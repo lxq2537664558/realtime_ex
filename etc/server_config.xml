@@ -1,0 +1,23 @@
+﻿<!--游戏服务器配置-->
+<root>
+	<!-- 服务器基本信息 sync_log-日志是否异步输出(0表示同步1表示异步) work_path-工作目录 enter_user_speed每秒进入游戏的玩家数量 new_date new_time服务器开启时间 safe_user_count当前安全的玩家数量 max_user_count最高玩家数量 db_thread_count数据库线程数量 all_user_gm是否所有玩家是GM partner_key平台KEY-->
+	<server_info sync_log = "0" work_path = "./conf/" enter_user_speed = "10" new_date = "2013-10-1" new_time = "18:00:00" safe_user_count = "20" max_user_count = "20" db_thread_count = "2" all_user_gm = "1" partner_key = "7D67B6C0AE249FB6C1C616EED4F2C972"/>
+  	<!--服务器id 以后每次合服往merge_id添加-->
+	<server_id_info id = "5">
+    		<merge_id id = "2"/>
+  	</server_id_info>
+	<!--服务器端口-->
+	<gate_netaddr ip = "127.0.0.1" port = "8000"/>
+	<!--连接平台服务器地址-->
+	<connect_plat ip = "127.0.0.1" port = "10000"/>
+	<!--策划数据库地址-->
+	<designer_db ip = "127.0.0.1" port = "3306" user = "root" password = "123456" name = "designer_db" charset = "utf8"/>
+	<!--游戏数据库地址-->
+	<game_db ip = "127.0.0.1" port = "3306" user = "root" password = "123456" name = "game_db" charset = "utf8"/>
+	<!--<server_time year = "2013" month = "4" day = "27" hour = "23" minute = "57" second = "0"/>-->
+	<!--脚本目录-->
+	<script_info root = "script/">
+		<seach_path path = "instance/"/>
+	</script_info>
+	<rebort name = "aa" count = "6000"/>
+</root>

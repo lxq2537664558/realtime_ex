@@ -1,0 +1,80 @@
+#pragma once
+
+#include "libBaseCommon/base_common.h"
+#include "libBaseCommon/noncopyable.h"
+
+namespace base
+{
+	class CNetRecvBuffer :
+		public noncopyable
+	{
+	public:
+		CNetRecvBuffer(uint32_t nBufSize);
+		~CNetRecvBuffer();
+
+		void		push(uint32_t nSize);
+		void		pop(uint32_t nSize);
+		void		resize(uint32_t nSize);
+		char*		getFreeBuffer() const;
+		char*		getDataBuffer() const;
+		uint32_t	getBufferSize() const;
+		uint32_t	getDataSize() const;
+		uint32_t	getFreeSize() const;
+
+	private:
+		char*		m_pBuf;
+		uint32_t	m_nBufPos;
+		uint32_t	m_nBufSize;
+	};
+
+	class CNetSendBuffer;
+	class CNetSendBufferBlock :
+		public noncopyable
+	{
+		friend class CNetSendBuffer;
+
+	public:
+		CNetSendBufferBlock(uint32_t nBufSize);
+		~CNetSendBufferBlock();
+
+		void		reset();
+		void		push(const char* pBuf, uint32_t nSize);
+		void		pop(uint32_t nSize);
+		char*		getDataBuffer() const;
+		uint32_t	getBufferSize() const;
+		uint32_t	getDataSize() const;
+		uint32_t	getFreeSize() const;
+
+	private:
+		char*					m_pBuf;
+		uint32_t				m_nDataBegin;
+		uint32_t				m_nDataEnd;
+		uint32_t				m_pBufSize;
+		CNetSendBufferBlock*	m_pNext;
+	};
+
+	class CNetSendBuffer :
+		public noncopyable
+	{
+	private:
+		uint32_t				m_nBuffBlockSize;
+		CNetSendBufferBlock*	m_pHead;
+		CNetSendBufferBlock*	m_pTail;
+
+		CNetSendBufferBlock*	m_pNoUse;
+
+	private:
+		CNetSendBufferBlock*	getBufferBlock();
+		void					putBufferBlock(CNetSendBufferBlock* pBufferBlock);
+
+	public:
+		CNetSendBuffer(uint32_t nBufSize);
+		~CNetSendBuffer();
+
+		void					push(const char* pBuf, uint32_t nSize);
+		void					pop(uint32_t nSize);
+		char*					getDataBuffer(uint32_t& nSize) const;
+		uint32_t				getDataSize() const;
+		bool					isEmpty() const;
+	};
+}

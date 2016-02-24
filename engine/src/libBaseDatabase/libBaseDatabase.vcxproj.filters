@@ -1,0 +1,66 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="inc">
+      <UniqueIdentifier>{84f032ba-3f7a-4db1-9a8f-d62d80ba7340}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{4ce50851-3aac-432e-b58c-595a7f447e34}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stdafx.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="db_connection.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="db_record_set.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="db_facade.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libBaseDatabase\database.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="db_binder.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="db_param_binder.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="db_result_binder.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="db_statement.h">
+      <Filter>src</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="db_connection.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="db_record_set.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="db_facade..cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="db_binder.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="db_param_binder.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="db_result_binder.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="db_statement.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

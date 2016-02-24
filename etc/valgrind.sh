@@ -1,0 +1,1 @@
+valgrind --tool=memcheck --undef-value-errors=yes --leak-check=full --error-limit=no --show-reachable=yes --log-file=CoreCommon_memcheck_%p.log ./TestCoreCommon
