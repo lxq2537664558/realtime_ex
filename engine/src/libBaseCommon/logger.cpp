@@ -46,7 +46,7 @@ static uint32_t formatLog(char* szBuf, uint32_t nBufSize, const char* szSection,
 	nLen = base::crt::strnlen(szBuf, nBufSize);
 	if (nLen >= _LOG_BUF_SIZE - 1)
 	{
-		// ½Ø¶Ï
+		// æˆªæ–­
 		base::crt::strncpy(szBuf + nBufSize - 3, 3, "\r\n", _TRUNCATE);
 		nLen = _LOG_BUF_SIZE - 1;
 	}

@@ -14,7 +14,7 @@
 #define SAFE_DELETE_ARRAY(ptr) { if(ptr != nullptr) { delete[] ptr; ptr = nullptr; } }
 #define SAFE_RELEASE(ptr) { if(ptr != nullptr) { ptr->release(); ptr = nullptr; } }
 
-// WindowsÏÂ__debugbreak()´úÌæint 3
+// Windowsä¸‹__debugbreak()ä»£æ›¿int 3
 #if defined _DEBUG && defined _WIN32
 #	define BREAK_POINT do{ __debugbreak(); } while(0)
 #else
@@ -32,5 +32,5 @@
 #define	DebugAst(Exp)			do{ if(!(Exp)) { base::saveErrorLog("DebugAst(%s) in %s, %d", #Exp, __FILE__, __LINE__); BREAK_POINT; return; } } while(0)
 #define	DebugAstEx(Exp, Ret)	do{ if(!(Exp)) { base::saveErrorLog("DebugAstEx(%s) in %s, %d", #Exp, __FILE__, __LINE__); BREAK_POINT; return Ret; } } while(0)
 
-#define	IF_NOT(Exp) if(!(Exp) ? (base::saveErrorLog("¡ïIF_NOT(%s)¡ï in %s, %d", #Exp, __FILE__, __LINE__), 1) : 0)
-#define	IF_OK(Exp)  if((Exp) ? 1 : (base::saveErrorLog("¡ïIF_OK(%s)¡ï in %s, %d", #Exp, __FILE__, __LINE__), 0))
+#define	IF_NOT(Exp) if(!(Exp) ? (base::saveErrorLog("IF_NOT(%s) in %s, %d", #Exp, __FILE__, __LINE__), 1) : 0)
+#define	IF_OK(Exp)  if((Exp) ? 1 : (base::saveErrorLog("IF_OK(%s) in %s, %d", #Exp, __FILE__, __LINE__), 0))

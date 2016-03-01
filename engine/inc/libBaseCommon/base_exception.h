@@ -8,9 +8,8 @@
 
 namespace base
 {
-
 	/**
-	@brief: »ù´¡Òì³£Àà
+	@brief: åŸºç¡€å¼‚å¸¸ç±»
 	*/
 	class __BASE_COMMON_API__ CBaseException
 	{
