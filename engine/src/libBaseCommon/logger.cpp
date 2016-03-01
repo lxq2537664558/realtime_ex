@@ -29,16 +29,12 @@ static uint32_t formatLog(char* szBuf, uint32_t nBufSize, const char* szSection,
 	char szTime[20] = { 0 };
 	base::formatLocalTime(szTime, _countof(szTime), nCurTime);
 
-	if (szSection[0] == 0)
-	{
-		if (base::crt::snprintf(szBuf, nBufSize, "%s.%03d ", szTime, (uint32_t)(nCurTime % 1000)) < 0)
-			return 0;
-	}
-	else
-	{
-		if (base::crt::snprintf(szBuf, nBufSize, "%s.%03d [%s] ", szTime, (uint32_t)(nCurTime % 1000), szSection) < 0)
-			return 0;
-	}
+	if (base::crt::snprintf(szBuf, nBufSize, "%s.%03d ", szTime, (uint32_t)(nCurTime % 1000)) < 0)
+		return 0;
+
+	if (szSection[0] != 0 && base::crt::snprintf(szBuf, nBufSize, "[%s] ", szTime, szSection) < 0)
+		return 0;
+	
 	size_t nLen = base::crt::strnlen(szBuf, nBufSize);
 	if (base::crt::vsnprintf(szBuf + nLen, nBufSize - nLen, szFormat, arg) < 0)
 		return 0;
