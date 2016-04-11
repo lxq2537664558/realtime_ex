@@ -51,7 +51,7 @@ namespace base
 #ifdef _WIN32
 		, m_hThread(nullptr)
 #else
-		, this->m_hThread(0)
+		, m_hThread(0)
 #endif
 	{
 	}

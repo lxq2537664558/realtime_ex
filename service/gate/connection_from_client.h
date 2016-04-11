@@ -14,8 +14,11 @@ public:
 
 	virtual void	onConnect(const std::string& szContext);
 	virtual void	onDisconnect();
-	virtual void	onDispatch(uint16_t nMsgType, const void* pData, uint16_t nSize);
+	virtual void	onDispatch(uint16_t nMessageType, const void* pData, uint16_t nSize);
 
 private:
-	CConnectionFromService*	m_pConnectionFromService;
+	void			doFoward(const core::message_header* pHeader);
+
+private:
+	uint64_t	m_nSessionID;
 };

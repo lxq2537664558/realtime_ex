@@ -1,10 +1,9 @@
 #pragma once
 
-#include "tinyxml2/tinyxml2.h"
-
 #include "core_common.h"
 #include "ticker.h"
-#include "base_connection_mgr.h"
+
+#include "libBaseCommon/buf_file.h"
 
 namespace core
 {
@@ -19,26 +18,27 @@ namespace core
 		eARS_Quit		= 3,	// 最终退出
 	};
 
-	class CCoreConnectionMgr;
-	class CTickerMgr;
-	class CMessagePort;
+	class CBaseConnectionMgr;
+	class CCoreApp;
 	/**
-	@brief: 基础框架类，单例，主要管理游戏中各个管理器
+	@brief: 基础框架类
 	*/
-	class CCoreApp
+	class CBaseApp
 	{
-	public:
-		CCoreApp();
-		virtual ~CCoreApp();
+		friend class CCoreApp;
 
-		static CCoreApp*& Inst();
+	public:
+		CBaseApp();
+		virtual ~CBaseApp();
+
+		static CBaseApp*& Inst();
 
 		/**
 		@brief: 启动框架
 		*/
-		bool					run(int32_t argc, char** argv, const char* szConfig);
+		bool					run(bool bNormalService, int32_t argc, char** argv, const char* szConfig);
 		/**
-		@brief: 获取服务基本信息
+		@brief: 获取本服务基本信息
 		*/
 		const SServiceBaseInfo&	getServiceBaseInfo() const;
 		/**
@@ -60,33 +60,23 @@ namespace core
 		*/
 		CBaseConnectionMgr*		getBaseConnectionMgr() const;
 		/*
-		@brief: 获取消息邮局
+		@brief: 获取配置文件名
 		*/
-		CMessagePort*			getMessagePort() const;
+		const std::string&		getConfigFileName() const;
+		/*
+		@brief: 获取写buf对象，的主要用于消息打包
+		*/
+		base::CWriteBuf&		getWriteBuf() const;
 		
 	protected:
-		virtual bool			onInit();
-		virtual bool			onProcess();
-		virtual void			onDestroy();
+		virtual bool			onInit() { return true; }
+		virtual void			onProcess() { }
+		virtual void			onDestroy() { }
 
 		virtual void			onBeforeFrame() { }
 		virtual void			onAfterFrame() { }
 
 		virtual	void			onQuit() = 0;
 		void					doQuit();
-
-	private:
-		void					onAnalyze();
-
-	protected:
-		tinyxml2::XMLElement*		m_pRootXML;
-		CTickerMgr*					m_pTickerMgr;
-		CCoreConnectionMgr*			m_pCoreConnectionMgr;
-		CMessagePort*				m_pMessagePort;
-		SServiceBaseInfo			m_sServiceBaseInfo;
-		uint32_t					m_nCycleCount;
-		uint32_t					m_nTotalTime;
-		volatile uint32_t			m_nRunState;
-		bool						m_bMarkQuit;	// 这个参数作用是只触发一次onQuit
 	};
 }

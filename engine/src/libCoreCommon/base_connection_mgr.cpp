@@ -1,11 +1,9 @@
 #include "stdafx.h"
 #include "base_connection_mgr.h"
 #include "base_connection.h"
-#include "core_data.h"
-#include "core_app.h"
+#include "base_app.h"
 #include "core_connection_mgr.h"
 #include "core_connection.h"
-
 
 #include "libBaseCommon/base_time.h"
 
@@ -58,18 +56,18 @@ namespace core
 			this->m_funConnectRefuse(szContext);
 	}
 
-	bool CBaseConnectionMgr::connect(const std::string& szHost, uint16_t nPort, const std::string& szContext, const std::string& szClassName, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, funRawDataParser pfRawDataParser)
+	bool CBaseConnectionMgr::connect(const std::string& szHost, uint16_t nPort, const std::string& szContext, const std::string& szClassName, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, ClientDataCallback clientDataCallback)
 	{
 		uint32_t nClassID = CBaseObject::getClassID(szClassName);
 
-		return this->m_pCoreConnectionMgr->connect(szHost, nPort, szContext, nClassID, nSendBufferSize, nRecvBufferSize, pfRawDataParser);
+		return this->m_pCoreConnectionMgr->connect(szHost, nPort, szContext, nClassID, nSendBufferSize, nRecvBufferSize, clientDataCallback);
 	}
 
-	bool CBaseConnectionMgr::listen(const std::string& szHost, uint16_t nPort, const std::string& szContext, const std::string& szClassName, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, funRawDataParser pfRawDataParser)
+	bool CBaseConnectionMgr::listen(const std::string& szHost, uint16_t nPort, const std::string& szContext, const std::string& szClassName, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, ClientDataCallback clientDataCallback)
 	{
 		uint32_t nClassID = CBaseObject::getClassID(szClassName);
 
-		return this->m_pCoreConnectionMgr->listen(szHost, nPort, szContext, nClassID, nSendBufferSize, nRecvBufferSize, pfRawDataParser);
+		return this->m_pCoreConnectionMgr->listen(szHost, nPort, szContext, nClassID, nSendBufferSize, nRecvBufferSize, clientDataCallback);
 	}
 
 	uint32_t CBaseConnectionMgr::getBaseConnectionCount(const std::string& szClassName) const

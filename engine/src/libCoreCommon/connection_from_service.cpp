@@ -1,10 +1,10 @@
 #include "stdafx.h"
 #include "connection_from_service.h"
-#include "service_mgr.h"
-
-#include "libCoreCommon\base_connection_mgr.h"
-#include "libCoreCommon\proto_system.h"
-#include "libCoreCommon\core_app.h"
+#include "core_app.h"
+#include "base_connection_mgr.h"
+#include "proto_system.h"
+#include "base_app.h"
+#include "message_dispatcher.h"
 
 namespace core
 {
@@ -29,34 +29,31 @@ namespace core
 	void CConnectionFromService::onDisconnect()
 	{
 		if (!this->m_szServiceName.empty())
-			CServiceMgr::Inst()->delConnectionFromService(this->m_szServiceName);
+			CCoreApp::Inst()->getServiceMgr()->delConnectionFromService(this->m_szServiceName);
 	}
 
-	void CConnectionFromService::onDispatch(uint16_t nMsgType, const void* pData, uint16_t nSize)
+	void CConnectionFromService::onDispatch(uint16_t nMessageType, const void* pData, uint16_t nSize)
 	{
-		if (nMsgType == eMT_SYSTEM)
+		if (nMessageType == eMT_SYSTEM)
 		{
 			const core::message_header* pHeader = reinterpret_cast<const core::message_header*>(pData);
 			DebugAst(nSize > sizeof(core::message_header));
 
-			if (pHeader->nMsgID == eSMT_SyncServiceInfo)
+			if (pHeader->nMessageID == eSMT_notify_service_base_info)
 			{
 				DebugAst(this->m_szServiceName.empty());
 
-				const CSMT_SyncServiceInfo* pInfo = reinterpret_cast<const CSMT_SyncServiceInfo*>(pData);
+				smt_notify_service_base_info netMsg;
+				netMsg.unpack(pData, nSize);
 
 				// 这里对其他服务的监听地址不感兴趣
-				this->m_szServiceName = pInfo->szName;
-				CServiceMgr::Inst()->addConnectionFromService(this);
+				this->m_szServiceName = netMsg.szName;
+				CCoreApp::Inst()->getServiceMgr()->addConnectionFromService(this);
 			}
 		}
-		else if (nMsgType == eMT_REQUEST)
+		else
 		{
-			CServiceMgr::Inst()->onDispatch(nMsgType, pData, nSize);
-		}
-		else if (nMsgType == eMT_RESPONSE)
-		{
-			CServiceMgr::Inst()->onDispatch(nMsgType, pData, nSize);
+			CMessageDispatcher::Inst()->dispatch(this->getServiceName(), nMessageType, pData, nSize);
 		}
 	}
 

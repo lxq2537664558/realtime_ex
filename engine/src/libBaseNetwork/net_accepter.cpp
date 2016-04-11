@@ -58,11 +58,6 @@ namespace base
 					pNetConnecter->shutdown(true, "set non block error");
 					continue;
 				}
-				if (!pNetConnecter->setBufferSize())
-				{
-					pNetConnecter->shutdown(true, "set buffer size error");
-					continue;
-				}
 				INetConnecterHandler* pHandler = this->m_pHandler->onAccept(pNetConnecter);
 				if (nullptr == pHandler)
 				{
@@ -107,14 +102,20 @@ namespace base
 	{
 		if (!this->open())
 			return false;
+		
+		if (!this->reuseAddr())
+		{
+			this->forceClose();
+			return false;
+		}
 
 		if (!this->nonBlock())
 		{
 			this->forceClose();
 			return false;
 		}
-
-		if (!this->reuseAddr())
+		// 监听到的连接会继承缓冲区大小
+		if (!this->setBufferSize())
 		{
 			this->forceClose();
 			return false;

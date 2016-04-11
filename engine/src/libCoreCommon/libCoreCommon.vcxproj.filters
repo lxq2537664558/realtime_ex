@@ -15,30 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\inc\libCoreCommon\base_object.h">
-      <Filter>inc</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreCommon\core_common.h">
-      <Filter>inc</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreCommon\core_app.h">
-      <Filter>inc</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreCommon\ticker.h">
-      <Filter>inc</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreCommon\message_dispatch.h">
-      <Filter>inc</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreCommon\base_connection_mgr.h">
-      <Filter>inc</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreCommon\base_connection.h">
-      <Filter>inc</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreCommon\proto_system.h">
-      <Filter>inc</Filter>
-    </ClInclude>
     <ClInclude Include="ticker_mgr.h">
       <Filter>src\core</Filter>
     </ClInclude>
@@ -46,9 +22,6 @@
       <Filter>src\core</Filter>
     </ClInclude>
     <ClInclude Include="core_connection_mgr.h">
-      <Filter>src\core</Filter>
-    </ClInclude>
-    <ClInclude Include="core_data.h">
       <Filter>src\core</Filter>
     </ClInclude>
     <ClInclude Include="fix_memory_pool.h">
@@ -59,9 +32,6 @@
     </ClInclude>
     <ClInclude Include="stdafx.h">
       <Filter>src\core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreCommon\message_port.h">
-      <Filter>inc</Filter>
     </ClInclude>
     <ClInclude Include="connection_from_service.h">
       <Filter>src\service</Filter>
@@ -75,6 +45,54 @@
     <ClInclude Include="service_mgr.h">
       <Filter>src\service</Filter>
     </ClInclude>
+    <ClInclude Include="message_send.h">
+      <Filter>src\service</Filter>
+    </ClInclude>
+    <ClInclude Include="message_directory.h">
+      <Filter>src\service</Filter>
+    </ClInclude>
+    <ClInclude Include="core_app.h">
+      <Filter>src\core</Filter>
+    </ClInclude>
+    <ClInclude Include="common_base.h">
+      <Filter>src\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreCommon\ticker.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreCommon\base_app.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreCommon\base_connection.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreCommon\base_connection_mgr.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreCommon\base_object.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreCommon\cluster_invoker.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreCommon\core_common.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreCommon\load_balance.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreCommon\message_dispatcher.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreCommon\message_registry.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreCommon\proto_system.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreCommon\protobuf_helper.h">
+      <Filter>inc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="base_connection.cpp">
@@ -86,9 +104,6 @@
     <ClCompile Include="base_object.cpp">
       <Filter>src\core</Filter>
     </ClCompile>
-    <ClCompile Include="core_app.cpp">
-      <Filter>src\core</Filter>
-    </ClCompile>
     <ClCompile Include="core_connection.cpp">
       <Filter>src\core</Filter>
     </ClCompile>
@@ -96,9 +111,6 @@
       <Filter>src\core</Filter>
     </ClCompile>
     <ClCompile Include="fix_memory_pool.cpp">
-      <Filter>src\core</Filter>
-    </ClCompile>
-    <ClCompile Include="message_dispatch.cpp">
       <Filter>src\core</Filter>
     </ClCompile>
     <ClCompile Include="monitor.cpp">
@@ -122,10 +134,31 @@
     <ClCompile Include="connection_to_service.cpp">
       <Filter>src\service</Filter>
     </ClCompile>
-    <ClCompile Include="message_port.cpp">
+    <ClCompile Include="service_mgr.cpp">
       <Filter>src\service</Filter>
     </ClCompile>
-    <ClCompile Include="service_mgr.cpp">
+    <ClCompile Include="message_send.cpp">
+      <Filter>src\service</Filter>
+    </ClCompile>
+    <ClCompile Include="protobuf_helper.cpp">
+      <Filter>src\service</Filter>
+    </ClCompile>
+    <ClCompile Include="cluster_invoker.cpp">
+      <Filter>src\service</Filter>
+    </ClCompile>
+    <ClCompile Include="message_registry.cpp">
+      <Filter>src\service</Filter>
+    </ClCompile>
+    <ClCompile Include="message_dispatcher.cpp">
+      <Filter>src\service</Filter>
+    </ClCompile>
+    <ClCompile Include="base_app.cpp">
+      <Filter>src\core</Filter>
+    </ClCompile>
+    <ClCompile Include="core_app.cpp">
+      <Filter>src\core</Filter>
+    </ClCompile>
+    <ClCompile Include="message_directory.cpp">
       <Filter>src\service</Filter>
     </ClCompile>
   </ItemGroup>

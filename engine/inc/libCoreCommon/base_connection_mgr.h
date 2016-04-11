@@ -13,6 +13,9 @@ namespace core
 	class CBaseConnection;
 	class CCoreConnectionMgr;
 	class CCoreConnection;
+	/**
+	@brief: 基础连接管理类，主要管理基础连接以及发起连接跟发起监听
+	*/
 	class CBaseConnectionMgr :
 		public base::noncopyable
 	{
@@ -24,17 +27,42 @@ namespace core
 		CBaseConnectionMgr();
 		~CBaseConnectionMgr();
 
-		bool				connect(const std::string& szHost, uint16_t nPort, const std::string& szContext, const std::string& szClassName, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, funRawDataParser pfRawDataParser);
-		bool				listen(const std::string& szHost, uint16_t nPort, const std::string& szContext, const std::string& szClassName, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, funRawDataParser pfRawDataParser);
+		/**
+		@brief: 主动发起一个连接（异步）
+		*/
+		bool				connect(const std::string& szHost, uint16_t nPort, const std::string& szContext, const std::string& szClassName, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, ClientDataCallback clientDataCallback);
+		/**
+		@brief: 发起一个监听
+		*/
+		bool				listen(const std::string& szHost, uint16_t nPort, const std::string& szContext, const std::string& szClassName, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, ClientDataCallback clientDataCallback);
 
+		/**
+		@brief: 根据连接ID获取一个连接
+		*/
 		CBaseConnection*	getBaseConnection(uint64_t nID) const;
+		/**
+		@brief: 根据连接的类名来获取所有基于这个连接类创建的连接对象
+		*/
 		void				getBaseConnection(const std::string& szClassName, std::vector<CBaseConnection*> vecBaseConnection) const;
+		/**
+		@brief: 根据连接的类名来获取所有基于这个连接类创建的连接数量
+		*/
 		uint32_t			getBaseConnectionCount(const std::string& szClassName) const;
-
+		/**
+		@brief: 根据连接的类名来向所有基于这个类创建的连接广播消息
+		*/
 		void				broadcast(const std::string& szClassName, uint16_t nMsgType, const void* pData, uint16_t nSize);
-
+		/**
+		@brief: 设置全局的连接成功回调
+		*/
 		void				setConnectCallback(std::function<void(CBaseConnection*)> funConnect);
+		/**
+		@brief: 设置全局的连接断开回调
+		*/
 		void				setDisconnectCallback(std::function<void(CBaseConnection*)> funDisconnect);
+		/**
+		@brief: 设置全局的主动发起连接被失败回调
+		*/
 		void				setConnectRefuseCallback(std::function<void(const std::string&)> funConnectRefuse);
 
 	private:

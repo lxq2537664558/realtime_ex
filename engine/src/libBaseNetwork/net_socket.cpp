@@ -125,7 +125,7 @@ namespace base
 		return true;
 	}
 
-	// ä¸»è¦ç”¨äºŽç›‘å¬SOCKET ä¸ºäº†è®©ç›‘å¬SOCKETå…³é—­åŽå¤„äºŽTIME_WAITçŠ¶æ€åŽï¼Œå¯ä»¥é©¬ä¸Šç»‘å®šåœ¨åŒä¸€ä¸ªç«¯å£ï¼Œä¸ç„¶éœ€è¦ç­‰å¾…ä¸€æ®µæ—¶é—´
+	// Ö÷ÒªÓÃÓÚ¼àÌýSOCKET ÎªÁËÈÃ¼àÌýSOCKET¹Ø±Õºó´¦ÓÚTIME_WAIT×´Ì¬ºó£¬¿ÉÒÔÂíÉÏ°ó¶¨ÔÚÍ¬Ò»¸ö¶Ë¿Ú£¬²»È»ÐèÒªµÈ´ýÒ»¶ÎÊ±¼ä
 	bool CNetSocket::reuseAddr()
 	{
 		DebugAstEx(this->m_nSocketID != _Invalid_SocketID, false);
@@ -170,9 +170,9 @@ namespace base
 		struct sockaddr remoteAddr;
 		socklen_t nPeerAddrLen = sizeof(remoteAddr);
 		::getpeername(this->m_nSocketID, &remoteAddr, &nPeerAddrLen);
-		// ä¸èƒ½ç”¨::htons https://bbs.archlinux.org/viewtopic.php?id=53751
-		this->m_sRemoteAddr.nPort = ntohs(((sockaddr_in*)&remoteAddr)->sin_port);
-		base::crt::strncpy(this->m_sRemoteAddr.szHost, _countof(this->m_sRemoteAddr.szHost), inet_ntoa(((sockaddr_in*)&remoteAddr)->sin_addr), _TRUNCATE);
+		// ²»ÄÜÓÃ::htons https://bbs.archlinux.org/viewtopic.php?id=53751
+		this->m_sRemoteAddr.nPort = ntohs((reinterpret_cast<sockaddr_in*>(&remoteAddr))->sin_port);
+		base::crt::strncpy(this->m_sRemoteAddr.szHost, _countof(this->m_sRemoteAddr.szHost), inet_ntoa((reinterpret_cast<sockaddr_in*>(&remoteAddr))->sin_addr), _TRUNCATE);
 	}
 
 	void CNetSocket::setLocalAddr()
@@ -180,9 +180,9 @@ namespace base
 		struct sockaddr localAddr;
 		socklen_t nLocalAddrLen = sizeof(localAddr);
 		::getsockname(this->m_nSocketID, &localAddr, &nLocalAddrLen);
-		// ä¸èƒ½ç”¨::htons https://bbs.archlinux.org/viewtopic.php?id=53751
-		this->m_sLocalAddr.nPort = ntohs(((sockaddr_in*)&localAddr)->sin_port);
-		base::crt::strncpy(this->m_sLocalAddr.szHost, _countof(this->m_sLocalAddr.szHost), inet_ntoa(((sockaddr_in*)&localAddr)->sin_addr), _TRUNCATE);
+		// ²»ÄÜÓÃ::htons https://bbs.archlinux.org/viewtopic.php?id=53751
+		this->m_sLocalAddr.nPort = ntohs((reinterpret_cast<sockaddr_in*>(&localAddr))->sin_port);
+		base::crt::strncpy(this->m_sLocalAddr.szHost, _countof(this->m_sLocalAddr.szHost), inet_ntoa((reinterpret_cast<sockaddr_in*>(&localAddr))->sin_addr), _TRUNCATE);
 	}
 
 	void CNetSocket::setSocketID(int32_t nSocketID)

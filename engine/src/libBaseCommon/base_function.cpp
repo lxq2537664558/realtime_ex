@@ -657,7 +657,7 @@ namespace base
 #ifdef _WIN32
 			return (::_itoa_s(nValue, szBuf, nBufSize, nRadix) == 0);
 #else
-
+			return true;
 #endif
 		}
 

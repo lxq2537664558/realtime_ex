@@ -1,72 +1,82 @@
 #include "stdafx.h"
 #include "gate_app.h"
 #include "connection_from_client.h"
-#include "connection_from_service.h"
-#include "connection_to_master.h"
+#include "gate_message_dispatcher.h"
 
 #include "libCoreCommon/base_connection_mgr.h"
+#include "libCoreCommon/message_dispatcher.h"
+#include "libCoreCommon/message_registry.h"
 
-#define _CHECK_CONNECT_TIME 5*1000
+#include <functional>
+
+#include "tinyxml2/tinyxml2.h"
+
+static bool dispatch_gate_message(const std::string& szFromServiceName, uint16_t nMessageType, const void* pData, uint16_t nSize)
+{
+	DebugAstEx(pData != nullptr, false);
+
+	CGateMessageDispatcher::Inst()->dispatch(nMessageType, pData, nSize);
+
+	return true;
+}
 
 CGateApp::CGateApp()
-	: m_pServiceMgr(nullptr)
-	, m_nMasterPort(0)
+	: m_pGateSessionMgr(nullptr)
 {
-	this->m_tickCheckConnect.setCallback(&CGateApp::onCheckConnect, this);
 }
 
 CGateApp::~CGateApp()
 {
-
 }
 
 CGateApp* CGateApp::Inst()
 {
-	return static_cast<CGateApp*>(CCoreApp::Inst());
+	return static_cast<CGateApp*>(CBaseApp::Inst());
 }
 
 bool CGateApp::onInit()
 {
-	if (!core::CCoreApp::onInit())
-		return false;
-	
 	CConnectionFromClient::registClassInfo();
-	CConnectionFromService::registClassInfo();
-	CConnectionToMaster::registClassInfo();
 
-	this->m_pServiceMgr = new CServiceMgr();
-	if (!this->m_pServiceMgr->init())
+	core::CMessageRegistry::Inst()->registGlobalBeforeCallback(std::bind(dispatch_gate_message, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
+	
+	if (!CGateMessageDispatcher::Inst()->init())
+	{
+		PrintWarning("CGateMessageDispatcher::Inst()->init()");
 		return false;
+	}
 
-	tinyxml2::XMLElement* pMasterAddrXML = this->m_pRootXML->FirstChildElement("connect_master_addr");
-	DebugAstEx(pMasterAddrXML != nullptr, false);
-	const char* szMasterHost = pMasterAddrXML->Attribute("host");
-	this->m_szMasterHost = szMasterHost;
-	this->m_nMasterPort = (uint16_t)pMasterAddrXML->IntAttribute("port");
-	
-	this->getBaseConnectionMgr()->connect(this->m_szMasterHost, this->m_nMasterPort, "master", _GET_CLASS_NAME(CConnectionToMaster), 10 * 1024, 10 * 1024, nullptr);
-	this->registTicker(&this->m_tickCheckConnect, _CHECK_CONNECT_TIME, _CHECK_CONNECT_TIME, 0);
-
-	tinyxml2::XMLElement* pListenClientAddrXML = this->m_pRootXML->FirstChildElement("listen_client_addr");
+	this->m_pGateSessionMgr = new CGateSessionMgr();
+	if (!this->m_pGateSessionMgr->init())
+	{
+		PrintWarning("this->m_pGateSessionMgr->init()");
+		return false;
+	}
+	tinyxml2::XMLDocument* pConfigXML = new tinyxml2::XMLDocument();
+	if (pConfigXML->LoadFile(this->getConfigFileName().c_str()) != tinyxml2::XML_SUCCESS)
+	{
+		PrintWarning("load etc config error");
+		return false;
+	}
+	tinyxml2::XMLElement* pRootXML = pConfigXML->RootElement();
+	if (pRootXML == nullptr)
+	{
+		PrintWarning("pRootXML == nullptr");
+		return false;
+	}
+	// 启动客户端连接
+	tinyxml2::XMLElement* pListenClientAddrXML = pRootXML->FirstChildElement("listen_client_addr");
 	DebugAstEx(pListenClientAddrXML != nullptr, false);
-	this->getBaseConnectionMgr()->listen(pListenClientAddrXML->Attribute("host"), (uint16_t)pListenClientAddrXML->IntAttribute("port"), "", _GET_CLASS_NAME(CConnectionFromClient), pListenClientAddrXML->IntAttribute("send_buf_size"), pListenClientAddrXML->IntAttribute("recv_buf_size"), core::default_parser_raw_data);
+	this->getBaseConnectionMgr()->listen(pListenClientAddrXML->Attribute("host"), (uint16_t)pListenClientAddrXML->IntAttribute("port"), "", _GET_CLASS_NAME(CConnectionFromClient), pListenClientAddrXML->IntAttribute("send_buf_size"), pListenClientAddrXML->IntAttribute("recv_buf_size"), core::default_parser_native_data);
 
-	this->getBaseConnectionMgr()->listen(this->getServiceBaseInfo().szHost, this->getServiceBaseInfo().nPort, "", _GET_CLASS_NAME(CConnectionFromService), this->getServiceBaseInfo().nSendBufSize, this->getServiceBaseInfo().nRecvBufSize, nullptr);
-	
+	SAFE_DELETE(pConfigXML);
+
 	return true;
 }
 
 void CGateApp::onDestroy()
 {
-	SAFE_DELETE(this->m_pServiceMgr);
-}
-
-void CGateApp::onCheckConnect(uint64_t nContext)
-{
-	// 断线重连，这种逻辑一般情况下是没有问题的
-	uint32_t nCount = this->getBaseConnectionMgr()->getBaseConnectionCount(_GET_CLASS_NAME(CConnectionToMaster));
-	if (nCount == 0)
-		this->getBaseConnectionMgr()->connect(this->m_szMasterHost, this->m_nMasterPort, "master", _GET_CLASS_NAME(CConnectionToMaster), 10 * 1024, 10 * 1024, nullptr);
+	SAFE_DELETE(this->m_pGateSessionMgr)
 }
 
 void CGateApp::onQuit()
@@ -74,15 +84,15 @@ void CGateApp::onQuit()
 	this->doQuit();
 }
 
-CServiceMgr* CGateApp::getServiceMgr() const
+CGateSessionMgr* CGateApp::getGateSessionMgr() const
 {
-	return this->m_pServiceMgr;
+	return this->m_pGateSessionMgr;
 }
 
 int32_t main(int32_t argc, char* argv[])
 {
 	CGateApp* pGateApp = new CGateApp();
-	pGateApp->run(argc, argv, "gate_config.xml");
+	pGateApp->run(true, argc, argv, "gate_config.xml");
 
 	return 0;
 }

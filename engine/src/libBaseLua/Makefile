@@ -10,7 +10,7 @@ BIN_PROJECT_NAME := $(BIN_ROOT_DIR)/libBaseLua.so
 .PHONY: all
 all: c_obj cxx_obj
 	g++ $(COMPILE_OPTION) -shared -fPIC -o $(BIN_PROJECT_NAME) ./*.o
-	cp ../../../3rd/lua/bin/linux/liblua.so $(BIN_ROOT_DIR)/
+	cp ../../../3rd/lua/lib/linux/liblua.so $(BIN_ROOT_DIR)/
 	
 .PHONY: c_obj
 c_obj: $(C_OBJS)

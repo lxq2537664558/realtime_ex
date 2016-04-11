@@ -14,7 +14,7 @@
 #define SAFE_DELETE_ARRAY(ptr) { if(ptr != nullptr) { delete[] ptr; ptr = nullptr; } }
 #define SAFE_RELEASE(ptr) { if(ptr != nullptr) { ptr->release(); ptr = nullptr; } }
 
-// Windowsä¸‹__debugbreak()ä»£æ›¿int 3
+// WindowsÏÂ__debugbreak()´úÌæint 3
 #if defined _DEBUG && defined _WIN32
 #	define BREAK_POINT do{ __debugbreak(); } while(0)
 #else

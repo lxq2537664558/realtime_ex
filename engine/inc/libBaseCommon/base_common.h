@@ -11,9 +11,9 @@
 #include <limits.h>
 
 #ifdef _WIN32
-#pragma warning(error:4244) ///< 把4244号警告信息作为一个错误
-#pragma warning(error:4715) ///< 把4715号警告信息作为一个错误
-#pragma warning(error:4717) ///< 把4717号警告信息作为一个错误
+#pragma warning(error:4244)
+#pragma warning(error:4715)
+#pragma warning(error:4717)
 #endif
 #	define INVALID_64BIT UINT64_MAX
 #	define INVALID_32BIT UINT32_MAX

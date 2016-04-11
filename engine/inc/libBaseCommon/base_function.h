@@ -29,8 +29,7 @@ namespace base
 	__BASE_COMMON_API__ void			sleep(uint32_t milliseconds);
 	__BASE_COMMON_API__ uint32_t		hash(const wchar_t* szKey);
 	__BASE_COMMON_API__ uint32_t		hash(const char* szKey);
-
-	// 这两个函数是有全局变量的
+	
 	__BASE_COMMON_API__ const char*		getInstanceName();
 	__BASE_COMMON_API__ void			setInstanceName(char* szName);
 	__BASE_COMMON_API__ void			setCurrentWorkPath(const char* szPath);
@@ -48,8 +47,6 @@ namespace base
 	template<class T>
 	T									limit(T n, T min, T max) { return (n < min) ? min : ((n > max) ? max : n); }
 
-
-	// crt中可能会出现内存溢出的函数这里全部重新定义，项目中禁止调用c runtime 中的类似函数，全部调用这边对应的函数
 	namespace crt
 	{
 		__BASE_COMMON_API__ size_t	strnlen(const char* szBuf, size_t nMaxSize);

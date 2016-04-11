@@ -1,10 +1,10 @@
 #pragma once
-#include "libCoreCommon/core_app.h"
+#include "libCoreCommon/base_app.h"
 
-#include "service_mgr.h"
+#include "gate_session_mgr.h"
 
 class CGateApp
-	: public core::CCoreApp
+	: public core::CBaseApp
 {
 public:
 	CGateApp();
@@ -12,19 +12,13 @@ public:
 
 	static CGateApp* Inst();
 
-	virtual bool	onInit();
-	virtual void	onDestroy();
+	virtual bool		onInit();
+	virtual void		onDestroy();
 
-	virtual void	onQuit();
+	virtual void		onQuit();
 
-	CServiceMgr*	getServiceMgr() const;
-
-private:
-	void			onCheckConnect(uint64_t nContext);
+	CGateSessionMgr*	getGateSessionMgr() const;
 
 private:
-	std::string		m_szMasterHost;
-	uint16_t		m_nMasterPort;
-	CServiceMgr*	m_pServiceMgr;
-	core::CTicker	m_tickCheckConnect;
+	CGateSessionMgr*	m_pGateSessionMgr;
 };

@@ -111,6 +111,7 @@
     <ClInclude Include="..\..\inc\libBaseCommon\profiling.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\rand_gen.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\safe_queue.h" />
+    <ClInclude Include="..\..\inc\libBaseCommon\singleton.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\spin_mutex.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\table_file.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\thread_base.h" />
@@ -128,6 +129,7 @@
     <ClCompile Include="base_exception.cpp" />
     <ClCompile Include="base_function.cpp" />
     <ClCompile Include="base_time.cpp" />
+    <ClCompile Include="buf_file.cpp" />
     <ClCompile Include="encryptor.cpp" />
     <ClCompile Include="exception_handler.cpp" />
     <ClCompile Include="logger.cpp" />

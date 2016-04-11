@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "ticker.h"
-#include "core_app.h"
+#include "base_app.h"
 
 #include "libBaseCommon/base_time.h"
 #include "libBaseCommon/debug_helper.h"
@@ -15,7 +15,7 @@ namespace core
 
 	CTicker::~CTicker()
 	{
-		CCoreApp::Inst()->unregistTicker(this);
+		CBaseApp::Inst()->unregistTicker(this);
 	}
 
 	int64_t CTicker::getIntervalTime() const

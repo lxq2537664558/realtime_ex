@@ -28,8 +28,8 @@ namespace base
 		virtual ~CNetEventLoop();
 
 		virtual bool	init(uint32_t nMaxSocketCount);
-		virtual bool	listen(const SNetAddr& netAddr, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, INetAccepterHandler* pHandler) override;
-		virtual bool	connect(const SNetAddr& netAddr, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, INetConnecterHandler* pHandler) override;
+		virtual bool	listen(const SNetAddr& netAddr, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, INetAccepterHandler* pHandler);
+		virtual bool	connect(const SNetAddr& netAddr, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, INetConnecterHandler* pHandler);
 		virtual int32_t	update(int32_t nTime);
 		virtual void	release();
 

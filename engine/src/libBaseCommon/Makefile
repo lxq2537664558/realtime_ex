@@ -7,7 +7,7 @@ BIN_PROJECT_NAME := $(BIN_ROOT_DIR)/libBaseCommon.so
 
 .PHONY: all
 all: c_obj cxx_obj
-	g++ $(COMPILE_OPTION) -shared -o $(BIN_PROJECT_NAME) ./*.o
+	g++ $(COMPILE_OPTION) -g -rdynamic -shared -o $(BIN_PROJECT_NAME) ./*.o
 	
 .PHONY: c_obj
 c_obj: $(C_OBJS)

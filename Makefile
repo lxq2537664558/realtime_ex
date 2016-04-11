@@ -16,6 +16,10 @@ engine:
 	make -C engine/src/libBaseLua;
 	make -C engine/src/libCoreCommon;
 	
+.PHONY: service
+service:
+	make -C service/gate;
+	
 .PHONY: engineTest
 engineTest:
 	make -C engineTest/TestBaseDatabase;
@@ -30,6 +34,10 @@ clean_engine:
 	make -C engine/src/libBaseDatabase clean;
 	make -C engine/src/libBaseLua clean;
 	make -C engine/src/libCoreCommon clean;
+	
+.PHONY: clean_service
+clean_service:
+	make -C service/gate clean;
 	
 .PHONY: clean_engineTest
 clean_engineTest:

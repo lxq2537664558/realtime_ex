@@ -12,6 +12,61 @@ namespace base
 		return bExist;
 	}
 
+	inline int32_t __index_proxy(lua_State* pL)
+	{
+		lua_getmetatable(pL, 1);
+		if (!lua_istable(pL, -1))
+			return 0;
+
+		lua_pushvalue(pL, 2);
+		lua_rawget(pL, -2);
+		if (lua_isfunction(pL, -1))
+			return 1;
+
+		if (!lua_isnil(pL, -1))
+			return 0;
+
+		lua_pop(pL, 1);
+		lua_pushstring(pL, "__property");
+		lua_rawget(pL, -2);
+		if (!lua_istable(pL, -1))
+			return 0;
+
+		lua_pushvalue(pL, 2);
+		lua_rawget(pL, -2);
+		if (!lua_isfunction(pL, -1))
+			return 0;
+
+		lua_pushvalue(pL, 1);
+		lua_pushboolean(pL, false);
+		lua_call(pL, 2, 1);
+
+		return 1;
+	}
+
+	inline int32_t __newindex_proxy(lua_State* pL)
+	{
+		lua_getmetatable(pL, 1);
+		if (!lua_istable(pL, -1))
+			return 0;
+
+		lua_pushstring(pL, "__property");
+		lua_rawget(pL, -2);
+		if (!lua_istable(pL, -1))
+			return 0;
+
+		lua_pushvalue(pL, 2);
+		lua_rawget(pL, -2);
+		if (!lua_isfunction(pL, -1))
+			return 0;
+
+		lua_pushvalue(pL, 1);
+		lua_pushboolean(pL, true);
+		lua_pushvalue(pL, 3);
+		lua_call(pL, 3, 0);
+		return 0;
+	}
+
 	template<typename RT, typename ...Args>
 	struct SFunctionWrapper
 	{
@@ -325,61 +380,6 @@ namespace base
 			push2Lua(pL, pObject->*pMemberOffsetInfo->mp);
 			return 1;
 		}
-	}
-
-	inline int32_t __index_proxy(lua_State* pL)
-	{
-		lua_getmetatable(pL, 1);
-		if (!lua_istable(pL, -1))
-			return 0;
-
-		lua_pushvalue(pL, 2);
-		lua_rawget(pL, -2);
-		if (lua_isfunction(pL, -1))
-			return 1;
-
-		if (!lua_isnil(pL, -1))
-			return 0;
-
-		lua_pop(pL, 1);
-		lua_pushstring(pL, "__property");
-		lua_rawget(pL, -2);
-		if (!lua_istable(pL, -1))
-			return 0;
-
-		lua_pushvalue(pL, 2);
-		lua_rawget(pL, -2);
-		if (!lua_isfunction(pL, -1))
-			return 0;
-
-		lua_pushvalue(pL, 1);
-		lua_pushboolean(pL, false);
-		lua_call(pL, 2, 1);
-
-		return 1;
-	}
-
-	inline int32_t __newindex_proxy(lua_State* pL)
-	{
-		lua_getmetatable(pL, 1);
-		if (!lua_istable(pL, -1))
-			return 0;
-
-		lua_pushstring(pL, "__property");
-		lua_rawget(pL, -2);
-		if (!lua_istable(pL, -1))
-			return 0;
-
-		lua_pushvalue(pL, 2);
-		lua_rawget(pL, -2);
-		if (!lua_isfunction(pL, -1))
-			return 0;
-
-		lua_pushvalue(pL, 1);
-		lua_pushboolean(pL, true);
-		lua_pushvalue(pL, 3);
-		lua_call(pL, 3, 0);
-		return 0;
 	}
 
 	template<class T, class M>

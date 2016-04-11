@@ -9,79 +9,159 @@
 namespace core
 {
 #pragma pack(push,1)
+	// 消息头
 	struct message_header
 	{
-		uint16_t nMsgSize;	// 包括消息头的
-		uint16_t nMsgID;	
+		uint16_t	nMessageSize;	// 包括消息头的
+		uint16_t	nMessageID;	
 
-		message_header( uint16_t nMsgID ) : nMsgID(nMsgID) { }
+		message_header(uint16_t nMessageID) : nMessageID(nMessageID) { }
 		message_header() {}
 	};
+
+	struct request_cookice
+	{
+		uint64_t nSessionID;
+	};
+
+	struct response_cookice
+	{
+		uint64_t nSessionID;
+		uint8_t  nResult;
+	};
+
 #pragma pack(pop)
 
-	inline int32_t default_parser_raw_data(const void* pData, uint32_t nDataSize)
+	inline int32_t default_parser_native_data(const void* pData, uint32_t nDataSize)
 	{
 		// 都不够消息头
-		if (nDataSize < sizeof(core::message_header))
+		if (nDataSize < sizeof(message_header))
 			return 0;
 
-		const message_header* pMessageHead = reinterpret_cast<const message_header*>(pData);
-		if (pMessageHead->nMsgSize < sizeof(message_header))
+		const message_header* pHeader = reinterpret_cast<const message_header*>(pData);
+		if (pHeader->nMessageSize < sizeof(message_header))
 			return -1;
 
 		// 不是完整的消息
-		if (nDataSize < pMessageHead->nMsgSize)
+		if (nDataSize < pHeader->nMessageSize)
 			return 0;
 
-		return pMessageHead->nMsgSize;
+		return pHeader->nMessageSize;
 	}
 }
 
-#define Msg_Begin(MsgName, MsgID) \
-class MsgName : public core::message_header\
+#define message_begin(MessageName, nMessageID) \
+class MessageName : public core::message_header\
 {\
 public:\
-	MsgName() : message_header(MsgID) { nMsgSize = sizeof(MsgName); }\
-	static  uint16_t	getMsgIDByType() { return MsgID; }\
-	static  const char*	getMsgName() { return #MsgName; }
+	MessageName() : message_header(nMessageID) { nMessageSize = sizeof(MessageName); }\
+	static  uint16_t	getMessageID() { return nMessageID; }\
+	static  const char*	getMessageName() { return #MessageName; }
 
-#define Msg_End };
+#define message_end };
+
+#define pack_begin(writeBuf)\
+	writeBuf.clear();\
+	writeBuf.write(this, sizeof(core::message_header));
+
+#define pack_end(writeBuf)\
+	do\
+			{\
+		uint16_t nPos = (uint16_t)writeBuf.getCurSize(); \
+		writeBuf.seek(base::eBST_Begin, 0); \
+		writeBuf.write(nPos); \
+		writeBuf.seek(base::eBST_Begin, nPos);\
+			} while(0)
+
+#define unpack_begin(buf, size)\
+	base::CReadBuf readBuf;\
+	readBuf.init(buf, size);\
+	readBuf.read(this, sizeof(core::message_header));
+
+#define unpack_end()
 
 
-#define _INVALID_SOCKET_ID		-1
-#define _MAX_SERVICE_TYPE_LEN	64
-#define _MAX_SERVICE_NAME_LEN	64
+
+#define _INVALID_SOCKET_ID			-1
+#define _MAX_SERVICE_TYPE_LEN		64
+#define _MAX_SERVICE_NAME_LEN		64
+#define _MAX_SERVICE_API_NAME_LEN	128
 
 enum EMessageType
 {
-	eMT_HEARTBEAT	= 1,		// 心跳包
-	eMT_REQUEST		= 2,		// 请求包
-	eMT_RESPONSE	= 3,		// 响应包
-	eMT_SYSTEM		= 4,		// 集群内部的系统包
-	eMT_GATE		= 5,		// 网关服务转发的客户端消息
-	eMT_CLIENT		= 6,		// 客户端包，不做任何处理，跟外部系统交互一般用这个，比如客户端
+	eMT_HEARTBEAT	= 1,		// 服务之间心跳消息
+	eMT_REQUEST		= 2,		// 服务之间的请求消息
+	eMT_RESPONSE	= 3,		// 服务之间的响应消息
+	eMT_SYSTEM		= 4,		// 服务之间的系统消息
+	eMT_FROM_GATE	= 5,		// 客户端通过网关服务转发给其他服务消息
+	eMT_TO_GATE		= 6,		// 其他服务通过网关服务转发客户端消息
+	eMT_CLIENT		= 7,		// 客户端消息
 	
-	eMT_BROADCAST	= 0x200,	// 广播包
+	eMT_TYPE_MASK	= 0x00ff,	// 类型掩码
+
+	// 特殊标记
+	eMT_NATIVE		= 0,		// 原生消息格式
+	eMT_PROTOBUF	= 0x8000,	// protobuf格式
+	eMT_BROADCAST	= 0x200,	// 广播消息
 };
 
 #pragma pack(push,1)
-struct gate_header
+struct gate_cookice
 {
-	uint64_t nID;
+	uint64_t nSessionID;
+};
+struct gate_cookice_broadcast
+{
+	uint16_t nCount;
 };
 #pragma pack(pop)
 
+namespace core
+{
+	typedef std::function<int32_t(const char*, uint32_t)>	ClientDataCallback;
+
+	struct SClientSessionInfo
+	{
+		const std::string&	szServiceName;
+		uint64_t			nSessionID;
+
+		SClientSessionInfo(const std::string&	szServiceName, uint64_t nSessionID)
+			: szServiceName(szServiceName), nSessionID(nSessionID)
+		{}
+	};
+
+	struct SServiceSessionInfo
+	{
+		std::string	szServiceName;
+		uint64_t	nSessionID;
+	};
+
+	enum EResponseResultType
+	{
+		eRRT_OK,
+		eRRT_TIME_OUT,
+		eRRT_ERROR,
+	};
+
+	typedef std::function<void(uint16_t, const message_header*, EResponseResultType)>		InvokeCallback;			// RPC消息响应回调函数类型
+	typedef std::function<void(const std::string&, uint16_t, const message_header*)>		ServiceCallback;		// 服务消息处理函数类型
+	typedef std::function<void(const SClientSessionInfo&, uint16_t, const message_header*)>	GateClientCallback;		// 经网关服务转发的客户端消息处理函数类型
+	typedef std::function<void(const message_header*)>										ClientCallback;			// 客户端消息处理函数类型
+	typedef std::function<bool(const std::string&, uint16_t, const void*, uint16_t)>		ServiceGlobalCallback;	// 全局的服务消息处理函数类型
+}
+
 struct SServiceBaseInfo
 {
-	char		szType[_MAX_SERVICE_TYPE_LEN];
-	char		szName[_MAX_SERVICE_NAME_LEN];
-	char		szHost[INET_ADDRSTRLEN];
+	std::string	szType;
+	std::string	szName;
+	std::string	szHost;
 	uint16_t	nPort;	// 0表示该服务没有监听地址
 	uint32_t	nRecvBufSize;
 	uint32_t	nSendBufSize;
 };
 
-namespace core
+struct SMessageSyncInfo
 {
-	typedef std::function<int32_t(const char*, uint32_t)>	funRawDataParser;
-}
+	uint8_t		nGate;
+	uint32_t	nMessageID;
+};

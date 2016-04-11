@@ -120,7 +120,7 @@ namespace base
 #define _Invalid_SendConnecterIndex -1
 #define _Invalid_SocketIndex -1
 
-//#define _NW_DEBUG
+#define _NW_DEBUG
 
 #ifdef _NW_DEBUG
 #define PrintNW	PrintInfo

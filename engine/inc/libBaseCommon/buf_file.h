@@ -1,5 +1,6 @@
 #pragma once
 
+#include "base_common.h"
 #include "noncopyable.h"
 #include "debug_helper.h"
 #include "base_function.h"
@@ -8,120 +9,89 @@
 
 namespace base
 {
+	enum EBufSeekType
+	{
+		eBST_Cur,
+		eBST_Begin,
+		eBST_End
+	};
+
+	// 下面这两个类有std::string作为接口，是迫不得已
+
 	/**
 	@brief: 把一段buf类似一个文件读取
 	*/
-	class CReadBufFile :
+	class __BASE_COMMON_API__ CReadBuf :
 		public noncopyable
 	{
 	public:
-		enum ESeekType
-		{
-			eST_Cur,
-			eST_Begin,
-			eST_End
-		};
+		CReadBuf();
+		~CReadBuf();
 
-	public:
-		CReadBufFile(void* pBuf, uint32_t nBufSize)
-		{
-			this->m_szBuf = static_cast<char*>(pBuf);
-			this->m_nBufSize = nBufSize;
-			this->m_nCurPos = 0;
-		}
+		bool		init(const void* pBuf, uint32_t nSize);
 
-		inline bool		seekPos(uint32_t nOffset, ESeekType eType = eST_Cur)
-		{
-			if (eST_Cur == eType)
-				this->m_nCurPos += nOffset;
-			else if (eST_Begin == eType)
-				this->m_nCurPos = nOffset;
-			else if (eST_End == eType)
-				this->m_nCurPos = this->m_nBufSize - nOffset;
-			else
-				return false;
-
-			return true;
-		}
-		inline char*	getBuf() const { return this->m_szBuf + this->m_nCurPos; }
-		inline uint32_t	getCurPos() const { return this->m_nCurPos; }
-		inline uint32_t	getBufSize() const { return this->m_nBufSize; }
-		inline bool		readRawBuf(void* pBuf, uint32_t nSize)
-		{
-			DebugAstEx(pBuf != nullptr, false);
-
-			if (this->m_nCurPos + nSize > this->m_nBufSize)
-				return false;
-
-			memcpy(pBuf, this->m_szBuf + this->m_nCurPos, nSize);
-			this->m_nCurPos += nSize;
-
-			return true;
-		}
+		bool		seek(EBufSeekType eType, int32_t nOffset);
+		const char*	getBuf() const;
+		uint32_t	getCurPos() const;
+		uint32_t	getSize() const;
+		bool		read(void* pBuf, uint32_t nSize);
+		bool		read(std::string& szBuf);
 
 		template<class T>
-		inline bool		readBuf(T* pBuf)
+		inline bool	read(T& val)
 		{
 			if (this->m_nCurPos + sizeof(T) > this->m_nBufSize)
 				return false;
 
-			memcpy(pBuf, this->m_szBuf + this->m_nCurPos, sizeof(T));
+			memcpy(&val, this->m_szBuf + this->m_nCurPos, sizeof(T));
 			this->m_nCurPos += sizeof(T);
 
 			return true;
 		}
 
 	private:
-		char*		m_szBuf;
-		uint32_t	m_nBufSize;
-		uint32_t	m_nCurPos;
+		const char*	m_szBuf;
+		int32_t		m_nBufSize;
+		int32_t		m_nCurPos;
 	};
 
 	/**
 	@brief: 类似一个文件写到一个buf中
 	*/
-	class CWriteBufFile :
+	class __BASE_COMMON_API__ CWriteBuf :
 		public noncopyable
 	{
 	public:
-		CWriteBufFile(uint32_t nSize)
-		{
-			this->m_vecBuf.resize(nSize);
-			this->m_nSize = 0;
-		}
+		CWriteBuf();
+		~CWriteBuf();
 
-		inline const char*	getBuf() const { return &this->m_vecBuf[0]; }
-		inline uint32_t		getBufSize() const { return this->m_nSize; }
-		inline void			writeRawBuf(const void* pBuf, uint32_t nSize)
-		{
-			if (0 == nSize)
-				return;
+		bool		init(uint32_t nBufSize);
 
-			DebugAst(pBuf != nullptr);
-			size_t nRemainSize = this->m_vecBuf.size() - this->m_nSize;
-			DebugAst(nRemainSize >= 0);
-			if (nRemainSize < nSize)
-				this->m_vecBuf.resize(this->m_vecBuf.size() + nSize);
-
-			memcpy(&this->m_vecBuf[0] + this->m_nSize, pBuf, nSize);
-			this->m_nSize += nSize;
-		}
+		void		clear();
+		const char*	getBuf() const;
+		uint32_t	getCurSize() const;
+		bool		seek(EBufSeekType eType, int32_t nOffset);
+		void		write(const void* pBuf, uint32_t nSize);
+		void		write(const std::string& szBuf);
 
 		template<class T>
-		inline void			writeBuf(const T* pBuf)
+		inline void	write(const T& val)
 		{
-			DebugAst(pBuf != nullptr);
-			int32_t nRemainSize = this->m_vecBuf.size() - this->m_nSize;
+			int32_t nRemainSize = this->m_nBufSize - this->m_nCurPos;
 			DebugAst(nRemainSize >= 0);
 			if (nRemainSize < sizeof(T))
-				this->m_vecBuf.resize(this->m_vecBuf.size() + sizeof(T));
+				this->resizeWriteBuf(this->m_nBufSize + sizeof(T) - nRemainSize);
 
-			memcpy(&this->m_vecBuf[0] + this->m_nSize, pBuf, sizeof(T));
-			this->m_nSize += sizeof(T);
+			memcpy(this->m_szBuf + this->m_nCurPos, &val, sizeof(T));
+			this->m_nCurPos += sizeof(T);
 		}
 
 	private:
-		std::vector<char>	m_vecBuf;
-		size_t				m_nSize;
+		bool		resizeWriteBuf(uint32_t nSize);
+
+	private:
+		char*	m_szBuf;
+		int32_t	m_nBufSize;
+		int32_t	m_nCurPos;
 	};
 }

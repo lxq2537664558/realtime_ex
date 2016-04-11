@@ -2,8 +2,7 @@
 #include "base_connection.h"
 #include "base_connection_mgr.h"
 #include "core_connection.h"
-#include "core_app.h"
-#include "core_data.h"
+#include "base_app.h"
 #include "core_common.h"
 
 #include "libBaseCommon/debug_helper.h"
@@ -21,23 +20,23 @@ namespace core
 	{
 	}
 
-	void CBaseConnection::send(uint16_t nMsgType, const void* pData, uint16_t nSize)
+	void CBaseConnection::send(uint16_t nMessageType, const void* pData, uint16_t nSize)
 	{
 		DebugAst(pData != nullptr);
 		DebugAst(this->m_pCoreConnection != nullptr);
 
-		this->m_pCoreConnection->send(nMsgType, pData, nSize);
+		this->m_pCoreConnection->send(nMessageType, pData, nSize);
 	}
 
-	void CBaseConnection::send(uint16_t nMsgType, const void* pData, uint16_t nSize, const void* pExtraBuf, uint16_t nExtraSize)
+	void CBaseConnection::send(uint16_t nMessageType, const void* pData, uint16_t nSize, const void* pExtraBuf, uint16_t nExtraSize)
 	{
 		DebugAst(pData != nullptr);
 		DebugAst(this->m_pCoreConnection != nullptr);
 
 		if (pExtraBuf == nullptr || nExtraSize == 0)
-			return this->send(nMsgType, pData, nSize);
+			return this->send(nMessageType, pData, nSize);
 
-		return this->m_pCoreConnection->send(nMsgType, pData, nSize, pExtraBuf, nExtraSize);
+		return this->m_pCoreConnection->send(nMessageType, pData, nSize, pExtraBuf, nExtraSize);
 	}
 
 	void CBaseConnection::shutdown(bool bForce, const std::string& szMsg)

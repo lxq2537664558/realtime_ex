@@ -1,9 +1,9 @@
 #include "stdafx.h"
 #include "libCoreCommon/proto_system.h"
-#include "libCoreCommon/core_app.h"
+#include "libCoreCommon/base_app.h"
 
 #include "connection_to_master.h"
-#include "service_mgr.h"
+#include "core_app.h"
 
 namespace core
 {
@@ -22,13 +22,15 @@ namespace core
 
 	void CConnectionToMaster::onConnect(const std::string& szContext)
 	{
-		CSMT_SyncServiceInfo netMsg;
-		netMsg.nType = CSMT_SyncServiceInfo::eAdd;
-		base::crt::strncpy(netMsg.szName, _countof(netMsg.szName), CCoreApp::Inst()->getServiceBaseInfo().szName, _TRUNCATE);
-		base::crt::strncpy(netMsg.szHost, _countof(netMsg.szHost), CCoreApp::Inst()->getServiceBaseInfo().szHost, _TRUNCATE);
-		netMsg.nPort = CCoreApp::Inst()->getServiceBaseInfo().nPort;
+		smt_sync_service_base_info netMsg;
+		netMsg.sServiceBaseInfo = CBaseApp::Inst()->getServiceBaseInfo();
 
-		this->send(eMT_SYSTEM, &netMsg, sizeof(netMsg));
+		base::CWriteBuf& writeBuf = CBaseApp::Inst()->getWriteBuf();
+		netMsg.pack(writeBuf);
+		
+		this->send(eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
+
+		CCoreApp::Inst()->getMessageDirectory()->onConnectToMaster();
 	}
 
 	void CConnectionToMaster::onDisconnect()
@@ -43,20 +45,19 @@ namespace core
 		const core::message_header* pHeader = reinterpret_cast<const core::message_header*>(pData);
 		DebugAst(nSize > sizeof(core::message_header));
 
-		if (pHeader->nMsgID == eSMT_SyncServiceInfo)
+		if (pHeader->nMessageID == eSMT_sync_service_base_info)
 		{
-			const CSMT_SyncServiceInfo* pInfo = reinterpret_cast<const CSMT_SyncServiceInfo*>(pData);
-			SServiceBaseInfo sServiceBaseInfo;
-			base::crt::strncpy(sServiceBaseInfo.szName, _countof(sServiceBaseInfo.szName), pInfo->szName, _TRUNCATE);
-			base::crt::strncpy(sServiceBaseInfo.szHost, _countof(sServiceBaseInfo.szHost), pInfo->szHost, _TRUNCATE);
-			sServiceBaseInfo.nPort = pInfo->nPort;
-			sServiceBaseInfo.nSendBufSize = pInfo->nSendBufSize;
-			sServiceBaseInfo.nRecvBufSize = pInfo->nRecvBufSize;
+			smt_sync_service_base_info netMsg;
+			netMsg.unpack(pData, nSize);
 			
-			if (pInfo->nType == CSMT_SyncServiceInfo::eAdd)
-				CServiceMgr::Inst()->addServiceBaseInfo(sServiceBaseInfo);
-			else
-				CServiceMgr::Inst()->delServiceBaseInfo(sServiceBaseInfo.szName);
+			CCoreApp::Inst()->getServiceMgr()->addService(netMsg.sServiceBaseInfo);
+		}
+		else if (pHeader->nMessageID == eSMT_remove_service_base_info)
+		{
+			smt_remove_service_base_info netMsg;
+			netMsg.unpack(pData, nSize);
+
+			CCoreApp::Inst()->getServiceMgr()->delService(netMsg.szName);
 		}
 	}
 }

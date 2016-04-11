@@ -478,6 +478,7 @@ namespace base
 		if (nEnd > _MAX_STACK_SIZE)
 			return 0;
 
+		// 使用这一系列函数必须在编译的时候加上-rdynamic选项
 		char szSymbol[4096] = { 0 };
 		void* pAddress[_MAX_STACK_SIZE] = { nullptr };
 		char** pSymbol = nullptr;
@@ -515,8 +516,9 @@ namespace base
 #ifdef _WIN32
 		return g_pGenWinDump->getStackInfo((uint64_t*)&pAddr, 1, szInfo, nMaxSize);
 #else
+		// 使用这一系列函数必须在编译的时候加上-rdynamic选项
 		char** pSymbol = nullptr;
-		pSymbol = (char**)backtrace_symbols(&pAddr, 1);
+		pSymbol = (char**)backtrace_symbols((void*const*)&pAddr, 1);
 		if (pSymbol != nullptr && pSymbol[0] != nullptr)
 			base::crt::strncpy(szInfo, nMaxSize, pSymbol[0], _TRUNCATE);
 		if (pSymbol != nullptr)

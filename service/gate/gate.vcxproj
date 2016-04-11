@@ -53,7 +53,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>../../engine/inc;../../3rd/tinyxml2/include;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../engine/inc;../../3rd/tinyxml2/include;../../3rd/protobuf/include;</AdditionalIncludeDirectories>
       <StringPooling>true</StringPooling>
     </ClCompile>
     <Link>
@@ -85,19 +85,19 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="connection_from_client.h" />
-    <ClInclude Include="connection_from_service.h" />
-    <ClInclude Include="connection_to_master.h" />
     <ClInclude Include="gate_app.h" />
-    <ClInclude Include="service_mgr.h" />
+    <ClInclude Include="gate_message_dispatcher.h" />
+    <ClInclude Include="gate_session.h" />
+    <ClInclude Include="gate_session_mgr.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="connection_from_client.cpp" />
-    <ClCompile Include="connection_from_service.cpp" />
-    <ClCompile Include="connection_to_master.cpp" />
-    <ClCompile Include="service_mgr.cpp" />
     <ClCompile Include="gate_app.cpp" />
+    <ClCompile Include="gate_message_dispatcher.cpp" />
+    <ClCompile Include="gate_session.cpp" />
+    <ClCompile Include="gate_session_mgr.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>

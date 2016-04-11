@@ -27,16 +27,16 @@
     <ClInclude Include="gate_app.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="service_mgr.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="connection_from_client.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="connection_from_service.h">
+    <ClInclude Include="gate_session.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="connection_to_master.h">
+    <ClInclude Include="gate_session_mgr.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="gate_message_dispatcher.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -47,16 +47,16 @@
     <ClCompile Include="gate_app.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="service_mgr.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="connection_from_client.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="connection_from_service.cpp">
+    <ClCompile Include="gate_session_mgr.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="connection_to_master.cpp">
+    <ClCompile Include="gate_session.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="gate_message_dispatcher.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

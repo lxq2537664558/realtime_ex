@@ -4,7 +4,6 @@
 
 namespace core
 {
-
 	class CConnectionToMaster
 		: public core::CBaseConnection
 	{

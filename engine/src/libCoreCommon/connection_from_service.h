@@ -15,7 +15,7 @@ namespace core
 
 		virtual void		onConnect(const std::string& szContext);
 		virtual void		onDisconnect();
-		virtual void		onDispatch(uint16_t nMsgType, const void* pData, uint16_t nSize);
+		virtual void		onDispatch(uint16_t nMessageType, const void* pData, uint16_t nSize);
 
 		const std::string&	getServiceName() const;
 

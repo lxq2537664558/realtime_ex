@@ -9,7 +9,7 @@ namespace base
 		uint32_t nYear;	// 年	[0, -)
 		uint32_t nMon;	// 月	[1,12]
 		uint32_t nDay;	// 日	[1,31]
-		uint32_t nWDay;	// 周日 [1, 7]
+		uint32_t nWDay;	// 周日	[1, 7]
 		uint32_t nHour;	// 时	[0,23]
 		uint32_t nMin;	// 分	[0,59]
 		uint32_t nSec;	// 秒	[0,59]

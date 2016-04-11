@@ -25,8 +25,8 @@ namespace core
 		~CCoreConnectionMgr();
 
 		bool				init(uint32_t nMaxSocketCount);
-		bool				connect(const std::string& szHost, uint16_t nPort, const std::string& szContext, uint32_t nClassID, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, funRawDataParser pfRawDataParser);
-		bool				listen(const std::string& szHost, uint16_t nPort, const std::string& szContext, uint32_t nClassID, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, funRawDataParser pfRawDataParser);
+		bool				connect(const std::string& szHost, uint16_t nPort, const std::string& szContext, uint32_t nClassID, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, ClientDataCallback clientDataCallback);
+		bool				listen(const std::string& szHost, uint16_t nPort, const std::string& szContext, uint32_t nClassID, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, ClientDataCallback clientDataCallback);
 		int32_t				update(int32_t nTime);
 
 		void				broadcast(uint32_t nClassID, uint16_t nMsgType, const void* pData, uint16_t nSize);
@@ -45,7 +45,7 @@ namespace core
 			std::string			szContext;
 			uint32_t			nClassID;
 			CCoreConnectionMgr*	pCoreConnectionMgr;
-			funRawDataParser	pfRawDataParser;
+			ClientDataCallback	clientDataCallback;
 
 			virtual base::INetConnecterHandler* onAccept( base::INetConnecter* pNetConnecter );
 		};
@@ -60,7 +60,7 @@ namespace core
 			std::string			szContext;
 			uint32_t			nClassID;
 			CCoreConnectionMgr*	pCoreConnectionMgr;
-			funRawDataParser	pfRawDataParser;
+			ClientDataCallback	clientDataCallback;
 
 			virtual uint32_t	onRecv( const char* pData, uint32_t nDataSize ) { return 0; }
 			virtual void		onConnect();
@@ -81,6 +81,6 @@ namespace core
 		void						onConnect( SNetActiveWaitConnecterHandler* pNetActiveWaitConnecterHandler );
 		void						delActiveWaitConnecterHandler( SNetActiveWaitConnecterHandler* pWaitActiveConnecterHandler );
 
-		CCoreConnection*			createCoreConnection(const std::string& szContext, uint32_t nClassID, funRawDataParser pfRawDataParser);
+		CCoreConnection*			createCoreConnection(const std::string& szContext, uint32_t nClassID, ClientDataCallback clientDataCallback);
 	};
 }

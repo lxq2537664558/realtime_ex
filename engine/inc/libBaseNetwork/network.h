@@ -2,8 +2,12 @@
 
 #include "libBaseCommon/base_function.h"
 
+#ifdef _WIN32
 #ifndef INET_ADDRSTRLEN
 #define INET_ADDRSTRLEN 22
+#endif
+#else
+#include <netinet/in.h>
 #endif
 
 struct SNetAddr

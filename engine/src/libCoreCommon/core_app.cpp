@@ -20,12 +20,17 @@
 #include "libBaseCommon/logger.h"
 
 #include "core_app.h"
-#include "core_data.h"
+#include "base_app.h"
 #include "base_object.h"
 #include "ticker_mgr.h"
 #include "monitor.h"
 #include "core_connection_mgr.h"
-#include "message_port.h"
+#include "message_dispatcher.h"
+#include "message_registry.h"
+#include "cluster_invoker.h"
+#include "service_mgr.h"
+
+#include "tinyxml2/tinyxml2.h"
 
 #ifndef _WIN32
 ///< 环境变量
@@ -80,36 +85,29 @@ static bool initProcessInfo(size_t argc, char** argv, const char* title)
 }
 #endif
 
-// 放这里为了调试或者看dump的时候方便
-core::CCoreApp* g_pCoreApp = nullptr;
-
 namespace core
 {
 	CCoreApp::CCoreApp()
-		: m_pRootXML(nullptr)
-		, m_pTickerMgr(nullptr)
+		: m_pTickerMgr(nullptr)
 		, m_pCoreConnectionMgr(nullptr)
-		, m_pMessagePort(nullptr)
+		, m_pServiceMgr(nullptr)
+		, m_pMessageSend(nullptr)
+		, m_pMessageDirectory(nullptr)
 		, m_nRunState(eARS_Start)
 		, m_bMarkQuit(false)
 		, m_nTotalTime(0)
 		, m_nCycleCount(0)
+		, m_bNormalService(true)
 	{
 		memset(&this->m_sServiceBaseInfo, 0, sizeof(this->m_sServiceBaseInfo));
-		CCoreApp::Inst() = this;
 	}
 
 	CCoreApp::~CCoreApp()
 	{
-		
+
 	}
 
-	CCoreApp*& CCoreApp::Inst()
-	{
-		return g_pCoreApp;
-	}
-
-	bool CCoreApp::run(int32_t argc, char** argv, const char* szConfig)
+	bool CCoreApp::run(bool bNormalService, int32_t argc, char** argv, const char* szConfig)
 	{
 		if (nullptr == szConfig)
 		{
@@ -117,11 +115,82 @@ namespace core
 			return false;
 		}
 
-		base::setInstanceName( argv[0] );
+		this->m_szConfig = szConfig;
+
+		base::setInstanceName(argv[0]);
 
 		base::initProcessExceptionHander();
 		base::initThreadExceptionHander();
 
+		if (!this->onInit())
+			return false;
+
+		while (true)
+		{
+			if (!this->onProcess())
+				break;
+		}
+
+		this->onDestroy();
+
+		base::uninitProcessExceptionHander();
+
+		return true;
+	}
+
+	const SServiceBaseInfo& CCoreApp::getServiceBaseInfo() const
+	{
+		return this->m_sServiceBaseInfo;
+	}
+
+	void CCoreApp::registTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
+	{
+		this->m_pTickerMgr->registTicker(pTicker, nStartTime, nIntervalTime, nContext);
+	}
+
+	void CCoreApp::unregistTicker(CTicker* pTicker)
+	{
+		this->m_pTickerMgr->unregistTicker(pTicker);
+	}
+
+	int64_t CCoreApp::getLogicTime() const
+	{
+		return this->m_pTickerMgr->getLogicTime();
+	}
+
+	CCoreConnectionMgr* CCoreApp::getCoreConnectionMgr() const
+	{
+		return this->m_pCoreConnectionMgr;
+	}
+
+	CServiceMgr* CCoreApp::getServiceMgr() const
+	{
+		return this->m_pServiceMgr;
+	}
+
+	CMessageSend* CCoreApp::getMessageSend() const
+	{
+		return this->m_pMessageSend;
+	}
+
+	CMessageDirectory* CCoreApp::getMessageDirectory() const
+	{
+		return this->m_pMessageDirectory;
+	}
+
+	const std::string& CCoreApp::getConfigFileName() const
+	{
+		return this->m_szConfig;
+	}
+
+	base::CWriteBuf& CCoreApp::getWriteBuf() const
+	{
+		const_cast<base::CWriteBuf&>(this->m_writeBuf).clear();
+		return const_cast<base::CWriteBuf&>(this->m_writeBuf);
+	}
+
+	bool CCoreApp::onInit()
+	{
 		// 首先获取可执行文件目录
 		char szBinPath[MAX_PATH] = { 0 };
 		_getcwd(szBinPath, MAX_PATH);
@@ -135,23 +204,27 @@ namespace core
 		char szCurPath[MAX_PATH] = { 0 };
 		_getcwd(szCurPath, MAX_PATH);
 		base::setCurrentWorkPath(szCurPath);
-		
+
+		std::string szConfig = szCurPath;
+		szConfig += "/etc/";
+		szConfig += this->m_szConfig;
+
+		this->m_szConfig = szConfig;
+
 		tinyxml2::XMLDocument* pConfigXML = new tinyxml2::XMLDocument();
-		std::string szConfigName = "etc/";
-		szConfigName += szConfig;
-		if (pConfigXML->LoadFile(szConfigName.c_str()) != tinyxml2::XML_SUCCESS)
+		if (pConfigXML->LoadFile(this->m_szConfig.c_str()) != tinyxml2::XML_SUCCESS)
 		{
 			fprintf(stderr, "load etc config error\n");
 			return false;
 		}
-		this->m_pRootXML = pConfigXML->RootElement();
-		if (this->m_pRootXML == nullptr)
+		tinyxml2::XMLElement* pRootXML = pConfigXML->RootElement();
+		if (pRootXML == nullptr)
 		{
-			fprintf(stderr, "this->m_pRootXML == nullptr\n");
+			fprintf(stderr, "pRootXML == nullptr\n");
 			return false;
 		}
 
-		tinyxml2::XMLElement* pServiceInfoXML = this->m_pRootXML->FirstChildElement("service_info");
+		tinyxml2::XMLElement* pServiceInfoXML = pRootXML->FirstChildElement("service_info");
 		if (pServiceInfoXML == nullptr)
 		{
 			fprintf(stderr, "pServerInfoXML == nullptr\n");
@@ -167,12 +240,12 @@ namespace core
 		}
 
 		int32_t nRes = _chdir(szWorkPath);
-		if( nRes != 0 )
+		if (nRes != 0)
 		{
 			fprintf(stderr, "switch work dir error\n");
 			return false;
 		}
-		
+
 		// 设置服务器时间
 		tinyxml2::XMLElement* pServerTimeXML = pServiceInfoXML->FirstChildElement("time");
 		if (pServerTimeXML != nullptr && pServerTimeXML->IntAttribute("enable") != 0)
@@ -213,7 +286,7 @@ namespace core
 
 		// 退出
 		memset(&sig_action, 0, sizeof(sig_action));
-		sig_action.sa_sigaction = [](int32_t signo, siginfo_t* , void* ptr)->void
+		sig_action.sa_sigaction = [](int32_t signo, siginfo_t*, void* ptr)->void
 		{
 			if (CCoreApp::Inst()->m_nRunState != eARS_Normal)
 				return;
@@ -224,9 +297,10 @@ namespace core
 		sig_action.sa_flags = SA_SIGINFO;
 		sigaction(SIGUSR1, &sig_action, 0);
 
-		char szControlName[MAX_PATH] = { 0 };
-		base::crt::snprintf(szControlName, _countof(szControlName), "%s/%s.pid", szBinPath, base::getInstanceName());
-		FILE* pFile = fopen(szControlName, "w");
+		// 写PID文件
+		char szPID[MAX_PATH] = { 0 };
+		base::crt::snprintf(szPID, _countof(szPID), "%s/%s.pid", szBinPath, base::getInstanceName());
+		FILE* pFile = fopen(szPID, "w");
 		if (nullptr != pFile)
 		{
 			char szPID[10] = { 0 };
@@ -236,59 +310,9 @@ namespace core
 
 			fclose(pFile);
 		}
+
+		this->m_szPID = szPID;
 #endif
-
-		if (!this->onInit())
-			return false;
-
-		while (true)
-		{
-			if (!this->onProcess())
-				break;
-		}
-
-		this->onDestroy();
-
-#ifndef _WIN32
-		remove(szControlName);
-#endif
-		base::uninitProcessExceptionHander();
-		return true;
-	}
-
-	const SServiceBaseInfo& CCoreApp::getServiceBaseInfo() const
-	{
-		return this->m_sServiceBaseInfo;
-	}
-
-	void CCoreApp::registTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
-	{
-		this->m_pTickerMgr->registTicker(pTicker, nStartTime, nIntervalTime, nContext);
-	}
-
-	void CCoreApp::unregistTicker(CTicker* pTicker)
-	{
-		this->m_pTickerMgr->unregistTicker(pTicker);
-	}
-
-	int64_t CCoreApp::getLogicTime() const
-	{
-		return this->m_pTickerMgr->getLogicTime();
-	}
-
-	CBaseConnectionMgr* CCoreApp::getBaseConnectionMgr() const
-	{
-		return this->m_pCoreConnectionMgr->getBaseConnectionMgr();
-	}
-
-	CMessagePort* CCoreApp::getMessagePort() const
-	{
-		return this->m_pMessagePort;
-	}
-
-	bool CCoreApp::onInit()
-	{
-		this->m_nRunState = eARS_Normal;
 
 		if (!base::initLog(true))
 		{
@@ -301,16 +325,15 @@ namespace core
 			return false;
 		}
 
-		if (!initMonitor())
+		if (!this->m_writeBuf.init(UINT16_MAX))
 		{
-			PrintWarning("initMonitor()");
+			PrintWarning("this->m_writeBuf.init(UINT16_MAX)");
 			return false;
 		}
 
-		tinyxml2::XMLElement* pServiceInfoXML = this->m_pRootXML->FirstChildElement("service_info");
-		if (pServiceInfoXML == nullptr)
+		if (!initMonitor())
 		{
-			PrintWarning("pServiceInfoXML == nullptr");
+			PrintWarning("initMonitor()");
 			return false;
 		}
 
@@ -324,68 +347,131 @@ namespace core
 			return false;
 		}
 
-		this->m_pMessagePort = new CMessagePort();
-		if (!this->m_pMessagePort->init())
+		this->m_pMessageSend = new CMessageSend();
+		if (!this->m_pMessageSend->init())
 		{
-			PrintWarning("this->m_pMessagePort->init()");
+			PrintWarning("this->m_pMessageSend->init()");
+			return false;
+		}
+
+		this->m_pMessageDirectory = new CMessageDirectory();
+		if (!this->m_pMessageDirectory->init())
+		{
+			PrintWarning("this->m_pMessageDirectory->init()");
+			return false;
+		}
+
+		if (!CClusterInvoker::Inst()->init())
+		{
+			PrintWarning("CClusterInvoker::Inst()->init()");
+			return false;
+		}
+
+		if (!CMessageRegistry::Inst()->init())
+		{
+			PrintWarning("CMessageRegistry::Inst()->init()");
+			return false;
+		}
+
+		if (!CMessageDispatcher::Inst()->init())
+		{
+			PrintWarning("CMessageDispatcher::Inst()->init()");
 			return false;
 		}
 
 		const char* szServiceType = pServiceInfoXML->Attribute("service_type");
 		const char* szServiceName = pServiceInfoXML->Attribute("service_name");
 		const char* szServiceHost = pServiceInfoXML->Attribute("host");
-		base::crt::strncpy(this->m_sServiceBaseInfo.szType, _countof(this->m_sServiceBaseInfo.szType), szServiceType, _TRUNCATE);
-		base::crt::strncpy(this->m_sServiceBaseInfo.szName, _countof(this->m_sServiceBaseInfo.szName), szServiceName, _TRUNCATE);
-		base::crt::strncpy(this->m_sServiceBaseInfo.szHost, _countof(this->m_sServiceBaseInfo.szHost), szServiceHost, _TRUNCATE);
+		this->m_sServiceBaseInfo.szType = szServiceType;
+		this->m_sServiceBaseInfo.szName = szServiceName;
+		this->m_sServiceBaseInfo.szHost = szServiceHost;
 		this->m_sServiceBaseInfo.nPort = (uint16_t)pServiceInfoXML->IntAttribute("port");
 		this->m_sServiceBaseInfo.nRecvBufSize = pServiceInfoXML->IntAttribute("recv_buf_size");
 		this->m_sServiceBaseInfo.nSendBufSize = pServiceInfoXML->IntAttribute("send_buf_size");
 
+		std::string szMasterHost;
+		uint16_t nMasterPort = 0;
+		tinyxml2::XMLElement* pMasterAddrXML = pRootXML->FirstChildElement("connect_master_addr");
+		if (pMasterAddrXML == nullptr)
+		{
+			szMasterHost = pMasterAddrXML->Attribute("host");
+			nMasterPort = (uint16_t)pMasterAddrXML->IntAttribute("port");
+		}
+		this->m_pServiceMgr = new CServiceMgr();
+		if (!this->m_pServiceMgr->init(this->m_bNormalService, szMasterHost, nMasterPort))
+		{
+			PrintWarning("CServiceMgr::Inst()->init(this->m_bNormalService, szMasterHost, nMasterPort)");
+		}
+
+		SAFE_DELETE(pConfigXML);
+
+		this->m_nRunState = eARS_Normal;
+
 		PrintInfo("CCoreApp::onInit service name: %s", this->m_sServiceBaseInfo.szName);
 
-		return true;
+		return CBaseApp::Inst()->onInit();
 	}
 
 	void CCoreApp::onDestroy()
 	{
+		CBaseApp::Inst()->onDestroy();
+
 		PrintInfo("CCoreApp::onDestroy");
 
-		SAFE_DELETE(this->m_pMessagePort);
 		SAFE_DELETE(this->m_pCoreConnectionMgr);
 		SAFE_DELETE(this->m_pTickerMgr);
-		tinyxml2::XMLDocument* pConfigXML = this->m_pRootXML->GetDocument();
-		SAFE_DELETE(pConfigXML);
+		SAFE_DELETE(this->m_pServiceMgr);
+
+		CMessageDispatcher::Inst()->release();
+		CMessageRegistry::Inst()->release();
+		CClusterInvoker::Inst()->release();
+
 		CBaseObject::unRegistClassInfo();
 
 		uninitMonitor();
 		base::uninitProfiling();
 		base::uninitLog();
+
+#ifndef _WIN32
+		// 删除pid文件
+		remove(this->m_szPID.c_str());
+#endif
 	}
 
 	bool CCoreApp::onProcess()
 	{
 		int64_t nBeginTime = base::getGmtTime();
+
+		CBaseApp::Inst()->onBeforeFrame();
+
 		this->m_pCoreConnectionMgr->update(this->m_pTickerMgr->getNearestTime());
-		
+
 		this->m_pTickerMgr->update();
+
+		CBaseApp::Inst()->onProcess();
+
+		CBaseApp::Inst()->onAfterFrame();
 
 		if (this->m_nRunState == eARS_Quitting && !this->m_bMarkQuit)
 		{
 			this->m_bMarkQuit = true;
+
+			PrintInfo("CCoreApp::onQuit");
+			
 			base::flushLog();
-			this->onQuit();
+			CBaseApp::Inst()->onQuit();
 		}
 		if (this->m_nRunState == eARS_Quit)
 			return false;
 
 		int64_t nEndTime = base::getLocalTime();
-		this->m_nTotalTime = this->m_nTotalTime + (uint32_t)(nEndTime-nBeginTime);
+		this->m_nTotalTime = this->m_nTotalTime + (uint32_t)(nEndTime - nBeginTime);
 
-		if( this->m_nCycleCount%100 == 0 )
+		if (this->m_nCycleCount % 100 == 0)
 		{
 			this->onAnalyze();
 #ifdef __PROFILING_OPEN
-			base::profiling( this->m_nTotalTime );
+			base::profiling(this->m_nTotalTime);
 #endif
 			this->m_nTotalTime = 0;
 		}

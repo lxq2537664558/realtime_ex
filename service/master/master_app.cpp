@@ -18,14 +18,11 @@ CMasterApp::~CMasterApp()
 
 CMasterApp* CMasterApp::Inst()
 {
-	return static_cast<CMasterApp*>(CCoreApp::Inst());
+	return static_cast<CMasterApp*>(CBaseApp::Inst());
 }
 
 bool CMasterApp::onInit()
 {
-	if (!core::CCoreApp::onInit())
-		return false;
-
 	CConnectionFromService::registClassInfo();
 	
 	this->m_pServiceMgr = new CServiceMgr();
@@ -55,7 +52,7 @@ CServiceMgr* CMasterApp::getServiceMgr() const
 int32_t main(int32_t argc, char* argv[])
 {
 	CMasterApp* pMasterApp = new CMasterApp();
-	pMasterApp->run(argc, argv, "master_config.xml");
+	pMasterApp->run(false, argc, argv, "master_config.xml");
 
 	return 0;
 }

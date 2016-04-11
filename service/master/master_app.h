@@ -1,10 +1,10 @@
 #pragma once
-#include "libCoreCommon/core_app.h"
+#include "libCoreCommon/base_app.h"
 
 #include "service_mgr.h"
 
 class CMasterApp
-	: public core::CCoreApp
+	: public core::CBaseApp
 {
 public:
 	CMasterApp();

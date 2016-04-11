@@ -4,7 +4,7 @@
 	<service_info sync_log = "0" work_path = "./conf/" max_socket_count = "100000" service_type = "gate" service_name = "gate-1" host = "0.0.0.0" port = "9000" send_buf_size = "102400" recv_buf_size = "102400"/>
 	<time year = "2013" month = "4" day = "27" hour = "23" minute = "57" second = "0" enable = "0"/>
 	<!--监听客户端地址-->
-	<listen_client_addr host = "0.0.0.0" port = "8000" send_buf_size = "102400" recv_buf_size = "102400"/>
+	<listen_client_addr host = "0.0.0.0" port = "8000" send_buf_size = "200000" recv_buf_size = "200000"/>
 	<!--连接master地址-->
 	<connect_master_addr host = "127.0.0.1" port = "10000"/>
 </root>

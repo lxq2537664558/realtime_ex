@@ -3,8 +3,7 @@
 #include "base_connection_mgr.h"
 #include "core_connection.h"
 #include "base_connection.h"
-#include "core_app.h"
-#include "core_data.h"
+#include "base_app.h"
 
 #include "libBaseCommon/base_time.h"
 #include "libBaseCommon/logger.h"
@@ -25,8 +24,8 @@ namespace core
 
 	void CCoreConnectionMgr::SNetActiveWaitConnecterHandler::onDisconnect()
 	{
-		if (CCoreApp::Inst()->getBaseConnectionMgr()->m_funConnectRefuse != nullptr)
-			CCoreApp::Inst()->getBaseConnectionMgr()->m_funConnectRefuse(szContext);
+		if (CBaseApp::Inst()->getBaseConnectionMgr()->m_funConnectRefuse != nullptr)
+			CBaseApp::Inst()->getBaseConnectionMgr()->m_funConnectRefuse(szContext);
 
 		pCoreConnectionMgr->delActiveWaitConnecterHandler(this);
 	}
@@ -64,8 +63,8 @@ namespace core
 	{
 		DebugAstEx(pNetConnecter != nullptr && pNetAccepterHandler != nullptr, nullptr);
 
-		CCoreConnection* pCoreConnection = this->createCoreConnection(pNetAccepterHandler->szContext, pNetAccepterHandler->nClassID, pNetAccepterHandler->pfRawDataParser);
-		DebugAstEx(nullptr != pCoreConnection, false);
+		CCoreConnection* pCoreConnection = this->createCoreConnection(pNetAccepterHandler->szContext, pNetAccepterHandler->nClassID, pNetAccepterHandler->clientDataCallback);
+		DebugAstEx(nullptr != pCoreConnection, nullptr);
 
 		return pCoreConnection;
 	}
@@ -74,7 +73,7 @@ namespace core
 	{
 		DebugAst(pNetActiveWaitConnecterHandler != nullptr && pNetActiveWaitConnecterHandler->getNetConnecter() != nullptr);
 
-		CCoreConnection* pCoreConnection = this->createCoreConnection(pNetActiveWaitConnecterHandler->szContext, pNetActiveWaitConnecterHandler->nClassID, pNetActiveWaitConnecterHandler->pfRawDataParser);
+		CCoreConnection* pCoreConnection = this->createCoreConnection(pNetActiveWaitConnecterHandler->szContext, pNetActiveWaitConnecterHandler->nClassID, pNetActiveWaitConnecterHandler->clientDataCallback);
 		if (nullptr == pCoreConnection)
 			return;
 
@@ -92,14 +91,14 @@ namespace core
 		SAFE_DELETE(pWaitActiveConnecterHandler);
 	}
 
-	bool CCoreConnectionMgr::connect(const std::string& szHost, uint16_t nPort, const std::string& szContext, uint32_t nClassID, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, funRawDataParser pfRawDataParser)
+	bool CCoreConnectionMgr::connect(const std::string& szHost, uint16_t nPort, const std::string& szContext, uint32_t nClassID, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, ClientDataCallback clientDataCallback)
 	{
 		PrintInfo("start connect host: %s  port: %u context: %s", szHost.c_str(), nPort, szContext.c_str());
 		SNetActiveWaitConnecterHandler* pWaitActiveConnecterHandler = new SNetActiveWaitConnecterHandler();
 		pWaitActiveConnecterHandler->szContext = szContext;
 		pWaitActiveConnecterHandler->nClassID = nClassID;
 		pWaitActiveConnecterHandler->pCoreConnectionMgr = this;
-		pWaitActiveConnecterHandler->pfRawDataParser = pfRawDataParser;
+		pWaitActiveConnecterHandler->clientDataCallback = clientDataCallback;
 
 		SNetAddr sNetAddr;
 		base::crt::strncpy(sNetAddr.szHost, _countof(sNetAddr.szHost), szHost.c_str(), _TRUNCATE);
@@ -114,13 +113,13 @@ namespace core
 		return true;
 	}
 
-	bool CCoreConnectionMgr::listen(const std::string& szHost, uint16_t nPort, const std::string& szContext, uint32_t nClassID, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, funRawDataParser pfRawDataParser)
+	bool CCoreConnectionMgr::listen(const std::string& szHost, uint16_t nPort, const std::string& szContext, uint32_t nClassID, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, ClientDataCallback clientDataCallback)
 	{
 		SNetAccepterHandler* pNetAccepterHandler = new SNetAccepterHandler();
 		pNetAccepterHandler->szContext = szContext;
 		pNetAccepterHandler->nClassID = nClassID;
 		pNetAccepterHandler->pCoreConnectionMgr = this;
-		pNetAccepterHandler->pfRawDataParser = pfRawDataParser;
+		pNetAccepterHandler->clientDataCallback = clientDataCallback;
 
 		SNetAddr sNetAddr;
 		base::crt::strncpy(sNetAddr.szHost, _countof(sNetAddr.szHost), szHost.c_str(), _TRUNCATE);
@@ -202,14 +201,14 @@ namespace core
 		}
 	}
 
-	CCoreConnection* CCoreConnectionMgr::createCoreConnection(const std::string& szContext, uint32_t nClassID, funRawDataParser pfRawDataParser)
+	CCoreConnection* CCoreConnectionMgr::createCoreConnection(const std::string& szContext, uint32_t nClassID, ClientDataCallback clientDataCallback)
 	{
 		CBaseConnection* pBaseConnection = dynamic_cast<CBaseConnection*>(CBaseObject::createObject(nClassID));
 		if (nullptr == pBaseConnection)
 			return nullptr;
 
 		CCoreConnection* pCoreConnection = new CCoreConnection();
-		if (!pCoreConnection->init(pBaseConnection, this->m_nNextCoreConnectionID++, pfRawDataParser))
+		if (!pCoreConnection->init(pBaseConnection, this->m_nNextCoreConnectionID++, clientDataCallback))
 		{
 			SAFE_DELETE(pCoreConnection);
 			CBaseObject::destroyObject(pBaseConnection);
