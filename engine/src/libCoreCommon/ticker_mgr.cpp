@@ -89,19 +89,15 @@ namespace core
 				if (pTicker->m_nNextTickTime <= this->m_nLogicTime)
 				{
 #ifdef __PROFILING_OPEN
-					void* pAddr = pTicker->m_pRawCallback;
-					base::profilingBeginByAddr(pAddr);
+					
 #endif
 					if (pTicker->m_nIntervalTime == 0)
 						this->unregistTicker(pTicker);
 
-					pushTickerMonitor(pAddr);
 					if (pTicker->m_callback != nullptr)
 						pTicker->m_callback(pTicker->m_nContext);
-					popMonitor();
 
 #ifdef __PROFILING_OPEN
-					base::profilingEndByAddr(pAddr);
 #endif
 					// 这个时候pTicker是不能动的，极有可能是个野指针
 					if (pTickerNode->Value.pTicker == nullptr)

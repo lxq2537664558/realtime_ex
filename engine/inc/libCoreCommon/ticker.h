@@ -34,32 +34,6 @@ namespace core
 		int64_t		getRemainTime() const;
 		bool		isRegist() const;
 		uint64_t	getContext() const;
-
-		// C函数回调
-		void		setCallback(void(*callback)(uint64_t))
-		{
-			DebugAst(callback != nullptr);
-			DebugAst(sizeof(this->m_pRawCallback) == sizeof(callback));
-
-			memcpy(&this->m_pRawCallback, &callback, sizeof(callback));
-			this->setCallback(std::bind(callback, std::placeholders::_1));
-		}
-
-		// C++成员函数回调
-		template<typename T>
-		void		setCallback(void(T::*callback)(uint64_t), T* pObject)
-		{
-			DebugAst(callback != nullptr && pObject != nullptr);
-			
-			// 有些情况下callback大小是两个void*大小，因为涉及到this指针的切割
-			void* pAddr[2] = { nullptr };
-			memcpy(pAddr, &callback, sizeof(callback));
-			this->m_pRawCallback = pAddr[0];
-
-			this->setCallback(std::bind(callback, pObject, std::placeholders::_1));
-		}
-
-	private:
 		void		setCallback(const std::function<void(uint64_t)>& callback);
 
 	private:
@@ -68,6 +42,5 @@ namespace core
 		int64_t							m_nNextTickTime;	// 下一次定时器运行时间
 		uint64_t						m_nContext;
 		std::function<void(uint64_t)>	m_callback;
-		void*							m_pRawCallback;
 	};
 }

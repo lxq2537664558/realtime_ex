@@ -90,4 +90,20 @@ namespace core
 		
 		CCoreApp::Inst()->doQuit();
 	}
+
+	void CBaseApp::registLoadBalancePolicy(ILoadBalancePolicy* pLoadBalancePolicy)
+	{
+		CCoreApp::Inst()->registLoadBalancePolicy(pLoadBalancePolicy);
+	}
+
+	ILoadBalancePolicy* CBaseApp::getLoadBalancePolicy(uint32_t nID) const
+	{
+		return CCoreApp::Inst()->getLoadBalancePolicy(nID);
+	}
+
+	const std::vector<std::string>& CBaseApp::getMessageServiceName(uint32_t nMessageID, bool bGate) const
+	{
+		return CCoreApp::Inst()->getMessageServiceName(nMessageID, bGate);
+	}
+
 }

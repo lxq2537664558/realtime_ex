@@ -26,11 +26,11 @@ namespace core
 	{
 		DebugAst(pData != nullptr);
 
-		// 先全局的过一遍，如果有一个返回false就直接跳过这个消息
-		const std::vector<ServiceGlobalCallback>& vecServiceGlobalBeforeCallback = CCoreApp::Inst()->getMessageDirectory()->getServiceGlobalBeforeCallback();
-		for (size_t i = 0; i < vecServiceGlobalBeforeCallback.size(); ++i)
+		// 先前置过滤器过一遍，如果有一个返回false就直接跳过这个消息
+		const std::vector<ServiceGlobalFilter>& vecServiceGlobalBeforeFilter = CCoreApp::Inst()->getMessageDirectory()->getGlobalBeforeFilter();
+		for (size_t i = 0; i < vecServiceGlobalBeforeFilter.size(); ++i)
 		{
-			if (vecServiceGlobalBeforeCallback[i] != nullptr && !vecServiceGlobalBeforeCallback[i](szFromServiceName, nMessageType, pData, nSize))
+			if (vecServiceGlobalBeforeFilter[i] != nullptr && !vecServiceGlobalBeforeFilter[i](szFromServiceName, nMessageType, pData, nSize))
 				return;
 		}
 
@@ -85,11 +85,11 @@ namespace core
 				gateClientCallback(session, nMessageType, pHeader);
 		}
 
-		const std::vector<ServiceGlobalCallback>& vecServiceGlobalAfterCallback = CCoreApp::Inst()->getMessageDirectory()->getServiceGlobalAfterCallback();
-		for (size_t i = 0; i < vecServiceGlobalAfterCallback.size(); ++i)
+		const std::vector<ServiceGlobalFilter>& vecServiceGlobalAfterFilter = CCoreApp::Inst()->getMessageDirectory()->getGlobalAfterFilter();
+		for (size_t i = 0; i < vecServiceGlobalAfterFilter.size(); ++i)
 		{
-			if (vecServiceGlobalAfterCallback[i] != nullptr)
-				vecServiceGlobalAfterCallback[i](szFromServiceName, nMessageType, pData, nSize);
+			if (vecServiceGlobalAfterFilter[i] != nullptr)
+				vecServiceGlobalAfterFilter[i](szFromServiceName, nMessageType, pData, nSize);
 		}
 	}
 }

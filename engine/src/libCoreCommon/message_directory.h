@@ -22,12 +22,12 @@ namespace core
 		ServiceCallback&		getCallback(uint32_t nMessageID);
 		GateClientCallback&		getGateClientCallback(uint32_t nMessageID);
 
-		void					registServiceGlobalBeforeCallback(const ServiceGlobalCallback& callback);
-		void					registServiceGlobalAfterCallback(const ServiceGlobalCallback& callback);
-		const std::vector<ServiceGlobalCallback>&
-								getServiceGlobalBeforeCallback();
-		const std::vector<ServiceGlobalCallback>&
-								getServiceGlobalAfterCallback();
+		void					registGlobalBeforeFilter(const ServiceGlobalFilter& callback);
+		void					registGlobalAfterFilter(const ServiceGlobalFilter& callback);
+		const std::vector<ServiceGlobalFilter>&
+								getGlobalBeforeFilter();
+		const std::vector<ServiceGlobalFilter>&
+								getGlobalAfterFilter();
 
 		void					onConnectToMaster();
 
@@ -42,8 +42,8 @@ namespace core
 		std::map<uint32_t, ServiceCallback>				m_mapServiceCallback;
 		std::map<uint32_t, GateClientCallback>			m_mapGateClientCallback;
 
-		std::vector<ServiceGlobalCallback>				m_vecServiceGlobalBeforeCallback;
-		std::vector<ServiceGlobalCallback>				m_vecServiceGlobalAfterCallback;
+		std::vector<ServiceGlobalFilter>				m_vecServiceGlobalBeforeFilter;
+		std::vector<ServiceGlobalFilter>				m_vecServiceGlobalAfterFilter;
 
 		std::map<uint32_t, std::vector<std::string>>	m_mapServiceMessageDirectory;
 		std::map<uint32_t, std::vector<std::string>>	m_mapGateClientMessageDirectory;

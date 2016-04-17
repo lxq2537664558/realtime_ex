@@ -15,7 +15,7 @@ namespace core
 		: m_nMasterPort(0)
 		, m_bMasterRefuse(false)
 	{
-		this->m_tickCheckConnect.setCallback(&CServiceMgr::onCheckConnect, this);
+		this->m_tickCheckConnect.setCallback(std::bind(&CServiceMgr::onCheckConnect, this, std::placeholders::_1));
 	}
 
 	CServiceMgr::~CServiceMgr()

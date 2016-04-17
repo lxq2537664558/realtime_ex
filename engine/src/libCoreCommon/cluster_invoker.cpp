@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "cluster_invoker.h"
 #include "core_app.h"
-#include "load_balance.h"
+#include "load_balance_policy.h"
 
 #include "libBaseCommon/debug_helper.h"
 
@@ -46,22 +46,22 @@ namespace core
 		return CCoreApp::Inst()->getMessageSend()->call(szServiceName, sRequestMessageInfo);
 	}
 
-	bool CClusterInvoker::invok(uint16_t nMessageFormat, const message_header* pData, CLoadBalance* pLoadBalance, uint64_t nLoadBalanceParam)
+	bool CClusterInvoker::invok(uint16_t nMessageFormat, const message_header* pData, ILoadBalancePolicy* pLoadBalancePolicy, uint64_t nLoadBalanceParam)
 	{
-		DebugAstEx(pData != nullptr && pLoadBalance != nullptr, false);
+		DebugAstEx(pData != nullptr && pLoadBalancePolicy != nullptr, false);
 
-		const std::string szServiceName = pLoadBalance->select(pData->nMessageID, nLoadBalanceParam);
+		const std::string szServiceName = pLoadBalancePolicy->select(pData->nMessageID, false, nLoadBalanceParam);
 		if (szServiceName.empty())
 			return false;
 
 		return this->invok(szServiceName, nMessageFormat, pData);
 	}
 
-	bool CClusterInvoker::invok_r(uint16_t nMessageFormat, const message_header* pData, CLoadBalance* pLoadBalance, uint64_t nLoadBalanceParam, InvokeCallback callback, uint64_t nContext /* = 0 */)
+	bool CClusterInvoker::invok_r(uint16_t nMessageFormat, const message_header* pData, ILoadBalancePolicy* pLoadBalancePolicy, uint64_t nLoadBalanceParam, InvokeCallback callback, uint64_t nContext /* = 0 */)
 	{
-		DebugAstEx(pData != nullptr && callback != nullptr, false);
+		DebugAstEx(pData != nullptr && callback != nullptr && pLoadBalancePolicy != nullptr, false);
 
-		const std::string szServiceName = pLoadBalance->select(pData->nMessageID, nLoadBalanceParam);
+		const std::string szServiceName = pLoadBalancePolicy->select(pData->nMessageID, false, nLoadBalanceParam);
 		if (szServiceName.empty())
 			return false;
 
@@ -113,11 +113,11 @@ namespace core
 		return CCoreApp::Inst()->getMessageSend()->send(sGateSessionInfo.szServiceName, sGateMessageInfo);
 	}
 
-	bool CClusterInvoker::foward(uint64_t nSessionID, uint16_t nMessageFormat, const message_header* pData, CLoadBalance* pLoadBalance, uint64_t nLoadBalanceParam)
+	bool CClusterInvoker::foward(uint64_t nSessionID, uint16_t nMessageFormat, const message_header* pData, ILoadBalancePolicy* pLoadBalancePolicy, uint64_t nLoadBalanceParam)
 	{
-		DebugAstEx(pData != nullptr && pLoadBalance != nullptr, false);
+		DebugAstEx(pData != nullptr && pLoadBalancePolicy != nullptr, false);
 
-		const std::string szServiceName = pLoadBalance->select(pData->nMessageID, nLoadBalanceParam);
+		const std::string szServiceName = pLoadBalancePolicy->select(pData->nMessageID, false, nLoadBalanceParam);
 		if (szServiceName.empty())
 			return false;
 

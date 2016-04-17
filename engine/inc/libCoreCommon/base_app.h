@@ -19,6 +19,7 @@ namespace core
 	};
 
 	class CBaseConnectionMgr;
+	class ILoadBalancePolicy;
 	class CCoreApp;
 	/**
 	@brief: 基础框架类
@@ -36,47 +37,66 @@ namespace core
 		/**
 		@brief: 启动框架
 		*/
-		bool					run(bool bNormalService, int32_t argc, char** argv, const char* szConfig);
+		bool	run(bool bNormalService, int32_t argc, char** argv, const char* szConfig);
 		/**
 		@brief: 获取本服务基本信息
 		*/
-		const SServiceBaseInfo&	getServiceBaseInfo() const;
+		const SServiceBaseInfo&	
+				getServiceBaseInfo() const;
 		/**
 		@brief: 注册定时器
 		nStartTime 第一次触发定时器的时间
 		nIntervalTime 第一次触发定时器后接下来定时器触发的间隔时间，如果该值是0就表示这个定时器只触发一次
 		*/
-		void					registTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
+		void	registTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
 		/**
 		@brief: 反注册定时器
 		*/
-		void					unregistTicker(CTicker* pTicker);
+		void	unregistTicker(CTicker* pTicker);
 		/**
 		@brief: 获取当前逻辑时间
 		*/
-		int64_t					getLogicTime() const;
+		int64_t	getLogicTime() const;
 		/*
 		@brief: 获取连接管理器
 		*/
-		CBaseConnectionMgr*		getBaseConnectionMgr() const;
+		CBaseConnectionMgr*	
+				getBaseConnectionMgr() const;
 		/*
 		@brief: 获取配置文件名
 		*/
-		const std::string&		getConfigFileName() const;
+		const std::string&		
+				getConfigFileName() const;
 		/*
 		@brief: 获取写buf对象，的主要用于消息打包
 		*/
-		base::CWriteBuf&		getWriteBuf() const;
+		base::CWriteBuf&		
+				getWriteBuf() const;
+		/*
+		@brief: 注册负载均衡器
+		*/
+		void	registLoadBalancePolicy(ILoadBalancePolicy* pLoadBalancePolicy);
+		/*
+		@brief: 获取负载均衡器
+		*/
+		ILoadBalancePolicy*	
+				getLoadBalancePolicy(uint32_t nID) const;
+
+		/*
+		@brief: 根据消息ID获取所有支持该消息的服务名字
+		*/
+		const std::vector<std::string>&
+				getMessageServiceName(uint32_t nMessageID, bool bGate) const;
 		
 	protected:
-		virtual bool			onInit() { return true; }
-		virtual void			onProcess() { }
-		virtual void			onDestroy() { }
+		virtual bool	onInit() { return true; }
+		virtual void	onProcess() { }
+		virtual void	onDestroy() { }
 
-		virtual void			onBeforeFrame() { }
-		virtual void			onAfterFrame() { }
+		virtual void	onBeforeFrame() { }
+		virtual void	onAfterFrame() { }
 
-		virtual	void			onQuit() = 0;
-		void					doQuit();
+		virtual	void	onQuit() = 0;
+		void			doQuit();
 	};
 }

@@ -8,6 +8,7 @@
 #include "service_mgr.h"
 #include "message_send.h"
 #include "message_directory.h"
+#include "load_balance_policy_mgr.h"
 
 namespace core
 {
@@ -24,49 +25,70 @@ namespace core
 		/**
 		@brief: 启动框架
 		*/
-		bool					run(bool bNormalService, int32_t argc, char** argv, const char* szConfig);
+		bool	run(bool bNormalService, int32_t argc, char** argv, const char* szConfig);
 		/**
 		@brief: 获取服务基本信息
 		*/
-		const SServiceBaseInfo&	getServiceBaseInfo() const;
+		const SServiceBaseInfo&	
+				getServiceBaseInfo() const;
 		/**
 		@brief: 注册定时器
 		nStartTime 第一次触发定时器的时间
 		nIntervalTime 第一次触发定时器后接下来定时器触发的间隔时间，如果该值是0就表示这个定时器只触发一次
 		*/
-		void					registTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
+		void	registTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
 		/**
 		@brief: 反注册定时器
 		*/
-		void					unregistTicker(CTicker* pTicker);
+		void	unregistTicker(CTicker* pTicker);
 		/**
 		@brief: 获取当前逻辑时间
 		*/
-		int64_t					getLogicTime() const;
+		int64_t	getLogicTime() const;
 		/*
 		@brief: 获取连接管理器
 		*/
-		CCoreConnectionMgr*		getCoreConnectionMgr() const;
+		CCoreConnectionMgr*		
+				getCoreConnectionMgr() const;
 		/*
 		@brief: 获取服务管理器
 		*/
-		CServiceMgr*			getServiceMgr() const;
+		CServiceMgr*			
+				getServiceMgr() const;
 		/*
 		@brief: 获取服务管理器
 		*/
-		CMessageSend*			getMessageSend() const;
+		CMessageSend*			
+				getMessageSend() const;
 		/*
 		@brief: 获取消息字典
 		*/
-		CMessageDirectory*		getMessageDirectory() const;
+		CMessageDirectory*		
+				getMessageDirectory() const;
 		/*
 		@brief: 获取配置文件名
 		*/
-		const std::string&		getConfigFileName() const;
+		const std::string&		
+				getConfigFileName() const;
 		/*
 		@brief: 获取写buf对象，的主要用于消息打包
 		*/
-		base::CWriteBuf&		getWriteBuf() const;
+		base::CWriteBuf&		
+				getWriteBuf() const;
+		/*
+		@brief: 注册负载均衡器
+		*/
+		void	registLoadBalancePolicy(ILoadBalancePolicy* pLoadBalance);
+		/*
+		@brief: 获取负载均衡器
+		*/
+		ILoadBalancePolicy*		
+				getLoadBalancePolicy(uint32_t nID) const;
+		/*
+		@brief: 根据消息ID获取所有支持该消息的服务名字
+		*/
+		const std::vector<std::string>&
+				getMessageServiceName(uint32_t nMessageID, bool bGate) const;
 		/*
 		@brief: 退出框架
 		*/
@@ -86,6 +108,7 @@ namespace core
 		CServiceMgr*			m_pServiceMgr;
 		CMessageSend*			m_pMessageSend;
 		CMessageDirectory*		m_pMessageDirectory;
+		CLoadBalancePolicyMgr*	m_pLoadBalancePolicyMgr;
 		SServiceBaseInfo		m_sServiceBaseInfo;
 		base::CWriteBuf			m_writeBuf;
 		uint32_t				m_nCycleCount;

@@ -93,6 +93,7 @@ namespace core
 		, m_pServiceMgr(nullptr)
 		, m_pMessageSend(nullptr)
 		, m_pMessageDirectory(nullptr)
+		, m_pLoadBalancePolicyMgr(nullptr)
 		, m_nRunState(eARS_Start)
 		, m_bMarkQuit(false)
 		, m_nTotalTime(0)
@@ -361,6 +362,13 @@ namespace core
 			return false;
 		}
 
+		this->m_pLoadBalancePolicyMgr = new CLoadBalancePolicyMgr();
+		if (!this->m_pLoadBalancePolicyMgr->init())
+		{
+			PrintWarning("this->m_pLoadBalancePolicyMgr->init()");
+			return false;
+		}
+
 		if (!CClusterInvoker::Inst()->init())
 		{
 			PrintWarning("CClusterInvoker::Inst()->init()");
@@ -489,4 +497,20 @@ namespace core
 
 		this->m_nRunState = eARS_Quit;
 	}
+
+	void CCoreApp::registLoadBalancePolicy(ILoadBalancePolicy* pLoadBalancePolicy)
+	{
+		this->m_pLoadBalancePolicyMgr->registLoadBalancePolicy(pLoadBalancePolicy);
+	}
+
+	ILoadBalancePolicy* CCoreApp::getLoadBalancePolicy(uint32_t nID) const
+	{
+		return this->m_pLoadBalancePolicyMgr->getLoadBalancePolicy(nID);
+	}
+
+	const std::vector<std::string>& CCoreApp::getMessageServiceName(uint32_t nMessageID, bool bGate) const
+	{
+		return this->m_pMessageDirectory->getMessageServiceName(nMessageID, bGate);
+	}
+
 }

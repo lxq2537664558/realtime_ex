@@ -15,7 +15,7 @@ namespace core
 	CMessageSend::CMessageSend()
 		: m_nNextSessionID(0)
 	{
-		this->m_tickCheckConnect.setCallback(&CMessageSend::onCheckConnect, this);
+		this->m_tickCheckConnect.setCallback(std::bind(&CMessageSend::onCheckConnect, this, std::placeholders::_1));
 	}
 
 	CMessageSend::~CMessageSend()
@@ -116,7 +116,7 @@ namespace core
 				pResponseInfo->callback = sRequestMessageInfo.callback;
 				pResponseInfo->nSessionID = nSessionID;
 				pResponseInfo->szServiceName = szServiceName;
-				pResponseInfo->tickTimeout.setCallback(&CMessageSend::onRequestMessageTimeout, this);
+				pResponseInfo->tickTimeout.setCallback(std::bind(&CMessageSend::onRequestMessageTimeout, this, std::placeholders::_1));
 				CCoreApp::Inst()->registTicker(&pResponseInfo->tickTimeout, _MAX_REQUEST_MESSAGE_TIMEOUT, 0, nSessionID);
 
 				this->m_mapResponseWaitInfo[pResponseInfo->nSessionID] = pResponseInfo;

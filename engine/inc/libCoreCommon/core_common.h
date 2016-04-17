@@ -147,7 +147,7 @@ namespace core
 	typedef std::function<void(const std::string&, uint16_t, const message_header*)>		ServiceCallback;		// 服务消息处理函数类型
 	typedef std::function<void(const SClientSessionInfo&, uint16_t, const message_header*)>	GateClientCallback;		// 经网关服务转发的客户端消息处理函数类型
 	typedef std::function<void(const message_header*)>										ClientCallback;			// 客户端消息处理函数类型
-	typedef std::function<bool(const std::string&, uint16_t, const void*, uint16_t)>		ServiceGlobalCallback;	// 全局的服务消息处理函数类型
+	typedef std::function<bool(const std::string&, uint16_t, const void*, uint16_t)>		ServiceGlobalFilter;	// 全局的消息过滤器类型
 }
 
 struct SServiceBaseInfo
@@ -164,4 +164,9 @@ struct SMessageSyncInfo
 {
 	uint8_t		nGate;
 	uint32_t	nMessageID;
+};
+
+enum ELoadBalancePolicyID
+{
+	eLBPID_Rand = 1,	// 随机类型
 };

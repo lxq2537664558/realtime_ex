@@ -170,24 +170,24 @@ namespace core
 		}
 	}
 
-	void CMessageDirectory::registServiceGlobalBeforeCallback(const ServiceGlobalCallback& callback)
+	void CMessageDirectory::registGlobalBeforeFilter(const ServiceGlobalFilter& callback)
 	{
-		this->m_vecServiceGlobalBeforeCallback.push_back(callback);
+		this->m_vecServiceGlobalBeforeFilter.push_back(callback);
 	}
 
-	void CMessageDirectory::registServiceGlobalAfterCallback(const ServiceGlobalCallback& callback)
+	void CMessageDirectory::registGlobalAfterFilter(const ServiceGlobalFilter& callback)
 	{
-		this->m_vecServiceGlobalAfterCallback.push_back(callback);
+		this->m_vecServiceGlobalAfterFilter.push_back(callback);
 	}
 
-	const std::vector<ServiceGlobalCallback>& CMessageDirectory::getServiceGlobalBeforeCallback()
+	const std::vector<ServiceGlobalFilter>& CMessageDirectory::getGlobalBeforeFilter()
 	{
-		return this->m_vecServiceGlobalBeforeCallback;
+		return this->m_vecServiceGlobalBeforeFilter;
 	}
 
-	const std::vector<ServiceGlobalCallback>& CMessageDirectory::getServiceGlobalAfterCallback()
+	const std::vector<ServiceGlobalFilter>& CMessageDirectory::getGlobalAfterFilter()
 	{
-		return this->m_vecServiceGlobalAfterCallback;
+		return this->m_vecServiceGlobalAfterFilter;
 	}
 
 }

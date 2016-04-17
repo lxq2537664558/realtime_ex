@@ -2,11 +2,10 @@
 #include "libBaseCommon/singleton.h"
 #include "libCoreCommon/core_common.h"
 
-#include <functional>
+#include "load_balance_policy.h"
 
 namespace core
 {
-	class CLoadBalance;
 	/**
 	@brief: 集群服务调用器
 	*/
@@ -30,11 +29,11 @@ namespace core
 		/**
 		@brief: 通过消息ID调用远程服务，需要提供负载均衡器，远程服务不用返回消息
 		*/
-		bool				invok(uint16_t nMessageFormat, const message_header* pData, CLoadBalance* pLoadBalance, uint64_t nLoadBalanceParam);
+		bool				invok(uint16_t nMessageFormat, const message_header* pData, ILoadBalancePolicy* pLoadBalancePolicy, uint64_t nLoadBalanceParam);
 		/**
 		@brief: 通过消息ID调用远程服务，需要提供负载均衡器，需要提供远程服务消息返回的响应函数回调
 		*/
-		bool				invok_r(uint16_t nMessageFormat, const message_header* pData, CLoadBalance* pLoadBalance, uint64_t nLoadBalanceParam, InvokeCallback callback, uint64_t nContext = 0);
+		bool				invok_r(uint16_t nMessageFormat, const message_header* pData, ILoadBalancePolicy* pLoadBalancePolicy, uint64_t nLoadBalanceParam, InvokeCallback callback, uint64_t nContext = 0);
 		/**
 		@brief: 响应远程服务的调用，发送响应消息
 		*/
@@ -61,6 +60,6 @@ namespace core
 		/**
 		@brief: 网关服务转发客户端消息
 		*/
-		bool				foward(uint64_t nSessionID, uint16_t nMessageFormat, const message_header* pData, CLoadBalance* pLoadBalance, uint64_t nLoadBalanceParam);
+		bool				foward(uint64_t nSessionID, uint16_t nMessageFormat, const message_header* pData, ILoadBalancePolicy* pLoadBalancePolicy, uint64_t nLoadBalanceParam);
 	};
 }

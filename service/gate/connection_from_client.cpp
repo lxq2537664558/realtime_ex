@@ -49,10 +49,10 @@ void CConnectionFromClient::doFoward(const core::message_header* pHeader)
 	{
 		// protobuf消息，去掉在消息长度上打上的标记，换做在消息类型上打上标记
 		const_cast<core::message_header*>(pHeader)->nMessageSize = -nMessageSize;
-		core::CClusterInvoker::Inst()->foward(this->getID(), eMT_PROTOBUF, pHeader, nullptr, 0);
+		core::CClusterInvoker::Inst()->foward(this->getID(), eMT_PROTOBUF, pHeader, CGateApp::Inst()->getLoadBalancePolicy(eLBPID_Rand), 0);
 	}
 	else
 	{
-		core::CClusterInvoker::Inst()->foward(this->getID(), eMT_NATIVE, pHeader, nullptr, 0);
+		core::CClusterInvoker::Inst()->foward(this->getID(), eMT_NATIVE, pHeader, CGateApp::Inst()->getLoadBalancePolicy(eLBPID_Rand), 0);
 	}
 }

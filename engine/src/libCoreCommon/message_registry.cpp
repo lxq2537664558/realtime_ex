@@ -29,13 +29,13 @@ namespace core
 		CCoreApp::Inst()->getMessageDirectory()->registCallback(nMessageID, callback);
 	}
 
-	void CMessageRegistry::registGlobalBeforeCallback(ServiceGlobalCallback callback)
+	void CMessageRegistry::registGlobalBeforeFilter(ServiceGlobalFilter callback)
 	{
-		CCoreApp::Inst()->getMessageDirectory()->registServiceGlobalBeforeCallback(callback);
+		CCoreApp::Inst()->getMessageDirectory()->registGlobalBeforeFilter(callback);
 	}
 
-	void CMessageRegistry::registGlobalAfterCallback(ServiceGlobalCallback callback)
+	void CMessageRegistry::registGlobalAfterFilter(ServiceGlobalFilter callback)
 	{
-		CCoreApp::Inst()->getMessageDirectory()->registServiceGlobalBeforeCallback(callback);
+		CCoreApp::Inst()->getMessageDirectory()->registGlobalAfterFilter(callback);
 	}
 }

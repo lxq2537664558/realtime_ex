@@ -28,12 +28,12 @@ namespace core
 		*/
 		void registCallback(uint32_t nMessageID, GateClientCallback callback);
 		/**
-		@brief: 注册服务之间的全局消息回调，在调用特定的消息回调前调用
+		@brief: 注册服务之间的前置过滤器
 		*/
-		void registGlobalBeforeCallback(ServiceGlobalCallback callback);
+		void registGlobalBeforeFilter(ServiceGlobalFilter callback);
 		/**
-		@brief: 注册服务之间的全局消息回调，在调用特定的消息回调后调用
+		@brief: 注册服务之间的后置过滤器
 		*/
-		void registGlobalAfterCallback(ServiceGlobalCallback callback);
+		void registGlobalAfterFilter(ServiceGlobalFilter callback);
 	};
 }

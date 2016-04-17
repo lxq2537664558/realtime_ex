@@ -16,7 +16,7 @@
     <ClInclude Include="..\..\inc\libCoreCommon\base_app.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\base_object.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\core_common.h" />
-    <ClInclude Include="..\..\inc\libCoreCommon\load_balance.h" />
+    <ClInclude Include="..\..\inc\libCoreCommon\load_balance_policy.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\message_dispatcher.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\message_registry.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\protobuf_helper.h" />
@@ -31,6 +31,7 @@
     <ClInclude Include="core_connection_mgr.h" />
     <ClInclude Include="common_base.h" />
     <ClInclude Include="fix_memory_pool.h" />
+    <ClInclude Include="load_balance_policy_mgr.h" />
     <ClInclude Include="message_directory.h" />
     <ClInclude Include="message_send.h" />
     <ClInclude Include="monitor.h" />
@@ -50,6 +51,8 @@
     <ClCompile Include="core_connection.cpp" />
     <ClCompile Include="core_connection_mgr.cpp" />
     <ClCompile Include="fix_memory_pool.cpp" />
+    <ClCompile Include="load_balance_policy.cpp" />
+    <ClCompile Include="load_balance_policy_mgr.cpp" />
     <ClCompile Include="message_directory.cpp" />
     <ClCompile Include="message_dispatcher.cpp" />
     <ClCompile Include="message_registry.cpp" />

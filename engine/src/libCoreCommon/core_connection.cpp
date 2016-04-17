@@ -136,7 +136,7 @@ namespace core
 		CBaseApp::Inst()->getBaseConnectionMgr()->onConnect(this->m_pBaseConnection);
 
 		this->m_pHeartbeat = new CTicker();
-		this->m_pHeartbeat->setCallback(&CCoreConnection::onHeartbeat, this);
+		this->m_pHeartbeat->setCallback(std::bind(&CCoreConnection::onHeartbeat, this, std::placeholders::_1));
 
 		CBaseApp::Inst()->registTicker(this->m_pHeartbeat, CHECK_TIME, CHECK_TIME, 0);
 	}

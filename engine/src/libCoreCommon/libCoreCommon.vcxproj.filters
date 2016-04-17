@@ -78,9 +78,6 @@
     <ClInclude Include="..\..\inc\libCoreCommon\core_common.h">
       <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreCommon\load_balance.h">
-      <Filter>inc</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\inc\libCoreCommon\message_dispatcher.h">
       <Filter>inc</Filter>
     </ClInclude>
@@ -92,6 +89,12 @@
     </ClInclude>
     <ClInclude Include="..\..\inc\libCoreCommon\protobuf_helper.h">
       <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreCommon\load_balance_policy.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="load_balance_policy_mgr.h">
+      <Filter>src\service</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -159,6 +162,12 @@
       <Filter>src\core</Filter>
     </ClCompile>
     <ClCompile Include="message_directory.cpp">
+      <Filter>src\service</Filter>
+    </ClCompile>
+    <ClCompile Include="load_balance_policy_mgr.cpp">
+      <Filter>src\service</Filter>
+    </ClCompile>
+    <ClCompile Include="load_balance_policy.cpp">
       <Filter>src\service</Filter>
     </ClCompile>
   </ItemGroup>
