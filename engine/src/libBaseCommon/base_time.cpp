@@ -211,6 +211,57 @@ namespace base
 		return ((int64_t)tt) * 1000;
 	}
 
+	int64_t getGmtTimeByBuf(char* szBuf)
+	{
+		if (szBuf == nullptr)
+			return -1;
+
+		std::string szTime = szBuf;
+		if (std::string::npos != szTime.find_first_not_of("0123456789-: "))
+			return -1;
+
+		uint32_t nCount = 0;
+		std::string::size_type nPos = std::string::npos;
+		while (std::string::npos != (nPos = szTime.find_first_of("-: ")))
+		{
+			++nCount;
+			if (nCount >= 1 && nCount <= 2)
+			{
+				if ('-' != szTime[nPos])
+					return -1;
+			}
+			else if (3 == nCount)
+			{
+				if (' ' != szTime[nPos])
+					return -1;
+			}
+			else if (nCount >= 4)
+			{
+				if (':' != szTime[nPos])
+					return -1;
+			}
+			szTime.erase(0, nPos + 1);
+		}
+
+		if (nCount != 5)
+			return -1;
+
+		STime sTime;
+		if (-1 == sscanf_s(szBuf, "%d-%d-%d %d:%d:%d", &sTime.nYear, &sTime.nMon, &sTime.nDay, &sTime.nHour, &sTime.nMin, &sTime.nSec))
+			return -1;
+
+		return getGmtTimeByTM(sTime);
+	}
+
+	int64_t getLocalTimeByBuf(char* szBuf)
+	{
+		int64_t nTime = getGmtTimeByBuf(szBuf);
+		if (nTime < 0)
+			return nTime;
+
+		return gmt2LocalTime(nTime);
+	}
+
 	int64_t gmt2LocalTime(int64_t nTime)
 	{
 		// LocalTime = GmtTime - ZoneTime

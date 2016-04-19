@@ -28,6 +28,10 @@ namespace base
 	*/
 	__BASE_COMMON_API__ int64_t	getGmtTimeByTM(const STime& sTime);
 	/**
+	@brief: 根据字符串格式的时间获取数值时间(字符串格式：2010-01-01 01:01:01)，单位毫秒
+	*/
+	__BASE_COMMON_API__ int64_t	getGmtTimeByBuf(char* szBuf);
+	/**
 	@brief: 获取本地时间，单位毫秒
 	*/
 	__BASE_COMMON_API__ int64_t	getLocalTime();
@@ -39,6 +43,10 @@ namespace base
 	@brief: 根据格式化的本地时间获取数值时间，单位毫秒
 	*/
 	__BASE_COMMON_API__ int64_t	getLocalTimeByTM(const STime& sTime);
+	/**
+	@brief: 根据字符串格式的时间获取数值时间(字符串格式：2010-01-01 01:01:01)，单位毫秒
+	*/
+	__BASE_COMMON_API__ int64_t	getLocalTimeByBuf(char* szBuf);
 	/**
 	@brief: 获取当前时区，单位毫秒
 	*/
@@ -52,11 +60,11 @@ namespace base
 	*/
 	__BASE_COMMON_API__ int64_t	local2GmtTime(int64_t nTime);
 	/**
-	@brief: 格式化本地时间
+	@brief: 格式化本地时间(字符串格式：2010-01-01 01:01:01)
 	*/
 	__BASE_COMMON_API__ size_t	formatLocalTime(char* szBuf, size_t nBufSize, int64_t nTime = 0);
 	/**
-	@brief: 格式化格林威治时间
+	@brief: 格式化格林威治时间(字符串格式：2010-01-01 01:01:01)
 	*/
 	__BASE_COMMON_API__ size_t	formatGmtTime(char* szBuf, size_t nBufSize, int64_t nTime = 0);
 	/**
