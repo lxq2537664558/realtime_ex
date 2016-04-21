@@ -25,8 +25,8 @@ namespace core
 		~CTickerMgr();
 
 		void				insertTicker(TickerNode_t* pTickerNode);
-		void				registTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
-		void				unregistTicker(CTicker* pTicker);
+		void				registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
+		void				unregisterTicker(CTicker* pTicker);
 		void				update();
 		inline uint64_t		getLogicTime() const { return this->m_nLogicTime; }
 		uint32_t			getNearestTime() const;

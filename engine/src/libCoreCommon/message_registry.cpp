@@ -19,23 +19,23 @@ namespace core
 		return true;
 	}
 
-	void CMessageRegistry::registCallback(uint32_t nMessageID, ServiceCallback callback)
+	void CMessageRegistry::registerCallback(uint32_t nMessageID, ServiceCallback callback)
 	{
-		CCoreApp::Inst()->getMessageDirectory()->registCallback(nMessageID, callback);
+		CCoreApp::Inst()->getMessageDirectory()->registerCallback(nMessageID, callback);
 	}
 
-	void CMessageRegistry::registCallback(uint32_t nMessageID, GateClientCallback callback)
+	void CMessageRegistry::registerCallback(uint32_t nMessageID, GateClientCallback callback)
 	{
-		CCoreApp::Inst()->getMessageDirectory()->registCallback(nMessageID, callback);
+		CCoreApp::Inst()->getMessageDirectory()->registerCallback(nMessageID, callback);
 	}
 
-	void CMessageRegistry::registGlobalBeforeFilter(ServiceGlobalFilter callback)
+	void CMessageRegistry::addGlobalBeforeFilter(ServiceGlobalFilter callback)
 	{
-		CCoreApp::Inst()->getMessageDirectory()->registGlobalBeforeFilter(callback);
+		CCoreApp::Inst()->getMessageDirectory()->addGlobalBeforeFilter(callback);
 	}
 
-	void CMessageRegistry::registGlobalAfterFilter(ServiceGlobalFilter callback)
+	void CMessageRegistry::addGlobalAfterFilter(ServiceGlobalFilter callback)
 	{
-		CCoreApp::Inst()->getMessageDirectory()->registGlobalAfterFilter(callback);
+		CCoreApp::Inst()->getMessageDirectory()->addGlobalAfterFilter(callback);
 	}
 }

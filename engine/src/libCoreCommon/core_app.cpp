@@ -144,14 +144,14 @@ namespace core
 		return this->m_sServiceBaseInfo;
 	}
 
-	void CCoreApp::registTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
+	void CCoreApp::registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
 	{
-		this->m_pTickerMgr->registTicker(pTicker, nStartTime, nIntervalTime, nContext);
+		this->m_pTickerMgr->registerTicker(pTicker, nStartTime, nIntervalTime, nContext);
 	}
 
-	void CCoreApp::unregistTicker(CTicker* pTicker)
+	void CCoreApp::unregisterTicker(CTicker* pTicker)
 	{
-		this->m_pTickerMgr->unregistTicker(pTicker);
+		this->m_pTickerMgr->unregisterTicker(pTicker);
 	}
 
 	int64_t CCoreApp::getLogicTime() const

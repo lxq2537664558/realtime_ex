@@ -25,7 +25,7 @@ namespace core
 
 	bool CTransport::init()
 	{
-		CCoreApp::Inst()->registTicker(&this->m_tickCheckConnect, 5 * 1000, 5 * 1000, 0);
+		CCoreApp::Inst()->registerTicker(&this->m_tickCheckConnect, 5 * 1000, 5 * 1000, 0);
 
 		return true;
 	}
@@ -117,7 +117,7 @@ namespace core
 				pResponseInfo->nSessionID = nSessionID;
 				pResponseInfo->szServiceName = szServiceName;
 				pResponseInfo->tickTimeout.setCallback(std::bind(&CTransport::onRequestMessageTimeout, this, std::placeholders::_1));
-				CCoreApp::Inst()->registTicker(&pResponseInfo->tickTimeout, _MAX_REQUEST_MESSAGE_TIMEOUT, 0, nSessionID);
+				CCoreApp::Inst()->registerTicker(&pResponseInfo->tickTimeout, _MAX_REQUEST_MESSAGE_TIMEOUT, 0, nSessionID);
 
 				this->m_mapResponseWaitInfo[pResponseInfo->nSessionID] = pResponseInfo;
 			}

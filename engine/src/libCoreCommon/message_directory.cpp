@@ -21,14 +21,14 @@ namespace core
 		return true;
 	}
 
-	void CMessageDirectory::registCallback(uint32_t nMessageID, const ServiceCallback& callback)
+	void CMessageDirectory::registerCallback(uint32_t nMessageID, const ServiceCallback& callback)
 	{
 		this->m_mapServiceCallback[nMessageID] = callback;
 
 		this->sendMessageInfo(false, nMessageID, false);
 	}
 
-	void CMessageDirectory::registCallback(uint32_t nMessageID, const GateClientCallback& callback)
+	void CMessageDirectory::registerCallback(uint32_t nMessageID, const GateClientCallback& callback)
 	{
 		this->m_mapGateClientCallback[nMessageID] = callback;
 
@@ -170,12 +170,12 @@ namespace core
 		}
 	}
 
-	void CMessageDirectory::registGlobalBeforeFilter(const ServiceGlobalFilter& callback)
+	void CMessageDirectory::addGlobalBeforeFilter(const ServiceGlobalFilter& callback)
 	{
 		this->m_vecServiceGlobalBeforeFilter.push_back(callback);
 	}
 
-	void CMessageDirectory::registGlobalAfterFilter(const ServiceGlobalFilter& callback)
+	void CMessageDirectory::addGlobalAfterFilter(const ServiceGlobalFilter& callback)
 	{
 		this->m_vecServiceGlobalAfterFilter.push_back(callback);
 	}

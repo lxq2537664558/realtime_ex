@@ -54,14 +54,14 @@ namespace core
 		return CCoreApp::Inst()->getServiceBaseInfo();
 	}
 
-	void CBaseApp::registTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
+	void CBaseApp::registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
 	{
-		CCoreApp::Inst()->registTicker(pTicker, nStartTime, nIntervalTime, nContext);
+		CCoreApp::Inst()->registerTicker(pTicker, nStartTime, nIntervalTime, nContext);
 	}
 
-	void CBaseApp::unregistTicker(CTicker* pTicker)
+	void CBaseApp::unregisterTicker(CTicker* pTicker)
 	{
-		CCoreApp::Inst()->unregistTicker(pTicker);
+		CCoreApp::Inst()->unregisterTicker(pTicker);
 	}
 
 	int64_t CBaseApp::getLogicTime() const

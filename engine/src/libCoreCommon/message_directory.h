@@ -17,13 +17,13 @@ namespace core
 
 		bool init();
 
-		void					registCallback(uint32_t nMessageID, const ServiceCallback& callback);
-		void					registCallback(uint32_t nMessageID, const GateClientCallback& callback);
+		void					registerCallback(uint32_t nMessageID, const ServiceCallback& callback);
+		void					registerCallback(uint32_t nMessageID, const GateClientCallback& callback);
 		ServiceCallback&		getCallback(uint32_t nMessageID);
 		GateClientCallback&		getGateClientCallback(uint32_t nMessageID);
 
-		void					registGlobalBeforeFilter(const ServiceGlobalFilter& callback);
-		void					registGlobalAfterFilter(const ServiceGlobalFilter& callback);
+		void					addGlobalBeforeFilter(const ServiceGlobalFilter& callback);
+		void					addGlobalAfterFilter(const ServiceGlobalFilter& callback);
 		const std::vector<ServiceGlobalFilter>&
 								getGlobalBeforeFilter();
 		const std::vector<ServiceGlobalFilter>&

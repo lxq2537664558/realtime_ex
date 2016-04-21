@@ -26,7 +26,7 @@ namespace core
 	bool CServiceMgr::init(bool bNormalService, const std::string& szMasterHost, uint16_t nMasterPort)
 	{
 		CBaseApp::Inst()->getBaseConnectionMgr()->setConnectRefuseCallback(std::bind(&CServiceMgr::onConnectRefuse, this, std::placeholders::_1));
-		CBaseApp::Inst()->registTicker(&this->m_tickCheckConnect, 5 * 1000, 5 * 1000, 0);
+		CBaseApp::Inst()->registerTicker(&this->m_tickCheckConnect, 5 * 1000, 5 * 1000, 0);
 
 		const SServiceBaseInfo& sServiceBaseInfo = CBaseApp::Inst()->getServiceBaseInfo();
 		if (bNormalService && sServiceBaseInfo.nPort != 0 && sServiceBaseInfo.szHost[0] != 0)

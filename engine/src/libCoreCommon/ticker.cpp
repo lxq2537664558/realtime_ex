@@ -15,7 +15,7 @@ namespace core
 
 	CTicker::~CTicker()
 	{
-		CBaseApp::Inst()->unregistTicker(this);
+		CBaseApp::Inst()->unregisterTicker(this);
 	}
 
 	int64_t CTicker::getIntervalTime() const
@@ -37,7 +37,7 @@ namespace core
 		return nRemainTime < 0 ? 0 : nRemainTime;
 	}
 
-	bool CTicker::isRegist() const
+	bool CTicker::isRegister() const
 	{
 		return this->m_pTickerNode != nullptr;
 	}

@@ -28,10 +28,10 @@ namespace core
 		return (uint32_t)nDeltaTime;
 	}
 
-	void CTickerMgr::registTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
+	void CTickerMgr::registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
 	{
 		DebugAst(pTicker != nullptr);
-		DebugAst(!pTicker->isRegist());
+		DebugAst(!pTicker->isRegister());
 		DebugAst(pTicker->m_callback != nullptr);
 
 		TickerNode_t* pTickerNode = new TickerNode_t();
@@ -44,10 +44,10 @@ namespace core
 		this->insertTicker(pTickerNode);
 	}
 
-	void CTickerMgr::unregistTicker(CTicker* pTicker)
+	void CTickerMgr::unregisterTicker(CTicker* pTicker)
 	{
 		DebugAst(pTicker != nullptr);
-		if (!pTicker->isRegist())
+		if (!pTicker->isRegister())
 			return;
 
 		if (pTicker->m_pTickerNode->isHang())
@@ -92,7 +92,7 @@ namespace core
 					
 #endif
 					if (pTicker->m_nIntervalTime == 0)
-						this->unregistTicker(pTicker);
+						this->unregisterTicker(pTicker);
 
 					if (pTicker->m_callback != nullptr)
 						pTicker->m_callback(pTicker->m_nContext);
