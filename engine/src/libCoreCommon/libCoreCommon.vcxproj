@@ -32,7 +32,6 @@
     <ClInclude Include="fix_memory_pool.h" />
     <ClInclude Include="load_balance_policy_mgr.h" />
     <ClInclude Include="message_directory.h" />
-    <ClInclude Include="protobuf_helper.h" />
     <ClInclude Include="transport.h" />
     <ClInclude Include="monitor.h" />
     <ClInclude Include="service_mgr.h" />
@@ -57,7 +56,6 @@
     <ClCompile Include="message_dispatcher.cpp" />
     <ClCompile Include="message_registry.cpp" />
     <ClCompile Include="transport.cpp" />
-    <ClCompile Include="protobuf_helper.cpp" />
     <ClCompile Include="cluster_invoker.cpp" />
     <ClCompile Include="monitor.cpp" />
     <ClCompile Include="service_mgr.cpp" />

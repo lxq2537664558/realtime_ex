@@ -32,7 +32,7 @@ namespace core
 			CCoreApp::Inst()->getServiceMgr()->delConnectionFromService(this->m_szServiceName);
 	}
 
-	void CConnectionFromService::onDispatch(uint16_t nMessageType, const void* pData, uint16_t nSize)
+	void CConnectionFromService::onDispatch(uint32_t nMessageType, const void* pData, uint16_t nSize)
 	{
 		if (nMessageType == eMT_SYSTEM)
 		{

@@ -508,9 +508,9 @@ namespace core
 		return this->m_pLoadBalancePolicyMgr->getLoadBalancePolicy(nID);
 	}
 
-	const std::vector<std::string>& CCoreApp::getServiceName(const std::string& szMessageName, bool bGate) const
+	const std::vector<std::string>& CCoreApp::getServiceName(const std::string& szMessageName) const
 	{
-		return this->m_pMessageDirectory->getServiceName(szMessageName, bGate);
+		return this->m_pMessageDirectory->getOtherServiceName(szMessageName);
 	}
 
 }

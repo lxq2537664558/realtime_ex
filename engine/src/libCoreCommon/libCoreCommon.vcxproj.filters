@@ -93,9 +93,6 @@
     <ClInclude Include="transport.h">
       <Filter>src\service</Filter>
     </ClInclude>
-    <ClInclude Include="protobuf_helper.h">
-      <Filter>src\service</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="base_connection.cpp">
@@ -138,9 +135,6 @@
       <Filter>src\service</Filter>
     </ClCompile>
     <ClCompile Include="service_mgr.cpp">
-      <Filter>src\service</Filter>
-    </ClCompile>
-    <ClCompile Include="protobuf_helper.cpp">
       <Filter>src\service</Filter>
     </ClCompile>
     <ClCompile Include="cluster_invoker.cpp">

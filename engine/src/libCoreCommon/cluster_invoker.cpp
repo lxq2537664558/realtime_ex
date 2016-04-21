@@ -48,7 +48,7 @@ namespace core
 	{
 		DebugAstEx(pMessage != nullptr && pLoadBalancePolicy != nullptr, false);
 
-		const std::string szServiceName = pLoadBalancePolicy->select(pMessage->GetTypeName(), false, nLoadBalanceParam);
+		const std::string szServiceName = pLoadBalancePolicy->select(pMessage->GetTypeName(), nLoadBalanceParam);
 		if (szServiceName.empty())
 			return false;
 
@@ -59,7 +59,7 @@ namespace core
 	{
 		DebugAstEx(pMessage != nullptr && callback != nullptr && pLoadBalancePolicy != nullptr, false);
 
-		const std::string szServiceName = pLoadBalancePolicy->select(pMessage->GetTypeName(), false, nLoadBalanceParam);
+		const std::string szServiceName = pLoadBalancePolicy->select(pMessage->GetTypeName(), nLoadBalanceParam);
 		if (szServiceName.empty())
 			return false;
 
@@ -112,7 +112,7 @@ namespace core
 	{
 		DebugAstEx(pMessage != nullptr && pLoadBalancePolicy != nullptr, false);
 
-		const std::string szServiceName = pLoadBalancePolicy->select(pMessage->GetTypeName(), false, nLoadBalanceParam);
+		const std::string szServiceName = pLoadBalancePolicy->select(pMessage->GetTypeName(), nLoadBalanceParam);
 		if (szServiceName.empty())
 			return false;
 

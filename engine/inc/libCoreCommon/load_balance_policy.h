@@ -9,7 +9,7 @@ namespace core
 		virtual ~ILoadBalancePolicy() { }
 		
 		virtual uint32_t	getID() const = 0;
-		virtual std::string	select(const std::string& szMessageName, bool bGate, uint64_t nContext) = 0;
+		virtual std::string	select(const std::string& szMessageName, uint64_t nContext) = 0;
 	};
 
 	class CLoadBalanceRandPolicy :
@@ -20,6 +20,6 @@ namespace core
 		virtual ~CLoadBalanceRandPolicy();
 
 		virtual uint32_t	getID() const;
-		virtual std::string select(const std::string& szMessageName, bool bGate, uint64_t nContext);
+		virtual std::string select(const std::string& szMessageName, uint64_t nContext);
 	};
 }

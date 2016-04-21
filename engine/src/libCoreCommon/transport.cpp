@@ -4,7 +4,6 @@
 #include "message_dispatcher.h"
 #include "connection_to_service.h"
 #include "connection_from_service.h"
-#include "protobuf_helper.h"
 
 #include "libBaseCommon/defer.h"
 

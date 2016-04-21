@@ -51,7 +51,7 @@ namespace core
 		return true;
 	}
 
-	void CMessageDispatcher::dispatch(const std::string& szFromServiceName, uint16_t nMessageType, const void* pData, uint16_t nSize)
+	void CMessageDispatcher::dispatch(const std::string& szFromServiceName, uint32_t nMessageType, const void* pData, uint16_t nSize)
 	{
 		DebugAst(pData != nullptr);
 

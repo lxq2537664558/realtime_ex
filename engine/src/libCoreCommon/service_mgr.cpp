@@ -144,88 +144,57 @@ namespace core
 
 	const SServiceBaseInfo* CServiceMgr::getServiceBaseInfo(const std::string& szName) const
 	{
-		auto iter = this->m_mapServiceInfo.find(szName);
-		if (iter == this->m_mapServiceInfo.end())
+		auto iter = this->m_mapServiceBaseInfo.find(szName);
+		if (iter == this->m_mapServiceBaseInfo.end())
 			return nullptr;
 
-		return &iter->second.sServiceBaseInfo;
+		return &iter->second;
 	}
 
 	void CServiceMgr::getServiceName(const std::string& szType, std::vector<std::string>& vecServiceName) const
 	{
-		for (auto iter : this->m_mapServiceInfo)
+		for (auto iter : this->m_mapServiceBaseInfo)
 		{
-			if (iter.second.sServiceBaseInfo.szType == szType)
-				vecServiceName.push_back(iter.second.sServiceBaseInfo.szName);
+			if (iter.second.szType == szType)
+				vecServiceName.push_back(iter.second.szName);
 		}
 	}
 
 	void CServiceMgr::addService(const SServiceBaseInfo& sServiceBaseInfo)
 	{
 		DebugAst(!sServiceBaseInfo.szName.empty());
-		DebugAst(this->m_mapServiceInfo.find(sServiceBaseInfo.szName) == this->m_mapServiceInfo.end());
+		DebugAst(this->m_mapServiceBaseInfo.find(sServiceBaseInfo.szName) == this->m_mapServiceBaseInfo.end());
 
 		PrintInfo("add service service_name: %s", sServiceBaseInfo.szName.c_str());
 
-		SServiceInfo sServiceInfo;
-		sServiceInfo.sServiceBaseInfo = sServiceBaseInfo;
-		this->m_mapServiceInfo[sServiceBaseInfo.szName] = sServiceInfo;
+		this->m_mapServiceBaseInfo[sServiceBaseInfo.szName] = sServiceBaseInfo;
 	}
 
 	void CServiceMgr::addServiceMessageInfo(const std::string& szName, const std::vector<SMessageSyncInfo>& vecMessageSyncInfo, bool bAdd)
 	{
-		auto iter = this->m_mapServiceInfo.find(szName);
-		if (iter == this->m_mapServiceInfo.end())
+		auto iter = this->m_mapServiceBaseInfo.find(szName);
+		if (iter == this->m_mapServiceBaseInfo.end())
 			return;
 
-		SServiceInfo& sServiceInfo = iter->second;
+		// 覆盖型的，先清除之前的
 		if (!bAdd)
-		{
-			for (size_t i = 0; i < sServiceInfo.vecServiceMessageID.size(); i++)
-			{
-				CCoreApp::Inst()->getMessageDirectory()->delMessage(szName, sServiceInfo.vecServiceMessageID[i], false);
-			}
-			for (size_t i = 0; i < sServiceInfo.vecGateServiceMessageID.size(); i++)
-			{
-				CCoreApp::Inst()->getMessageDirectory()->delMessage(szName, sServiceInfo.vecGateServiceMessageID[i], false);
-			}
-
-			sServiceInfo.vecServiceMessageID.clear();
-			sServiceInfo.vecGateServiceMessageID.clear();
-		}
+			CCoreApp::Inst()->getMessageDirectory()->clearMessage(szName);
 
 		for (size_t i = 0; i < vecMessageSyncInfo.size(); ++i)
 		{
-			if (vecMessageSyncInfo[i].nGate)
-			{
-				sServiceInfo.vecGateServiceMessageID.push_back(vecMessageSyncInfo[i].nMessageID);
-				CCoreApp::Inst()->getMessageDirectory()->addMessage(szName, vecMessageSyncInfo[i].nMessageID, true);
-			}
-			else
-			{
-				CCoreApp::Inst()->getMessageDirectory()->addMessage(szName, vecMessageSyncInfo[i].nMessageID, false);
-				sServiceInfo.vecServiceMessageID.push_back(vecMessageSyncInfo[i].nMessageID);
-			}
+			CCoreApp::Inst()->getMessageDirectory()->addMessage(szName, vecMessageSyncInfo[i].szMessageName);
 		}
 	}
 
 	void CServiceMgr::delService(const std::string& szName)
 	{
-		auto iter = this->m_mapServiceInfo.find(szName);
-		if (iter == this->m_mapServiceInfo.end())
+		auto iter = this->m_mapServiceBaseInfo.find(szName);
+		if (iter == this->m_mapServiceBaseInfo.end())
 			return;
 
-		SServiceInfo& sServiceInfo = iter->second;
-		for (size_t i = 0; i < sServiceInfo.vecServiceMessageID.size(); i++)
-		{
-			CCoreApp::Inst()->getMessageDirectory()->delMessage(szName, sServiceInfo.vecServiceMessageID[i], false);
-		}
-		for (size_t i = 0; i < sServiceInfo.vecGateServiceMessageID.size(); i++)
-		{
-			CCoreApp::Inst()->getMessageDirectory()->delMessage(szName, sServiceInfo.vecGateServiceMessageID[i], false);
-		}
+		CCoreApp::Inst()->getMessageDirectory()->clearMessage(szName);
 
-		this->m_mapServiceInfo.erase(iter);
+		this->m_mapServiceBaseInfo.erase(iter);
 		PrintInfo("del service service_name: %s", szName.c_str());
 
 		CCoreApp::Inst()->getTransport()->delCacheMessage(szName);

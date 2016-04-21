@@ -48,7 +48,7 @@ namespace core
 		/**
 		@brief: 消息回调
 		*/
-		virtual void			onDispatch(uint16_t nMessageType, const void* pData, uint16_t nSize) { }
+		virtual void			onDispatch(uint32_t nMessageType, const void* pData, uint16_t nSize) { }
 		/**
 		@brief: 获取本地地址
 		*/

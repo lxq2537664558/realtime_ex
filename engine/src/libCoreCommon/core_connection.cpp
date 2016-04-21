@@ -159,7 +159,7 @@ namespace core
 		this->m_pNetConnecter = nullptr;
 	}
 
-	void CCoreConnection::onPacketMsg(uint16_t nMessageType, const void* pData, uint16_t nSize)
+	void CCoreConnection::onPacketMsg(uint32_t nMessageType, const void* pData, uint16_t nSize)
 	{
 		if (nMessageType == eMT_HEARTBEAT)
 			return;

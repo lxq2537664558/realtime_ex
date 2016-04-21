@@ -36,23 +36,23 @@ namespace core
 
 		void	onConnectToMaster();
 
-		void	addMessage(const std::string& szServiceName, uint32_t nMessageID, bool bGate);
-		void	delMessage(const std::string& szServiceName, uint32_t nMessageID, bool bGate);
+		void	addMessage(const std::string& szServiceName, const std::string& szMessageName);
+		void	delMessage(const std::string& szServiceName, const std::string& szMessageName);
 		const std::vector<std::string>&
-				getServiceName(const std::string& szMessageName, bool bGate) const;
+				getOtherServiceName(const std::string& szMessageName) const;
+		void	clearMessage(const std::string& szServiceName);
 
 	private:
-		void	sendMessageInfo(const std::string& szMessageName, bool bGate);
+		void	sendMessageInfo(const std::string& szMessageName);
 
 	private:
 		std::map<uint32_t, ServiceCallback>				m_mapServiceCallback;
 		std::map<uint32_t, GateClientCallback>			m_mapGateClientCallback;
-		std::map<uint32_t, std::string>					m_mapMessageName;
+		std::map<uint32_t, std::string>					m_mapOwnerMessageName;
+		std::map<std::string, std::vector<std::string>>	m_mapOtherMessageDirectoryByMessageName;
+		std::map<std::string, std::vector<std::string>>	m_mapOtherMessageDirectoryByServiceName;
 
 		std::vector<ServiceGlobalFilter>				m_vecServiceGlobalBeforeFilter;
 		std::vector<ServiceGlobalFilter>				m_vecServiceGlobalAfterFilter;
-
-		std::map<uint32_t, std::vector<std::string>>	m_mapServiceMessageDirectory;
-		std::map<uint32_t, std::vector<std::string>>	m_mapGateClientMessageDirectory;
 	};
 }

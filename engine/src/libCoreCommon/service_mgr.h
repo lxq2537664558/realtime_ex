@@ -40,18 +40,11 @@ namespace core
 		void					onCheckConnect(uint64_t nContext);
 
 	private:
-		struct SServiceInfo
-		{
-			SServiceBaseInfo		sServiceBaseInfo;
-			std::vector<uint32_t>	vecServiceMessageID;
-			std::vector<uint32_t>	vecGateServiceMessageID;
-		};
-
 		CTicker											m_tickCheckConnect;
 
 		std::map<std::string, CConnectionToService*>	m_mapConnectionToService;
 		std::map<std::string, CConnectionFromService*>	m_mapConnectionFromService;
-		std::map<std::string, SServiceInfo>				m_mapServiceInfo;
+		std::map<std::string, SServiceBaseInfo>			m_mapServiceBaseInfo;
 
 		std::string										m_szMasterHost;
 		uint16_t										m_nMasterPort;

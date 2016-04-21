@@ -145,11 +145,11 @@ namespace core
 		eRRT_ERROR,
 	};
 
-	typedef std::function<void(uint16_t, const google::protobuf::Message*, EResponseResultType)>		InvokeCallback;			// RPC消息响应回调函数类型
-	typedef std::function<void(const std::string&, uint16_t, const google::protobuf::Message*)>			ServiceCallback;		// 服务消息处理函数类型
-	typedef std::function<void(const SClientSessionInfo&, uint16_t, const google::protobuf::Message*)>	GateClientCallback;		// 经网关服务转发的客户端消息处理函数类型
+	typedef std::function<void(uint32_t, const google::protobuf::Message*, EResponseResultType)>		InvokeCallback;			// RPC消息响应回调函数类型
+	typedef std::function<void(const std::string&, uint32_t, const google::protobuf::Message*)>			ServiceCallback;		// 服务消息处理函数类型
+	typedef std::function<void(const SClientSessionInfo&, uint32_t, const google::protobuf::Message*)>	GateClientCallback;		// 经网关服务转发的客户端消息处理函数类型
 	typedef std::function<void(const google::protobuf::Message*)>										ClientCallback;			// 客户端消息处理函数类型
-	typedef std::function<bool(const std::string&, uint16_t, const void*, uint16_t)>					ServiceGlobalFilter;	// 全局的消息过滤器类型
+	typedef std::function<bool(const std::string&, uint32_t, const void*, uint16_t)>					ServiceGlobalFilter;	// 全局的消息过滤器类型
 }
 
 struct SServiceBaseInfo
@@ -164,7 +164,6 @@ struct SServiceBaseInfo
 
 struct SMessageSyncInfo
 {
-	uint8_t		nGate;
 	std::string	szMessageName;
 };
 

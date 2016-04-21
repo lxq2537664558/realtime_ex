@@ -1,6 +1,8 @@
 #pragma once
 #include "libBaseCommon/noncopyable.h"
+
 #include "libCoreCommon/core_common.h"
+#include "libCoreCommon/base_connection.h"
 
 #include "common_base.h"
 
@@ -23,8 +25,6 @@ namespace core
 		bool					send(const std::string& szServiceName, const SGateMessageInfo& sGateMessageInfo);
 
 		bool					broadcast(const std::string& szServiceName, const SGateBroadcastMessageInfo& sGateBroadcastMessageInfo);
-
-		bool					route(const std::string& szServiceName, const SGateMessageInfo& sGateMessageInfo);
 
 		void					onConnectRefuse(const std::string& szContext);
 

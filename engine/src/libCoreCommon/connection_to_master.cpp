@@ -38,7 +38,7 @@ namespace core
 
 	}
 
-	void CConnectionToMaster::onDispatch(uint16_t nMsgType, const void* pData, uint16_t nSize)
+	void CConnectionToMaster::onDispatch(uint32_t nMsgType, const void* pData, uint16_t nSize)
 	{
 		DebugAst(nMsgType == eMT_SYSTEM);
 

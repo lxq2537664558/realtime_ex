@@ -42,7 +42,7 @@ namespace core
 		virtual void		onConnect();
 		virtual void		onDisconnect();
 
-		void				onPacketMsg(uint16_t nMessageType, const void* pData, uint16_t nSize);
+		void				onPacketMsg(uint32_t nMessageType, const void* pData, uint16_t nSize);
 		void				sendHeartbeat();
 
 	private:
