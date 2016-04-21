@@ -32,7 +32,7 @@ namespace core
 		int64_t		getIntervalTime() const;
 		int64_t		getNextTickTime() const;
 		int64_t		getRemainTime() const;
-		bool		isRegist() const;
+		bool		isRegister() const;
 		uint64_t	getContext() const;
 		void		setCallback(const std::function<void(uint64_t)>& callback);
 

@@ -8,7 +8,7 @@
 namespace core
 {
 	/**
-	@brief: 消息响应注册器
+	@brief: 消息注册器
 	*/
 	class CMessageRegistry :
 		public base::CSingleton<CMessageRegistry>
@@ -20,20 +20,20 @@ namespace core
 		bool init();
 
 		/**
-		@brief: 注册普通的服务响应函数
+		@brief: 注册普通服务消息
 		*/
-		void registCallback(uint32_t nMessageID, ServiceCallback callback);
+		void registerCallback(uint32_t nMessageID, ServiceCallback callback);
 		/**
-		@brief: 注册经网关服务转发客户端消息响应函数
+		@brief: 注册经网关服务转发客户端的消息
 		*/
-		void registCallback(uint32_t nMessageID, GateClientCallback callback);
+		void registerCallback(uint32_t nMessageID, GateClientCallback callback);
 		/**
-		@brief: 注册服务之间的前置过滤器
+		@brief: 添加服务之间的前置过滤器
 		*/
-		void registGlobalBeforeFilter(ServiceGlobalFilter callback);
+		void addGlobalBeforeFilter(ServiceGlobalFilter callback);
 		/**
-		@brief: 注册服务之间的后置过滤器
+		@brief: 添加服务之间的后置过滤器
 		*/
-		void registGlobalAfterFilter(ServiceGlobalFilter callback);
+		void addGlobalAfterFilter(ServiceGlobalFilter callback);
 	};
 }
