@@ -84,9 +84,6 @@
     <ClInclude Include="..\..\inc\libCoreCommon\proto_system.h">
       <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreCommon\protobuf_helper.h">
-      <Filter>inc</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\inc\libCoreCommon\load_balance_policy.h">
       <Filter>inc</Filter>
     </ClInclude>
@@ -94,6 +91,9 @@
       <Filter>src\service</Filter>
     </ClInclude>
     <ClInclude Include="transport.h">
+      <Filter>src\service</Filter>
+    </ClInclude>
+    <ClInclude Include="protobuf_helper.h">
       <Filter>src\service</Filter>
     </ClInclude>
   </ItemGroup>

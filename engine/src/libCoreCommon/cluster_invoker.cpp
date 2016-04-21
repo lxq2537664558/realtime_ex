@@ -22,74 +22,70 @@ namespace core
 		return true;
 	}
 
-	bool CClusterInvoker::invok(const std::string& szServiceName, uint16_t nMessageFormat, const message_header* pData)
+	bool CClusterInvoker::invok(const std::string& szServiceName, const google::protobuf::Message* pMessage)
 	{
-		DebugAstEx(pData != nullptr, false);
+		DebugAstEx(pMessage != nullptr, false);
 
 		SRequestMessageInfo sRequestMessageInfo;
-		sRequestMessageInfo.nMessageFormat = nMessageFormat;
-		sRequestMessageInfo.pData = pData;
+		sRequestMessageInfo.pMessage = const_cast<google::protobuf::Message*>(pMessage);
 		sRequestMessageInfo.callback = nullptr;
 		
 		return CCoreApp::Inst()->getTransport()->call(szServiceName, sRequestMessageInfo);
 	}
 
-	bool CClusterInvoker::invok_r(const std::string& szServiceName, uint16_t nMessageFormat, const message_header* pData, InvokeCallback callback, uint64_t nContext /* = 0 */)
+	bool CClusterInvoker::invok_r(const std::string& szServiceName, const google::protobuf::Message* pMessage, InvokeCallback callback, uint64_t nContext /* = 0 */)
 	{
-		DebugAstEx(pData != nullptr && callback != nullptr, false);
+		DebugAstEx(pMessage != nullptr && callback != nullptr, false);
 
 		SRequestMessageInfo sRequestMessageInfo;
-		sRequestMessageInfo.nMessageFormat = nMessageFormat;
-		sRequestMessageInfo.pData = pData;
+		sRequestMessageInfo.pMessage = const_cast<google::protobuf::Message*>(pMessage);
 		sRequestMessageInfo.callback = callback;
 		
 		return CCoreApp::Inst()->getTransport()->call(szServiceName, sRequestMessageInfo);
 	}
 
-	bool CClusterInvoker::invok(uint16_t nMessageFormat, const message_header* pData, ILoadBalancePolicy* pLoadBalancePolicy, uint64_t nLoadBalanceParam)
+	bool CClusterInvoker::invok(const google::protobuf::Message* pMessage, ILoadBalancePolicy* pLoadBalancePolicy, uint64_t nLoadBalanceParam)
 	{
-		DebugAstEx(pData != nullptr && pLoadBalancePolicy != nullptr, false);
+		DebugAstEx(pMessage != nullptr && pLoadBalancePolicy != nullptr, false);
 
-		const std::string szServiceName = pLoadBalancePolicy->select(pData->nMessageID, false, nLoadBalanceParam);
+		const std::string szServiceName = pLoadBalancePolicy->select(pMessage->GetTypeName(), false, nLoadBalanceParam);
 		if (szServiceName.empty())
 			return false;
 
-		return this->invok(szServiceName, nMessageFormat, pData);
+		return this->invok(szServiceName, pMessage);
 	}
 
-	bool CClusterInvoker::invok_r(uint16_t nMessageFormat, const message_header* pData, ILoadBalancePolicy* pLoadBalancePolicy, uint64_t nLoadBalanceParam, InvokeCallback callback, uint64_t nContext /* = 0 */)
+	bool CClusterInvoker::invok_r(const google::protobuf::Message* pMessage, ILoadBalancePolicy* pLoadBalancePolicy, uint64_t nLoadBalanceParam, InvokeCallback callback, uint64_t nContext /* = 0 */)
 	{
-		DebugAstEx(pData != nullptr && callback != nullptr && pLoadBalancePolicy != nullptr, false);
+		DebugAstEx(pMessage != nullptr && callback != nullptr && pLoadBalancePolicy != nullptr, false);
 
-		const std::string szServiceName = pLoadBalancePolicy->select(pData->nMessageID, false, nLoadBalanceParam);
+		const std::string szServiceName = pLoadBalancePolicy->select(pMessage->GetTypeName(), false, nLoadBalanceParam);
 		if (szServiceName.empty())
 			return false;
 
-		return this->invok_r(szServiceName, nMessageFormat, pData, callback, nContext);
+		return this->invok_r(szServiceName, pMessage, callback, nContext);
 	}
 
-	void CClusterInvoker::response(uint16_t nMessageFormat, const message_header* pData)
+	void CClusterInvoker::response(const google::protobuf::Message* pMessage)
 	{
-		DebugAst(pData != nullptr);
+		DebugAst(pMessage != nullptr);
 
 		SResponseMessageInfo sResponseMessageInfo;
-		sResponseMessageInfo.nMessageFormat = nMessageFormat;
 		sResponseMessageInfo.nSessionID = CCoreApp::Inst()->getTransport()->getServiceSessionInfo().nSessionID;
-		sResponseMessageInfo.pData = pData;
+		sResponseMessageInfo.pMessage = const_cast<google::protobuf::Message*>(pMessage);
 		sResponseMessageInfo.nResult = eRRT_OK;
 
 		bool bRet = CCoreApp::Inst()->getTransport()->response(CCoreApp::Inst()->getTransport()->getServiceSessionInfo().szServiceName, sResponseMessageInfo);
 		DebugAst(bRet);
 	}
 
-	void CClusterInvoker::response(const SServiceSessionInfo& sServiceSessionInfo, uint16_t nMessageFormat, const message_header* pData)
+	void CClusterInvoker::response(const SServiceSessionInfo& sServiceSessionInfo, const google::protobuf::Message* pMessage)
 	{
-		DebugAst(pData != nullptr);
+		DebugAst(pMessage != nullptr);
 
 		SResponseMessageInfo sResponseMessageInfo;
-		sResponseMessageInfo.nMessageFormat = nMessageFormat;
 		sResponseMessageInfo.nSessionID = sServiceSessionInfo.nSessionID;
-		sResponseMessageInfo.pData = pData;
+		sResponseMessageInfo.pMessage = const_cast<google::protobuf::Message*>(pMessage);
 		sResponseMessageInfo.nResult = eRRT_OK;
 
 		bool bRet = CCoreApp::Inst()->getTransport()->response(sServiceSessionInfo.szServiceName, sResponseMessageInfo);
@@ -101,37 +97,35 @@ namespace core
 		return CCoreApp::Inst()->getTransport()->getServiceSessionInfo();
 	}
 
-	bool CClusterInvoker::send(const SClientSessionInfo& sGateSessionInfo, uint16_t nMessageFormat, const message_header* pData)
+	bool CClusterInvoker::send(const SClientSessionInfo& sGateSessionInfo, const google::protobuf::Message* pMessage)
 	{
-		DebugAstEx(pData != nullptr, false);
+		DebugAstEx(pMessage != nullptr, false);
 
 		SGateMessageInfo sGateMessageInfo;
 		sGateMessageInfo.nSessionID = sGateSessionInfo.nSessionID;
-		sGateMessageInfo.nMessageFormat = nMessageFormat | eMT_TO_GATE;
-		sGateMessageInfo.pData = pData;
+		sGateMessageInfo.pMessage = const_cast<google::protobuf::Message*>(pMessage);
 
 		return CCoreApp::Inst()->getTransport()->send(sGateSessionInfo.szServiceName, sGateMessageInfo);
 	}
 
-	bool CClusterInvoker::foward(uint64_t nSessionID, uint16_t nMessageFormat, const message_header* pData, ILoadBalancePolicy* pLoadBalancePolicy, uint64_t nLoadBalanceParam)
+	bool CClusterInvoker::foward(uint64_t nSessionID, const google::protobuf::Message* pMessage, ILoadBalancePolicy* pLoadBalancePolicy, uint64_t nLoadBalanceParam)
 	{
-		DebugAstEx(pData != nullptr && pLoadBalancePolicy != nullptr, false);
+		DebugAstEx(pMessage != nullptr && pLoadBalancePolicy != nullptr, false);
 
-		const std::string szServiceName = pLoadBalancePolicy->select(pData->nMessageID, false, nLoadBalanceParam);
+		const std::string szServiceName = pLoadBalancePolicy->select(pMessage->GetTypeName(), false, nLoadBalanceParam);
 		if (szServiceName.empty())
 			return false;
 
 		SGateMessageInfo sGateMessageInfo;
 		sGateMessageInfo.nSessionID = nSessionID;
-		sGateMessageInfo.nMessageFormat = nMessageFormat | eMT_FROM_GATE;
-		sGateMessageInfo.pData = pData;
+		sGateMessageInfo.pMessage = const_cast<google::protobuf::Message*>(pMessage);
 
 		return CCoreApp::Inst()->getTransport()->send(szServiceName, sGateMessageInfo);
 	}
 
-	bool CClusterInvoker::broadcast(const std::vector<SClientSessionInfo>& vecGateSessionInfo, uint16_t nMessageFormat, const message_header* pData)
+	bool CClusterInvoker::broadcast(const std::vector<SClientSessionInfo>& vecGateSessionInfo, const google::protobuf::Message* pMessage)
 	{
-		DebugAstEx(pData != nullptr, false);
+		DebugAstEx(pMessage != nullptr, false);
 
 		std::map<std::string, std::vector<uint64_t>> mapGateSessionInfo;
 		for (size_t i = 0; i < vecGateSessionInfo.size(); ++i)
@@ -144,8 +138,7 @@ namespace core
 		{
 			SGateBroadcastMessageInfo sGateBroadcastMessageInfo;
 			sGateBroadcastMessageInfo.vecSessionID = iter->second;
-			sGateBroadcastMessageInfo.nMessageFormat = nMessageFormat;
-			sGateBroadcastMessageInfo.pData = pData;
+			sGateBroadcastMessageInfo.pMessage = const_cast<google::protobuf::Message*>(pMessage);
 			if (!CCoreApp::Inst()->getTransport()->broadcast(iter->first, sGateBroadcastMessageInfo))
 				bRet = false;
 		}

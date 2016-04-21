@@ -15,32 +15,39 @@ namespace core
 		CMessageDirectory();
 		~CMessageDirectory();
 
-		bool init();
+		bool	init();
 
-		void					registerCallback(uint32_t nMessageID, const ServiceCallback& callback);
-		void					registerCallback(uint32_t nMessageID, const GateClientCallback& callback);
-		ServiceCallback&		getCallback(uint32_t nMessageID);
-		GateClientCallback&		getGateClientCallback(uint32_t nMessageID);
+		void	registerCallback(const std::string& szMessageName, const ServiceCallback& callback);
+		void	registerCallback(const std::string& szMessageName, const GateClientCallback& callback);
+		ServiceCallback&	
+				getCallback(uint32_t nMessageID);
+		GateClientCallback&
+				getGateClientCallback(uint32_t nMessageID);
 
-		void					addGlobalBeforeFilter(const ServiceGlobalFilter& callback);
-		void					addGlobalAfterFilter(const ServiceGlobalFilter& callback);
+		void	addGlobalBeforeFilter(const ServiceGlobalFilter& callback);
+		void	addGlobalAfterFilter(const ServiceGlobalFilter& callback);
 		const std::vector<ServiceGlobalFilter>&
-								getGlobalBeforeFilter();
+				getGlobalBeforeFilter();
 		const std::vector<ServiceGlobalFilter>&
-								getGlobalAfterFilter();
+				getGlobalAfterFilter();
 
-		void					onConnectToMaster();
+		const std::string&
+				getMessageName(uint32_t nMessageID) const;
 
-		void					addMessage(const std::string& szServiceName, uint32_t nMessageID, bool bGate);
-		void					delMessage(const std::string& szServiceName, uint32_t nMessageID, bool bGate);
+		void	onConnectToMaster();
+
+		void	addMessage(const std::string& szServiceName, uint32_t nMessageID, bool bGate);
+		void	delMessage(const std::string& szServiceName, uint32_t nMessageID, bool bGate);
 		const std::vector<std::string>&
-								getMessageServiceName(uint32_t nMessageID, bool bGate) const;
+				getServiceName(const std::string& szMessageName, bool bGate) const;
+
 	private:
-		void					sendMessageInfo(bool bGate, uint32_t nMessageID, bool bFull);
+		void	sendMessageInfo(const std::string& szMessageName, bool bGate);
 
 	private:
 		std::map<uint32_t, ServiceCallback>				m_mapServiceCallback;
 		std::map<uint32_t, GateClientCallback>			m_mapGateClientCallback;
+		std::map<uint32_t, std::string>					m_mapMessageName;
 
 		std::vector<ServiceGlobalFilter>				m_vecServiceGlobalBeforeFilter;
 		std::vector<ServiceGlobalFilter>				m_vecServiceGlobalAfterFilter;

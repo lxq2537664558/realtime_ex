@@ -22,11 +22,11 @@ namespace core
 		/**
 		@brief: 注册普通服务消息
 		*/
-		void registerCallback(uint32_t nMessageID, ServiceCallback callback);
+		void registerCallback(const std::string& szMessageName, ServiceCallback callback);
 		/**
 		@brief: 注册经网关服务转发客户端的消息
 		*/
-		void registerCallback(uint32_t nMessageID, GateClientCallback callback);
+		void registerCallback(const std::string& szMessageName, GateClientCallback callback);
 		/**
 		@brief: 添加服务之间的前置过滤器
 		*/

@@ -21,27 +21,27 @@ namespace core
 		/**
 		@brief: 调用指定远程服务的消息，远程服务不用返回消息
 		*/
-		bool				invok(const std::string& szServiceName, uint16_t nMessageFormat, const message_header* pData);
+		bool				invok(const std::string& szServiceName, const google::protobuf::Message* pMessage);
 		/**
 		@brief: 调用指定远程服务的消息，需要提供远程服务消息返回的响应函数回调
 		*/
-		bool				invok_r(const std::string& szServiceName, uint16_t nMessageFormat, const message_header* pData, InvokeCallback callback, uint64_t nContext = 0);
+		bool				invok_r(const std::string& szServiceName, const google::protobuf::Message* pMessage, InvokeCallback callback, uint64_t nContext = 0);
 		/**
 		@brief: 通过消息ID调用远程服务，需要提供负载均衡器，远程服务不用返回消息
 		*/
-		bool				invok(uint16_t nMessageFormat, const message_header* pData, ILoadBalancePolicy* pLoadBalancePolicy, uint64_t nLoadBalanceParam);
+		bool				invok(const google::protobuf::Message* pMessage, ILoadBalancePolicy* pLoadBalancePolicy, uint64_t nLoadBalanceParam);
 		/**
 		@brief: 通过消息ID调用远程服务，需要提供负载均衡器，需要提供远程服务消息返回的响应函数回调
 		*/
-		bool				invok_r(uint16_t nMessageFormat, const message_header* pData, ILoadBalancePolicy* pLoadBalancePolicy, uint64_t nLoadBalanceParam, InvokeCallback callback, uint64_t nContext = 0);
+		bool				invok_r(const google::protobuf::Message* pMessage, ILoadBalancePolicy* pLoadBalancePolicy, uint64_t nLoadBalanceParam, InvokeCallback callback, uint64_t nContext = 0);
 		/**
 		@brief: 响应远程服务的调用，发送响应消息
 		*/
-		void				response(uint16_t nMessageFormat, const message_header* pData);
+		void				response(const google::protobuf::Message* pMessage);
 		/**
 		@brief: 响应远程服务的调用，发送响应消息，这个需要用户自己制定服务session，主要用于不能立即响应，需要等待其他信息的消息
 		*/
-		void				response(const SServiceSessionInfo& sServiceSessionInfo, uint16_t nMessageFormat, const message_header* pData);
+		void				response(const SServiceSessionInfo& sServiceSessionInfo, const google::protobuf::Message* pMessage);
 		/**
 		@brief: 获取当前服务session信息
 		*/
@@ -52,14 +52,14 @@ namespace core
 		/**
 		@brief: 向客户端发送消息，客户端ID由SGateSessionInfo来表述
 		*/
-		bool				send(const SClientSessionInfo& sGateSessionInfo, uint16_t nMessageFormat, const message_header* pData);
+		bool				send(const SClientSessionInfo& sGateSessionInfo, const google::protobuf::Message* pMessage);
 		/**
 		@brief: 向一批客户端广播消息，客户端ID由std::vector<SGateSessionInfo>来表述
 		*/
-		bool				broadcast(const std::vector<SClientSessionInfo>& vecGateSessionInfo, uint16_t nMessageFormat, const message_header* pData);
+		bool				broadcast(const std::vector<SClientSessionInfo>& vecGateSessionInfo, const google::protobuf::Message* pMessage);
 		/**
 		@brief: 网关服务转发客户端消息
 		*/
-		bool				foward(uint64_t nSessionID, uint16_t nMessageFormat, const message_header* pData, ILoadBalancePolicy* pLoadBalancePolicy, uint64_t nLoadBalanceParam);
+		bool				foward(uint64_t nSessionID, const google::protobuf::Message* pMessage, ILoadBalancePolicy* pLoadBalancePolicy, uint64_t nLoadBalanceParam);
 	};
 }

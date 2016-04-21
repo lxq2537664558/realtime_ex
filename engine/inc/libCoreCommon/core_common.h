@@ -6,6 +6,8 @@
 
 #include "ticker.h"
 
+#include "google/protobuf/message.h"
+
 namespace core
 {
 #pragma pack(push,1)
@@ -13,7 +15,7 @@ namespace core
 	struct message_header
 	{
 		uint16_t	nMessageSize;	// 包括消息头的
-		uint16_t	nMessageID;	
+		uint32_t	nMessageID;	
 
 		message_header(uint16_t nMessageID) : nMessageID(nMessageID) { }
 		message_header() {}
@@ -143,11 +145,11 @@ namespace core
 		eRRT_ERROR,
 	};
 
-	typedef std::function<void(uint16_t, const message_header*, EResponseResultType)>		InvokeCallback;			// RPC消息响应回调函数类型
-	typedef std::function<void(const std::string&, uint16_t, const message_header*)>		ServiceCallback;		// 服务消息处理函数类型
-	typedef std::function<void(const SClientSessionInfo&, uint16_t, const message_header*)>	GateClientCallback;		// 经网关服务转发的客户端消息处理函数类型
-	typedef std::function<void(const message_header*)>										ClientCallback;			// 客户端消息处理函数类型
-	typedef std::function<bool(const std::string&, uint16_t, const void*, uint16_t)>		ServiceGlobalFilter;	// 全局的消息过滤器类型
+	typedef std::function<void(uint16_t, const google::protobuf::Message*, EResponseResultType)>		InvokeCallback;			// RPC消息响应回调函数类型
+	typedef std::function<void(const std::string&, uint16_t, const google::protobuf::Message*)>			ServiceCallback;		// 服务消息处理函数类型
+	typedef std::function<void(const SClientSessionInfo&, uint16_t, const google::protobuf::Message*)>	GateClientCallback;		// 经网关服务转发的客户端消息处理函数类型
+	typedef std::function<void(const google::protobuf::Message*)>										ClientCallback;			// 客户端消息处理函数类型
+	typedef std::function<bool(const std::string&, uint16_t, const void*, uint16_t)>					ServiceGlobalFilter;	// 全局的消息过滤器类型
 }
 
 struct SServiceBaseInfo
@@ -163,7 +165,7 @@ struct SServiceBaseInfo
 struct SMessageSyncInfo
 {
 	uint8_t		nGate;
-	uint32_t	nMessageID;
+	std::string	szMessageName;
 };
 
 enum ELoadBalancePolicyID

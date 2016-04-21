@@ -83,10 +83,10 @@ namespace core
 				getLoadBalancePolicy(uint32_t nID) const;
 
 		/*
-		@brief: 根据消息ID获取所有支持该消息的服务名字
+		@brief: 根据消息名字获取所有支持该消息的服务名字
 		*/
 		const std::vector<std::string>&
-				getMessageServiceName(uint32_t nMessageID, bool bGate) const;
+				getServiceName(const std::string& szMessageName, bool bGate) const;
 		
 	protected:
 		virtual bool	onInit() { return true; }

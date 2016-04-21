@@ -5,6 +5,35 @@
 #include "libBaseCommon/debug_helper.h"
 #include "libBaseCommon/defer.h"
 
+static google::protobuf::Message* create_protobuf_message(const std::string& szMessageName)
+{
+	const google::protobuf::Descriptor* pDescriptor = google::protobuf::DescriptorPool::generated_pool()->FindMessageTypeByName(szMessageName);
+	if (pDescriptor == nullptr)
+		return nullptr;
+
+	const google::protobuf::Message* pProtoType = google::protobuf::MessageFactory::generated_factory()->GetPrototype(pDescriptor);
+	if (pProtoType == nullptr)
+		return nullptr;
+
+	return pProtoType->New();
+}
+
+static google::protobuf::Message* unserialize_protobuf_message_from_buf(const std::string& szMessageName, const core::message_header* pHeader)
+{
+	google::protobuf::Message* pMessage = create_protobuf_message(szMessageName);
+	if (nullptr == pMessage)
+		return nullptr;
+
+
+	if (!pMessage->ParseFromArray(pHeader + 1, pHeader->nMessageSize - sizeof(core::message_header)))
+	{
+		SAFE_DELETE(pMessage);
+		return nullptr;
+	}
+
+	return pMessage;
+}
+
 namespace core
 {
 	CMessageDispatcher::CMessageDispatcher()
@@ -44,11 +73,18 @@ namespace core
 
 			// °þµôcookice
 			const message_header* pHeader = reinterpret_cast<const message_header*>(pCookice + 1);
+			const std::string& szMessageName = CCoreApp::Inst()->getMessageDirectory()->getMessageName(pHeader->nMessageID);
+			ServiceCallback& callback = CCoreApp::Inst()->getMessageDirectory()->getCallback(pHeader->nMessageID);
+			if (callback != nullptr)
+			{
+				google::protobuf::Message* pMessage = unserialize_protobuf_message_from_buf(szMessageName, pHeader);
+				if (nullptr == pMessage)
+					PrintWarning("create message error from_service_name: %s message_name: %s message_id: %d", szFromServiceName.c_str(), szMessageName.c_str(), pHeader->nMessageID);
+				else
+					callback(szFromServiceName, nMessageType, pMessage);
 
-			ServiceCallback& serviceCallback = CCoreApp::Inst()->getMessageDirectory()->getCallback(pHeader->nMessageID);
-			if (serviceCallback != nullptr)
-				serviceCallback(szFromServiceName, nMessageType, pHeader);
-
+				SAFE_DELETE(pMessage);
+			}
 			sServiceSessionInfo.szServiceName.clear();
 			sServiceSessionInfo.nSessionID = 0;
 		}
@@ -65,24 +101,41 @@ namespace core
 
 			// °þµôcookice
 			const message_header* pHeader = reinterpret_cast<const message_header*>(pCookice + 1);
+			const std::string& szMessageName = CCoreApp::Inst()->getMessageDirectory()->getMessageName(pHeader->nMessageID);
 
 			if (pResponseWaitInfo->callback != nullptr)
-				pResponseWaitInfo->callback(nMessageType, pHeader, (EResponseResultType)pCookice->nResult);
+			{
+				google::protobuf::Message* pMessage = unserialize_protobuf_message_from_buf(szMessageName, pHeader);
+				if (nullptr == pMessage)
+					PrintWarning("create message error from_service_name: %s message_name: %s message_id: %d", szFromServiceName.c_str(), szMessageName.c_str(), pHeader->nMessageID);
+				else
+					pResponseWaitInfo->callback(nMessageType, pMessage, (EResponseResultType)pCookice->nResult);
 
+				SAFE_DELETE(pMessage);
+			}
 			SAFE_DELETE(pResponseWaitInfo);
 		}
 		else if ((nMessageType&eMT_TYPE_MASK) == eMT_FROM_GATE)
 		{
 			const gate_cookice* pCookice = reinterpret_cast<const gate_cookice*>(pData);
-			
+
 			// °þµôcookice
 			const message_header* pHeader = reinterpret_cast<const message_header*>(pCookice + 1);
+			const std::string& szMessageName = CCoreApp::Inst()->getMessageDirectory()->getMessageName(pHeader->nMessageID);
 
 			SClientSessionInfo session(szFromServiceName, pCookice->nSessionID);
 
-			GateClientCallback& gateClientCallback = CCoreApp::Inst()->getMessageDirectory()->getGateClientCallback(pHeader->nMessageID);
-			if (gateClientCallback != nullptr)
-				gateClientCallback(session, nMessageType, pHeader);
+			GateClientCallback& callback = CCoreApp::Inst()->getMessageDirectory()->getGateClientCallback(pHeader->nMessageID);
+			if (callback != nullptr)
+			{
+				google::protobuf::Message* pMessage = unserialize_protobuf_message_from_buf(szMessageName, pHeader);
+				if (nullptr == pMessage)
+					PrintWarning("create message error from_service_name: %s message_name: %s message_id: %d", szFromServiceName.c_str(), szMessageName.c_str(), pHeader->nMessageID);
+				else
+					callback(session, nMessageType, pMessage);
+
+				SAFE_DELETE(pMessage);
+			}
 		}
 
 		const std::vector<ServiceGlobalFilter>& vecServiceGlobalAfterFilter = CCoreApp::Inst()->getMessageDirectory()->getGlobalAfterFilter();

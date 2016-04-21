@@ -104,7 +104,7 @@ message_begin(smt_sync_service_message_info, eSMT_sync_service_message_info)
 		for (uint16_t i = 0; i < nCount; ++i)
 		{
 			writeBuf.write(vecMessageSyncInfo[i].nGate);
-			writeBuf.write(vecMessageSyncInfo[i].nMessageID);
+			writeBuf.write(vecMessageSyncInfo[i].szMessageName.c_str());
 		}
 
 		pack_end(writeBuf);
@@ -122,7 +122,7 @@ message_begin(smt_sync_service_message_info, eSMT_sync_service_message_info)
 		{
 			SMessageSyncInfo sMessageSyncInfo;
 			readBuf.read(sMessageSyncInfo.nGate);
-			readBuf.read(sMessageSyncInfo.nMessageID);
+			readBuf.read(sMessageSyncInfo.szMessageName);
 
 			vecMessageSyncInfo.push_back(sMessageSyncInfo);
 		}

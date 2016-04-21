@@ -101,9 +101,9 @@ namespace core
 		return CCoreApp::Inst()->getLoadBalancePolicy(nID);
 	}
 
-	const std::vector<std::string>& CBaseApp::getMessageServiceName(uint32_t nMessageID, bool bGate) const
+	const std::vector<std::string>& CBaseApp::getServiceName(const std::string& szMessageName, bool bGate) const
 	{
-		return CCoreApp::Inst()->getMessageServiceName(nMessageID, bGate);
+		return CCoreApp::Inst()->getServiceName(szMessageName, bGate);
 	}
 
 }

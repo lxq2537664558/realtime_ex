@@ -4,11 +4,31 @@
 #include "message_dispatcher.h"
 #include "connection_to_service.h"
 #include "connection_from_service.h"
+#include "protobuf_helper.h"
 
 #include "libBaseCommon/defer.h"
 
 #define _MAX_CACHE_MESSAGE_SIZE			1024 * 1024 * 100
 #define _MAX_REQUEST_MESSAGE_TIMEOUT	10000
+
+static int32_t serialize_protobuf_message_to_buf(const google::protobuf::Message* pMessage, core::message_header* pHeader, uint32_t nSize)
+{
+	DebugAstEx(pMessage != nullptr, false);
+
+	std::string szMessageData;
+	if (!pMessage->SerializeToString(&szMessageData))
+		return -1;
+
+	if (szMessageData.size() > nSize)
+		return -1;
+
+	pHeader->nMessageID = base::hash(pMessage->GetTypeName().c_str());
+	pHeader->nMessageSize = (uint16_t)(sizeof(core::message_header) + szMessageData.size());
+
+	memcpy(pHeader + 1, szMessageData.c_str(), szMessageData.size());
+
+	return (int32_t)(szMessageData.size() + sizeof(core::message_header));
+}
 
 namespace core
 {
@@ -26,6 +46,8 @@ namespace core
 	bool CTransport::init()
 	{
 		CCoreApp::Inst()->registerTicker(&this->m_tickCheckConnect, 5 * 1000, 5 * 1000, 0);
+
+		this->m_vecBuf.resize(UINT16_MAX);
 
 		return true;
 	}
@@ -86,7 +108,7 @@ namespace core
 		SMessageCacheInfo& sMessageCacheInfo = this->m_mapMessageCacheInfo[szServiceName];
 		if (sMessageCacheInfo.nTotalSize >= _MAX_CACHE_MESSAGE_SIZE)
 		{
-			sMessageCacheInfo.vecRequestMessageInfo.clear();
+			sMessageCacheInfo.vecRequestMessageCacheInfo.clear();
 			PrintWarning("cache message too big drop all cache message service_name: %s", szServiceName.c_str());
 		}
 
@@ -95,7 +117,11 @@ namespace core
 
 	bool CTransport::call(const std::string& szServiceName, const SRequestMessageInfo& sRequestMessageInfo)
 	{
-		DebugAstEx(sRequestMessageInfo.pData != nullptr, false);
+		DebugAstEx(sRequestMessageInfo.pMessage != nullptr, false);
+
+		int32_t nBufSize = serialize_protobuf_message_to_buf(sRequestMessageInfo.pMessage, reinterpret_cast<message_header*>(&this->m_vecBuf[0]), (uint32_t)this->m_vecBuf.size());
+		if (nBufSize < 0)
+			return false;
 
 		CConnectionToService* pConnectionToService = CCoreApp::Inst()->getServiceMgr()->getConnectionToService(szServiceName);
 		if (pConnectionToService != nullptr)
@@ -108,7 +134,7 @@ namespace core
 			request_cookice cookice;
 			cookice.nSessionID = nSessionID;
 
-			pConnectionToService->send(eMT_REQUEST | sRequestMessageInfo.nMessageFormat, &cookice, sizeof(cookice), sRequestMessageInfo.pData, sRequestMessageInfo.pData->nMessageSize);
+			pConnectionToService->send(eMT_REQUEST, &cookice, sizeof(cookice), &this->m_vecBuf[0], (uint16_t)nBufSize);
 			
 			if (nSessionID != 0)
 			{
@@ -126,19 +152,20 @@ namespace core
 
 		SMessageCacheInfo* pMessageCacheInfo = this->getMessageCacheInfo(szServiceName);
 
-		pMessageCacheInfo->vecRequestMessageInfo.push_back(sRequestMessageInfo);
-		pMessageCacheInfo->nTotalSize += (uint32_t)sRequestMessageInfo.pData->nMessageSize;
-
-		// 需要把数据拷贝出来，不然等函数返回后数据指针就成为无效的野指针了
-		SRequestMessageInfo& sDstRequestMessageInfo = pMessageCacheInfo->vecRequestMessageInfo[pMessageCacheInfo->vecRequestMessageInfo.size() - 1];
-		sDstRequestMessageInfo.pData = reinterpret_cast<message_header*>(new char[sRequestMessageInfo.pData->nMessageSize]);
-		memcpy(const_cast<message_header*>(sDstRequestMessageInfo.pData), sRequestMessageInfo.pData, sRequestMessageInfo.pData->nMessageSize);
+		SRequestMessageCacheInfo* pRequestMessageCacheInfo = new SRequestMessageCacheInfo();
+		pRequestMessageCacheInfo->vecBuf.resize(nBufSize);
+		memcpy(&pRequestMessageCacheInfo->vecBuf[0], &this->m_vecBuf[0], nBufSize);
+		pRequestMessageCacheInfo->callback = sRequestMessageInfo.callback;
+		pMessageCacheInfo->vecRequestMessageCacheInfo.push_back(pRequestMessageCacheInfo);
+		pMessageCacheInfo->nTotalSize += nBufSize;
 
 		return true;
 	}
 
 	bool CTransport::response(const std::string& szServiceName, const SResponseMessageInfo& sResponseMessageInfo)
 	{
+		DebugAstEx(sResponseMessageInfo.pMessage != nullptr, false);
+
 		CConnectionFromService* pConnectionFromService = CCoreApp::Inst()->getServiceMgr()->getConnectionFromService(szServiceName);
 		DebugAstEx(pConnectionFromService != nullptr, false);
 
@@ -146,13 +173,23 @@ namespace core
 		cookice.nSessionID = sResponseMessageInfo.nSessionID;
 		cookice.nResult = sResponseMessageInfo.nResult;
 
-		pConnectionFromService->send(eMT_RESPONSE | sResponseMessageInfo.nMessageFormat, &cookice, sizeof(cookice), sResponseMessageInfo.pData, sResponseMessageInfo.pData->nMessageSize);
+		int32_t nBufSize = serialize_protobuf_message_to_buf(sResponseMessageInfo.pMessage, reinterpret_cast<message_header*>(&this->m_vecBuf[0]), (uint32_t)this->m_vecBuf.size());
+		if (nBufSize < 0)
+			return false;
+
+		pConnectionFromService->send(eMT_RESPONSE, &cookice, sizeof(cookice), &this->m_vecBuf[0], (uint16_t)nBufSize);
 
 		return true;
 	}
 
 	bool CTransport::send(const std::string& szServiceName, const SGateMessageInfo& sGateMessageInfo)
 	{
+		DebugAstEx(sGateMessageInfo.pMessage != nullptr, false);
+
+		int32_t nBufSize = serialize_protobuf_message_to_buf(sGateMessageInfo.pMessage, reinterpret_cast<message_header*>(&this->m_vecBuf[0]), (uint32_t)this->m_vecBuf.size());
+		if (nBufSize < 0)
+			return false;
+
 		CConnectionToService* pConnectionToService = CCoreApp::Inst()->getServiceMgr()->getConnectionToService(szServiceName);
 		if (pConnectionToService != nullptr)
 		{
@@ -160,27 +197,30 @@ namespace core
 			gate_cookice cookice;
 			cookice.nSessionID = sGateMessageInfo.nSessionID;
 
-			pConnectionToService->send(sGateMessageInfo.nMessageFormat, &cookice, sizeof(cookice), sGateMessageInfo.pData, sGateMessageInfo.pData->nMessageSize);
+			pConnectionToService->send(eMT_TO_GATE, &cookice, sizeof(cookice), &this->m_vecBuf[0], (uint16_t)nBufSize);
 
 			return true;
 		}
 
 		SMessageCacheInfo* pMessageCacheInfo = this->getMessageCacheInfo(szServiceName);
 
-		pMessageCacheInfo->vecGateMessageInfo.push_back(sGateMessageInfo);
-		pMessageCacheInfo->nTotalSize += (uint32_t)sGateMessageInfo.pData->nMessageSize;
-
-		// 需要把数据拷贝出来，不然等函数返回后数据指针就成为无效的野指针了
-		SGateMessageInfo& sDstGateMessageInfo = pMessageCacheInfo->vecGateMessageInfo[pMessageCacheInfo->vecGateMessageInfo.size() - 1];
-		sDstGateMessageInfo.pData = reinterpret_cast<message_header*>(new char[sGateMessageInfo.pData->nMessageSize]);
-		memcpy(const_cast<message_header*>(sDstGateMessageInfo.pData), sGateMessageInfo.pData, sGateMessageInfo.pData->nMessageSize);
+		SGateMessageCacheInfo* pGateMessageCacheInfo = new SGateMessageCacheInfo();
+		pGateMessageCacheInfo->vecBuf.resize(nBufSize);
+		memcpy(&pGateMessageCacheInfo->vecBuf[0], &this->m_vecBuf[0], nBufSize);
+		pGateMessageCacheInfo->nSessionID = sGateMessageInfo.nSessionID;
+		pMessageCacheInfo->vecGateMessageCacheInfo.push_back(pGateMessageCacheInfo);
+		pMessageCacheInfo->nTotalSize += nBufSize;
 
 		return true;
 	}
 
 	bool CTransport::broadcast(const std::string& szServiceName, const SGateBroadcastMessageInfo& sGateBroadcastMessageInfo)
 	{
-		DebugAstEx(!sGateBroadcastMessageInfo.vecSessionID.empty(), false);
+		DebugAstEx(sGateBroadcastMessageInfo.pMessage != nullptr && !sGateBroadcastMessageInfo.vecSessionID.empty(), false);
+
+		int32_t nBufSize = serialize_protobuf_message_to_buf(sGateBroadcastMessageInfo.pMessage, reinterpret_cast<message_header*>(&this->m_vecBuf[0]), (uint32_t)this->m_vecBuf.size());
+		if (nBufSize < 0)
+			return false;
 
 		CConnectionToService* pConnectionToService = CCoreApp::Inst()->getServiceMgr()->getConnectionToService(szServiceName);
 		if (pConnectionToService != nullptr)
@@ -190,20 +230,18 @@ namespace core
 			pCookice->nCount = (uint16_t)sGateBroadcastMessageInfo.vecSessionID.size();
 			memcpy(pCookice + 1, &sGateBroadcastMessageInfo.vecSessionID[0], sizeof(uint64_t) * sGateBroadcastMessageInfo.vecSessionID.size());
 
-			pConnectionToService->send(eMT_TO_GATE | sGateBroadcastMessageInfo.nMessageFormat, pCookice, (uint16_t)(sizeof(uint64_t) * sGateBroadcastMessageInfo.vecSessionID.size()), sGateBroadcastMessageInfo.pData, sGateBroadcastMessageInfo.pData->nMessageSize);
+			pConnectionToService->send(eMT_TO_GATE | eMT_BROADCAST, pCookice, (uint16_t)(sizeof(uint64_t) * sGateBroadcastMessageInfo.vecSessionID.size()), &this->m_vecBuf[0], (uint16_t)nBufSize);
 
 			return true;
 		}
-
 		SMessageCacheInfo* pMessageCacheInfo = this->getMessageCacheInfo(szServiceName);
 
-		pMessageCacheInfo->vecGateBroadcastMessageInfo.push_back(sGateBroadcastMessageInfo);
-		pMessageCacheInfo->nTotalSize += (uint32_t)sGateBroadcastMessageInfo.pData->nMessageSize;
-
-		// 需要把数据拷贝出来，不然等函数返回后数据指针就成为无效的野指针了
-		SGateBroadcastMessageInfo& sDstGateBroadcastMessageInfo = pMessageCacheInfo->vecGateBroadcastMessageInfo[pMessageCacheInfo->vecGateBroadcastMessageInfo.size() - 1];
-		sDstGateBroadcastMessageInfo.pData = reinterpret_cast<message_header*>(new char[sGateBroadcastMessageInfo.pData->nMessageSize]);
-		memcpy(const_cast<message_header*>(sDstGateBroadcastMessageInfo.pData), sGateBroadcastMessageInfo.pData, sGateBroadcastMessageInfo.pData->nMessageSize);
+		SGateBroadcastMessageCacheInfo* sGateBroadcastMessageCacheInfo = new SGateBroadcastMessageCacheInfo();
+		sGateBroadcastMessageCacheInfo->vecBuf.resize(nBufSize);
+		memcpy(&sGateBroadcastMessageCacheInfo->vecBuf[0], &this->m_vecBuf[0], nBufSize);
+		sGateBroadcastMessageCacheInfo->vecSessionID = sGateBroadcastMessageInfo.vecSessionID;
+		pMessageCacheInfo->vecGateBroadcastMessageCacheInfo.push_back(sGateBroadcastMessageCacheInfo);
+		pMessageCacheInfo->nTotalSize += nBufSize;
 
 		return true;
 	}
@@ -235,25 +273,72 @@ namespace core
 
 	void CTransport::sendCacheMessage(const std::string& szServiceName)
 	{
+		CConnectionToService* pConnectionToService = CCoreApp::Inst()->getServiceMgr()->getConnectionToService(szServiceName);
+		DebugAst(pConnectionToService != nullptr);
+
 		// 把之前cache的消息发送出去
 		auto iter = this->m_mapMessageCacheInfo.find(szServiceName);
 		if (iter != this->m_mapMessageCacheInfo.end())
 		{
 			SMessageCacheInfo& sMessageCacheInfo = iter->second;
-			for (size_t i = 0; i < sMessageCacheInfo.vecRequestMessageInfo.size(); ++i)
+			for (size_t i = 0; i < sMessageCacheInfo.vecRequestMessageCacheInfo.size(); ++i)
 			{
-				this->call(szServiceName, sMessageCacheInfo.vecRequestMessageInfo[i]);
-				SAFE_DELETE_ARRAY(sMessageCacheInfo.vecRequestMessageInfo[i].pData);
+				SRequestMessageCacheInfo* pRequestMessageCacheInfo = sMessageCacheInfo.vecRequestMessageCacheInfo[i];
+				if (NULL == pRequestMessageCacheInfo)
+					continue;
+
+				uint64_t nSessionID = 0;
+				if (pRequestMessageCacheInfo->callback != nullptr)
+					nSessionID = this->genSessionID();
+
+				// 填充cookice
+				request_cookice cookice;
+				cookice.nSessionID = nSessionID;
+
+				pConnectionToService->send(eMT_REQUEST, &cookice, sizeof(cookice), &pRequestMessageCacheInfo->vecBuf[0], (uint16_t)pRequestMessageCacheInfo->vecBuf.size());
+
+				if (nSessionID != 0)
+				{
+					SResponseWaitInfo* pResponseInfo = new SResponseWaitInfo();
+					pResponseInfo->callback = pRequestMessageCacheInfo->callback;
+					pResponseInfo->nSessionID = nSessionID;
+					pResponseInfo->szServiceName = szServiceName;
+					pResponseInfo->tickTimeout.setCallback(std::bind(&CTransport::onRequestMessageTimeout, this, std::placeholders::_1));
+					CCoreApp::Inst()->registerTicker(&pResponseInfo->tickTimeout, _MAX_REQUEST_MESSAGE_TIMEOUT, 0, nSessionID);
+
+					this->m_mapResponseWaitInfo[pResponseInfo->nSessionID] = pResponseInfo;
+				}
+
+				SAFE_DELETE(pRequestMessageCacheInfo);
 			}
-			for (size_t i = 0; i < sMessageCacheInfo.vecGateMessageInfo.size(); ++i)
+			for (size_t i = 0; i < sMessageCacheInfo.vecGateMessageCacheInfo.size(); ++i)
 			{
-				this->send(szServiceName, sMessageCacheInfo.vecGateMessageInfo[i]);
-				SAFE_DELETE_ARRAY(sMessageCacheInfo.vecGateMessageInfo[i].pData);
+				SGateMessageCacheInfo* pGateMessageCacheInfo = sMessageCacheInfo.vecGateMessageCacheInfo[i];
+				if (NULL == pGateMessageCacheInfo)
+					continue;
+
+				// 填充cookice
+				gate_cookice cookice;
+				cookice.nSessionID = pGateMessageCacheInfo->nSessionID;
+
+				pConnectionToService->send(eMT_TO_GATE, &cookice, sizeof(cookice), &pGateMessageCacheInfo->vecBuf[0], (uint16_t)pGateMessageCacheInfo->vecBuf.size());
+
+				SAFE_DELETE(pGateMessageCacheInfo);
 			}
-			for (size_t i = 0; i < sMessageCacheInfo.vecGateBroadcastMessageInfo.size(); ++i)
+			for (size_t i = 0; i < sMessageCacheInfo.vecGateBroadcastMessageCacheInfo.size(); ++i)
 			{
-				this->broadcast(szServiceName, sMessageCacheInfo.vecGateBroadcastMessageInfo[i]);
-				SAFE_DELETE_ARRAY(sMessageCacheInfo.vecGateBroadcastMessageInfo[i].pData);
+				SGateBroadcastMessageCacheInfo* pGateBroadcastMessageCacheInfo = sMessageCacheInfo.vecGateBroadcastMessageCacheInfo[i];
+				if (NULL == pGateBroadcastMessageCacheInfo)
+					continue;
+
+				// 填充cookice
+				gate_cookice_broadcast* pCookice = reinterpret_cast<gate_cookice_broadcast*>(new char[sizeof(gate_cookice_broadcast) + sizeof(uint64_t) * pGateBroadcastMessageCacheInfo->vecSessionID.size()]);
+				pCookice->nCount = (uint16_t)pGateBroadcastMessageCacheInfo->vecSessionID.size();
+				memcpy(pCookice + 1, &pGateBroadcastMessageCacheInfo->vecSessionID[0], sizeof(uint64_t) * pGateBroadcastMessageCacheInfo->vecSessionID.size());
+
+				pConnectionToService->send(eMT_TO_GATE | eMT_BROADCAST, pCookice, (uint16_t)(sizeof(uint64_t) * pGateBroadcastMessageCacheInfo->vecSessionID.size()), &pGateBroadcastMessageCacheInfo->vecBuf[0], (uint16_t)pGateBroadcastMessageCacheInfo->vecBuf.size());
+				
+				SAFE_DELETE(pGateBroadcastMessageCacheInfo);
 			}
 
 			this->m_mapMessageCacheInfo.erase(iter);

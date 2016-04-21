@@ -19,14 +19,14 @@ namespace core
 		return true;
 	}
 
-	void CMessageRegistry::registerCallback(uint32_t nMessageID, ServiceCallback callback)
+	void CMessageRegistry::registerCallback(const std::string& szMessageName, ServiceCallback callback)
 	{
-		CCoreApp::Inst()->getMessageDirectory()->registerCallback(nMessageID, callback);
+		CCoreApp::Inst()->getMessageDirectory()->registerCallback(szMessageName, callback);
 	}
 
-	void CMessageRegistry::registerCallback(uint32_t nMessageID, GateClientCallback callback)
+	void CMessageRegistry::registerCallback(const std::string& szMessageName, GateClientCallback callback)
 	{
-		CCoreApp::Inst()->getMessageDirectory()->registerCallback(nMessageID, callback);
+		CCoreApp::Inst()->getMessageDirectory()->registerCallback(szMessageName, callback);
 	}
 
 	void CMessageRegistry::addGlobalBeforeFilter(ServiceGlobalFilter callback)

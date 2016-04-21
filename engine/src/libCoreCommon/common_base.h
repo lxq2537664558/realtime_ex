@@ -9,40 +9,54 @@ namespace core
 {
 	struct SRequestMessageInfo
 	{
-		uint16_t				nMessageFormat;
-		const message_header*	pData;
-		InvokeCallback			callback;
+		google::protobuf::Message*	pMessage;
+		InvokeCallback				callback;
 	};
 
 	struct SResponseMessageInfo
 	{
-		uint16_t				nMessageFormat;
-		uint64_t				nSessionID;
-		const message_header*	pData;
-		uint8_t					nResult;
+		uint64_t					nSessionID;
+		google::protobuf::Message*	pMessage;
+		uint8_t						nResult;
 	};
 
 	struct SGateMessageInfo
 	{
-		uint64_t				nSessionID;
-		uint16_t				nMessageFormat;
-		const message_header*	pData;
+		uint64_t					nSessionID;
+		google::protobuf::Message*	pMessage;
 	};
 
 	struct SGateBroadcastMessageInfo
 	{
+		std::vector<uint64_t>		vecSessionID;
+		google::protobuf::Message*	pMessage;
+	};
+
+	struct SRequestMessageCacheInfo
+	{
+		std::vector<char>	vecBuf;
+		InvokeCallback		callback;
+	};
+
+	struct SGateMessageCacheInfo
+	{
+		uint64_t			nSessionID;
+		std::vector<char>	vecBuf;
+	};
+
+	struct SGateBroadcastMessageCacheInfo
+	{
 		std::vector<uint64_t>	vecSessionID;
-		uint16_t				nMessageFormat;
-		const message_header*	pData;
+		std::vector<char>		vecBuf;
 	};
 
 	struct SMessageCacheInfo
 	{
-		uint32_t								nTotalSize;
-		bool									bRefuse;
-		std::vector<SRequestMessageInfo>		vecRequestMessageInfo;
-		std::vector<SGateMessageInfo>			vecGateMessageInfo;
-		std::vector<SGateBroadcastMessageInfo>	vecGateBroadcastMessageInfo;
+		uint32_t										nTotalSize;
+		bool											bRefuse;
+		std::vector<SRequestMessageCacheInfo*>			vecRequestMessageCacheInfo;
+		std::vector<SGateMessageCacheInfo*>				vecGateMessageCacheInfo;
+		std::vector<SGateBroadcastMessageCacheInfo*>	vecGateBroadcastMessageCacheInfo;
 	};
 
 	struct SResponseWaitInfo
@@ -51,5 +65,17 @@ namespace core
 		uint64_t		nSessionID;
 		std::string		szServiceName;
 		InvokeCallback	callback;
+	};
+
+	struct SServiceCallbackInfo
+	{
+		std::string		szMessageName;
+		ServiceCallback	serviceCallback;
+	};
+
+	struct SGateClientCallbackInfo
+	{
+		std::string			szMessageName;
+		GateClientCallback	gateClientCallback;
 	};
 }

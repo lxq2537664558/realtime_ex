@@ -39,6 +39,7 @@ namespace core
 		void					onCheckConnect(uint64_t nContext);
 		void					onRequestMessageTimeout(uint64_t nContext);
 		uint64_t				genSessionID();
+		bool					send(CBaseConnection* pBaseConnection, uint16_t nMessageFormat, const void* pCookice, uint16_t nCookiceSize, const void* pBuf, uint16_t nBufSize);
 
 	private:
 		uint64_t									m_nNextSessionID;
@@ -46,5 +47,6 @@ namespace core
 		CTicker										m_tickCheckConnect;
 		std::map<uint64_t, SResponseWaitInfo*>		m_mapResponseWaitInfo;
 		std::map<std::string, SMessageCacheInfo>	m_mapMessageCacheInfo;
+		std::vector<char>							m_vecBuf;
 	};
 }

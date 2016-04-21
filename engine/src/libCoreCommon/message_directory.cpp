@@ -21,22 +21,36 @@ namespace core
 		return true;
 	}
 
-	void CMessageDirectory::registerCallback(uint32_t nMessageID, const ServiceCallback& callback)
+	void CMessageDirectory::registerCallback(const std::string& szMessageName, const ServiceCallback& callback)
 	{
+		uint32_t nMessageID = base::hash(szMessageName.c_str());
+		auto iter = this->m_mapMessageName.find(nMessageID);
+		if (iter != this->m_mapMessageName.end())
+		{
+			// 名字哈希冲突了
+			PrintWarning("dup message name by register service callback message_id: %d exist_message_name: %s new_message_name: %s", nMessageID, iter->second.c_str(), szMessageName.c_str());
+			return;
+		}
 		this->m_mapServiceCallback[nMessageID] = callback;
+		this->m_mapMessageName[nMessageID] = szMessageName;
 
-		this->sendMessageInfo(false, nMessageID, false);
+		this->sendMessageInfo(szMessageName, false);
 	}
 
-	void CMessageDirectory::registerCallback(uint32_t nMessageID, const GateClientCallback& callback)
+	void CMessageDirectory::registerCallback(const std::string& szMessageName, const GateClientCallback& callback)
 	{
-		this->m_mapGateClientCallback[nMessageID] = callback;
-
-		CConnectionToMaster* pConnectionToMaster = CCoreApp::Inst()->getServiceMgr()->getConnectionToMaster();
-		if (nullptr == pConnectionToMaster)
+		uint32_t nMessageID = base::hash(szMessageName.c_str());
+		auto iter = this->m_mapMessageName.find(nMessageID);
+		if (iter != this->m_mapMessageName.end())
+		{
+			// 名字哈希冲突了
+			PrintWarning("dup message name by register gate client callback message_id: %d exist_message_name: %s new_message_name: %s", nMessageID, iter->second.c_str(), szMessageName.c_str());
 			return;
-
-		this->sendMessageInfo(true, nMessageID, false);
+		}
+		this->m_mapGateClientCallback[nMessageID] = callback;
+		this->m_mapMessageName[nMessageID] = szMessageName;
+		
+		this->sendMessageInfo(szMessageName, true);
 	}
 
 	ServiceCallback& CMessageDirectory::getCallback(uint32_t nMessageID)
@@ -65,43 +79,53 @@ namespace core
 
 	void CMessageDirectory::onConnectToMaster()
 	{
-		this->sendMessageInfo(false, 0, true);
+		CConnectionToMaster* pConnectionToMaster = CCoreApp::Inst()->getServiceMgr()->getConnectionToMaster();
+		DebugAst(nullptr != pConnectionToMaster);
+
+		smt_sync_service_message_info netMsg;
+		netMsg.nAdd = 0;
+		for (auto iter = this->m_mapServiceCallback.begin(); iter != this->m_mapServiceCallback.end(); ++iter)
+		{
+			const std::string& szMessageName = this->getMessageName(iter->first);
+			if (szMessageName.empty())
+				continue;
+
+			SMessageSyncInfo sMessageSyncInfo;
+			sMessageSyncInfo.nGate = 0;
+			sMessageSyncInfo.szMessageName = szMessageName;
+			netMsg.vecMessageSyncInfo.push_back(sMessageSyncInfo);
+		}
+
+		for (auto iter = this->m_mapGateClientCallback.begin(); iter != this->m_mapGateClientCallback.end(); ++iter)
+		{
+			const std::string& szMessageName = this->getMessageName(iter->first);
+			if (szMessageName.empty())
+				continue;
+
+			SMessageSyncInfo sMessageSyncInfo;
+			sMessageSyncInfo.nGate = 1;
+			sMessageSyncInfo.szMessageName = szMessageName;
+			netMsg.vecMessageSyncInfo.push_back(sMessageSyncInfo);
+		}
+
+		base::CWriteBuf& writeBuf = CBaseApp::Inst()->getWriteBuf();
+		netMsg.pack(writeBuf);
+		pConnectionToMaster->send(eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
 	}
 
-	void CMessageDirectory::sendMessageInfo(bool bGate, uint32_t nMessageID, bool bFull)
+	void CMessageDirectory::sendMessageInfo(const std::string& szMessageName, bool bGate)
 	{
 		CConnectionToMaster* pConnectionToMaster = CCoreApp::Inst()->getServiceMgr()->getConnectionToMaster();
 		if (nullptr == pConnectionToMaster)
 			return;
 
 		smt_sync_service_message_info netMsg;
-		// 单个消息添加
-		if (!bFull)
-		{
-			netMsg.nAdd = 1;
-			SMessageSyncInfo sMessageSyncInfo;
-			sMessageSyncInfo.nGate = bGate;
-			sMessageSyncInfo.nMessageID = nMessageID;
-			netMsg.vecMessageSyncInfo.push_back(sMessageSyncInfo);
-		}
-		else
-		{
-			netMsg.nAdd = 0;
-			for (auto iter = this->m_mapServiceCallback.begin(); iter != this->m_mapServiceCallback.end(); ++iter)
-			{
-				SMessageSyncInfo sMessageSyncInfo;
-				sMessageSyncInfo.nGate = 0;
-				sMessageSyncInfo.nMessageID = iter->first;
-				netMsg.vecMessageSyncInfo.push_back(sMessageSyncInfo);
-			}
-			for (auto iter = this->m_mapGateClientCallback.begin(); iter != this->m_mapGateClientCallback.end(); ++iter)
-			{
-				SMessageSyncInfo sMessageSyncInfo;
-				sMessageSyncInfo.nGate = 1;
-				sMessageSyncInfo.nMessageID = iter->first;
-				netMsg.vecMessageSyncInfo.push_back(sMessageSyncInfo);
-			}
-		}
+		netMsg.nAdd = 1;
+		SMessageSyncInfo sMessageSyncInfo;
+		sMessageSyncInfo.nGate = bGate;
+		sMessageSyncInfo.szMessageName = szMessageName;
+		netMsg.vecMessageSyncInfo.push_back(sMessageSyncInfo);
+		
 		base::CWriteBuf& writeBuf = CBaseApp::Inst()->getWriteBuf();
 		netMsg.pack(writeBuf);
 		pConnectionToMaster->send(eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
@@ -149,7 +173,7 @@ namespace core
 		}
 	}
 
-	const std::vector<std::string>& CMessageDirectory::getMessageServiceName(uint32_t nMessageID, bool bGate) const
+	const std::vector<std::string>& CMessageDirectory::getServiceName(uint32_t nMessageID, bool bGate) const
 	{
 		static std::vector<std::string> s_vecMessageServiceName;
 		if (bGate)
@@ -188,6 +212,18 @@ namespace core
 	const std::vector<ServiceGlobalFilter>& CMessageDirectory::getGlobalAfterFilter()
 	{
 		return this->m_vecServiceGlobalAfterFilter;
+	}
+
+	const std::string& CMessageDirectory::getMessageName(uint32_t nMessageID) const
+	{
+		auto iter = this->m_mapMessageName.find(nMessageID);
+		if (iter == this->m_mapMessageName.end())
+		{
+			std::string szMessageName;
+			return szMessageName;
+		}
+
+		return iter->second;
 	}
 
 }
