@@ -38,7 +38,7 @@ namespace core
 		{
 			const request_cookice* pCookice = reinterpret_cast<const request_cookice*>(pData);
 
-			SServiceSessionInfo& sServiceSessionInfo = CCoreApp::Inst()->getMessageSend()->getServiceSessionInfo();
+			SServiceSessionInfo& sServiceSessionInfo = CCoreApp::Inst()->getTransport()->getServiceSessionInfo();
 			sServiceSessionInfo.szServiceName = szFromServiceName;
 			sServiceSessionInfo.nSessionID = pCookice->nSessionID;
 
@@ -56,7 +56,7 @@ namespace core
 		{
 			const response_cookice* pCookice = reinterpret_cast<const response_cookice*>(pData);
 
-			SResponseWaitInfo* pResponseWaitInfo = CCoreApp::Inst()->getMessageSend()->getResponseWaitInfo(pCookice->nSessionID, true);
+			SResponseWaitInfo* pResponseWaitInfo = CCoreApp::Inst()->getTransport()->getResponseWaitInfo(pCookice->nSessionID, true);
 			if (nullptr == pResponseWaitInfo)
 			{
 				PrintWarning("invalid session id from_service_name: %s session_id: "UINT64FMT, szFromServiceName.c_str(), pCookice->nSessionID);

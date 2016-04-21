@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "message_send.h"
+#include "transport.h"
 #include "core_app.h"
 #include "message_dispatcher.h"
 #include "connection_to_service.h"
@@ -12,25 +12,25 @@
 
 namespace core
 {
-	CMessageSend::CMessageSend()
+	CTransport::CTransport()
 		: m_nNextSessionID(0)
 	{
-		this->m_tickCheckConnect.setCallback(std::bind(&CMessageSend::onCheckConnect, this, std::placeholders::_1));
+		this->m_tickCheckConnect.setCallback(std::bind(&CTransport::onCheckConnect, this, std::placeholders::_1));
 	}
 
-	CMessageSend::~CMessageSend()
+	CTransport::~CTransport()
 	{
 
 	}
 
-	bool CMessageSend::init()
+	bool CTransport::init()
 	{
 		CCoreApp::Inst()->registTicker(&this->m_tickCheckConnect, 5 * 1000, 5 * 1000, 0);
 
 		return true;
 	}
 
-	uint64_t CMessageSend::genSessionID()
+	uint64_t CTransport::genSessionID()
 	{
 		++this->m_nNextSessionID;
 		if (this->m_nNextSessionID == 0)
@@ -39,7 +39,7 @@ namespace core
 		return this->m_nNextSessionID;
 	}
 
-	void CMessageSend::onCheckConnect(uint64_t nContext)
+	void CTransport::onCheckConnect(uint64_t nContext)
 	{
 		for (auto iter : this->m_mapMessageCacheInfo)
 		{
@@ -56,7 +56,7 @@ namespace core
 		}
 	}
 
-	void CMessageSend::onConnectRefuse(const std::string& szContext)
+	void CTransport::onConnectRefuse(const std::string& szContext)
 	{
 		auto iter = this->m_mapMessageCacheInfo.find(szContext);
 		if (iter == this->m_mapMessageCacheInfo.end())
@@ -65,7 +65,7 @@ namespace core
 		iter->second.bRefuse = true;
 	}
 
-	SMessageCacheInfo* CMessageSend::getMessageCacheInfo(const std::string& szServiceName)
+	SMessageCacheInfo* CTransport::getMessageCacheInfo(const std::string& szServiceName)
 	{
 		const SServiceBaseInfo* pServiceBaseInfo = CCoreApp::Inst()->getServiceMgr()->getServiceBaseInfo(szServiceName);
 		if (pServiceBaseInfo == nullptr)
@@ -93,7 +93,7 @@ namespace core
 		return &sMessageCacheInfo;
 	}
 
-	bool CMessageSend::call(const std::string& szServiceName, const SRequestMessageInfo& sRequestMessageInfo)
+	bool CTransport::call(const std::string& szServiceName, const SRequestMessageInfo& sRequestMessageInfo)
 	{
 		DebugAstEx(sRequestMessageInfo.pData != nullptr, false);
 
@@ -116,7 +116,7 @@ namespace core
 				pResponseInfo->callback = sRequestMessageInfo.callback;
 				pResponseInfo->nSessionID = nSessionID;
 				pResponseInfo->szServiceName = szServiceName;
-				pResponseInfo->tickTimeout.setCallback(std::bind(&CMessageSend::onRequestMessageTimeout, this, std::placeholders::_1));
+				pResponseInfo->tickTimeout.setCallback(std::bind(&CTransport::onRequestMessageTimeout, this, std::placeholders::_1));
 				CCoreApp::Inst()->registTicker(&pResponseInfo->tickTimeout, _MAX_REQUEST_MESSAGE_TIMEOUT, 0, nSessionID);
 
 				this->m_mapResponseWaitInfo[pResponseInfo->nSessionID] = pResponseInfo;
@@ -137,7 +137,7 @@ namespace core
 		return true;
 	}
 
-	bool CMessageSend::response(const std::string& szServiceName, const SResponseMessageInfo& sResponseMessageInfo)
+	bool CTransport::response(const std::string& szServiceName, const SResponseMessageInfo& sResponseMessageInfo)
 	{
 		CConnectionFromService* pConnectionFromService = CCoreApp::Inst()->getServiceMgr()->getConnectionFromService(szServiceName);
 		DebugAstEx(pConnectionFromService != nullptr, false);
@@ -151,7 +151,7 @@ namespace core
 		return true;
 	}
 
-	bool CMessageSend::send(const std::string& szServiceName, const SGateMessageInfo& sGateMessageInfo)
+	bool CTransport::send(const std::string& szServiceName, const SGateMessageInfo& sGateMessageInfo)
 	{
 		CConnectionToService* pConnectionToService = CCoreApp::Inst()->getServiceMgr()->getConnectionToService(szServiceName);
 		if (pConnectionToService != nullptr)
@@ -178,7 +178,7 @@ namespace core
 		return true;
 	}
 
-	bool CMessageSend::broadcast(const std::string& szServiceName, const SGateBroadcastMessageInfo& sGateBroadcastMessageInfo)
+	bool CTransport::broadcast(const std::string& szServiceName, const SGateBroadcastMessageInfo& sGateBroadcastMessageInfo)
 	{
 		DebugAstEx(!sGateBroadcastMessageInfo.vecSessionID.empty(), false);
 
@@ -208,7 +208,7 @@ namespace core
 		return true;
 	}
 
-	void CMessageSend::onRequestMessageTimeout(uint64_t nContext)
+	void CTransport::onRequestMessageTimeout(uint64_t nContext)
 	{
 		auto iter = this->m_mapResponseWaitInfo.find(nContext);
 		if (iter == this->m_mapResponseWaitInfo.end())
@@ -233,7 +233,7 @@ namespace core
 		SAFE_DELETE(pResponseWaitInfo);
 	}
 
-	void CMessageSend::sendCacheMessage(const std::string& szServiceName)
+	void CTransport::sendCacheMessage(const std::string& szServiceName)
 	{
 		// 把之前cache的消息发送出去
 		auto iter = this->m_mapMessageCacheInfo.find(szServiceName);
@@ -260,17 +260,17 @@ namespace core
 		}
 	}
 
-	void CMessageSend::delCacheMessage(const std::string& szServiceName)
+	void CTransport::delCacheMessage(const std::string& szServiceName)
 	{
 		this->m_mapMessageCacheInfo.erase(szServiceName);
 	}
 
-	SServiceSessionInfo& CMessageSend::getServiceSessionInfo()
+	SServiceSessionInfo& CTransport::getServiceSessionInfo()
 	{
 		return this->m_sServiceSessionInfo;
 	}
 
-	SResponseWaitInfo* CMessageSend::getResponseWaitInfo(uint64_t nSessionID, bool bErase)
+	SResponseWaitInfo* CTransport::getResponseWaitInfo(uint64_t nSessionID, bool bErase)
 	{
 		auto iter = this->m_mapResponseWaitInfo.find(nSessionID);
 		if (iter == this->m_mapResponseWaitInfo.end())

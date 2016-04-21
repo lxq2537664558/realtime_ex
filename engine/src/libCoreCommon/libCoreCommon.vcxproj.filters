@@ -45,9 +45,6 @@
     <ClInclude Include="service_mgr.h">
       <Filter>src\service</Filter>
     </ClInclude>
-    <ClInclude Include="message_send.h">
-      <Filter>src\service</Filter>
-    </ClInclude>
     <ClInclude Include="message_directory.h">
       <Filter>src\service</Filter>
     </ClInclude>
@@ -96,6 +93,9 @@
     <ClInclude Include="load_balance_policy_mgr.h">
       <Filter>src\service</Filter>
     </ClInclude>
+    <ClInclude Include="transport.h">
+      <Filter>src\service</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="base_connection.cpp">
@@ -140,9 +140,6 @@
     <ClCompile Include="service_mgr.cpp">
       <Filter>src\service</Filter>
     </ClCompile>
-    <ClCompile Include="message_send.cpp">
-      <Filter>src\service</Filter>
-    </ClCompile>
     <ClCompile Include="protobuf_helper.cpp">
       <Filter>src\service</Filter>
     </ClCompile>
@@ -168,6 +165,9 @@
       <Filter>src\service</Filter>
     </ClCompile>
     <ClCompile Include="load_balance_policy.cpp">
+      <Filter>src\service</Filter>
+    </ClCompile>
+    <ClCompile Include="transport.cpp">
       <Filter>src\service</Filter>
     </ClCompile>
   </ItemGroup>

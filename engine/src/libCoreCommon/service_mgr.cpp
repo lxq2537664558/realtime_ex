@@ -68,7 +68,7 @@ namespace core
 			return;
 		}
 
-		CCoreApp::Inst()->getMessageSend()->onConnectRefuse(szContext);
+		CCoreApp::Inst()->getTransport()->onConnectRefuse(szContext);
 	}
 
 	CConnectionToService* CServiceMgr::getConnectionToService(const std::string& szName) const
@@ -92,7 +92,7 @@ namespace core
 
 		this->m_mapConnectionToService[pConnectionToService->getServiceName()] = pConnectionToService;
 
-		CCoreApp::Inst()->getMessageSend()->sendCacheMessage(pConnectionToService->getServiceName());
+		CCoreApp::Inst()->getTransport()->sendCacheMessage(pConnectionToService->getServiceName());
 	}
 
 	void CServiceMgr::delConnectionToService(const std::string& szName)
@@ -228,6 +228,6 @@ namespace core
 		this->m_mapServiceInfo.erase(iter);
 		PrintInfo("del service service_name: %s", szName.c_str());
 
-		CCoreApp::Inst()->getMessageSend()->delCacheMessage(szName);
+		CCoreApp::Inst()->getTransport()->delCacheMessage(szName);
 	}
 }

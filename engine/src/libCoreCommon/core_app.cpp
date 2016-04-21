@@ -91,7 +91,7 @@ namespace core
 		: m_pTickerMgr(nullptr)
 		, m_pCoreConnectionMgr(nullptr)
 		, m_pServiceMgr(nullptr)
-		, m_pMessageSend(nullptr)
+		, m_pTransport(nullptr)
 		, m_pMessageDirectory(nullptr)
 		, m_pLoadBalancePolicyMgr(nullptr)
 		, m_nRunState(eARS_Start)
@@ -169,9 +169,9 @@ namespace core
 		return this->m_pServiceMgr;
 	}
 
-	CMessageSend* CCoreApp::getMessageSend() const
+	CTransport* CCoreApp::getTransport() const
 	{
-		return this->m_pMessageSend;
+		return this->m_pTransport;
 	}
 
 	CMessageDirectory* CCoreApp::getMessageDirectory() const
@@ -348,8 +348,8 @@ namespace core
 			return false;
 		}
 
-		this->m_pMessageSend = new CMessageSend();
-		if (!this->m_pMessageSend->init())
+		this->m_pTransport = new CTransport();
+		if (!this->m_pTransport->init())
 		{
 			PrintWarning("this->m_pMessageSend->init()");
 			return false;

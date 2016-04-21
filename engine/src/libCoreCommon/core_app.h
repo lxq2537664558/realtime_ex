@@ -6,7 +6,7 @@
 #include "ticker_mgr.h"
 #include "core_connection_mgr.h"
 #include "service_mgr.h"
-#include "message_send.h"
+#include "transport.h"
 #include "message_directory.h"
 #include "load_balance_policy_mgr.h"
 
@@ -56,10 +56,10 @@ namespace core
 		CServiceMgr*			
 				getServiceMgr() const;
 		/*
-		@brief: 获取服务管理器
+		@brief: 获取消息传送器
 		*/
-		CMessageSend*			
-				getMessageSend() const;
+		CTransport*			
+				getTransport() const;
 		/*
 		@brief: 获取消息字典
 		*/
@@ -106,7 +106,7 @@ namespace core
 		CTickerMgr*				m_pTickerMgr;
 		CCoreConnectionMgr*		m_pCoreConnectionMgr;
 		CServiceMgr*			m_pServiceMgr;
-		CMessageSend*			m_pMessageSend;
+		CTransport*				m_pTransport;
 		CMessageDirectory*		m_pMessageDirectory;
 		CLoadBalancePolicyMgr*	m_pLoadBalancePolicyMgr;
 		SServiceBaseInfo		m_sServiceBaseInfo;

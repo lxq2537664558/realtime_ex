@@ -8,12 +8,12 @@
 
 namespace core
 {
-	class CMessageSend :
+	class CTransport :
 		public base::noncopyable
 	{
 	public:
-		CMessageSend();
-		~CMessageSend();
+		CTransport();
+		~CTransport();
 
 		bool					init();
 

@@ -31,7 +31,7 @@ namespace core
 		sRequestMessageInfo.pData = pData;
 		sRequestMessageInfo.callback = nullptr;
 		
-		return CCoreApp::Inst()->getMessageSend()->call(szServiceName, sRequestMessageInfo);
+		return CCoreApp::Inst()->getTransport()->call(szServiceName, sRequestMessageInfo);
 	}
 
 	bool CClusterInvoker::invok_r(const std::string& szServiceName, uint16_t nMessageFormat, const message_header* pData, InvokeCallback callback, uint64_t nContext /* = 0 */)
@@ -43,7 +43,7 @@ namespace core
 		sRequestMessageInfo.pData = pData;
 		sRequestMessageInfo.callback = callback;
 		
-		return CCoreApp::Inst()->getMessageSend()->call(szServiceName, sRequestMessageInfo);
+		return CCoreApp::Inst()->getTransport()->call(szServiceName, sRequestMessageInfo);
 	}
 
 	bool CClusterInvoker::invok(uint16_t nMessageFormat, const message_header* pData, ILoadBalancePolicy* pLoadBalancePolicy, uint64_t nLoadBalanceParam)
@@ -74,11 +74,11 @@ namespace core
 
 		SResponseMessageInfo sResponseMessageInfo;
 		sResponseMessageInfo.nMessageFormat = nMessageFormat;
-		sResponseMessageInfo.nSessionID = CCoreApp::Inst()->getMessageSend()->getServiceSessionInfo().nSessionID;
+		sResponseMessageInfo.nSessionID = CCoreApp::Inst()->getTransport()->getServiceSessionInfo().nSessionID;
 		sResponseMessageInfo.pData = pData;
 		sResponseMessageInfo.nResult = eRRT_OK;
 
-		bool bRet = CCoreApp::Inst()->getMessageSend()->response(CCoreApp::Inst()->getMessageSend()->getServiceSessionInfo().szServiceName, sResponseMessageInfo);
+		bool bRet = CCoreApp::Inst()->getTransport()->response(CCoreApp::Inst()->getTransport()->getServiceSessionInfo().szServiceName, sResponseMessageInfo);
 		DebugAst(bRet);
 	}
 
@@ -92,13 +92,13 @@ namespace core
 		sResponseMessageInfo.pData = pData;
 		sResponseMessageInfo.nResult = eRRT_OK;
 
-		bool bRet = CCoreApp::Inst()->getMessageSend()->response(sServiceSessionInfo.szServiceName, sResponseMessageInfo);
+		bool bRet = CCoreApp::Inst()->getTransport()->response(sServiceSessionInfo.szServiceName, sResponseMessageInfo);
 		DebugAst(bRet);
 	}
 
 	SServiceSessionInfo CClusterInvoker::getServiceSessionInfo() const
 	{
-		return CCoreApp::Inst()->getMessageSend()->getServiceSessionInfo();
+		return CCoreApp::Inst()->getTransport()->getServiceSessionInfo();
 	}
 
 	bool CClusterInvoker::send(const SClientSessionInfo& sGateSessionInfo, uint16_t nMessageFormat, const message_header* pData)
@@ -110,7 +110,7 @@ namespace core
 		sGateMessageInfo.nMessageFormat = nMessageFormat | eMT_TO_GATE;
 		sGateMessageInfo.pData = pData;
 
-		return CCoreApp::Inst()->getMessageSend()->send(sGateSessionInfo.szServiceName, sGateMessageInfo);
+		return CCoreApp::Inst()->getTransport()->send(sGateSessionInfo.szServiceName, sGateMessageInfo);
 	}
 
 	bool CClusterInvoker::foward(uint64_t nSessionID, uint16_t nMessageFormat, const message_header* pData, ILoadBalancePolicy* pLoadBalancePolicy, uint64_t nLoadBalanceParam)
@@ -126,7 +126,7 @@ namespace core
 		sGateMessageInfo.nMessageFormat = nMessageFormat | eMT_FROM_GATE;
 		sGateMessageInfo.pData = pData;
 
-		return CCoreApp::Inst()->getMessageSend()->send(szServiceName, sGateMessageInfo);
+		return CCoreApp::Inst()->getTransport()->send(szServiceName, sGateMessageInfo);
 	}
 
 	bool CClusterInvoker::broadcast(const std::vector<SClientSessionInfo>& vecGateSessionInfo, uint16_t nMessageFormat, const message_header* pData)
@@ -146,7 +146,7 @@ namespace core
 			sGateBroadcastMessageInfo.vecSessionID = iter->second;
 			sGateBroadcastMessageInfo.nMessageFormat = nMessageFormat;
 			sGateBroadcastMessageInfo.pData = pData;
-			if (!CCoreApp::Inst()->getMessageSend()->broadcast(iter->first, sGateBroadcastMessageInfo))
+			if (!CCoreApp::Inst()->getTransport()->broadcast(iter->first, sGateBroadcastMessageInfo))
 				bRet = false;
 		}
 
