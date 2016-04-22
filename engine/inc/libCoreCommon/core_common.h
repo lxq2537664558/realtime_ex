@@ -154,10 +154,12 @@ namespace core
 
 struct SServiceBaseInfo
 {
-	std::string	szType;
-	std::string	szName;
+	std::string	szType;			// 服务类型
+	std::string	szName;			// 服务名字
+	std::string	szGroup;		// 服务所属的组
+	std::string	szVersion;		// 服务版本
 	std::string	szHost;
-	uint16_t	nPort;	// 0表示该服务没有监听地址
+	uint16_t	nPort;			// 0表示该服务没有监听地址
 	uint32_t	nRecvBufSize;
 	uint32_t	nSendBufSize;
 };
