@@ -17,7 +17,7 @@ public:
 	virtual void	onDispatch(uint16_t nMessageType, const void* pData, uint16_t nSize);
 
 private:
-	void			doFoward(const core::message_header* pHeader);
+	void			forward(const core::message_header* pHeader);
 
 private:
 	uint64_t	m_nSessionID;

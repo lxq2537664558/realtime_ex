@@ -38,7 +38,7 @@ bool CGateApp::onInit()
 {
 	CConnectionFromClient::registClassInfo();
 
-	core::CMessageRegistry::Inst()->registGlobalBeforeFilter(std::bind(dispatch_gate_message, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
+	core::CMessageRegistry::Inst()->addGlobalBeforeFilter(std::bind(dispatch_gate_message, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
 	
 	if (!CGateMessageDispatcher::Inst()->init())
 	{

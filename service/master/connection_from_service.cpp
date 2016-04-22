@@ -53,11 +53,11 @@ void CConnectionFromService::onDispatch(uint16_t nMsgType, const void* pData, ui
 
 		CMasterApp::Inst()->getServiceMgr()->delService(netMsg.szName);
 	}
-	else if (pHeader->nMessageID == eSMT_sync_service_message_info)
+	else if (pHeader->nMessageID == eSMT_register_service_message_info)
 	{
-		smt_sync_service_message_info netMsg;
+		smt_register_service_message_info netMsg;
 		netMsg.unpack(pData, nSize);
 
-		CMasterApp::Inst()->getServiceMgr()->addServiceMessageInfo(this->m_szServiceName, netMsg.vecMessageSyncInfo, !!netMsg.nAdd);
+		CMasterApp::Inst()->getServiceMgr()->registerMessageInfo(this->m_szServiceName, netMsg.vecMessageSyncInfo);
 	}
 }

@@ -16,16 +16,16 @@ public:
 	CConnectionFromService*	getServiceConnection(const std::string& szName) const;
 	void					addService(CConnectionFromService* pConnectionFromService, const SServiceBaseInfo& sServiceBaseInfo);
 	void					delService(const std::string& szName);
-	void					addServiceMessageInfo(const std::string& szName, const std::vector<SMessageSyncInfo>& vecMessageSyncInfo, bool bAdd);
+	void					registerMessageInfo(const std::string& szName, const std::vector<SMessageSyncInfo>& vecMessageSyncInfo);
 
 private:
 	struct SServiceInfo
 	{
-		SServiceBaseInfo		sServiceBaseInfo;
-		std::vector<uint32_t>	vecServiceMessageID;
-		std::vector<uint32_t>	vecGateServiceMessageID;
-		CConnectionFromService*	pConnectionFromService;
+		SServiceBaseInfo			sServiceBaseInfo;
+		std::set<std::string>		setServiceMessageName;
+		CConnectionFromService*		pConnectionFromService;
 	};
 
+	std::map<uint32_t, std::string>		m_mapMessageName;
 	std::map<std::string, SServiceInfo>	m_mapServiceInfo;
 };
