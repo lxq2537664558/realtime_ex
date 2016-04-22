@@ -93,17 +93,21 @@ namespace core
 
 	void CBaseApp::registLoadBalancePolicy(ILoadBalancePolicy* pLoadBalancePolicy)
 	{
-		CCoreApp::Inst()->registLoadBalancePolicy(pLoadBalancePolicy);
+		CCoreApp::Inst()->getLoadBalancePolicyMgr()->registLoadBalancePolicy(pLoadBalancePolicy);
 	}
 
 	ILoadBalancePolicy* CBaseApp::getLoadBalancePolicy(uint32_t nID) const
 	{
-		return CCoreApp::Inst()->getLoadBalancePolicy(nID);
+		return CCoreApp::Inst()->getLoadBalancePolicyMgr()->getLoadBalancePolicy(nID);
 	}
 
 	const std::vector<std::string>& CBaseApp::getServiceName(const std::string& szMessageName) const
 	{
-		return CCoreApp::Inst()->getServiceName(szMessageName);
+		return CCoreApp::Inst()->getMessageDirectory()->getOtherServiceName(szMessageName);
 	}
 
+	const std::string& CBaseApp::getMessageName(uint32_t nMessageID) const
+	{
+		return CCoreApp::Inst()->getMessageDirectory()->getMessageName(nMessageID);
+	}
 }

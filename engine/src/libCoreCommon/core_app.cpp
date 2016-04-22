@@ -498,19 +498,9 @@ namespace core
 		this->m_nRunState = eARS_Quit;
 	}
 
-	void CCoreApp::registLoadBalancePolicy(ILoadBalancePolicy* pLoadBalancePolicy)
+	CLoadBalancePolicyMgr* CCoreApp::getLoadBalancePolicyMgr() const
 	{
-		this->m_pLoadBalancePolicyMgr->registLoadBalancePolicy(pLoadBalancePolicy);
-	}
-
-	ILoadBalancePolicy* CCoreApp::getLoadBalancePolicy(uint32_t nID) const
-	{
-		return this->m_pLoadBalancePolicyMgr->getLoadBalancePolicy(nID);
-	}
-
-	const std::vector<std::string>& CCoreApp::getServiceName(const std::string& szMessageName) const
-	{
-		return this->m_pMessageDirectory->getOtherServiceName(szMessageName);
+		return this->m_pLoadBalancePolicyMgr;
 	}
 
 }

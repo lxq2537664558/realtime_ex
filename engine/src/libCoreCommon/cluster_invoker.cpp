@@ -108,19 +108,20 @@ namespace core
 		return CCoreApp::Inst()->getTransport()->send(sGateSessionInfo.szServiceName, sGateMessageInfo);
 	}
 
-	bool CClusterInvoker::foward(uint64_t nSessionID, const google::protobuf::Message* pMessage, ILoadBalancePolicy* pLoadBalancePolicy, uint64_t nLoadBalanceParam)
+	bool CClusterInvoker::forward(uint64_t nSessionID, const message_header* pHeader, ILoadBalancePolicy* pLoadBalancePolicy, uint64_t nLoadBalanceParam)
 	{
-		DebugAstEx(pMessage != nullptr && pLoadBalancePolicy != nullptr, false);
+		DebugAstEx(pHeader != nullptr && pLoadBalancePolicy != nullptr, false);
 
-		const std::string szServiceName = pLoadBalancePolicy->select(pMessage->GetTypeName(), nLoadBalanceParam);
+		const std::string& szMessageName = CCoreApp::Inst()->getMessageDirectory()->getMessageName(pHeader->nMessageID);
+		const std::string szServiceName = pLoadBalancePolicy->select(szMessageName, nLoadBalanceParam);
 		if (szServiceName.empty())
 			return false;
 
-		SGateMessageInfo sGateMessageInfo;
+		SGateForwardMessageInfo sGateMessageInfo;
 		sGateMessageInfo.nSessionID = nSessionID;
-		sGateMessageInfo.pMessage = const_cast<google::protobuf::Message*>(pMessage);
+		sGateMessageInfo.pHeader = const_cast<message_header*>(pHeader);
 
-		return CCoreApp::Inst()->getTransport()->send(szServiceName, sGateMessageInfo);
+		return CCoreApp::Inst()->getTransport()->forward(szServiceName, sGateMessageInfo);
 	}
 
 	bool CClusterInvoker::broadcast(const std::vector<SClientSessionInfo>& vecGateSessionInfo, const google::protobuf::Message* pMessage)

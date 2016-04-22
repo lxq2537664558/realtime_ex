@@ -60,6 +60,6 @@ namespace core
 		/**
 		@brief: 网关服务转发客户端消息
 		*/
-		bool				foward(uint64_t nSessionID, const google::protobuf::Message* pMessage, ILoadBalancePolicy* pLoadBalancePolicy, uint64_t nLoadBalanceParam);
+		bool				forward(uint64_t nSessionID, const message_header* pHeader, ILoadBalancePolicy* pLoadBalancePolicy, uint64_t nLoadBalanceParam);
 	};
 }

@@ -20,6 +20,12 @@ namespace core
 		uint8_t						nResult;
 	};
 
+	struct SGateForwardMessageInfo
+	{
+		uint64_t		nSessionID;
+		message_header*	pHeader;
+	};
+
 	struct SGateMessageInfo
 	{
 		uint64_t					nSessionID;
@@ -44,6 +50,12 @@ namespace core
 		std::vector<char>	vecBuf;
 	};
 
+	struct SGateForwardMessageCacheInfo
+	{
+		uint64_t			nSessionID;
+		std::vector<char>	vecBuf;
+	};
+
 	struct SGateBroadcastMessageCacheInfo
 	{
 		std::vector<uint64_t>	vecSessionID;
@@ -56,6 +68,7 @@ namespace core
 		bool											bRefuse;
 		std::vector<SRequestMessageCacheInfo*>			vecRequestMessageCacheInfo;
 		std::vector<SGateMessageCacheInfo*>				vecGateMessageCacheInfo;
+		std::vector<SGateForwardMessageCacheInfo*>		vecGateForwardMessageCacheInfo;
 		std::vector<SGateBroadcastMessageCacheInfo*>	vecGateBroadcastMessageCacheInfo;
 	};
 

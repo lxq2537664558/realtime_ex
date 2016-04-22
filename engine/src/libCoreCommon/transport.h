@@ -22,6 +22,8 @@ namespace core
 		bool					call(const std::string& szServiceName, const SRequestMessageInfo& sRequestMessageInfo);
 		bool					response(const std::string& szServiceName, const SResponseMessageInfo& sResponseMessageInfo);
 
+		bool					forward(const std::string& szServiceName, const SGateForwardMessageInfo& sGateMessageInfo);
+
 		bool					send(const std::string& szServiceName, const SGateMessageInfo& sGateMessageInfo);
 
 		bool					broadcast(const std::string& szServiceName, const SGateBroadcastMessageInfo& sGateBroadcastMessageInfo);
@@ -39,8 +41,7 @@ namespace core
 		void					onCheckConnect(uint64_t nContext);
 		void					onRequestMessageTimeout(uint64_t nContext);
 		uint64_t				genSessionID();
-		bool					send(CBaseConnection* pBaseConnection, uint16_t nMessageFormat, const void* pCookice, uint16_t nCookiceSize, const void* pBuf, uint16_t nBufSize);
-
+		
 	private:
 		uint64_t									m_nNextSessionID;
 		SServiceSessionInfo							m_sServiceSessionInfo;

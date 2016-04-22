@@ -181,6 +181,34 @@ namespace core
 		return true;
 	}
 
+	bool CTransport::forward(const std::string& szServiceName, const SGateForwardMessageInfo& sGateMessageInfo)
+	{
+		DebugAstEx(sGateMessageInfo.pHeader != nullptr, false);
+
+		CConnectionToService* pConnectionToService = CCoreApp::Inst()->getServiceMgr()->getConnectionToService(szServiceName);
+		if (pConnectionToService != nullptr)
+		{
+			// Ìî³äcookice
+			gate_cookice cookice;
+			cookice.nSessionID = sGateMessageInfo.nSessionID;
+
+			pConnectionToService->send(eMT_TO_GATE, &cookice, sizeof(cookice), sGateMessageInfo.pHeader, sGateMessageInfo.pHeader->nMessageSize);
+
+			return true;
+		}
+
+		SMessageCacheInfo* pMessageCacheInfo = this->getMessageCacheInfo(szServiceName);
+
+		SGateForwardMessageCacheInfo* pGateForwardMessageCacheInfo = new SGateForwardMessageCacheInfo();
+		pGateForwardMessageCacheInfo->vecBuf.resize(sGateMessageInfo.pHeader->nMessageSize);
+		memcpy(&pGateForwardMessageCacheInfo->vecBuf[0], sGateMessageInfo.pHeader, sGateMessageInfo.pHeader->nMessageSize);
+		pGateForwardMessageCacheInfo->nSessionID = sGateMessageInfo.nSessionID;
+		pMessageCacheInfo->vecGateForwardMessageCacheInfo.push_back(pGateForwardMessageCacheInfo);
+		pMessageCacheInfo->nTotalSize += sGateMessageInfo.pHeader->nMessageSize;
+
+		return true;
+	}
+
 	bool CTransport::send(const std::string& szServiceName, const SGateMessageInfo& sGateMessageInfo)
 	{
 		DebugAstEx(sGateMessageInfo.pMessage != nullptr, false);
@@ -203,11 +231,11 @@ namespace core
 
 		SMessageCacheInfo* pMessageCacheInfo = this->getMessageCacheInfo(szServiceName);
 
-		SGateMessageCacheInfo* pGateMessageCacheInfo = new SGateMessageCacheInfo();
-		pGateMessageCacheInfo->vecBuf.resize(nBufSize);
-		memcpy(&pGateMessageCacheInfo->vecBuf[0], &this->m_vecBuf[0], nBufSize);
-		pGateMessageCacheInfo->nSessionID = sGateMessageInfo.nSessionID;
-		pMessageCacheInfo->vecGateMessageCacheInfo.push_back(pGateMessageCacheInfo);
+		SGateMessageCacheInfo* sGateMessageCacheInfo = new SGateMessageCacheInfo();
+		sGateMessageCacheInfo->vecBuf.resize(nBufSize);
+		memcpy(&sGateMessageCacheInfo->vecBuf[0], &this->m_vecBuf[0], nBufSize);
+		sGateMessageCacheInfo->nSessionID = sGateMessageInfo.nSessionID;
+		pMessageCacheInfo->vecGateMessageCacheInfo.push_back(sGateMessageCacheInfo);
 		pMessageCacheInfo->nTotalSize += nBufSize;
 
 		return true;

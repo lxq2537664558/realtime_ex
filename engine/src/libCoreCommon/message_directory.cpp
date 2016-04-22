@@ -82,8 +82,7 @@ namespace core
 		CConnectionToMaster* pConnectionToMaster = CCoreApp::Inst()->getServiceMgr()->getConnectionToMaster();
 		DebugAst(nullptr != pConnectionToMaster);
 
-		smt_sync_service_message_info netMsg;
-		netMsg.nAdd = 0;
+		smt_register_service_message_info netMsg;
 		for (auto iter = this->m_mapOwnerMessageName.begin(); iter != this->m_mapOwnerMessageName.end(); ++iter)
 		{
 			const std::string& szMessageName = iter->second;
@@ -103,8 +102,7 @@ namespace core
 		if (nullptr == pConnectionToMaster)
 			return;
 
-		smt_sync_service_message_info netMsg;
-		netMsg.nAdd = 1;
+		smt_register_service_message_info netMsg;
 		SMessageSyncInfo sMessageSyncInfo;
 		sMessageSyncInfo.szMessageName = szMessageName;
 		netMsg.vecMessageSyncInfo.push_back(sMessageSyncInfo);

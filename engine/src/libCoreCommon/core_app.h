@@ -76,19 +76,10 @@ namespace core
 		base::CWriteBuf&		
 				getWriteBuf() const;
 		/*
-		@brief: 注册负载均衡器
+		@brief: 获取负载均衡管理器
 		*/
-		void	registLoadBalancePolicy(ILoadBalancePolicy* pLoadBalance);
-		/*
-		@brief: 获取负载均衡器
-		*/
-		ILoadBalancePolicy*		
-				getLoadBalancePolicy(uint32_t nID) const;
-		/*
-		@brief: 根据消息ID获取所有支持该消息的服务名字
-		*/
-		const std::vector<std::string>&
-				getServiceName(const std::string& szMessageName) const;
+		CLoadBalancePolicyMgr*
+				getLoadBalancePolicyMgr() const;
 		/*
 		@brief: 退出框架
 		*/
