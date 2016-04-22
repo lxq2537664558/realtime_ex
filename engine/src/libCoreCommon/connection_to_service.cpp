@@ -24,14 +24,15 @@ namespace core
 	void CConnectionToService::onConnect(const std::string& szContext)
 	{
 		// szContext中存的是服务名字
+		this->m_szServiceName = szContext;
+
 		// 同步服务名字
 		smt_notify_service_base_info netMsg;
+		netMsg.szServiceName = this->m_szServiceName;
 		base::CWriteBuf& writeBuf = CBaseApp::Inst()->getWriteBuf();
 		netMsg.pack(writeBuf);
 
 		this->send(eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
-
-		this->m_szServiceName = szContext;
 
 		CCoreApp::Inst()->getServiceMgr()->addConnectionToService(this);
 	}

@@ -160,7 +160,7 @@ namespace core
 		}
 	}
 
-	void CServiceMgr::addService(const SServiceBaseInfo& sServiceBaseInfo)
+	void CServiceMgr::addOtherService(const SServiceBaseInfo& sServiceBaseInfo)
 	{
 		DebugAst(!sServiceBaseInfo.szName.empty());
 		DebugAst(this->m_mapServiceBaseInfo.find(sServiceBaseInfo.szName) == this->m_mapServiceBaseInfo.end());
@@ -170,33 +170,17 @@ namespace core
 		this->m_mapServiceBaseInfo[sServiceBaseInfo.szName] = sServiceBaseInfo;
 	}
 
-	void CServiceMgr::addServiceMessageInfo(const std::string& szName, const std::vector<SMessageSyncInfo>& vecMessageSyncInfo, bool bAdd)
+	void CServiceMgr::delOtherService(const std::string& szServiceName)
 	{
-		auto iter = this->m_mapServiceBaseInfo.find(szName);
+		auto iter = this->m_mapServiceBaseInfo.find(szServiceName);
 		if (iter == this->m_mapServiceBaseInfo.end())
 			return;
 
-		// 覆盖型的，先清除之前的
-		if (!bAdd)
-			CCoreApp::Inst()->getMessageDirectory()->clearMessage(szName);
-
-		for (size_t i = 0; i < vecMessageSyncInfo.size(); ++i)
-		{
-			CCoreApp::Inst()->getMessageDirectory()->addMessage(szName, vecMessageSyncInfo[i].szMessageName);
-		}
-	}
-
-	void CServiceMgr::delService(const std::string& szName)
-	{
-		auto iter = this->m_mapServiceBaseInfo.find(szName);
-		if (iter == this->m_mapServiceBaseInfo.end())
-			return;
-
-		CCoreApp::Inst()->getMessageDirectory()->clearMessage(szName);
+		CCoreApp::Inst()->getMessageDirectory()->delOtherServiceMessageInfo(szServiceName);
 
 		this->m_mapServiceBaseInfo.erase(iter);
-		PrintInfo("del service service_name: %s", szName.c_str());
+		PrintInfo("del service service_name: %s", szServiceName.c_str());
 
-		CCoreApp::Inst()->getTransport()->delCacheMessage(szName);
+		CCoreApp::Inst()->getTransport()->delCacheMessage(szServiceName);
 	}
 }

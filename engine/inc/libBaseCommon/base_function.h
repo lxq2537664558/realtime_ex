@@ -27,8 +27,11 @@ namespace base
 #endif
 
 	__BASE_COMMON_API__ void			sleep(uint32_t milliseconds);
+
 	__BASE_COMMON_API__ uint32_t		hash(const wchar_t* szKey);
 	__BASE_COMMON_API__ uint32_t		hash(const char* szKey);
+
+	__BASE_COMMON_API__	uint32_t		crc32(const char* szBuf, uint32_t nBufSize);
 	
 	__BASE_COMMON_API__ const char*		getInstanceName();
 	__BASE_COMMON_API__ void			setInstanceName(char* szName);

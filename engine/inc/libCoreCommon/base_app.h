@@ -84,7 +84,7 @@ namespace core
 		/*
 		@brief: 根据消息名字获取所有支持该消息的服务名字
 		*/
-		const std::vector<std::string>&
+		const std::set<std::string>&
 				getServiceName(const std::string& szMessageName) const;
 		/*
 		@brief: 根据消息ID获取消息名字

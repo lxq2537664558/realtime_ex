@@ -45,14 +45,24 @@ namespace core
 
 				smt_notify_service_base_info netMsg;
 				netMsg.unpack(pData, nSize);
-
+				if (netMsg.szServiceName.empty())
+				{
+					this->shutdown(true, "empty service name");
+					return;
+				}
 				// 这里对其他服务的监听地址不感兴趣
-				this->m_szServiceName = netMsg.szName;
+				this->m_szServiceName = netMsg.szServiceName;
 				CCoreApp::Inst()->getServiceMgr()->addConnectionFromService(this);
 			}
 		}
 		else
 		{
+			// 如果连服务名字都没有上报就发送其他包过来了，肯定非法，直接踢掉
+			if (this->m_szServiceName.empty())
+			{
+				this->shutdown(true, "invalid connection");
+				return;
+			}
 			CMessageDispatcher::Inst()->dispatch(this->getServiceName(), nMessageType, pData, nSize);
 		}
 	}

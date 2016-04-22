@@ -27,7 +27,7 @@ void CConnectionFromService::onConnect(const std::string& szContext)
 
 void CConnectionFromService::onDisconnect()
 {
-	CMasterApp::Inst()->getServiceMgr()->delService(this->m_szServiceName);
+	CMasterApp::Inst()->getServiceMgr()->unregisterService(this->m_szServiceName);
 }
 
 void CConnectionFromService::onDispatch(uint16_t nMsgType, const void* pData, uint16_t nSize)
@@ -37,21 +37,21 @@ void CConnectionFromService::onDispatch(uint16_t nMsgType, const void* pData, ui
 	const core::message_header* pHeader = reinterpret_cast<const core::message_header*>(pData);
 	DebugAst(nSize > sizeof(core::message_header));
 
-	if (pHeader->nMessageID == eSMT_sync_service_base_info)
+	if (pHeader->nMessageID == eSMT_register_service_base_info)
 	{
-		smt_sync_service_base_info netMsg;
+		smt_register_service_base_info netMsg;
 		netMsg.unpack(pData, nSize);
 
 		this->m_szServiceName = netMsg.sServiceBaseInfo.szName;
 		
-		CMasterApp::Inst()->getServiceMgr()->addService(this, netMsg.sServiceBaseInfo);
+		CMasterApp::Inst()->getServiceMgr()->registerService(this, netMsg.sServiceBaseInfo);
 	}
-	else if (pHeader->nMessageID == eSMT_remove_service_base_info)
+	else if (pHeader->nMessageID == eSMT_unregister_service_base_info)
 	{
-		smt_remove_service_base_info netMsg;
+		smt_unregister_service_base_info netMsg;
 		netMsg.unpack(pData, nSize);
 
-		CMasterApp::Inst()->getServiceMgr()->delService(netMsg.szName);
+		CMasterApp::Inst()->getServiceMgr()->unregisterService(netMsg.szName);
 	}
 	else if (pHeader->nMessageID == eSMT_register_service_message_info)
 	{

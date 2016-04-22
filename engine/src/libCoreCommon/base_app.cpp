@@ -101,7 +101,7 @@ namespace core
 		return CCoreApp::Inst()->getLoadBalancePolicyMgr()->getLoadBalancePolicy(nID);
 	}
 
-	const std::vector<std::string>& CBaseApp::getServiceName(const std::string& szMessageName) const
+	const std::set<std::string>& CBaseApp::getServiceName(const std::string& szMessageName) const
 	{
 		return CCoreApp::Inst()->getMessageDirectory()->getOtherServiceName(szMessageName);
 	}

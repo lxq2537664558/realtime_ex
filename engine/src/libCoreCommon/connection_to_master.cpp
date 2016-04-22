@@ -22,7 +22,7 @@ namespace core
 
 	void CConnectionToMaster::onConnect(const std::string& szContext)
 	{
-		smt_sync_service_base_info netMsg;
+		smt_register_service_base_info netMsg;
 		netMsg.sServiceBaseInfo = CBaseApp::Inst()->getServiceBaseInfo();
 
 		base::CWriteBuf& writeBuf = CBaseApp::Inst()->getWriteBuf();
@@ -50,14 +50,21 @@ namespace core
 			smt_sync_service_base_info netMsg;
 			netMsg.unpack(pData, nSize);
 			
-			CCoreApp::Inst()->getServiceMgr()->addService(netMsg.sServiceBaseInfo);
+			CCoreApp::Inst()->getServiceMgr()->addOtherService(netMsg.sServiceBaseInfo);
 		}
 		else if (pHeader->nMessageID == eSMT_remove_service_base_info)
 		{
 			smt_remove_service_base_info netMsg;
 			netMsg.unpack(pData, nSize);
 
-			CCoreApp::Inst()->getServiceMgr()->delService(netMsg.szName);
+			CCoreApp::Inst()->getServiceMgr()->delOtherService(netMsg.szName);
+		}
+		else if (pHeader->nMessageID == eSMT_sync_service_message_info)
+		{
+			smt_sync_service_message_info netMsg;
+			netMsg.unpack(pData, nSize);
+
+			CCoreApp::Inst()->getMessageDirectory()->addOtherServiceMessageInfo(netMsg.szServiceName, netMsg.vecMessageSyncInfo);
 		}
 	}
 }

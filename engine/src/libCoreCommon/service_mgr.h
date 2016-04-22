@@ -29,9 +29,8 @@ namespace core
 
 		CConnectionToMaster*	getConnectionToMaster() const;
 
-		void					addService(const SServiceBaseInfo& sServiceBaseInfo);
-		void					delService(const std::string& szName);
-		void					addServiceMessageInfo(const std::string& szName, const std::vector<SMessageSyncInfo>& vecMessageSyncInfo, bool bAdd);
+		void					addOtherService(const SServiceBaseInfo& sServiceBaseInfo);
+		void					delOtherService(const std::string& szServiceName);
 		const SServiceBaseInfo*	getServiceBaseInfo(const std::string& szName) const;
 		void					getServiceName(const std::string& szType, std::vector<std::string>& vecServiceName) const;
 

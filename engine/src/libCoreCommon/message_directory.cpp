@@ -112,42 +112,13 @@ namespace core
 		pConnectionToMaster->send(eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
 	}
 
-	void CMessageDirectory::addMessage(const std::string& szServiceName, const std::string& szMessageName)
-	{
-		auto& vecMessageName = this->m_mapOtherMessageDirectoryByMessageName[szMessageName];
-		for (size_t i = 0; i < vecMessageName.size(); ++i)
-		{
-			if (vecMessageName[i] == szServiceName)
-			{
-				PrintWarning("dup message service_name: %s message_name: %s", szServiceName.c_str(), szMessageName.c_str());
-				return;
-			}
-		}
-
-		vecMessageName.push_back(szServiceName);
-	}
-
-	void CMessageDirectory::delMessage(const std::string& szServiceName, const std::string& szMessageName)
-	{
-		auto& vecMessageName = this->m_mapOtherMessageDirectoryByMessageName[szMessageName];
-
-		for (size_t i = 0; i < vecMessageName.size(); ++i)
-		{
-			if (vecMessageName[i] == szServiceName)
-			{
-				vecMessageName.erase(vecMessageName.begin() + i);
-				return;
-			}
-		}
-	}
-
-	const std::vector<std::string>& CMessageDirectory::getOtherServiceName(const std::string& szMessageName) const
+	const std::set<std::string>& CMessageDirectory::getOtherServiceName(const std::string& szMessageName) const
 	{
 		auto iter = this->m_mapOtherMessageDirectoryByMessageName.find(szMessageName);
 		if (iter == this->m_mapOtherMessageDirectoryByMessageName.end())
 		{
-			static std::vector<std::string> s_vecMessageName;
-			return s_vecMessageName;
+			static std::set<std::string> s_setMessageName;
+			return s_setMessageName;
 		}
 
 		return iter->second;
@@ -185,9 +156,45 @@ namespace core
 		return iter->second;
 	}
 
-	void CMessageDirectory::clearMessage(const std::string& szServiceName)
+	void CMessageDirectory::delOtherServiceMessageInfo(const std::string& szServiceName)
 	{
+		auto& setMessageDirectory = this->m_mapOtherMessageDirectoryByServiceName[szServiceName];
 
+		for (auto iter = setMessageDirectory.begin(); iter != setMessageDirectory.end(); ++iter)
+		{
+			const std::string& szMessageName = *iter;
+
+			this->m_mapOtherMessageDirectoryByMessageName[szMessageName].erase(szServiceName);
+		}
+
+		this->m_mapOtherMessageDirectoryByServiceName.erase(szServiceName);
 	}
 
+	void CMessageDirectory::addOtherServiceMessageInfo(const std::string& szServiceName, const std::vector<SMessageSyncInfo>& vecMessageSyncInfo)
+	{
+		if (CCoreApp::Inst()->getServiceMgr()->getServiceBaseInfo(szServiceName) == nullptr)
+		{
+			PrintWarning("unknown service name server_name: %s", szServiceName.c_str());
+			return;
+		}
+
+		auto& setMessageDirectory = this->m_mapOtherMessageDirectoryByServiceName[szServiceName];
+
+		for (size_t i = 0; i < vecMessageSyncInfo.size(); ++i)
+		{
+			const SMessageSyncInfo& sMessageSyncInfo = vecMessageSyncInfo[i];
+			auto iter = setMessageDirectory.find(sMessageSyncInfo.szMessageName);
+			if (iter == setMessageDirectory.end())
+			{
+				setMessageDirectory.insert(sMessageSyncInfo.szMessageName);
+			}
+		}
+
+		for (size_t i = 0; i < vecMessageSyncInfo.size(); ++i)
+		{
+			const std::string& szMessageName = vecMessageSyncInfo[i].szMessageName;
+
+			this->m_mapOtherMessageDirectoryByMessageName[szMessageName].insert(szServiceName);
+		}
+	}
 }

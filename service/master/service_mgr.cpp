@@ -31,7 +31,7 @@ CConnectionFromService* CServiceMgr::getServiceConnection(const std::string& szN
 	return iter->second.pConnectionFromService;
 }
 
-void CServiceMgr::addService(CConnectionFromService* pConnectionFromService, const SServiceBaseInfo& sServiceBaseInfo)
+void CServiceMgr::registerService(CConnectionFromService* pConnectionFromService, const SServiceBaseInfo& sServiceBaseInfo)
 {
 	DebugAst(pConnectionFromService != nullptr);
 
@@ -74,6 +74,7 @@ void CServiceMgr::addService(CConnectionFromService* pConnectionFromService, con
 		// 同步消息基本信息
 		writeBuf.clear();
 		smt_sync_service_message_info netMsg2;
+		netMsg2.szServiceName = sOtherServiceInfo.sServiceBaseInfo.szName;
 		for (auto iter = sOtherServiceInfo.setServiceMessageName.begin(); iter != sOtherServiceInfo.setServiceMessageName.end(); ++iter)
 		{
 			SMessageSyncInfo sMessageSyncInfo;
@@ -99,27 +100,34 @@ void CServiceMgr::addService(CConnectionFromService* pConnectionFromService, con
 	CMasterApp::Inst()->getBaseConnectionMgr()->broadcast(_GET_CLASS_NAME(CConnectionFromService), eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
 }
 
-void CServiceMgr::delService(const std::string& szName)
+void CServiceMgr::unregisterService(const std::string& szServiceName)
 {
-	auto iter = this->m_mapServiceInfo.find(szName);
+	auto iter = this->m_mapServiceInfo.find(szServiceName);
 	if (iter == this->m_mapServiceInfo.end())
 		return;
 
 	base::CWriteBuf& writeBuf = CMasterApp::Inst()->getWriteBuf();
 
 	smt_remove_service_base_info netMsg;
-	netMsg.szName = szName;
+	netMsg.szName = szServiceName;
 
 	netMsg.pack(writeBuf);
 
 	CMasterApp::Inst()->getBaseConnectionMgr()->broadcast(_GET_CLASS_NAME(CConnectionFromService), eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
 
+	// 清理该服务的消息
+	SServiceInfo& sServiceInfo = iter->second;
+	for (auto iter = sServiceInfo.setServiceMessageName.begin(); iter != sServiceInfo.setServiceMessageName.end(); ++iter)
+	{
+		uint32_t nMessageID = base::hash(iter->c_str());
+		this->m_mapMessageName.erase(nMessageID);
+	}
 	this->m_mapServiceInfo.erase(iter);
 }
 
-void CServiceMgr::registerMessageInfo(const std::string& szName, const std::vector<SMessageSyncInfo>& vecMessageSyncInfo)
+void CServiceMgr::registerMessageInfo(const std::string& szServiceName, const std::vector<SMessageSyncInfo>& vecMessageSyncInfo)
 {
-	auto iter = this->m_mapServiceInfo.find(szName);
+	auto iter = this->m_mapServiceInfo.find(szServiceName);
 	if (iter == this->m_mapServiceInfo.end())
 		return;
 
@@ -135,12 +143,17 @@ void CServiceMgr::registerMessageInfo(const std::string& szName, const std::vect
 			sServiceInfo.setServiceMessageName.insert(sMessageSyncInfo.szMessageName);
 			vecDeltaMessageInfo.push_back(sMessageSyncInfo);
 		}
+	}
 
+	for (size_t i = 0; i < vecDeltaMessageInfo.size(); ++i)
+	{
+		const SMessageSyncInfo& sMessageSyncInfo = vecDeltaMessageInfo[i];
+		// 检测hash冲突
 		uint32_t nMessageID = base::hash(sMessageSyncInfo.szMessageName.c_str());
-		auto iterMessage = this->m_mapMessageName.find(nMessageID);
-		if (iterMessage != this->m_mapMessageName.end())
+		auto iter = this->m_mapMessageName.find(nMessageID);
+		if (iter != this->m_mapMessageName.end())
 		{
-			PrintWarning("dup message name exist_message_name :%s exist_message_id: %d new_message_name: %s new_message_id: %d", sMessageSyncInfo.szMessageName.c_str(), nMessageID, iterMessage->second.c_str(), nMessageID);
+			PrintWarning("dup message name exist_message_name :%s exist_message_id: %d new_message_name: %s new_message_id: %d", sMessageSyncInfo.szMessageName.c_str(), nMessageID, iter->second.c_str(), nMessageID);
 		}
 		else
 		{
@@ -154,6 +167,7 @@ void CServiceMgr::registerMessageInfo(const std::string& szName, const std::vect
 		base::CWriteBuf& writeBuf = CMasterApp::Inst()->getWriteBuf();
 
 		smt_sync_service_message_info netMsg;
+		netMsg.szServiceName = szServiceName;
 		netMsg.vecMessageSyncInfo = vecDeltaMessageInfo;
 		netMsg.pack(writeBuf);
 
