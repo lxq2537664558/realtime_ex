@@ -246,10 +246,15 @@ namespace base
 		if (nCount != 5)
 			return -1;
 
+#ifdef _WIN32
 		STime sTime;
 		if (-1 == sscanf_s(szBuf, "%d-%d-%d %d:%d:%d", &sTime.nYear, &sTime.nMon, &sTime.nDay, &sTime.nHour, &sTime.nMin, &sTime.nSec))
 			return -1;
-
+#else
+		STime sTime;
+		if (-1 == sscanf(szBuf, "%d-%d-%d %d:%d:%d", &sTime.nYear, &sTime.nMon, &sTime.nDay, &sTime.nHour, &sTime.nMin, &sTime.nSec))
+			return -1;
+#endif
 		return getGmtTimeByTM(sTime);
 	}
 
