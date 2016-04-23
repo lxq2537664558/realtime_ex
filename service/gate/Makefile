@@ -7,7 +7,7 @@ include ../../build.mk
 
 .PHONY: all
 all: c_obj cxx_obj
-	cd $(BIN_ROOT_DIR);g++ $(COMPILE_OPTION) -g -rdynamic -o gate ../../service/gate/*.o -lpthread -Wl,-rpath=./ -L. -lBaseCommon -lBaseNetwork -lCoreCommon -ltinyxml2 -lrt
+	cd $(BIN_ROOT_DIR);g++ $(COMPILE_OPTION) -g -rdynamic -o gate ../../service/gate/*.o -lpthread -Wl,-rpath=./ -L. -lBaseCommon -lBaseNetwork -lCoreCommon -ltinyxml2 -lprotobuf -lrt
 	
 .PHONY: c_obj
 c_obj: $(C_OBJS)
