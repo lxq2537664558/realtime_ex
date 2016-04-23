@@ -2,9 +2,10 @@
 #include "service_mgr.h"
 #include "master_app.h"
 #include "connection_from_service.h"
-#include "libCoreCommon\proto_system.h"
 
+#include "libCoreCommon/proto_system.h"
 #include "libCoreCommon/base_connection_mgr.h"
+
 #include "libBaseCommon/base_function.h"
 
 CServiceMgr::CServiceMgr()
