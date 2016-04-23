@@ -2,8 +2,8 @@
 #include "connection_from_service.h"
 #include "master_app.h"
 
-#include "libCoreCommon\base_connection_mgr.h"
-#include "libCoreCommon\proto_system.h"
+#include "libCoreCommon/base_connection_mgr.h"
+#include "libCoreCommon/proto_system.h"
 
 DEFINE_OBJECT(CConnectionFromService, 100)
 

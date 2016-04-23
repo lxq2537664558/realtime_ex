@@ -4,9 +4,9 @@
 #include "gate_session.h"
 #include "gate_app.h"
 
-#include "libCoreCommon\base_connection.h"
-#include "libCoreCommon\base_connection_mgr.h"
-#include "libCoreCommon\base_app.h"
+#include "libCoreCommon/base_connection.h"
+#include "libCoreCommon/base_connection_mgr.h"
+#include "libCoreCommon/base_app.h"
 
 CGateMessageDispatcher::CGateMessageDispatcher()
 {
