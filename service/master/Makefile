@@ -1,6 +1,6 @@
 INCLUDE_DIR := \
 -I../../engine/inc\
--I../../3rd/tinyxml2/include
+-I../../3rd/tinyxml2/include\
 -I../../3rd/protobuf/include
 
 include ../../build.mk
