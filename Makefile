@@ -19,6 +19,7 @@ engine:
 .PHONY: service
 service:
 	make -C service/gate;
+	make -C service/master;
 	
 .PHONY: engineTest
 engineTest:
@@ -38,6 +39,7 @@ clean_engine:
 .PHONY: clean_service
 clean_service:
 	make -C service/gate clean;
+	make -C service/master clean;
 	
 .PHONY: clean_engineTest
 clean_engineTest:
