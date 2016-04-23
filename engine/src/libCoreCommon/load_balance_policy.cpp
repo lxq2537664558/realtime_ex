@@ -2,7 +2,7 @@
 #include "load_balance_policy.h"
 #include "base_app.h"
 
-#include "libBaseCommon\rand_gen.h"
+#include "libBaseCommon/rand_gen.h"
 
 namespace core
 {
