@@ -196,7 +196,7 @@ namespace base
 
 		int32_t nRemainSize = this->m_nBufSize - this->m_nCurPos;
 		DebugAst(nRemainSize >= 0);
-		if (nRemainSize < szBuf.size() + 2)
+		if (nRemainSize < (int32_t)szBuf.size() + 2)
 			this->resizeWriteBuf((uint32_t)(this->m_nBufSize + szBuf.size() + 2 - nRemainSize));
 
 		uint16_t& nLen = *reinterpret_cast<uint16_t*>(this->m_szBuf + this->m_nCurPos);

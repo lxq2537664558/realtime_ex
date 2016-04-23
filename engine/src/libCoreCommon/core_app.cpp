@@ -415,7 +415,7 @@ namespace core
 
 		this->m_nRunState = eARS_Normal;
 
-		PrintInfo("CCoreApp::onInit service name: %s", this->m_sServiceBaseInfo.szName);
+		PrintInfo("CCoreApp::onInit service name: %s", this->m_sServiceBaseInfo.szName.c_str());
 
 		return CBaseApp::Inst()->onInit();
 	}

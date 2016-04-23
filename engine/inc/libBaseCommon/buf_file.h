@@ -40,7 +40,7 @@ namespace base
 		template<class T>
 		inline bool	read(T& val)
 		{
-			if (this->m_nCurPos + sizeof(T) > this->m_nBufSize)
+			if (this->m_nCurPos + (int32_t)sizeof(T) > this->m_nBufSize)
 				return false;
 
 			memcpy(&val, this->m_szBuf + this->m_nCurPos, sizeof(T));
@@ -79,7 +79,7 @@ namespace base
 		{
 			int32_t nRemainSize = this->m_nBufSize - this->m_nCurPos;
 			DebugAst(nRemainSize >= 0);
-			if (nRemainSize < sizeof(T))
+			if (nRemainSize < (int32_t)sizeof(T))
 				this->resizeWriteBuf(this->m_nBufSize + sizeof(T) - nRemainSize);
 
 			memcpy(this->m_szBuf + this->m_nCurPos, &val, sizeof(T));
