@@ -89,6 +89,6 @@ namespace core
 	struct SGateClientCallbackInfo
 	{
 		std::string			szMessageName;
-		GateClientCallback	gateClientCallback;
+		GateForwardCallback	gateClientCallback;
 	};
 }

@@ -19,12 +19,12 @@ namespace core
 		return true;
 	}
 
-	void CMessageRegistry::registerCallback(const std::string& szMessageName, ServiceCallback callback)
+	void CMessageRegistry::registerServiceCallback(const std::string& szMessageName, ServiceCallback callback)
 	{
 		CCoreApp::Inst()->getMessageDirectory()->registerCallback(szMessageName, callback);
 	}
 
-	void CMessageRegistry::registerCallback(const std::string& szMessageName, GateClientCallback callback)
+	void CMessageRegistry::registerGateForwardCallback(const std::string& szMessageName, GateForwardCallback callback)
 	{
 		CCoreApp::Inst()->getMessageDirectory()->registerCallback(szMessageName, callback);
 	}

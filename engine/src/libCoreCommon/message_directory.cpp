@@ -37,7 +37,7 @@ namespace core
 		this->sendMessageInfo(szMessageName);
 	}
 
-	void CMessageDirectory::registerCallback(const std::string& szMessageName, const GateClientCallback& callback)
+	void CMessageDirectory::registerCallback(const std::string& szMessageName, const GateForwardCallback& callback)
 	{
 		uint32_t nMessageID = base::hash(szMessageName.c_str());
 		auto iter = this->m_mapOwnerMessageName.find(nMessageID);
@@ -65,12 +65,12 @@ namespace core
 		return iter->second;
 	}
 
-	GateClientCallback& CMessageDirectory::getGateClientCallback(uint32_t nMessageID)
+	GateForwardCallback& CMessageDirectory::getGateClientCallback(uint32_t nMessageID)
 	{
 		auto iter = this->m_mapGateClientCallback.find(nMessageID);
 		if (iter == this->m_mapGateClientCallback.end())
 		{
-			static GateClientCallback callback;
+			static GateForwardCallback callback;
 			return callback;
 		}
 
@@ -165,6 +165,8 @@ namespace core
 			const std::string& szMessageName = *iter;
 
 			this->m_mapOtherMessageDirectoryByMessageName[szMessageName].erase(szServiceName);
+
+			PrintInfo("del other service message info service_name: %s message_name: %s", szServiceName.c_str(), szMessageName.c_str());
 		}
 
 		this->m_mapOtherMessageDirectoryByServiceName.erase(szServiceName);
@@ -187,6 +189,7 @@ namespace core
 			if (iter == setMessageDirectory.end())
 			{
 				setMessageDirectory.insert(sMessageSyncInfo.szMessageName);
+				PrintInfo("add other service message info service_name: %s message_name: %s", szServiceName.c_str(), sMessageSyncInfo.szMessageName.c_str());
 			}
 		}
 

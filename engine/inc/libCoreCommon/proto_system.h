@@ -159,7 +159,7 @@ message_begin(smt_register_service_message_info, eSMT_register_service_message_i
 		writeBuf.write(nCount);
 		for (uint16_t i = 0; i < nCount; ++i)
 		{
-			writeBuf.write(vecMessageSyncInfo[i].szMessageName.c_str());
+			writeBuf.write(vecMessageSyncInfo[i].szMessageName);
 		}
 
 		pack_end(writeBuf);

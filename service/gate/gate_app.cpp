@@ -11,7 +11,7 @@
 
 #include "tinyxml2/tinyxml2.h"
 
-static bool dispatch_gate_message(const std::string& szFromServiceName, uint16_t nMessageType, const void* pData, uint16_t nSize)
+static bool dispatch_gate_message(const std::string& szFromServiceName, uint32_t nMessageType, const void* pData, uint16_t nSize)
 {
 	DebugAstEx(pData != nullptr, false);
 

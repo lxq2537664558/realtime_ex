@@ -73,6 +73,7 @@ namespace base
 		bool		seek(EBufSeekType eType, int32_t nOffset);
 		void		write(const void* pBuf, uint32_t nSize);
 		void		write(const std::string& szBuf);
+		void		write(const char* szBuf);
 
 		template<class T>
 		inline void	write(const T& val)

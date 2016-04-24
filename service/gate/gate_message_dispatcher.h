@@ -17,13 +17,18 @@ public:
 	/**
 	@brief: 消息派发函数，由各个消息源调用来派发消息
 	*/
-	void	dispatch(uint16_t nMessageType, const void* pData, uint16_t nSize);
+	void	dispatch(uint32_t nMessageType, const void* pData, uint16_t nSize);
 	/**
 	@brief: 注册经客户端消息响应函数
 	*/
-	void	registCallback(uint32_t nMessageID, core::ClientCallback callback);
+	void	registerCallback(const std::string& szMessageName, core::ClientCallback callback);
 	/**
-	@brief: 获取消息响应函数
+	@brief: 根据消息名字获取消息响应函数
+	*/
+	core::ClientCallback&
+			getCallback(const std::string& szMessageName);
+	/**
+	@brief: 根据消息ID获取消息响应函数
 	*/
 	core::ClientCallback&
 			getCallback(uint32_t nMessageID);

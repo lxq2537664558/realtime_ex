@@ -4,6 +4,13 @@
 #include "stdafx.h"
 #include "test_service_app1.h"
 
+#include "libCoreCommon/message_registry.h"
+
+void client_request_msg_callback(const core::SClientSessionInfo& sClientSessionInfo, uint32_t nMessageType, const google::protobuf::Message* pMessage)
+{
+
+}
+
 CTestServiceApp1::CTestServiceApp1()
 {
 }
@@ -19,6 +26,8 @@ CTestServiceApp1* CTestServiceApp1::Inst()
 
 bool CTestServiceApp1::onInit()
 {
+	core::CMessageRegistry::Inst()->registerGateForwardCallback("test.client_request_msg", &client_request_msg_callback);
+
 	return true;
 }
 

@@ -1,0 +1,8 @@
+<!--服务器配置-->
+<root>
+	<!-- 服务基本信息 sync_log-(日志是否异步输出,0表示同步1表示异步) work_path(工作目录) service_name(服务名字，集群内唯一) host(监听集群内其他服务的ip) port(监听集群内其他服务端口，如果没有监听需求，就填0)-->
+	<service_info sync_log = "0" work_path = "./conf/" max_socket_count = "100000" service_type = "test2" service_name = "test2-1" host = "0.0.0.0" port = "6100" send_buf_size = "1024" recv_buf_size = "1024"/>
+	<time year = "2013" month = "4" day = "27" hour = "23" minute = "57" second = "0" enable = "0"/>
+	<!--连接master地址-->
+	<connect_master_addr host = "127.0.0.1" port = "10000"/>
+</root>

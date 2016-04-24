@@ -125,7 +125,7 @@ namespace core
 
 			SClientSessionInfo session(szFromServiceName, pCookice->nSessionID);
 
-			GateClientCallback& callback = CCoreApp::Inst()->getMessageDirectory()->getGateClientCallback(pHeader->nMessageID);
+			GateForwardCallback& callback = CCoreApp::Inst()->getMessageDirectory()->getGateClientCallback(pHeader->nMessageID);
 			if (callback != nullptr)
 			{
 				google::protobuf::Message* pMessage = unserialize_protobuf_message_from_buf(szMessageName, pHeader);

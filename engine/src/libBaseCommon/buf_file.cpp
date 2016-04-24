@@ -195,14 +195,24 @@ namespace base
 	{
 		DebugAst(szBuf.size() < UINT16_MAX);
 
+		this->write(szBuf.c_str());
+	}
+
+	void CWriteBuf::write(const char* szBuf)
+	{
+		DebugAst(szBuf != nullptr);
+
+		uint16_t nBufLen = (uint16_t)base::crt::strnlen(szBuf, _TRUNCATE);
+		DebugAst(nBufLen < UINT16_MAX);
+
 		int32_t nRemainSize = this->m_nBufSize - this->m_nCurPos;
 		DebugAst(nRemainSize >= 0);
-		if (nRemainSize < (int32_t)szBuf.size() + 2)
-			this->resizeWriteBuf((uint32_t)(this->m_nBufSize + szBuf.size() + 2 - nRemainSize));
+		if (nRemainSize < (int32_t)nBufLen + 2)
+			this->resizeWriteBuf((uint32_t)(this->m_nBufSize + nBufLen + 2 - nRemainSize));
 
 		uint16_t& nLen = *reinterpret_cast<uint16_t*>(this->m_szBuf + this->m_nCurPos);
-		nLen = (uint16_t)szBuf.size();
-		memcpy(this->m_szBuf + this->m_nCurPos + 2, szBuf.c_str(), szBuf.size());
-		this->m_nCurPos += (int32_t)(szBuf.size() + 2);
+		nLen = (uint16_t)nBufLen;
+		memcpy(this->m_szBuf + this->m_nCurPos + 2, szBuf, nBufLen);
+		this->m_nCurPos += (int32_t)(nBufLen + 2);
 	}
 }

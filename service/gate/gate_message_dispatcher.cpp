@@ -23,8 +23,16 @@ bool CGateMessageDispatcher::init()
 	return true;
 }
 
-void CGateMessageDispatcher::registCallback(uint32_t nMessageID, core::ClientCallback callback)
+void CGateMessageDispatcher::registerCallback(const std::string& szMessageName, core::ClientCallback callback)
 {
+	uint32_t nMessageID = base::hash(szMessageName.c_str());
+	auto iter = this->m_mapClientCallback.find(nMessageID);
+	if (iter != this->m_mapClientCallback.end())
+	{
+		PrintWarning("dup client message name message_name: %s", szMessageName);
+		return;
+	}
+
 	this->m_mapClientCallback[nMessageID] = callback;
 }
 
@@ -41,7 +49,21 @@ core::ClientCallback& CGateMessageDispatcher::getCallback(uint32_t nMessageID)
 	return iter->second;
 }
 
-void CGateMessageDispatcher::dispatch(uint16_t nMessageType, const void* pData, uint16_t nSize)
+core::ClientCallback& CGateMessageDispatcher::getCallback(const std::string& szMessageName)
+{
+	uint32_t nMessageID = base::hash(szMessageName.c_str());
+	auto iter = this->m_mapClientCallback.find(nMessageID);
+	if (iter == this->m_mapClientCallback.end())
+	{
+		static core::ClientCallback s_callback;
+
+		return s_callback;
+	}
+
+	return iter->second;
+}
+
+void CGateMessageDispatcher::dispatch(uint32_t nMessageType, const void* pData, uint16_t nSize)
 {
 	DebugAst(pData != nullptr);
 
@@ -83,10 +105,6 @@ void CGateMessageDispatcher::dispatch(uint16_t nMessageType, const void* pData, 
 			PrintWarning("invalid message size client_id: "UINT64FMT" message_id: %d message_size: %d", pCookice->nSessionID, pHeader->nMessageID, pHeader->nMessageSize);
 			return;
 		}
-
-		// 消息长度打上protobuf标记
-		if ((nMessageType&eMT_PROTOBUF) != 0)
-			const_cast<core::message_header*>(pHeader)->nMessageSize |= eMT_PROTOBUF;
 
 		pConnectionFromClient->send(eMT_CLIENT, pHeader, nMessageSize);
 	}

@@ -4,6 +4,13 @@
 #include "stdafx.h"
 #include "test_service_app2.h"
 
+#include "libCoreCommon/message_registry.h"
+
+void service_request_msg_callback(const std::string& szFromService, uint32_t nMessageType, const google::protobuf::Message* pMessage)
+{
+
+}
+
 CTestServiceApp2::CTestServiceApp2()
 {
 }
@@ -19,6 +26,8 @@ CTestServiceApp2* CTestServiceApp2::Inst()
 
 bool CTestServiceApp2::onInit()
 {
+	core::CMessageRegistry::Inst()->registerServiceCallback("test.service_request_msg", &service_request_msg_callback);
+
 	return true;
 }
 

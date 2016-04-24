@@ -18,10 +18,10 @@ namespace core
 		bool	init();
 
 		void	registerCallback(const std::string& szMessageName, const ServiceCallback& callback);
-		void	registerCallback(const std::string& szMessageName, const GateClientCallback& callback);
+		void	registerCallback(const std::string& szMessageName, const GateForwardCallback& callback);
 		ServiceCallback&	
 				getCallback(uint32_t nMessageID);
-		GateClientCallback&
+		GateForwardCallback&
 				getGateClientCallback(uint32_t nMessageID);
 
 		void	addGlobalBeforeFilter(const ServiceGlobalFilter& callback);
@@ -46,7 +46,7 @@ namespace core
 
 	private:
 		std::map<uint32_t, ServiceCallback>				m_mapServiceCallback;
-		std::map<uint32_t, GateClientCallback>			m_mapGateClientCallback;
+		std::map<uint32_t, GateForwardCallback>			m_mapGateClientCallback;
 		std::map<uint32_t, std::string>					m_mapOwnerMessageName;
 		std::map<std::string, std::set<std::string>>	m_mapOtherMessageDirectoryByMessageName;
 		std::map<std::string, std::set<std::string>>	m_mapOtherMessageDirectoryByServiceName;

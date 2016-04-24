@@ -1,0 +1,5 @@
+package test;
+message service_request_msg
+{
+	optional string name = 4;
+}
