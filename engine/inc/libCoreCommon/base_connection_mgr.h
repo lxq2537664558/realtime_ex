@@ -43,7 +43,7 @@ namespace core
 		/**
 		@brief: 根据连接的类名来获取所有基于这个连接类创建的连接对象
 		*/
-		void				getBaseConnection(const std::string& szClassName, std::vector<CBaseConnection*> vecBaseConnection) const;
+		void				getBaseConnection(const std::string& szClassName, std::vector<CBaseConnection*>& vecBaseConnection) const;
 		/**
 		@brief: 根据连接的类名来获取所有基于这个连接类创建的连接数量
 		*/
@@ -51,7 +51,7 @@ namespace core
 		/**
 		@brief: 根据连接的类名来向所有基于这个类创建的连接广播消息
 		*/
-		void				broadcast(const std::string& szClassName, uint16_t nMsgType, const void* pData, uint16_t nSize);
+		void				broadcast(const std::string& szClassName, uint16_t nMsgType, const void* pData, uint16_t nSize, const std::vector<uint64_t>* vecExcludeID);
 		/**
 		@brief: 设置全局的连接成功回调
 		*/

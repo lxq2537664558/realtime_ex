@@ -61,7 +61,9 @@ bool CServiceMgr::registerService(CConnectionFromService* pConnectionFromService
 			continue;
 
 		auto iter = this->m_mapServiceInfo.find(pOtherConnectionFromService->getServiceName());
-		
+		if (iter == this->m_mapServiceInfo.end())
+			continue;
+
 		SServiceInfo& sOtherServiceInfo = iter->second;
 		base::CWriteBuf& writeBuf = CMasterApp::Inst()->getWriteBuf();
 
@@ -99,7 +101,11 @@ bool CServiceMgr::registerService(CConnectionFromService* pConnectionFromService
 
 	netMsg.pack(writeBuf);
 
-	CMasterApp::Inst()->getBaseConnectionMgr()->broadcast(_GET_CLASS_NAME(CConnectionFromService), eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
+	std::vector<uint64_t> vecExcludeID;
+	vecExcludeID.push_back(pConnectionFromService->getID());
+	CMasterApp::Inst()->getBaseConnectionMgr()->broadcast(_GET_CLASS_NAME(CConnectionFromService), eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize(), &vecExcludeID);
+
+	PrintInfo("register service service_name: %s", sServiceBaseInfo.szName.c_str());
 
 	return true;
 }
@@ -110,15 +116,6 @@ void CServiceMgr::unregisterService(const std::string& szServiceName)
 	if (iter == this->m_mapServiceInfo.end())
 		return;
 
-	base::CWriteBuf& writeBuf = CMasterApp::Inst()->getWriteBuf();
-
-	smt_remove_service_base_info netMsg;
-	netMsg.szName = szServiceName;
-
-	netMsg.pack(writeBuf);
-
-	CMasterApp::Inst()->getBaseConnectionMgr()->broadcast(_GET_CLASS_NAME(CConnectionFromService), eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
-
 	// 清理该服务的消息
 	SServiceInfo& sServiceInfo = iter->second;
 	for (auto iter = sServiceInfo.setServiceMessageName.begin(); iter != sServiceInfo.setServiceMessageName.end(); ++iter)
@@ -126,7 +123,22 @@ void CServiceMgr::unregisterService(const std::string& szServiceName)
 		uint32_t nMessageID = base::hash(iter->c_str());
 		this->m_mapMessageName.erase(nMessageID);
 	}
+
+	base::CWriteBuf& writeBuf = CMasterApp::Inst()->getWriteBuf();
+
+	smt_remove_service_base_info netMsg;
+	netMsg.szName = szServiceName;
+
+	netMsg.pack(writeBuf);
+
+	std::vector<uint64_t> vecExcludeID;
+	if (sServiceInfo.pConnectionFromService != nullptr)
+		vecExcludeID.push_back(sServiceInfo.pConnectionFromService->getID());
+	CMasterApp::Inst()->getBaseConnectionMgr()->broadcast(_GET_CLASS_NAME(CConnectionFromService), eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize(), &vecExcludeID);
+
 	this->m_mapServiceInfo.erase(iter);
+
+	PrintInfo("unregister service service_name: %s", szServiceName.c_str());
 }
 
 void CServiceMgr::registerMessageInfo(const std::string& szServiceName, const std::vector<SMessageSyncInfo>& vecMessageSyncInfo)
@@ -178,6 +190,14 @@ void CServiceMgr::registerMessageInfo(const std::string& szServiceName, const st
 		netMsg.vecMessageSyncInfo = vecDeltaMessageInfo;
 		netMsg.pack(writeBuf);
 
-		CMasterApp::Inst()->getBaseConnectionMgr()->broadcast(_GET_CLASS_NAME(CConnectionFromService), eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
+		std::vector<uint64_t> vecExcludeID;
+		if (sServiceInfo.pConnectionFromService != nullptr)
+			vecExcludeID.push_back(sServiceInfo.pConnectionFromService->getID());
+		CMasterApp::Inst()->getBaseConnectionMgr()->broadcast(_GET_CLASS_NAME(CConnectionFromService), eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize(), &vecExcludeID);
+	}
+
+	for (size_t i = 0; i < vecDeltaMessageInfo.size(); ++i)
+	{
+		PrintInfo("register service message info service_name: %s message_name: %s", szServiceName.c_str(), vecDeltaMessageInfo[i].szMessageName.c_str());
 	}
 }

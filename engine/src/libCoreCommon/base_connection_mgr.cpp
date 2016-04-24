@@ -2,6 +2,7 @@
 #include "base_connection_mgr.h"
 #include "base_connection.h"
 #include "base_app.h"
+#include "core_app.h"
 #include "core_connection_mgr.h"
 #include "core_connection.h"
 
@@ -86,17 +87,17 @@ namespace core
 		return pCoreConnection->getBaseConnection();
 	}
 
-	void CBaseConnectionMgr::getBaseConnection(const std::string& szClassName, std::vector<CBaseConnection*> vecBaseConnection) const
+	void CBaseConnectionMgr::getBaseConnection(const std::string& szClassName, std::vector<CBaseConnection*>& vecBaseConnection) const
 	{
 		uint32_t nClassID = CBaseObject::getClassID(szClassName);
 
 		this->m_pCoreConnectionMgr->getBaseConnection(nClassID, vecBaseConnection);
 	}
 
-	void CBaseConnectionMgr::broadcast(const std::string& szClassName, uint16_t nMsgType, const void* pData, uint16_t nSize)
+	void CBaseConnectionMgr::broadcast(const std::string& szClassName, uint16_t nMsgType, const void* pData, uint16_t nSize, const std::vector<uint64_t>* vecExcludeID)
 	{
 		uint32_t nClassID = CBaseObject::getClassID(szClassName);
 
-		this->m_pCoreConnectionMgr->broadcast(nClassID, nMsgType, pData, nSize);
+		this->m_pCoreConnectionMgr->broadcast(nClassID, nMsgType, pData, nSize, vecExcludeID);
 	}
 }

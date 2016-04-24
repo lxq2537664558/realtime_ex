@@ -29,9 +29,9 @@ namespace core
 		bool				listen(const std::string& szHost, uint16_t nPort, const std::string& szContext, uint32_t nClassID, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, ClientDataCallback clientDataCallback);
 		int32_t				update(int32_t nTime);
 
-		void				broadcast(uint32_t nClassID, uint16_t nMsgType, const void* pData, uint16_t nSize);
+		void				broadcast(uint32_t nClassID, uint16_t nMsgType, const void* pData, uint16_t nSize, const std::vector<uint64_t>* vecExcludeID);
 		
-		void				onDisconnect(CCoreConnection* pCoreConnection);
+		void				destroyConnection(CCoreConnection* pCoreConnection);
 		void				getBaseConnection(uint32_t nClassID, std::vector<CBaseConnection*>& vecBaseConnection) const;
 		CCoreConnection*	getCoreConnection(uint64_t nID) const;
 		uint32_t			getCoreConnectionCount(uint32_t nClassID) const;
@@ -81,6 +81,6 @@ namespace core
 		void						onConnect( SNetActiveWaitConnecterHandler* pNetActiveWaitConnecterHandler );
 		void						delActiveWaitConnecterHandler( SNetActiveWaitConnecterHandler* pWaitActiveConnecterHandler );
 
-		CCoreConnection*			createCoreConnection(const std::string& szContext, uint32_t nClassID, ClientDataCallback clientDataCallback);
+		CCoreConnection*			createConnection(const std::string& szContext, uint32_t nClassID, ClientDataCallback clientDataCallback);
 	};
 }

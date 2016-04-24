@@ -2,6 +2,7 @@
 #include "core_connection.h"
 #include "core_connection_mgr.h"
 #include "base_connection_mgr.h"
+#include "core_app.h"
 #include "base_app.h"
 #include "core_common.h"
 #include "base_connection.h"
@@ -138,7 +139,7 @@ namespace core
 		this->m_pHeartbeat = new CTicker();
 		this->m_pHeartbeat->setCallback(std::bind(&CCoreConnection::onHeartbeat, this, std::placeholders::_1));
 
-		CBaseApp::Inst()->registerTicker(this->m_pHeartbeat, CHECK_TIME, CHECK_TIME, 0);
+		CCoreApp::Inst()->registerTicker(this->m_pHeartbeat, CHECK_TIME, CHECK_TIME, 0);
 	}
 
 	uint64_t CCoreConnection::getID() const
@@ -155,8 +156,11 @@ namespace core
 		CBaseApp::Inst()->getBaseConnectionMgr()->onDisconnect(this->m_pBaseConnection);
 
 		SAFE_DELETE(this->m_pHeartbeat);
-		this->m_pBaseConnection = nullptr;
+
 		this->m_pNetConnecter = nullptr;
+
+		// Ïú»Ù¶ÔÏó
+		CCoreApp::Inst()->getCoreConnectionMgr()->destroyConnection(this);
 	}
 
 	void CCoreConnection::onPacketMsg(uint32_t nMessageType, const void* pData, uint16_t nSize)

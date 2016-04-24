@@ -21,7 +21,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{4B7449EF-F9CA-4552-B881-0EF6A5576820}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>TestServiceA</RootNamespace>
+    <RootNamespace>TestService1</RootNamespace>
     <ProjectName>TestService1</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />

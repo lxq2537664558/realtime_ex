@@ -39,7 +39,7 @@ namespace base
 					break;
 				}
 
-				PrintNW("new connection accept  listen addr: %s %d cur connection[%d]", this->getListenAddr().szHost, this->getListenAddr().nPort, this->m_pNetEventLoop->getSocketCount());
+				PrintNW("new connection accept listen addr: %s %d cur connection[%d]", this->getListenAddr().szHost, this->getListenAddr().nPort, this->m_pNetEventLoop->getSocketCount());
 
 				CNetConnecter* pNetConnecter = new CNetConnecter();
 				if (!pNetConnecter->init(this->m_nSendBufferSize, this->m_nRecvBufferSize, this->m_pNetEventLoop))

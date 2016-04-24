@@ -157,9 +157,9 @@ namespace core
 		DebugAst(!sServiceBaseInfo.szName.empty());
 		DebugAst(this->m_mapServiceBaseInfo.find(sServiceBaseInfo.szName) == this->m_mapServiceBaseInfo.end());
 
-		PrintInfo("add service service_name: %s", sServiceBaseInfo.szName.c_str());
-
 		this->m_mapServiceBaseInfo[sServiceBaseInfo.szName] = sServiceBaseInfo;
+
+		PrintInfo("add service service_name: %s", sServiceBaseInfo.szName.c_str());
 	}
 
 	void CServiceMgr::delOtherService(const std::string& szServiceName)
@@ -171,8 +171,9 @@ namespace core
 		CCoreApp::Inst()->getMessageDirectory()->delOtherServiceMessageInfo(szServiceName);
 
 		this->m_mapServiceBaseInfo.erase(iter);
-		PrintInfo("del service service_name: %s", szServiceName.c_str());
 
 		CCoreApp::Inst()->getTransport()->delCacheMessage(szServiceName);
+
+		PrintInfo("del service service_name: %s", szServiceName.c_str());
 	}
 }
