@@ -30,6 +30,10 @@
 #include "cluster_invoker.h"
 #include "service_mgr.h"
 
+#include "core_connection_from_service.h"
+#include "core_connection_to_master.h"
+#include "core_connection_to_service.h"
+
 #include "tinyxml2/tinyxml2.h"
 
 #ifndef _WIN32
@@ -117,6 +121,7 @@ namespace core
 		}
 
 		this->m_szConfig = szConfig;
+		this->m_bNormalService = bNormalService;
 
 		base::setInstanceName(argv[0]);
 
@@ -326,6 +331,10 @@ namespace core
 			return false;
 		}
 
+		CCoreConnectionFromService::registClassInfo();
+		CCoreConnectionToService::registClassInfo();
+		CCoreConnectionToMaster::registClassInfo();
+
 		if (!this->m_writeBuf.init(UINT16_MAX))
 		{
 			PrintWarning("this->m_writeBuf.init(UINT16_MAX)");
@@ -400,7 +409,7 @@ namespace core
 		std::string szMasterHost;
 		uint16_t nMasterPort = 0;
 		tinyxml2::XMLElement* pMasterAddrXML = pRootXML->FirstChildElement("connect_master_addr");
-		if (pMasterAddrXML == nullptr)
+		if (pMasterAddrXML != nullptr)
 		{
 			szMasterHost = pMasterAddrXML->Attribute("host");
 			nMasterPort = (uint16_t)pMasterAddrXML->IntAttribute("port");
@@ -448,6 +457,12 @@ namespace core
 
 	bool CCoreApp::onProcess()
 	{
+		uint64_t nMem = 0;
+		uint64_t nVMem = 0;
+		base::getMemoryUsage(nMem, nVMem);
+		if (nVMem >= 1024 * 1024 * 1024)
+			exit(0);
+
 		int64_t nBeginTime = base::getGmtTime();
 
 		CBaseApp::Inst()->onBeforeFrame();

@@ -14,7 +14,7 @@ public:
 
 	virtual void	onConnect(const std::string& szContext);
 	virtual void	onDisconnect();
-	virtual void	onDispatch(uint16_t nMessageType, const void* pData, uint16_t nSize);
+	virtual void	onDispatch(uint32_t nMessageType, const void* pData, uint16_t nSize);
 
 private:
 	void			forward(const core::message_header* pHeader);

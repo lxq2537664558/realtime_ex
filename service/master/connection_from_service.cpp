@@ -23,6 +23,7 @@ const std::string& CConnectionFromService::getServiceName() const
 
 void CConnectionFromService::onConnect(const std::string& szContext)
 {
+	
 }
 
 void CConnectionFromService::onDisconnect()
@@ -30,7 +31,7 @@ void CConnectionFromService::onDisconnect()
 	CMasterApp::Inst()->getServiceMgr()->unregisterService(this->m_szServiceName);
 }
 
-void CConnectionFromService::onDispatch(uint16_t nMsgType, const void* pData, uint16_t nSize)
+void CConnectionFromService::onDispatch(uint32_t nMsgType, const void* pData, uint16_t nSize)
 {
 	DebugAst(nMsgType == eMT_SYSTEM);
 
@@ -44,7 +45,12 @@ void CConnectionFromService::onDispatch(uint16_t nMsgType, const void* pData, ui
 
 		this->m_szServiceName = netMsg.sServiceBaseInfo.szName;
 		
-		CMasterApp::Inst()->getServiceMgr()->registerService(this, netMsg.sServiceBaseInfo);
+		if (!CMasterApp::Inst()->getServiceMgr()->registerService(this, netMsg.sServiceBaseInfo))
+		{
+			PrintWarning("dup service service_name: %s", this->m_szServiceName.c_str());
+			this->shutdown(true, "dup service connection");
+			return;
+		}
 	}
 	else if (pHeader->nMessageID == eSMT_unregister_service_base_info)
 	{

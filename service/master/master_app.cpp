@@ -29,7 +29,7 @@ bool CMasterApp::onInit()
 	if (!this->m_pServiceMgr->init())
 		return false;
 
-	this->getBaseConnectionMgr()->listen(this->getServiceBaseInfo().szHost, this->getServiceBaseInfo().nPort, "", _GET_CLASS_NAME(CConnectionFromService), this->getServiceBaseInfo().nSendBufSize, this->getServiceBaseInfo().nRecvBufSize * 1024, nullptr);
+	this->getBaseConnectionMgr()->listen(this->getServiceBaseInfo().szHost, this->getServiceBaseInfo().nPort, "", _GET_CLASS_NAME(CConnectionFromService), this->getServiceBaseInfo().nSendBufSize, this->getServiceBaseInfo().nRecvBufSize, nullptr);
 
 	return true;
 }

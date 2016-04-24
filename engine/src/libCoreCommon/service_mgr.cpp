@@ -1,8 +1,8 @@
 #include "stdafx.h"
 #include "service_mgr.h"
-#include "connection_to_service.h"
-#include "connection_from_service.h"
-#include "connection_to_master.h"
+#include "core_connection_to_service.h"
+#include "core_connection_from_service.h"
+#include "core_connection_to_master.h"
 #include "message_dispatcher.h"
 #include "base_connection_mgr.h"
 #include "core_app.h"
@@ -13,9 +13,8 @@ namespace core
 {
 	CServiceMgr::CServiceMgr()
 		: m_nMasterPort(0)
-		, m_bMasterRefuse(false)
 	{
-		this->m_tickCheckConnect.setCallback(std::bind(&CServiceMgr::onCheckConnect, this, std::placeholders::_1));
+		this->m_tickCheckConnectMaster.setCallback(std::bind(&CServiceMgr::onCheckConnectMaster, this, std::placeholders::_1));
 	}
 
 	CServiceMgr::~CServiceMgr()
@@ -26,52 +25,45 @@ namespace core
 	bool CServiceMgr::init(bool bNormalService, const std::string& szMasterHost, uint16_t nMasterPort)
 	{
 		CBaseApp::Inst()->getBaseConnectionMgr()->setConnectRefuseCallback(std::bind(&CServiceMgr::onConnectRefuse, this, std::placeholders::_1));
-		CBaseApp::Inst()->registerTicker(&this->m_tickCheckConnect, 5 * 1000, 5 * 1000, 0);
 
 		const SServiceBaseInfo& sServiceBaseInfo = CBaseApp::Inst()->getServiceBaseInfo();
 		if (bNormalService && sServiceBaseInfo.nPort != 0 && sServiceBaseInfo.szHost[0] != 0)
 		{
-			if (!CBaseApp::Inst()->getBaseConnectionMgr()->listen(sServiceBaseInfo.szHost, sServiceBaseInfo.nPort, "", _GET_CLASS_NAME(CConnectionFromService), sServiceBaseInfo.nSendBufSize, sServiceBaseInfo.nRecvBufSize, nullptr))
+			if (!CBaseApp::Inst()->getBaseConnectionMgr()->listen(sServiceBaseInfo.szHost, sServiceBaseInfo.nPort, "", _GET_CLASS_NAME(CCoreConnectionFromService), sServiceBaseInfo.nSendBufSize, sServiceBaseInfo.nRecvBufSize, nullptr))
 				return false;
 		}
 
 		this->m_szMasterHost = szMasterHost;
 		this->m_nMasterPort = nMasterPort;
-		this->m_bMasterRefuse = false;
+		
 		if (!this->m_szMasterHost.empty() && this->m_nMasterPort != 0)
 		{
-			if (!CBaseApp::Inst()->getBaseConnectionMgr()->connect(this->m_szMasterHost, this->m_nMasterPort, "master", _GET_CLASS_NAME(CConnectionToMaster), 1024, 1024, nullptr))
+			if (!CBaseApp::Inst()->getBaseConnectionMgr()->connect(this->m_szMasterHost, this->m_nMasterPort, "master", _GET_CLASS_NAME(CCoreConnectionToMaster), 1024, 1024, nullptr))
 				return false;
+
+			CBaseApp::Inst()->registerTicker(&this->m_tickCheckConnectMaster, 5 * 1000, 5 * 1000, 0);
 		}
 
 		return true;
 	}
 
-	void CServiceMgr::onCheckConnect(uint64_t nContext)
+	void CServiceMgr::onCheckConnectMaster(uint64_t nContext)
 	{
-		if (this->m_bMasterRefuse)
+		if ( !this->m_szMasterHost.empty() && this->m_nMasterPort != 0 && this->getConnectionToMaster() == nullptr)
 		{
-			if (!CBaseApp::Inst()->getBaseConnectionMgr()->connect(this->m_szMasterHost, this->m_nMasterPort, "master", _GET_CLASS_NAME(CConnectionToMaster), 1024, 1024, nullptr))
+			if (!CBaseApp::Inst()->getBaseConnectionMgr()->connect(this->m_szMasterHost, this->m_nMasterPort, "master", _GET_CLASS_NAME(CCoreConnectionToMaster), 1024, 1024, nullptr))
 			{
-
+				PrintWarning("connect master error");
 			}
-
-			this->m_bMasterRefuse = false;
 		}
 	}
 
 	void CServiceMgr::onConnectRefuse(const std::string& szContext)
 	{
-		if (szContext == "master")
-		{
-			this->m_bMasterRefuse = true;
-			return;
-		}
-
 		CCoreApp::Inst()->getTransport()->onConnectRefuse(szContext);
 	}
 
-	CConnectionToService* CServiceMgr::getConnectionToService(const std::string& szName) const
+	CCoreConnectionToService* CServiceMgr::getConnectionToService(const std::string& szName) const
 	{
 		auto iter = this->m_mapConnectionToService.find(szName);
 		if (iter == this->m_mapConnectionToService.end())
@@ -80,19 +72,19 @@ namespace core
 		return iter->second;
 	}
 
-	void CServiceMgr::addConnectionToService(CConnectionToService* pConnectionToService)
+	void CServiceMgr::addConnectionToService(CCoreConnectionToService* pCoreConnectionToService)
 	{
-		DebugAst(pConnectionToService != nullptr);
+		DebugAst(pCoreConnectionToService != nullptr);
 
-		if (this->m_mapConnectionToService.find(pConnectionToService->getServiceName()) != this->m_mapConnectionToService.end())
+		if (this->m_mapConnectionToService.find(pCoreConnectionToService->getServiceName()) != this->m_mapConnectionToService.end())
 		{
-			PrintWarning("dup service service_name: %s remote_addr: %s %d", pConnectionToService->getServiceName().c_str(), pConnectionToService->getRemoteAddr().szHost, pConnectionToService->getRemoteAddr().nPort);
+			PrintWarning("dup service service_name: %s remote_addr: %s %d", pCoreConnectionToService->getServiceName().c_str(), pCoreConnectionToService->getRemoteAddr().szHost, pCoreConnectionToService->getRemoteAddr().nPort);
 			return;
 		}
 
-		this->m_mapConnectionToService[pConnectionToService->getServiceName()] = pConnectionToService;
+		this->m_mapConnectionToService[pCoreConnectionToService->getServiceName()] = pCoreConnectionToService;
 
-		CCoreApp::Inst()->getTransport()->sendCacheMessage(pConnectionToService->getServiceName());
+		CCoreApp::Inst()->getTransport()->sendCacheMessage(pCoreConnectionToService->getServiceName());
 	}
 
 	void CServiceMgr::delConnectionToService(const std::string& szName)
@@ -104,7 +96,7 @@ namespace core
 		this->m_mapConnectionToService.erase(iter);
 	}
 
-	CConnectionFromService* CServiceMgr::getConnectionFromService(const std::string& szName) const
+	CCoreConnectionFromService* CServiceMgr::getConnectionFromService(const std::string& szName) const
 	{
 		auto iter = this->m_mapConnectionFromService.find(szName);
 		if (iter == this->m_mapConnectionFromService.end())
@@ -113,14 +105,14 @@ namespace core
 		return iter->second;
 	}
 
-	void CServiceMgr::addConnectionFromService(CConnectionFromService* pConnectionFromService)
+	void CServiceMgr::addConnectionFromService(CCoreConnectionFromService* pCoreConnectionFromService)
 	{
-		DebugAst(pConnectionFromService != nullptr);
+		DebugAst(pCoreConnectionFromService != nullptr);
 
-		auto iter = this->m_mapConnectionFromService.find(pConnectionFromService->getServiceName());
+		auto iter = this->m_mapConnectionFromService.find(pCoreConnectionFromService->getServiceName());
 		DebugAst(iter == this->m_mapConnectionFromService.end());
 
-		this->m_mapConnectionFromService[pConnectionFromService->getServiceName()] = pConnectionFromService;
+		this->m_mapConnectionFromService[pCoreConnectionFromService->getServiceName()] = pCoreConnectionFromService;
 	}
 
 	void CServiceMgr::delConnectionFromService(const std::string& szName)
@@ -132,14 +124,14 @@ namespace core
 		this->m_mapConnectionFromService.erase(iter);
 	}
 
-	CConnectionToMaster* CServiceMgr::getConnectionToMaster() const
+	CCoreConnectionToMaster* CServiceMgr::getConnectionToMaster() const
 	{
 		std::vector<CBaseConnection*> vecBaseConnection;
-		CCoreApp::Inst()->getCoreConnectionMgr()->getBaseConnection(_GET_CLASS_ID(CConnectionToMaster), vecBaseConnection);
+		CCoreApp::Inst()->getCoreConnectionMgr()->getBaseConnection(_GET_CLASS_ID(CCoreConnectionToMaster), vecBaseConnection);
 		if (vecBaseConnection.empty())
 			return nullptr;
 
-		return dynamic_cast<CConnectionToMaster*>(vecBaseConnection[0]);
+		return dynamic_cast<CCoreConnectionToMaster*>(vecBaseConnection[0]);
 	}
 
 	const SServiceBaseInfo* CServiceMgr::getServiceBaseInfo(const std::string& szName) const

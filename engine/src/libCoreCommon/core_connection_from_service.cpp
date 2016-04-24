@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "connection_from_service.h"
+#include "core_connection_from_service.h"
 #include "core_app.h"
 #include "base_connection_mgr.h"
 #include "proto_system.h"
@@ -9,30 +9,30 @@
 namespace core
 {
 
-	DEFINE_OBJECT(CConnectionFromService, 100)
+	DEFINE_OBJECT(CCoreConnectionFromService, 100)
 
-	CConnectionFromService::CConnectionFromService()
+	CCoreConnectionFromService::CCoreConnectionFromService()
 	{
 
 	}
 
-	CConnectionFromService::~CConnectionFromService()
+	CCoreConnectionFromService::~CCoreConnectionFromService()
 	{
 
 	}
 
-	void CConnectionFromService::onConnect(const std::string& szContext)
+	void CCoreConnectionFromService::onConnect(const std::string& szContext)
 	{
 		// 这个是被动连接，对方服务信息会由对方服务主动推过来
 	}
 
-	void CConnectionFromService::onDisconnect()
+	void CCoreConnectionFromService::onDisconnect()
 	{
 		if (!this->m_szServiceName.empty())
 			CCoreApp::Inst()->getServiceMgr()->delConnectionFromService(this->m_szServiceName);
 	}
 
-	void CConnectionFromService::onDispatch(uint32_t nMessageType, const void* pData, uint16_t nSize)
+	void CCoreConnectionFromService::onDispatch(uint32_t nMessageType, const void* pData, uint16_t nSize)
 	{
 		if (nMessageType == eMT_SYSTEM)
 		{
@@ -67,7 +67,7 @@ namespace core
 		}
 	}
 
-	const std::string& CConnectionFromService::getServiceName() const
+	const std::string& CCoreConnectionFromService::getServiceName() const
 	{
 		return this->m_szServiceName;
 	}

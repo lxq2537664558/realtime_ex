@@ -22,9 +22,9 @@
     <ClInclude Include="..\..\inc\libCoreCommon\cluster_invoker.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\proto_system.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\ticker.h" />
-    <ClInclude Include="connection_from_service.h" />
-    <ClInclude Include="connection_to_master.h" />
-    <ClInclude Include="connection_to_service.h" />
+    <ClInclude Include="core_connection_from_service.h" />
+    <ClInclude Include="core_connection_to_master.h" />
+    <ClInclude Include="core_connection_to_service.h" />
     <ClInclude Include="core_app.h" />
     <ClInclude Include="core_connection.h" />
     <ClInclude Include="core_connection_mgr.h" />
@@ -41,9 +41,9 @@
   <ItemGroup>
     <ClCompile Include="base_connection.cpp" />
     <ClCompile Include="base_connection_mgr.cpp" />
-    <ClCompile Include="connection_from_service.cpp" />
-    <ClCompile Include="connection_to_master.cpp" />
-    <ClCompile Include="connection_to_service.cpp" />
+    <ClCompile Include="core_connection_from_service.cpp" />
+    <ClCompile Include="core_connection_to_master.cpp" />
+    <ClCompile Include="core_connection_to_service.cpp" />
     <ClCompile Include="base_app.cpp" />
     <ClCompile Include="base_object.cpp" />
     <ClCompile Include="core_app.cpp" />

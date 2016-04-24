@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "connection_to_service.h"
+#include "core_connection_to_service.h"
 #include "core_app.h"
 #include "base_connection_mgr.h"
 #include "proto_system.h"
@@ -9,19 +9,19 @@
 namespace core
 {
 
-	DEFINE_OBJECT(CConnectionToService, 100)
+	DEFINE_OBJECT(CCoreConnectionToService, 100)
 
-	CConnectionToService::CConnectionToService()
+	CCoreConnectionToService::CCoreConnectionToService()
 	{
 
 	}
 
-	CConnectionToService::~CConnectionToService()
+	CCoreConnectionToService::~CCoreConnectionToService()
 	{
 
 	}
 
-	void CConnectionToService::onConnect(const std::string& szContext)
+	void CCoreConnectionToService::onConnect(const std::string& szContext)
 	{
 		// szContext中存的是服务名字
 		this->m_szServiceName = szContext;
@@ -37,13 +37,13 @@ namespace core
 		CCoreApp::Inst()->getServiceMgr()->addConnectionToService(this);
 	}
 
-	void CConnectionToService::onDisconnect()
+	void CCoreConnectionToService::onDisconnect()
 	{
 		if (!this->m_szServiceName.empty())
 			CCoreApp::Inst()->getServiceMgr()->delConnectionToService(this->m_szServiceName);
 	}
 
-	void CConnectionToService::onDispatch(uint32_t nMessageType, const void* pData, uint16_t nSize)
+	void CCoreConnectionToService::onDispatch(uint32_t nMessageType, const void* pData, uint16_t nSize)
 	{
 		if (nMessageType == eMT_SYSTEM)
 		{
@@ -55,7 +55,7 @@ namespace core
 		}
 	}
 
-	const std::string& CConnectionToService::getServiceName() const
+	const std::string& CCoreConnectionToService::getServiceName() const
 	{
 		return this->m_szServiceName;
 	}

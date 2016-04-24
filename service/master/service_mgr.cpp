@@ -32,12 +32,13 @@ CConnectionFromService* CServiceMgr::getServiceConnection(const std::string& szN
 	return iter->second.pConnectionFromService;
 }
 
-void CServiceMgr::registerService(CConnectionFromService* pConnectionFromService, const SServiceBaseInfo& sServiceBaseInfo)
+bool CServiceMgr::registerService(CConnectionFromService* pConnectionFromService, const SServiceBaseInfo& sServiceBaseInfo)
 {
-	DebugAst(pConnectionFromService != nullptr);
+	DebugAstEx(pConnectionFromService != nullptr, false);
 
 	auto iter = this->m_mapServiceInfo.find(sServiceBaseInfo.szName);
-	DebugAst(iter == this->m_mapServiceInfo.end());
+	if (iter != this->m_mapServiceInfo.end())
+		return false;
 
 	// 初始化服务信息
 	SServiceInfo sServiceInfo;
@@ -99,6 +100,8 @@ void CServiceMgr::registerService(CConnectionFromService* pConnectionFromService
 	netMsg.pack(writeBuf);
 
 	CMasterApp::Inst()->getBaseConnectionMgr()->broadcast(_GET_CLASS_NAME(CConnectionFromService), eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
+
+	return true;
 }
 
 void CServiceMgr::unregisterService(const std::string& szServiceName)
@@ -130,7 +133,10 @@ void CServiceMgr::registerMessageInfo(const std::string& szServiceName, const st
 {
 	auto iter = this->m_mapServiceInfo.find(szServiceName);
 	if (iter == this->m_mapServiceInfo.end())
+	{
+		PrintWarning("unknown service name by register message info service_name: %s", szServiceName.c_str());
 		return;
+	}
 
 	SServiceInfo& sServiceInfo = iter->second;
 	

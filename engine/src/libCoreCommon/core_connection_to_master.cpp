@@ -2,26 +2,35 @@
 #include "libCoreCommon/proto_system.h"
 #include "libCoreCommon/base_app.h"
 
-#include "connection_to_master.h"
+#include "core_connection_to_master.h"
 #include "core_app.h"
 
 namespace core
 {
 
-	DEFINE_OBJECT(CConnectionToMaster, 1)
+	DEFINE_OBJECT(CCoreConnectionToMaster, 1)
 
-	CConnectionToMaster::CConnectionToMaster()
+	CCoreConnectionToMaster::CCoreConnectionToMaster()
 	{
 
 	}
 
-	CConnectionToMaster::~CConnectionToMaster()
+	CCoreConnectionToMaster::~CCoreConnectionToMaster()
 	{
 
 	}
 
-	void CConnectionToMaster::onConnect(const std::string& szContext)
+	void CCoreConnectionToMaster::onConnect(const std::string& szContext)
 	{
+		// 连接master的连接只能有一个
+		std::vector<CBaseConnection*> vecBaseConnection;
+		CCoreApp::Inst()->getCoreConnectionMgr()->getBaseConnection(_GET_CLASS_ID(CCoreConnectionToMaster), vecBaseConnection);
+		if (vecBaseConnection.size() > 1)
+		{
+			this->shutdown(false, "dup master connection");
+			return;
+		}
+
 		smt_register_service_base_info netMsg;
 		netMsg.sServiceBaseInfo = CBaseApp::Inst()->getServiceBaseInfo();
 
@@ -33,12 +42,12 @@ namespace core
 		CCoreApp::Inst()->getMessageDirectory()->onConnectToMaster();
 	}
 
-	void CConnectionToMaster::onDisconnect()
+	void CCoreConnectionToMaster::onDisconnect()
 	{
 
 	}
 
-	void CConnectionToMaster::onDispatch(uint32_t nMsgType, const void* pData, uint16_t nSize)
+	void CCoreConnectionToMaster::onDispatch(uint32_t nMsgType, const void* pData, uint16_t nSize)
 	{
 		DebugAst(nMsgType == eMT_SYSTEM);
 

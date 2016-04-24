@@ -4,14 +4,14 @@
 
 namespace core
 {
-	class CConnectionToMaster
+	class CCoreConnectionToMaster
 		: public core::CBaseConnection
 	{
-		DECLARE_OBJECT(CConnectionToMaster)
+		DECLARE_OBJECT(CCoreConnectionToMaster)
 
 	public:
-		CConnectionToMaster();
-		virtual ~CConnectionToMaster();
+		CCoreConnectionToMaster();
+		virtual ~CCoreConnectionToMaster();
 
 		virtual void	onConnect(const std::string& szContext);
 		virtual void	onDisconnect();

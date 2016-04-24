@@ -4,14 +4,14 @@
 
 namespace core
 {
-	class CConnectionToService
+	class CCoreConnectionFromService
 		: public core::CBaseConnection
 	{
-		DECLARE_OBJECT(CConnectionToService)
+		DECLARE_OBJECT(CCoreConnectionFromService)
 
 	public:
-		CConnectionToService();
-		virtual ~CConnectionToService();
+		CCoreConnectionFromService();
+		virtual ~CCoreConnectionFromService();
 
 		virtual void		onConnect(const std::string& szContext);
 		virtual void		onDisconnect();

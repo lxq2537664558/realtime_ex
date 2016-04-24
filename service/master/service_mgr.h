@@ -14,7 +14,7 @@ public:
 
 	bool					init();
 	CConnectionFromService*	getServiceConnection(const std::string& szName) const;
-	void					registerService(CConnectionFromService* pConnectionFromService, const SServiceBaseInfo& sServiceBaseInfo);
+	bool					registerService(CConnectionFromService* pConnectionFromService, const SServiceBaseInfo& sServiceBaseInfo);
 	void					unregisterService(const std::string& szServiceName);
 	void					registerMessageInfo(const std::string& szServiceName, const std::vector<SMessageSyncInfo>& vecMessageSyncInfo);
 

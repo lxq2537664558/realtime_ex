@@ -21,6 +21,7 @@ namespace core
 	public:
 		CBaseConnection();
 		virtual ~CBaseConnection();
+
 		/**
 		@brief: 发送消息
 		*/
@@ -38,18 +39,6 @@ namespace core
 		*/
 		uint64_t				getID() const;
 		/**
-		@brief: 连接成功回调
-		*/
-		virtual void			onConnect(const std::string& szContext) { }
-		/**
-		@brief: 连接断开回调
-		*/
-		virtual void			onDisconnect() { }
-		/**
-		@brief: 消息回调
-		*/
-		virtual void			onDispatch(uint32_t nMessageType, const void* pData, uint16_t nSize) { }
-		/**
 		@brief: 获取本地地址
 		*/
 		const SNetAddr&			getLocalAddr() const;
@@ -57,6 +46,18 @@ namespace core
 		@brief: 获取远程地址
 		*/
 		const SNetAddr&			getRemoteAddr() const;
+		/**
+		@brief: 连接成功回调
+		*/
+		virtual void			onConnect(const std::string& szContext) = 0;
+		/**
+		@brief: 连接断开回调
+		*/
+		virtual void			onDisconnect() = 0;
+		/**
+		@brief: 消息回调
+		*/
+		virtual void			onDispatch(uint32_t nMessageType, const void* pData, uint16_t nSize) = 0;
 
 	private:
 		CCoreConnection*	m_pCoreConnection;

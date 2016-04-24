@@ -2,8 +2,8 @@
 #include "transport.h"
 #include "core_app.h"
 #include "message_dispatcher.h"
-#include "connection_to_service.h"
-#include "connection_from_service.h"
+#include "core_connection_to_service.h"
+#include "core_connection_from_service.h"
 
 #include "libBaseCommon/defer.h"
 
@@ -71,7 +71,7 @@ namespace core
 				IF_NOT(pServiceBaseInfo != nullptr)
 					continue;
 
-				CCoreApp::Inst()->getCoreConnectionMgr()->connect(pServiceBaseInfo->szHost, pServiceBaseInfo->nPort, pServiceBaseInfo->szName, _GET_CLASS_ID(CConnectionToService), pServiceBaseInfo->nSendBufSize, pServiceBaseInfo->nRecvBufSize, nullptr);
+				CCoreApp::Inst()->getCoreConnectionMgr()->connect(pServiceBaseInfo->szHost, pServiceBaseInfo->nPort, pServiceBaseInfo->szName, _GET_CLASS_ID(CCoreConnectionToService), pServiceBaseInfo->nSendBufSize, pServiceBaseInfo->nRecvBufSize, nullptr);
 				sRequestMessageGroupInfo.bRefuse = false;
 			}
 		}
@@ -122,8 +122,8 @@ namespace core
 		if (nBufSize < 0)
 			return false;
 
-		CConnectionToService* pConnectionToService = CCoreApp::Inst()->getServiceMgr()->getConnectionToService(szServiceName);
-		if (pConnectionToService != nullptr)
+		CCoreConnectionToService* pCoreConnectionToService = CCoreApp::Inst()->getServiceMgr()->getConnectionToService(szServiceName);
+		if (pCoreConnectionToService != nullptr)
 		{
 			uint64_t nSessionID = 0;
 			if (sRequestMessageInfo.callback != nullptr)
@@ -133,7 +133,7 @@ namespace core
 			request_cookice cookice;
 			cookice.nSessionID = nSessionID;
 
-			pConnectionToService->send(eMT_REQUEST, &cookice, sizeof(cookice), &this->m_vecBuf[0], (uint16_t)nBufSize);
+			pCoreConnectionToService->send(eMT_REQUEST, &cookice, sizeof(cookice), &this->m_vecBuf[0], (uint16_t)nBufSize);
 			
 			if (nSessionID != 0)
 			{
@@ -165,8 +165,8 @@ namespace core
 	{
 		DebugAstEx(sResponseMessageInfo.pMessage != nullptr, false);
 
-		CConnectionFromService* pConnectionFromService = CCoreApp::Inst()->getServiceMgr()->getConnectionFromService(szServiceName);
-		DebugAstEx(pConnectionFromService != nullptr, false);
+		CCoreConnectionFromService* pCoreConnectionFromService = CCoreApp::Inst()->getServiceMgr()->getConnectionFromService(szServiceName);
+		DebugAstEx(pCoreConnectionFromService != nullptr, false);
 
 		response_cookice cookice;
 		cookice.nSessionID = sResponseMessageInfo.nSessionID;
@@ -176,7 +176,7 @@ namespace core
 		if (nBufSize < 0)
 			return false;
 
-		pConnectionFromService->send(eMT_RESPONSE, &cookice, sizeof(cookice), &this->m_vecBuf[0], (uint16_t)nBufSize);
+		pCoreConnectionFromService->send(eMT_RESPONSE, &cookice, sizeof(cookice), &this->m_vecBuf[0], (uint16_t)nBufSize);
 
 		return true;
 	}
@@ -185,14 +185,14 @@ namespace core
 	{
 		DebugAstEx(sGateMessageInfo.pHeader != nullptr, false);
 
-		CConnectionToService* pConnectionToService = CCoreApp::Inst()->getServiceMgr()->getConnectionToService(szServiceName);
-		if (pConnectionToService != nullptr)
+		CCoreConnectionToService* pCoreConnectionToService = CCoreApp::Inst()->getServiceMgr()->getConnectionToService(szServiceName);
+		if (pCoreConnectionToService != nullptr)
 		{
 			// 填充cookice
 			gate_cookice cookice;
 			cookice.nSessionID = sGateMessageInfo.nSessionID;
 
-			pConnectionToService->send(eMT_TO_GATE, &cookice, sizeof(cookice), sGateMessageInfo.pHeader, sGateMessageInfo.pHeader->nMessageSize);
+			pCoreConnectionToService->send(eMT_TO_GATE, &cookice, sizeof(cookice), sGateMessageInfo.pHeader, sGateMessageInfo.pHeader->nMessageSize);
 
 			return true;
 		}
@@ -217,14 +217,14 @@ namespace core
 		if (nBufSize < 0)
 			return false;
 
-		CConnectionToService* pConnectionToService = CCoreApp::Inst()->getServiceMgr()->getConnectionToService(szServiceName);
-		if (pConnectionToService != nullptr)
+		CCoreConnectionToService* pCoreConnectionToService = CCoreApp::Inst()->getServiceMgr()->getConnectionToService(szServiceName);
+		if (pCoreConnectionToService != nullptr)
 		{
 			// 填充cookice
 			gate_cookice cookice;
 			cookice.nSessionID = sGateMessageInfo.nSessionID;
 
-			pConnectionToService->send(eMT_TO_GATE, &cookice, sizeof(cookice), &this->m_vecBuf[0], (uint16_t)nBufSize);
+			pCoreConnectionToService->send(eMT_TO_GATE, &cookice, sizeof(cookice), &this->m_vecBuf[0], (uint16_t)nBufSize);
 
 			return true;
 		}
@@ -249,15 +249,15 @@ namespace core
 		if (nBufSize < 0)
 			return false;
 
-		CConnectionToService* pConnectionToService = CCoreApp::Inst()->getServiceMgr()->getConnectionToService(szServiceName);
-		if (pConnectionToService != nullptr)
+		CCoreConnectionToService* pCoreConnectionToService = CCoreApp::Inst()->getServiceMgr()->getConnectionToService(szServiceName);
+		if (pCoreConnectionToService != nullptr)
 		{
 			// 填充cookice
 			gate_cookice_broadcast* pCookice = reinterpret_cast<gate_cookice_broadcast*>(new char[sizeof(gate_cookice_broadcast) + sizeof(uint64_t) * sGateBroadcastMessageInfo.vecSessionID.size()]);
 			pCookice->nCount = (uint16_t)sGateBroadcastMessageInfo.vecSessionID.size();
 			memcpy(pCookice + 1, &sGateBroadcastMessageInfo.vecSessionID[0], sizeof(uint64_t) * sGateBroadcastMessageInfo.vecSessionID.size());
 
-			pConnectionToService->send(eMT_TO_GATE | eMT_BROADCAST, pCookice, (uint16_t)(sizeof(uint64_t) * sGateBroadcastMessageInfo.vecSessionID.size()), &this->m_vecBuf[0], (uint16_t)nBufSize);
+			pCoreConnectionToService->send(eMT_TO_GATE | eMT_BROADCAST, pCookice, (uint16_t)(sizeof(uint64_t) * sGateBroadcastMessageInfo.vecSessionID.size()), &this->m_vecBuf[0], (uint16_t)nBufSize);
 
 			return true;
 		}
@@ -300,8 +300,8 @@ namespace core
 
 	void CTransport::sendCacheMessage(const std::string& szServiceName)
 	{
-		CConnectionToService* pConnectionToService = CCoreApp::Inst()->getServiceMgr()->getConnectionToService(szServiceName);
-		DebugAst(pConnectionToService != nullptr);
+		CCoreConnectionToService* pCoreConnectionToService = CCoreApp::Inst()->getServiceMgr()->getConnectionToService(szServiceName);
+		DebugAst(pCoreConnectionToService != nullptr);
 
 		// 把之前cache的消息发送出去
 		auto iter = this->m_mapMessageCacheInfo.find(szServiceName);
@@ -322,7 +322,7 @@ namespace core
 				request_cookice cookice;
 				cookice.nSessionID = nSessionID;
 
-				pConnectionToService->send(eMT_REQUEST, &cookice, sizeof(cookice), &pRequestMessageCacheInfo->vecBuf[0], (uint16_t)pRequestMessageCacheInfo->vecBuf.size());
+				pCoreConnectionToService->send(eMT_REQUEST, &cookice, sizeof(cookice), &pRequestMessageCacheInfo->vecBuf[0], (uint16_t)pRequestMessageCacheInfo->vecBuf.size());
 
 				if (nSessionID != 0)
 				{
@@ -348,7 +348,7 @@ namespace core
 				gate_cookice cookice;
 				cookice.nSessionID = pGateMessageCacheInfo->nSessionID;
 
-				pConnectionToService->send(eMT_TO_GATE, &cookice, sizeof(cookice), &pGateMessageCacheInfo->vecBuf[0], (uint16_t)pGateMessageCacheInfo->vecBuf.size());
+				pCoreConnectionToService->send(eMT_TO_GATE, &cookice, sizeof(cookice), &pGateMessageCacheInfo->vecBuf[0], (uint16_t)pGateMessageCacheInfo->vecBuf.size());
 
 				SAFE_DELETE(pGateMessageCacheInfo);
 			}
@@ -363,7 +363,7 @@ namespace core
 				pCookice->nCount = (uint16_t)pGateBroadcastMessageCacheInfo->vecSessionID.size();
 				memcpy(pCookice + 1, &pGateBroadcastMessageCacheInfo->vecSessionID[0], sizeof(uint64_t) * pGateBroadcastMessageCacheInfo->vecSessionID.size());
 
-				pConnectionToService->send(eMT_TO_GATE | eMT_BROADCAST, pCookice, (uint16_t)(sizeof(uint64_t) * pGateBroadcastMessageCacheInfo->vecSessionID.size()), &pGateBroadcastMessageCacheInfo->vecBuf[0], (uint16_t)pGateBroadcastMessageCacheInfo->vecBuf.size());
+				pCoreConnectionToService->send(eMT_TO_GATE | eMT_BROADCAST, pCookice, (uint16_t)(sizeof(uint64_t) * pGateBroadcastMessageCacheInfo->vecSessionID.size()), &pGateBroadcastMessageCacheInfo->vecBuf[0], (uint16_t)pGateBroadcastMessageCacheInfo->vecBuf.size());
 				
 				SAFE_DELETE(pGateBroadcastMessageCacheInfo);
 			}

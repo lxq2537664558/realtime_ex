@@ -2,7 +2,7 @@
 #include "message_directory.h"
 #include "proto_system.h"
 #include "core_app.h"
-#include "connection_to_master.h"
+#include "core_connection_to_master.h"
 
 namespace core
 {
@@ -79,8 +79,8 @@ namespace core
 
 	void CMessageDirectory::onConnectToMaster()
 	{
-		CConnectionToMaster* pConnectionToMaster = CCoreApp::Inst()->getServiceMgr()->getConnectionToMaster();
-		DebugAst(nullptr != pConnectionToMaster);
+		CCoreConnectionToMaster* pCoreConnectionToMaster = CCoreApp::Inst()->getServiceMgr()->getConnectionToMaster();
+		DebugAst(nullptr != pCoreConnectionToMaster);
 
 		smt_register_service_message_info netMsg;
 		for (auto iter = this->m_mapOwnerMessageName.begin(); iter != this->m_mapOwnerMessageName.end(); ++iter)
@@ -93,13 +93,13 @@ namespace core
 
 		base::CWriteBuf& writeBuf = CBaseApp::Inst()->getWriteBuf();
 		netMsg.pack(writeBuf);
-		pConnectionToMaster->send(eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
+		pCoreConnectionToMaster->send(eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
 	}
 
 	void CMessageDirectory::sendMessageInfo(const std::string& szMessageName)
 	{
-		CConnectionToMaster* pConnectionToMaster = CCoreApp::Inst()->getServiceMgr()->getConnectionToMaster();
-		if (nullptr == pConnectionToMaster)
+		CCoreConnectionToMaster* pCoreConnectionToMaster = CCoreApp::Inst()->getServiceMgr()->getConnectionToMaster();
+		if (nullptr == pCoreConnectionToMaster)
 			return;
 
 		smt_register_service_message_info netMsg;
@@ -109,7 +109,7 @@ namespace core
 		
 		base::CWriteBuf& writeBuf = CBaseApp::Inst()->getWriteBuf();
 		netMsg.pack(writeBuf);
-		pConnectionToMaster->send(eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
+		pCoreConnectionToMaster->send(eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
 	}
 
 	const std::set<std::string>& CMessageDirectory::getOtherServiceName(const std::string& szMessageName) const

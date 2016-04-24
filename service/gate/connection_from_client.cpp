@@ -29,7 +29,7 @@ void CConnectionFromClient::onDisconnect()
 		CGateApp::Inst()->getGateSessionMgr()->delSession(this->m_nSessionID);
 }
 
-void CConnectionFromClient::onDispatch(uint16_t nMessageType, const void* pData, uint16_t nSize)
+void CConnectionFromClient::onDispatch(uint32_t nMessageType, const void* pData, uint16_t nSize)
 {
 	DebugAst(nMessageType == eMT_CLIENT);
 

@@ -122,7 +122,6 @@ namespace base
 
 	void CWriteBuf::clear()
 	{
-		this->m_nBufSize = 0;
 		this->m_nCurPos = 0;
 	}
 
@@ -159,7 +158,9 @@ namespace base
 				this->m_nCurPos = this->m_nBufSize - nOffset;
 		}
 		else
+		{
 			return false;
+		}
 
 		return true;
 	}

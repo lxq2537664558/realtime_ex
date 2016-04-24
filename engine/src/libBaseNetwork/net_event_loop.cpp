@@ -52,6 +52,11 @@ namespace base
 	
 	bool CNetEventLoop::listen(const SNetAddr& netAddr, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, INetAccepterHandler* pHandler)
 	{
+		if (nRecvBufferSize == 0 || nSendBufferSize == 0)
+		{
+			PrintWarning("invalid buf size recv_buf_size: %d send_buf_size: %d", nRecvBufferSize, nSendBufferSize);
+			return false;
+		}
 		CNetAccepter* pNetAccepter = new CNetAccepter();
 		if (!pNetAccepter->init(nSendBufferSize, nRecvBufferSize, this))
 		{
