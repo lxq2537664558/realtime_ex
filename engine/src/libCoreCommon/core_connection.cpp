@@ -194,7 +194,7 @@ namespace core
 		case eMT_REQUEST:
 		case eMT_RESPONSE:
 		case eMT_SYSTEM:
-		case eMT_FROM_GATE:
+		case eMT_GATE_FORWARD:
 		case eMT_TO_GATE:
 			{
 				message_header header;
@@ -225,7 +225,7 @@ namespace core
 		case eMT_REQUEST:
 		case eMT_RESPONSE:
 		case eMT_SYSTEM:
-		case eMT_FROM_GATE:
+		case eMT_GATE_FORWARD:
 		case eMT_TO_GATE:
 			{
 				message_header header;

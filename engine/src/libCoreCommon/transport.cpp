@@ -4,29 +4,11 @@
 #include "message_dispatcher.h"
 #include "core_connection_to_service.h"
 #include "core_connection_from_service.h"
+#include "protobuf_helper.h"
 
 #include "libBaseCommon/defer.h"
 
 #define _MAX_CACHE_MESSAGE_SIZE			1024 * 1024 * 100
-
-static int32_t serialize_protobuf_message_to_buf(const google::protobuf::Message* pMessage, core::message_header* pHeader, uint32_t nSize)
-{
-	DebugAstEx(pMessage != nullptr, false);
-
-	std::string szMessageData;
-	if (!pMessage->SerializeToString(&szMessageData))
-		return -1;
-
-	if (szMessageData.size() > nSize)
-		return -1;
-
-	pHeader->nMessageID = base::hash(pMessage->GetTypeName().c_str());
-	pHeader->nMessageSize = (uint16_t)(sizeof(core::message_header) + szMessageData.size());
-
-	memcpy(pHeader + 1, szMessageData.c_str(), szMessageData.size());
-
-	return (int32_t)(szMessageData.size() + sizeof(core::message_header));
-}
 
 namespace core
 {
@@ -389,7 +371,7 @@ namespace core
 				gate_cookice cookice;
 				cookice.nSessionID = pGateForwardMessageCacheInfo->nSessionID;
 
-				pCoreConnectionToService->send(eMT_FROM_GATE, &cookice, sizeof(cookice), &pGateForwardMessageCacheInfo->vecBuf[0], (uint16_t)pGateForwardMessageCacheInfo->vecBuf.size());
+				pCoreConnectionToService->send(eMT_GATE_FORWARD, &cookice, sizeof(cookice), &pGateForwardMessageCacheInfo->vecBuf[0], (uint16_t)pGateForwardMessageCacheInfo->vecBuf.size());
 
 				SAFE_DELETE(pGateForwardMessageCacheInfo);
 			}

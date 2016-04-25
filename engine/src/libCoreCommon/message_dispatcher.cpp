@@ -1,38 +1,10 @@
 #include "stdafx.h"
 #include "message_dispatcher.h"
 #include "core_app.h"
+#include "protobuf_helper.h"
 
 #include "libBaseCommon/debug_helper.h"
 #include "libBaseCommon/defer.h"
-
-static google::protobuf::Message* create_protobuf_message(const std::string& szMessageName)
-{
-	const google::protobuf::Descriptor* pDescriptor = google::protobuf::DescriptorPool::generated_pool()->FindMessageTypeByName(szMessageName);
-	if (pDescriptor == nullptr)
-		return nullptr;
-
-	const google::protobuf::Message* pProtoType = google::protobuf::MessageFactory::generated_factory()->GetPrototype(pDescriptor);
-	if (pProtoType == nullptr)
-		return nullptr;
-
-	return pProtoType->New();
-}
-
-static google::protobuf::Message* unserialize_protobuf_message_from_buf(const std::string& szMessageName, const core::message_header* pHeader)
-{
-	google::protobuf::Message* pMessage = create_protobuf_message(szMessageName);
-	if (nullptr == pMessage)
-		return nullptr;
-
-
-	if (!pMessage->ParseFromArray(pHeader + 1, pHeader->nMessageSize - sizeof(core::message_header)))
-	{
-		SAFE_DELETE(pMessage);
-		return nullptr;
-	}
-
-	return pMessage;
-}
 
 namespace core
 {
@@ -115,7 +87,7 @@ namespace core
 			}
 			SAFE_DELETE(pResponseWaitInfo);
 		}
-		else if ((nMessageType&eMT_TYPE_MASK) == eMT_FROM_GATE)
+		else if ((nMessageType&eMT_TYPE_MASK) == eMT_GATE_FORWARD)
 		{
 			const gate_cookice* pCookice = reinterpret_cast<const gate_cookice*>(pData);
 

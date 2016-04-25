@@ -108,7 +108,11 @@ namespace core
 
 	const std::string& CBaseApp::getMessageName(uint32_t nMessageID) const
 	{
-		return CCoreApp::Inst()->getMessageDirectory()->getOwnerMessageName(nMessageID);
+		const std::string& szMessageName = CCoreApp::Inst()->getMessageDirectory()->getOwnerMessageName(nMessageID);
+		if (szMessageName.empty())
+			return CCoreApp::Inst()->getMessageDirectory()->getOtherMessageName(nMessageID);
+
+		return szMessageName;
 	}
 
 	uint32_t CBaseApp::getInvokTimeout() const

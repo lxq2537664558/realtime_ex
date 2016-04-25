@@ -24,13 +24,14 @@ namespace core
 	void CCoreConnectionToService::onConnect(const std::string& szContext)
 	{
 		// szContext中存的是服务名字
-		this->m_szServiceName = szContext;
-
-		if (CCoreApp::Inst()->getServiceMgr()->getConnectionToService(this->m_szServiceName) != nullptr)
+		if (CCoreApp::Inst()->getServiceMgr()->getConnectionToService(szContext) != nullptr)
 		{
+			PrintWarning("dup service service_name: %s", szContext.c_str());
 			this->shutdown(true, "dup service connection");
 			return;
 		}
+
+		this->m_szServiceName = szContext;
 
 		// 同步服务名字
 		smt_notify_service_base_info netMsg;

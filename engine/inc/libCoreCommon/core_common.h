@@ -91,18 +91,18 @@ public:\
 
 enum EMessageType
 {
-	eMT_HEARTBEAT	= 1,		// 服务之间心跳消息
-	eMT_REQUEST		= 2,		// 服务之间的请求消息
-	eMT_RESPONSE	= 3,		// 服务之间的响应消息
-	eMT_SYSTEM		= 4,		// 服务之间的系统消息
-	eMT_FROM_GATE	= 5,		// 客户端通过网关服务转发给其他服务消息
-	eMT_TO_GATE		= 6,		// 其他服务通过网关服务转发客户端消息
-	eMT_CLIENT		= 7,		// 客户端消息
+	eMT_HEARTBEAT		= 1,		// 服务之间心跳消息
+	eMT_REQUEST			= 2,		// 服务之间的请求消息
+	eMT_RESPONSE		= 3,		// 服务之间的响应消息
+	eMT_SYSTEM			= 4,		// 服务之间的系统消息
+	eMT_GATE_FORWARD	= 5,		// 客户端通过网关服务转发给其他服务消息
+	eMT_TO_GATE			= 6,		// 其他服务通过网关服务转发客户端消息
+	eMT_CLIENT			= 7,		// 客户端消息
 	
-	eMT_TYPE_MASK	= 0x00ff,	// 类型掩码
+	eMT_TYPE_MASK		= 0x00ff,	// 类型掩码
 
 	// 特殊标记
-	eMT_BROADCAST	= 0x200,	// 广播消息
+	eMT_BROADCAST		= 0x200,	// 广播消息
 };
 
 #pragma pack(push,1)
@@ -146,7 +146,7 @@ namespace core
 	typedef std::function<void(uint32_t, const google::protobuf::Message*, EResponseResultType)>		InvokeCallback;			// RPC消息响应回调函数类型
 	typedef std::function<void(const std::string&, uint32_t, const google::protobuf::Message*)>			ServiceCallback;		// 服务消息处理函数类型
 	typedef std::function<void(const SClientSessionInfo&, uint32_t, const google::protobuf::Message*)>	GateForwardCallback;	// 经网关服务转发的客户端消息处理函数类型
-	typedef std::function<void(const message_header*)>													ClientCallback;			// 客户端消息处理函数类型
+	typedef std::function<void(uint64_t, const message_header*)>										ClientCallback;			// 客户端消息处理函数类型
 	typedef std::function<bool(const std::string&, uint32_t, const void*, uint16_t)>					ServiceGlobalFilter;	// 全局的消息过滤器类型
 }
 

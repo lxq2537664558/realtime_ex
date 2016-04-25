@@ -50,10 +50,14 @@ namespace core
 					this->shutdown(true, "empty service name");
 					return;
 				}
+
 				// 这里对其他服务的监听地址不感兴趣
 				this->m_szServiceName = netMsg.szServiceName;
+
 				if (!CCoreApp::Inst()->getServiceMgr()->addConnectionFromService(this))
 				{
+					PrintWarning("dup service service_name: %s", this->m_szServiceName.c_str());
+					this->m_szServiceName.clear();
 					this->shutdown(true, "dup service connection");
 					return;
 				}

@@ -93,6 +93,9 @@
     <ClInclude Include="core_connection_from_service.h">
       <Filter>src\service</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreCommon\protobuf_helper.h">
+      <Filter>inc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="base_connection.cpp">
@@ -162,6 +165,9 @@
       <Filter>src\service</Filter>
     </ClCompile>
     <ClCompile Include="core_connection_from_service.cpp">
+      <Filter>src\service</Filter>
+    </ClCompile>
+    <ClCompile Include="protobuf_helper.cpp">
       <Filter>src\service</Filter>
     </ClCompile>
   </ItemGroup>
