@@ -13,10 +13,12 @@ public:
 
 	bool			init();
 
-	CGateSession*	createSession(uint64_t nSessionID);
-	CGateSession*	getSession(uint64_t nSessionID) const;
-	void			delSession(uint64_t nSessionID);
+	CGateSession*	createSession(uint64_t nSocketID, uint64_t nSessionID);
+	CGateSession*	getSessionBySessionID(uint64_t nSessionID) const;
+	CGateSession*	getSessionBySocketID(uint64_t nSocketID) const;
+	void			delSessionbySessionID(uint64_t nSessionID);
 
 private:
-	std::map<uint64_t, CGateSession*>	m_mapGateSession;
+	std::map<uint64_t, CGateSession*>	m_mapGateSessionBySessionID;
+	std::map<uint64_t, uint64_t>		m_mapSessionIDBySocketID;
 };

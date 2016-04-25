@@ -4,9 +4,10 @@
 class CGateSession
 {
 public:
-	CGateSession(uint64_t nSessionID);
+	CGateSession();
 	~CGateSession();
 
+	bool		init(uint64_t nSocketID, uint64_t nSessionID);
 	uint64_t	getSessionID() const;
 	uint64_t	getSocketID() const;
 

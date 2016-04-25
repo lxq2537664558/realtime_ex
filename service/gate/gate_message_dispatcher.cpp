@@ -7,6 +7,7 @@
 #include "libCoreCommon/base_connection.h"
 #include "libCoreCommon/base_connection_mgr.h"
 #include "libCoreCommon/base_app.h"
+#include "libCoreCommon/cluster_invoker.h"
 
 CGateMessageDispatcher::CGateMessageDispatcher()
 {
@@ -25,45 +26,50 @@ bool CGateMessageDispatcher::init()
 
 void CGateMessageDispatcher::registerCallback(const std::string& szMessageName, core::ClientCallback callback)
 {
+	DebugAst(callback != nullptr);
+
 	uint32_t nMessageID = base::hash(szMessageName.c_str());
-	auto iter = this->m_mapClientCallback.find(nMessageID);
-	if (iter != this->m_mapClientCallback.end())
+	auto iter = this->m_mapClientCallbackInfo.find(nMessageID);
+	if (iter != this->m_mapClientCallbackInfo.end())
 	{
 		PrintWarning("dup client message name message_name: %s", szMessageName);
 		return;
 	}
 
-	this->m_mapClientCallback[nMessageID] = callback;
+	SClientCallbackInfo sClientCallbackInfo;
+	sClientCallbackInfo.szMessageName = szMessageName;
+	sClientCallbackInfo.callback = callback;
+	this->m_mapClientCallbackInfo[nMessageID] = sClientCallbackInfo;
 }
 
 core::ClientCallback& CGateMessageDispatcher::getCallback(uint32_t nMessageID)
 {
-	auto iter = this->m_mapClientCallback.find(nMessageID);
-	if (iter == this->m_mapClientCallback.end())
+	auto iter = this->m_mapClientCallbackInfo.find(nMessageID);
+	if (iter == this->m_mapClientCallbackInfo.end())
 	{
 		static core::ClientCallback s_callback;
 
 		return s_callback;
 	}
 
-	return iter->second;
+	return iter->second.callback;
 }
 
 core::ClientCallback& CGateMessageDispatcher::getCallback(const std::string& szMessageName)
 {
 	uint32_t nMessageID = base::hash(szMessageName.c_str());
-	auto iter = this->m_mapClientCallback.find(nMessageID);
-	if (iter == this->m_mapClientCallback.end())
+	auto iter = this->m_mapClientCallbackInfo.find(nMessageID);
+	if (iter == this->m_mapClientCallbackInfo.end())
 	{
 		static core::ClientCallback s_callback;
 
 		return s_callback;
 	}
 
-	return iter->second;
+	return iter->second.callback;
 }
 
-void CGateMessageDispatcher::dispatch(uint32_t nMessageType, const void* pData, uint16_t nSize)
+void CGateMessageDispatcher::dispatch(uint64_t nSocketID, uint32_t nMessageType, const void* pData, uint16_t nSize)
 {
 	DebugAst(pData != nullptr);
 
@@ -71,22 +77,26 @@ void CGateMessageDispatcher::dispatch(uint32_t nMessageType, const void* pData, 
 	{
 		const core::message_header* pHeader = reinterpret_cast<const core::message_header*>(pData);
 
-		auto iter = this->m_mapClientCallback.find(pHeader->nMessageID);
-		if (iter == this->m_mapClientCallback.end())
+		auto iter = this->m_mapClientCallbackInfo.find(pHeader->nMessageID);
+		if (iter == this->m_mapClientCallbackInfo.end())
+		{
+			CGateSession* pGateSession = CGateApp::Inst()->getGateSessionMgr()->getSessionBySocketID(nSocketID);
+			DebugAst(pGateSession != nullptr);
+			this->forward(pGateSession->getSessionID(), pHeader);
 			return;
+		}
 
-		core::ClientCallback& callback = iter->second;
-		if (callback == nullptr)
-			return;
-
-		callback(pHeader);
+		core::ClientCallback& callback = iter->second.callback;
+		DebugAst(callback != nullptr);
+		
+		callback(nSocketID, pHeader);
 	}
 	else if ((nMessageType&eMT_TYPE_MASK) == eMT_TO_GATE)
 	{
 		DebugAst(nSize > sizeof(gate_cookice));
 
 		const gate_cookice* pCookice = reinterpret_cast<const gate_cookice*>(pData);
-		CGateSession* pGateSession = CGateApp::Inst()->getGateSessionMgr()->getSession(pCookice->nSessionID);
+		CGateSession* pGateSession = CGateApp::Inst()->getGateSessionMgr()->getSessionBySessionID(pCookice->nSessionID);
 		if (nullptr == pGateSession)
 			return;
 
@@ -108,4 +118,11 @@ void CGateMessageDispatcher::dispatch(uint32_t nMessageType, const void* pData, 
 
 		pConnectionFromClient->send(eMT_CLIENT, pHeader, nMessageSize);
 	}
+}
+
+void CGateMessageDispatcher::forward(uint64_t nSessionID, const core::message_header* pHeader)
+{
+	DebugAst(pHeader != nullptr);
+
+	core::CClusterInvoker::Inst()->forward(nSessionID, pHeader, CGateApp::Inst()->getLoadBalancePolicy(eLBPID_Rand), 0);
 }

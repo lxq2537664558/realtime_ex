@@ -42,12 +42,12 @@ void CConnectionFromService::onDispatch(uint32_t nMsgType, const void* pData, ui
 	{
 		smt_register_service_base_info netMsg;
 		netMsg.unpack(pData, nSize);
-
-		this->m_szServiceName = netMsg.sServiceBaseInfo.szName;
 		
+		this->m_szServiceName = netMsg.sServiceBaseInfo.szName;
 		if (!CMasterApp::Inst()->getServiceMgr()->registerService(this, netMsg.sServiceBaseInfo))
 		{
 			PrintWarning("dup service service_name: %s", this->m_szServiceName.c_str());
+			this->m_szServiceName.clear();
 			this->shutdown(true, "dup service connection");
 			return;
 		}

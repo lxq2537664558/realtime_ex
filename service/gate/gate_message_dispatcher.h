@@ -17,7 +17,7 @@ public:
 	/**
 	@brief: 消息派发函数，由各个消息源调用来派发消息
 	*/
-	void	dispatch(uint32_t nMessageType, const void* pData, uint16_t nSize);
+	void	dispatch(uint64_t nSocketID, uint32_t nMessageType, const void* pData, uint16_t nSize);
 	/**
 	@brief: 注册经客户端消息响应函数
 	*/
@@ -34,5 +34,13 @@ public:
 			getCallback(uint32_t nMessageID);
 
 private:
-	std::map<uint32_t, core::ClientCallback>	m_mapClientCallback;
+	void	forward(uint64_t nSessionID, const core::message_header* pHeader);
+
+private:
+	struct SClientCallbackInfo
+	{
+		std::string				szMessageName;
+		core::ClientCallback	callback;
+	};
+	std::map<uint32_t, SClientCallbackInfo>	m_mapClientCallbackInfo;
 };

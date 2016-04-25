@@ -170,7 +170,7 @@ void CServiceMgr::registerMessageInfo(const std::string& szServiceName, const st
 		// ¼ì²âhash³åÍ»
 		uint32_t nMessageID = base::hash(sMessageSyncInfo.szMessageName.c_str());
 		auto iter = this->m_mapMessageName.find(nMessageID);
-		if (iter != this->m_mapMessageName.end())
+		if (iter != this->m_mapMessageName.end() && iter->second != sMessageSyncInfo.szMessageName)
 		{
 			PrintWarning("dup message name exist_message_name :%s exist_message_id: %d new_message_name: %s new_message_id: %d", sMessageSyncInfo.szMessageName.c_str(), nMessageID, iter->second.c_str(), nMessageID);
 		}

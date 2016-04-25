@@ -11,11 +11,11 @@
 
 #include "tinyxml2/tinyxml2.h"
 
-static bool dispatch_gate_message(const std::string& szFromServiceName, uint32_t nMessageType, const void* pData, uint16_t nSize)
+static bool gate_before_filter(const std::string& szFromServiceName, uint32_t nMessageType, const void* pData, uint16_t nSize)
 {
 	DebugAstEx(pData != nullptr, false);
 
-	CGateMessageDispatcher::Inst()->dispatch(nMessageType, pData, nSize);
+	CGateMessageDispatcher::Inst()->dispatch(0, nMessageType, pData, nSize);
 
 	return true;
 }
@@ -38,7 +38,7 @@ bool CGateApp::onInit()
 {
 	CConnectionFromClient::registClassInfo();
 
-	core::CMessageRegistry::Inst()->addGlobalBeforeFilter(std::bind(dispatch_gate_message, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
+	core::CMessageRegistry::Inst()->addGlobalBeforeFilter(std::bind(gate_before_filter, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
 	
 	if (!CGateMessageDispatcher::Inst()->init())
 	{
