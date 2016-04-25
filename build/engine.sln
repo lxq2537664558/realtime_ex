@@ -80,6 +80,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestService1", "..\engineTe
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestService2", "..\engineTest\TestService2\TestService2.vcxproj", "{B27E3B20-4F24-466C-B0C5-7886A211D813}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestServiceClient", "..\engineTest\TestServiceClient\TestServiceClient.vcxproj", "{EC198626-3EA7-42E8-A029-E9F5EEA63DD4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Mixed Platforms = Debug|Mixed Platforms
@@ -293,6 +295,18 @@ Global
 		{B27E3B20-4F24-466C-B0C5-7886A211D813}.Release|Win32.Build.0 = Release|Win32
 		{B27E3B20-4F24-466C-B0C5-7886A211D813}.Release|x64.ActiveCfg = Release|x64
 		{B27E3B20-4F24-466C-B0C5-7886A211D813}.Release|x64.Build.0 = Release|x64
+		{EC198626-3EA7-42E8-A029-E9F5EEA63DD4}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
+		{EC198626-3EA7-42E8-A029-E9F5EEA63DD4}.Debug|Mixed Platforms.Build.0 = Debug|Win32
+		{EC198626-3EA7-42E8-A029-E9F5EEA63DD4}.Debug|Win32.ActiveCfg = Debug|Win32
+		{EC198626-3EA7-42E8-A029-E9F5EEA63DD4}.Debug|Win32.Build.0 = Debug|Win32
+		{EC198626-3EA7-42E8-A029-E9F5EEA63DD4}.Debug|x64.ActiveCfg = Debug|x64
+		{EC198626-3EA7-42E8-A029-E9F5EEA63DD4}.Debug|x64.Build.0 = Debug|x64
+		{EC198626-3EA7-42E8-A029-E9F5EEA63DD4}.Release|Mixed Platforms.ActiveCfg = Release|Win32
+		{EC198626-3EA7-42E8-A029-E9F5EEA63DD4}.Release|Mixed Platforms.Build.0 = Release|Win32
+		{EC198626-3EA7-42E8-A029-E9F5EEA63DD4}.Release|Win32.ActiveCfg = Release|Win32
+		{EC198626-3EA7-42E8-A029-E9F5EEA63DD4}.Release|Win32.Build.0 = Release|Win32
+		{EC198626-3EA7-42E8-A029-E9F5EEA63DD4}.Release|x64.ActiveCfg = Release|x64
+		{EC198626-3EA7-42E8-A029-E9F5EEA63DD4}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -317,5 +331,6 @@ Global
 		{71C863CB-E1D2-4F84-B4A3-92A79723099C} = {216086F1-3D14-42E1-B4CF-45A5766F0FDE}
 		{4B7449EF-F9CA-4552-B881-0EF6A5576820} = {9B243426-3FEB-467D-91E9-43F5532C5FD4}
 		{B27E3B20-4F24-466C-B0C5-7886A211D813} = {9B243426-3FEB-467D-91E9-43F5532C5FD4}
+		{EC198626-3EA7-42E8-A029-E9F5EEA63DD4} = {9B243426-3FEB-467D-91E9-43F5532C5FD4}
 	EndGlobalSection
 EndGlobal
