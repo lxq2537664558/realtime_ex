@@ -52,11 +52,11 @@ namespace core
 		/**
 		@brief: 向客户端发送消息，客户端ID由SGateSessionInfo来表述
 		*/
-		bool				send(const SClientSessionInfo& sGateSessionInfo, const google::protobuf::Message* pMessage);
+		bool				send(const SClientSessionInfo& sClientSessionInfo, const google::protobuf::Message* pMessage);
 		/**
 		@brief: 向一批客户端广播消息，客户端ID由std::vector<SGateSessionInfo>来表述
 		*/
-		bool				broadcast(const std::vector<SClientSessionInfo>& vecGateSessionInfo, const google::protobuf::Message* pMessage);
+		bool				broadcast(const std::vector<SClientSessionInfo>& vecClientSessionInfo, const google::protobuf::Message* pMessage);
 		/**
 		@brief: 网关服务转发客户端消息
 		*/

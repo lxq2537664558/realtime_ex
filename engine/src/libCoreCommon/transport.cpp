@@ -8,7 +8,6 @@
 #include "libBaseCommon/defer.h"
 
 #define _MAX_CACHE_MESSAGE_SIZE			1024 * 1024 * 100
-#define _MAX_REQUEST_MESSAGE_TIMEOUT	10000
 
 static int32_t serialize_protobuf_message_to_buf(const google::protobuf::Message* pMessage, core::message_header* pHeader, uint32_t nSize)
 {
@@ -62,18 +61,23 @@ namespace core
 
 	void CTransport::onCheckConnect(uint64_t nContext)
 	{
-		for (auto iter : this->m_mapMessageCacheInfo)
+		for (auto iter = this->m_mapMessageCacheInfo.begin(); iter != this->m_mapMessageCacheInfo.end(); ++iter)
 		{
-			SMessageCacheInfo& sRequestMessageGroupInfo = iter.second;
-			if (sRequestMessageGroupInfo.bRefuse)
-			{
-				const SServiceBaseInfo* pServiceBaseInfo = CCoreApp::Inst()->getServiceMgr()->getServiceBaseInfo(iter.first);
-				IF_NOT(pServiceBaseInfo != nullptr)
-					continue;
+			SMessageCacheInfo& sMessageCacheInfo = iter->second;
+			
+			const SServiceBaseInfo* pServiceBaseInfo = CCoreApp::Inst()->getServiceMgr()->getServiceBaseInfo(iter->first);
+			IF_NOT(pServiceBaseInfo != nullptr)
+				continue;
 
+			if (sMessageCacheInfo.bRefuse)
+			{
 				CCoreApp::Inst()->getCoreConnectionMgr()->connect(pServiceBaseInfo->szHost, pServiceBaseInfo->nPort, pServiceBaseInfo->szName, _GET_CLASS_ID(CCoreConnectionToService), pServiceBaseInfo->nSendBufSize, pServiceBaseInfo->nRecvBufSize, nullptr);
-				sRequestMessageGroupInfo.bRefuse = false;
+				sMessageCacheInfo.bRefuse = false;
 			}
+			
+			CCoreConnectionToService* pCoreConnectionToService = CCoreApp::Inst()->getServiceMgr()->getConnectionToService(pServiceBaseInfo->szName);
+			if (pCoreConnectionToService != nullptr)
+				this->sendCacheMessage(pServiceBaseInfo->szName);
 		}
 	}
 
@@ -142,7 +146,7 @@ namespace core
 				pResponseInfo->nSessionID = nSessionID;
 				pResponseInfo->szServiceName = szServiceName;
 				pResponseInfo->tickTimeout.setCallback(std::bind(&CTransport::onRequestMessageTimeout, this, std::placeholders::_1));
-				CCoreApp::Inst()->registerTicker(&pResponseInfo->tickTimeout, _MAX_REQUEST_MESSAGE_TIMEOUT, 0, nSessionID);
+				CCoreApp::Inst()->registerTicker(&pResponseInfo->tickTimeout, CCoreApp::Inst()->getInvokTimeout() * 1000, 0, nSessionID);
 
 				this->m_mapResponseWaitInfo[pResponseInfo->nSessionID] = pResponseInfo;
 			}
@@ -157,6 +161,8 @@ namespace core
 		pRequestMessageCacheInfo->callback = sRequestMessageInfo.callback;
 		pMessageCacheInfo->vecRequestMessageCacheInfo.push_back(pRequestMessageCacheInfo);
 		pMessageCacheInfo->nTotalSize += nBufSize;
+
+		this->onCheckConnect(0);
 
 		return true;
 	}
@@ -206,6 +212,8 @@ namespace core
 		pMessageCacheInfo->vecGateForwardMessageCacheInfo.push_back(pGateForwardMessageCacheInfo);
 		pMessageCacheInfo->nTotalSize += sGateMessageInfo.pHeader->nMessageSize;
 
+		this->onCheckConnect(0);
+
 		return true;
 	}
 
@@ -238,6 +246,8 @@ namespace core
 		pMessageCacheInfo->vecGateMessageCacheInfo.push_back(sGateMessageCacheInfo);
 		pMessageCacheInfo->nTotalSize += nBufSize;
 
+		this->onCheckConnect(0);
+
 		return true;
 	}
 
@@ -269,6 +279,8 @@ namespace core
 		sGateBroadcastMessageCacheInfo->vecSessionID = sGateBroadcastMessageInfo.vecSessionID;
 		pMessageCacheInfo->vecGateBroadcastMessageCacheInfo.push_back(sGateBroadcastMessageCacheInfo);
 		pMessageCacheInfo->nTotalSize += nBufSize;
+
+		this->onCheckConnect(0);
 
 		return true;
 	}
@@ -331,7 +343,7 @@ namespace core
 					pResponseInfo->nSessionID = nSessionID;
 					pResponseInfo->szServiceName = szServiceName;
 					pResponseInfo->tickTimeout.setCallback(std::bind(&CTransport::onRequestMessageTimeout, this, std::placeholders::_1));
-					CCoreApp::Inst()->registerTicker(&pResponseInfo->tickTimeout, _MAX_REQUEST_MESSAGE_TIMEOUT, 0, nSessionID);
+					CCoreApp::Inst()->registerTicker(&pResponseInfo->tickTimeout, CCoreApp::Inst()->getInvokTimeout() * 1000, 0, nSessionID);
 
 					this->m_mapResponseWaitInfo[pResponseInfo->nSessionID] = pResponseInfo;
 				}
@@ -366,6 +378,20 @@ namespace core
 				pCoreConnectionToService->send(eMT_TO_GATE | eMT_BROADCAST, pCookice, (uint16_t)(sizeof(uint64_t) * pGateBroadcastMessageCacheInfo->vecSessionID.size()), &pGateBroadcastMessageCacheInfo->vecBuf[0], (uint16_t)pGateBroadcastMessageCacheInfo->vecBuf.size());
 				
 				SAFE_DELETE(pGateBroadcastMessageCacheInfo);
+			}
+			for (size_t i = 0; i < sMessageCacheInfo.vecGateForwardMessageCacheInfo.size(); ++i)
+			{
+				SGateForwardMessageCacheInfo* pGateForwardMessageCacheInfo = sMessageCacheInfo.vecGateForwardMessageCacheInfo[i];
+				if (NULL == pGateForwardMessageCacheInfo)
+					continue;
+
+				// Ìî³äcookice
+				gate_cookice cookice;
+				cookice.nSessionID = pGateForwardMessageCacheInfo->nSessionID;
+
+				pCoreConnectionToService->send(eMT_FROM_GATE, &cookice, sizeof(cookice), &pGateForwardMessageCacheInfo->vecBuf[0], (uint16_t)pGateForwardMessageCacheInfo->vecBuf.size());
+
+				SAFE_DELETE(pGateForwardMessageCacheInfo);
 			}
 
 			this->m_mapMessageCacheInfo.erase(iter);

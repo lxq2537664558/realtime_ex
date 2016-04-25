@@ -83,13 +83,25 @@ namespace core
 		/*
 		@brief: 退出框架
 		*/
-		void					doQuit();
+		void	doQuit();
+		/*
+		@brief: 获取远程调用超时时间
+		*/
+		uint32_t getInvokTimeout() const;
+		/*
+		@brief: 获取连接心跳超时极限次数
+		*/
+		uint32_t getHeartbeatLimit() const;
+		/*
+		@brief: 获取连接心跳同步时间
+		*/
+		uint32_t getHeartbeatTime() const;
 
 	private:
-		bool					onInit();
-		bool					onProcess();
-		void					onDestroy();
-		void					onAnalyze();
+		bool	onInit();
+		bool	onProcess();
+		void	onDestroy();
+		void	onAnalyze();
 
 	protected:
 		std::string				m_szConfig;
@@ -106,6 +118,9 @@ namespace core
 		uint32_t				m_nTotalTime;
 		volatile uint32_t		m_nRunState;
 		bool					m_bNormalService;
+		uint32_t				m_nInvokTimeout;
+		uint32_t				m_nHeartbeatLimit;
+		uint32_t				m_nHeartbeatTime;
 		bool					m_bMarkQuit;	// 这个参数作用是只触发一次onQuit
 	};
 }

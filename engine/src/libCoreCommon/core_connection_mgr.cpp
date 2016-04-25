@@ -63,8 +63,10 @@ namespace core
 	{
 		DebugAstEx(pNetConnecter != nullptr && pNetAccepterHandler != nullptr, nullptr);
 
-		CCoreConnection* pCoreConnection = this->createConnection(pNetAccepterHandler->szContext, pNetAccepterHandler->nClassID, pNetAccepterHandler->clientDataCallback);
+		CCoreConnection* pCoreConnection = this->createConnection(pNetAccepterHandler->nClassID, pNetAccepterHandler->clientDataCallback);
 		DebugAstEx(nullptr != pCoreConnection, nullptr);
+		
+		pCoreConnection->m_szContext = pNetAccepterHandler->szContext;
 
 		return pCoreConnection;
 	}
@@ -73,9 +75,11 @@ namespace core
 	{
 		DebugAst(pNetActiveWaitConnecterHandler != nullptr && pNetActiveWaitConnecterHandler->getNetConnecter() != nullptr);
 
-		CCoreConnection* pCoreConnection = this->createConnection(pNetActiveWaitConnecterHandler->szContext, pNetActiveWaitConnecterHandler->nClassID, pNetActiveWaitConnecterHandler->clientDataCallback);
+		CCoreConnection* pCoreConnection = this->createConnection(pNetActiveWaitConnecterHandler->nClassID, pNetActiveWaitConnecterHandler->clientDataCallback);
 		if (nullptr == pCoreConnection)
 			return;
+
+		pCoreConnection->m_szContext = pNetActiveWaitConnecterHandler->szContext;
 
 		base::INetConnecter* pNetConnecter = pNetActiveWaitConnecterHandler->getNetConnecter();
 
@@ -216,7 +220,7 @@ namespace core
 		}
 	}
 
-	CCoreConnection* CCoreConnectionMgr::createConnection(const std::string& szContext, uint32_t nClassID, ClientDataCallback clientDataCallback)
+	CCoreConnection* CCoreConnectionMgr::createConnection(uint32_t nClassID, ClientDataCallback clientDataCallback)
 	{
 		CBaseConnection* pBaseConnection = dynamic_cast<CBaseConnection*>(CBaseObject::createObject(nClassID));
 		if (nullptr == pBaseConnection)

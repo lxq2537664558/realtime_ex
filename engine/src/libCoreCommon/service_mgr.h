@@ -22,11 +22,11 @@ namespace core
 
 		CCoreConnectionToService*
 				getConnectionToService(const std::string& szName) const;
-		void	addConnectionToService(CCoreConnectionToService* pCoreConnectionToService);
+		bool	addConnectionToService(CCoreConnectionToService* pCoreConnectionToService);
 		void	delConnectionToService(const std::string& szName);
 		CCoreConnectionFromService*
 				getConnectionFromService(const std::string& szName) const;
-		void	addConnectionFromService(CCoreConnectionFromService* pCoreConnectionFromService);
+		bool	addConnectionFromService(CCoreConnectionFromService* pCoreConnectionFromService);
 		void	delConnectionFromService(const std::string& szName);
 
 		CCoreConnectionToMaster*

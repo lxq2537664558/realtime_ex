@@ -91,6 +91,18 @@ namespace core
 		*/
 		const std::string&
 				getMessageName(uint32_t nMessageID) const;
+		/*
+		@brief: 获取远程调用超时时间
+		*/
+		uint32_t getInvokTimeout() const;
+		/*
+		@brief: 获取连接心跳超时极限次数
+		*/
+		uint32_t getHeartbeatLimit() const;
+		/*
+		@brief: 获取连接心跳同步时间
+		*/
+		uint32_t getHeartbeatTime() const;
 		
 	protected:
 		virtual bool	onInit() { return true; }

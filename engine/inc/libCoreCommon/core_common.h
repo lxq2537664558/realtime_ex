@@ -102,8 +102,6 @@ enum EMessageType
 	eMT_TYPE_MASK	= 0x00ff,	// 类型掩码
 
 	// 特殊标记
-	eMT_NATIVE		= 0,		// 原生消息格式
-	eMT_PROTOBUF	= 0x8000,	// protobuf格式
 	eMT_BROADCAST	= 0x200,	// 广播消息
 };
 

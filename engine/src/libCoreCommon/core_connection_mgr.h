@@ -81,6 +81,6 @@ namespace core
 		void						onConnect( SNetActiveWaitConnecterHandler* pNetActiveWaitConnecterHandler );
 		void						delActiveWaitConnecterHandler( SNetActiveWaitConnecterHandler* pWaitActiveConnecterHandler );
 
-		CCoreConnection*			createConnection(const std::string& szContext, uint32_t nClassID, ClientDataCallback clientDataCallback);
+		CCoreConnection*			createConnection(uint32_t nClassID, ClientDataCallback clientDataCallback);
 	};
 }

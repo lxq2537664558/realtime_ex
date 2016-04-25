@@ -52,7 +52,11 @@ namespace core
 				}
 				// 这里对其他服务的监听地址不感兴趣
 				this->m_szServiceName = netMsg.szServiceName;
-				CCoreApp::Inst()->getServiceMgr()->addConnectionFromService(this);
+				if (!CCoreApp::Inst()->getServiceMgr()->addConnectionFromService(this))
+				{
+					this->shutdown(true, "dup service connection");
+					return;
+				}
 			}
 		}
 		else

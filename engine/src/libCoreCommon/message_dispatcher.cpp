@@ -73,7 +73,7 @@ namespace core
 
 			// °þµôcookice
 			const message_header* pHeader = reinterpret_cast<const message_header*>(pCookice + 1);
-			const std::string& szMessageName = CCoreApp::Inst()->getMessageDirectory()->getMessageName(pHeader->nMessageID);
+			const std::string& szMessageName = CCoreApp::Inst()->getMessageDirectory()->getOwnerMessageName(pHeader->nMessageID);
 			ServiceCallback& callback = CCoreApp::Inst()->getMessageDirectory()->getCallback(pHeader->nMessageID);
 			if (callback != nullptr)
 			{
@@ -101,7 +101,7 @@ namespace core
 
 			// °þµôcookice
 			const message_header* pHeader = reinterpret_cast<const message_header*>(pCookice + 1);
-			const std::string& szMessageName = CCoreApp::Inst()->getMessageDirectory()->getMessageName(pHeader->nMessageID);
+			const std::string& szMessageName = CCoreApp::Inst()->getMessageDirectory()->getOwnerMessageName(pHeader->nMessageID);
 
 			if (pResponseWaitInfo->callback != nullptr)
 			{
@@ -121,7 +121,7 @@ namespace core
 
 			// °þµôcookice
 			const message_header* pHeader = reinterpret_cast<const message_header*>(pCookice + 1);
-			const std::string& szMessageName = CCoreApp::Inst()->getMessageDirectory()->getMessageName(pHeader->nMessageID);
+			const std::string& szMessageName = CCoreApp::Inst()->getMessageDirectory()->getOwnerMessageName(pHeader->nMessageID);
 
 			SClientSessionInfo session(szFromServiceName, pCookice->nSessionID);
 

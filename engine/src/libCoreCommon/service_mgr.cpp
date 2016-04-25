@@ -72,19 +72,21 @@ namespace core
 		return iter->second;
 	}
 
-	void CServiceMgr::addConnectionToService(CCoreConnectionToService* pCoreConnectionToService)
+	bool CServiceMgr::addConnectionToService(CCoreConnectionToService* pCoreConnectionToService)
 	{
-		DebugAst(pCoreConnectionToService != nullptr);
+		DebugAstEx(pCoreConnectionToService != nullptr, false);
 
 		if (this->m_mapConnectionToService.find(pCoreConnectionToService->getServiceName()) != this->m_mapConnectionToService.end())
 		{
 			PrintWarning("dup service service_name: %s remote_addr: %s %d", pCoreConnectionToService->getServiceName().c_str(), pCoreConnectionToService->getRemoteAddr().szHost, pCoreConnectionToService->getRemoteAddr().nPort);
-			return;
+			return false;
 		}
 
 		this->m_mapConnectionToService[pCoreConnectionToService->getServiceName()] = pCoreConnectionToService;
 
 		CCoreApp::Inst()->getTransport()->sendCacheMessage(pCoreConnectionToService->getServiceName());
+
+		return true;
 	}
 
 	void CServiceMgr::delConnectionToService(const std::string& szName)
@@ -105,14 +107,20 @@ namespace core
 		return iter->second;
 	}
 
-	void CServiceMgr::addConnectionFromService(CCoreConnectionFromService* pCoreConnectionFromService)
+	bool CServiceMgr::addConnectionFromService(CCoreConnectionFromService* pCoreConnectionFromService)
 	{
-		DebugAst(pCoreConnectionFromService != nullptr);
+		DebugAstEx(pCoreConnectionFromService != nullptr, false);
 
 		auto iter = this->m_mapConnectionFromService.find(pCoreConnectionFromService->getServiceName());
-		DebugAst(iter == this->m_mapConnectionFromService.end());
+		if (iter != this->m_mapConnectionFromService.end())
+		{
+			PrintWarning("dup service service_name: %s remote_addr: %s %d", pCoreConnectionFromService->getServiceName().c_str(), pCoreConnectionFromService->getRemoteAddr().szHost, pCoreConnectionFromService->getRemoteAddr().nPort);
+			return false;
+		}
 
 		this->m_mapConnectionFromService[pCoreConnectionFromService->getServiceName()] = pCoreConnectionFromService;
+	
+		return true;
 	}
 
 	void CServiceMgr::delConnectionFromService(const std::string& szName)
@@ -145,10 +153,10 @@ namespace core
 
 	void CServiceMgr::getServiceName(const std::string& szType, std::vector<std::string>& vecServiceName) const
 	{
-		for (auto iter : this->m_mapServiceBaseInfo)
+		for (auto iter = this->m_mapServiceBaseInfo.begin(); iter != this->m_mapServiceBaseInfo.end(); ++iter)
 		{
-			if (iter.second.szType == szType)
-				vecServiceName.push_back(iter.second.szName);
+			if (iter->second.szType == szType)
+				vecServiceName.push_back(iter->second.szName);
 		}
 	}
 

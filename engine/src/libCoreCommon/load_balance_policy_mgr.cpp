@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "load_balance_policy_mgr.h"
+#include "base_app.h"
 
 namespace core
 {
@@ -15,6 +16,7 @@ namespace core
 
 	bool CLoadBalancePolicyMgr::init()
 	{
+		CBaseApp::Inst()->registLoadBalancePolicy(new CLoadBalanceRandPolicy());
 		return true;
 	}
 

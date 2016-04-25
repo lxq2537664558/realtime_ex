@@ -8,7 +8,6 @@ namespace core
 {
 	CLoadBalanceRandPolicy::CLoadBalanceRandPolicy()
 	{
-
 	}
 
 	CLoadBalanceRandPolicy::~CLoadBalanceRandPolicy()

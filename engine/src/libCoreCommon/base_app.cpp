@@ -108,6 +108,22 @@ namespace core
 
 	const std::string& CBaseApp::getMessageName(uint32_t nMessageID) const
 	{
-		return CCoreApp::Inst()->getMessageDirectory()->getMessageName(nMessageID);
+		return CCoreApp::Inst()->getMessageDirectory()->getOwnerMessageName(nMessageID);
 	}
+
+	uint32_t CBaseApp::getInvokTimeout() const
+	{
+		return CCoreApp::Inst()->getInvokTimeout();
+	}
+
+	uint32_t CBaseApp::getHeartbeatLimit() const
+	{
+		return CCoreApp::Inst()->getHeartbeatLimit();
+	}
+
+	uint32_t CBaseApp::getHeartbeatTime() const
+	{
+		return CCoreApp::Inst()->getHeartbeatTime();
+	}
+
 }

@@ -26,15 +26,25 @@ namespace core
 		// szContext中存的是服务名字
 		this->m_szServiceName = szContext;
 
+		if (CCoreApp::Inst()->getServiceMgr()->getConnectionToService(this->m_szServiceName) != nullptr)
+		{
+			this->shutdown(true, "dup service connection");
+			return;
+		}
+
 		// 同步服务名字
 		smt_notify_service_base_info netMsg;
-		netMsg.szServiceName = this->m_szServiceName;
+		netMsg.szServiceName = CCoreApp::Inst()->getServiceBaseInfo().szName;
 		base::CWriteBuf& writeBuf = CBaseApp::Inst()->getWriteBuf();
 		netMsg.pack(writeBuf);
 
 		this->send(eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
 
-		CCoreApp::Inst()->getServiceMgr()->addConnectionToService(this);
+		if (!CCoreApp::Inst()->getServiceMgr()->addConnectionToService(this))
+		{
+			this->shutdown(true, "dup service connection");
+			return;
+		}
 	}
 
 	void CCoreConnectionToService::onDisconnect()

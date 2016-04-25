@@ -144,10 +144,22 @@ namespace core
 		return this->m_vecServiceGlobalAfterFilter;
 	}
 
-	const std::string& CMessageDirectory::getMessageName(uint32_t nMessageID) const
+	const std::string& CMessageDirectory::getOwnerMessageName(uint32_t nMessageID) const
 	{
 		auto iter = this->m_mapOwnerMessageName.find(nMessageID);
 		if (iter == this->m_mapOwnerMessageName.end())
+		{
+			static std::string szMessageName;
+			return szMessageName;
+		}
+
+		return iter->second;
+	}
+
+	const std::string& CMessageDirectory::getOtherMessageName(uint32_t nMessageID) const
+	{
+		auto iter = this->m_mapOtherMessageName.find(nMessageID);
+		if (iter == this->m_mapOtherMessageName.end())
 		{
 			static std::string szMessageName;
 			return szMessageName;
@@ -198,6 +210,9 @@ namespace core
 			const std::string& szMessageName = vecMessageSyncInfo[i].szMessageName;
 
 			this->m_mapOtherMessageDirectoryByMessageName[szMessageName].insert(szServiceName);
+
+			uint32_t nMessageID = base::hash(szMessageName.c_str());
+			this->m_mapOtherMessageName[nMessageID] = szMessageName;
 		}
 	}
 }

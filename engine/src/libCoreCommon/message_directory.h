@@ -32,7 +32,10 @@ namespace core
 				getGlobalAfterFilter();
 
 		const std::string&
-				getMessageName(uint32_t nMessageID) const;
+				getOwnerMessageName(uint32_t nMessageID) const;
+
+		const std::string&
+				getOtherMessageName(uint32_t nMessageID) const;
 
 		void	onConnectToMaster();
 
@@ -48,6 +51,7 @@ namespace core
 		std::map<uint32_t, ServiceCallback>				m_mapServiceCallback;
 		std::map<uint32_t, GateForwardCallback>			m_mapGateClientCallback;
 		std::map<uint32_t, std::string>					m_mapOwnerMessageName;
+		std::map<uint32_t, std::string>					m_mapOtherMessageName;
 		std::map<std::string, std::set<std::string>>	m_mapOtherMessageDirectoryByMessageName;
 		std::map<std::string, std::set<std::string>>	m_mapOtherMessageDirectoryByServiceName;
 

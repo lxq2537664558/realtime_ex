@@ -102,9 +102,14 @@ namespace core
 		, m_bMarkQuit(false)
 		, m_nTotalTime(0)
 		, m_nCycleCount(0)
+		, m_nInvokTimeout(0)
+		, m_nHeartbeatLimit(0)
+		, m_nHeartbeatTime(0)
 		, m_bNormalService(true)
 	{
-		memset(&this->m_sServiceBaseInfo, 0, sizeof(this->m_sServiceBaseInfo));
+		this->m_sServiceBaseInfo.nPort = 0;
+		this->m_sServiceBaseInfo.nRecvBufSize = 0;
+		this->m_sServiceBaseInfo.nSendBufSize = 0;
 	}
 
 	CCoreApp::~CCoreApp()
@@ -402,9 +407,20 @@ namespace core
 		this->m_sServiceBaseInfo.szType = szServiceType;
 		this->m_sServiceBaseInfo.szName = szServiceName;
 		this->m_sServiceBaseInfo.szHost = szServiceHost;
-		this->m_sServiceBaseInfo.nPort = (uint16_t)pServiceInfoXML->IntAttribute("port");
-		this->m_sServiceBaseInfo.nRecvBufSize = pServiceInfoXML->IntAttribute("recv_buf_size");
-		this->m_sServiceBaseInfo.nSendBufSize = pServiceInfoXML->IntAttribute("send_buf_size");
+		this->m_sServiceBaseInfo.nPort = (uint16_t)pServiceInfoXML->UnsignedAttribute("port");
+		this->m_sServiceBaseInfo.nRecvBufSize = pServiceInfoXML->UnsignedAttribute("recv_buf_size");
+		this->m_sServiceBaseInfo.nSendBufSize = pServiceInfoXML->UnsignedAttribute("send_buf_size");
+
+		tinyxml2::XMLElement* pServiceInfoMiscXML = pServiceInfoXML->FirstChildElement("misc");
+		if (nullptr == pServiceInfoMiscXML)
+		{
+			PrintWarning("nullptr == pServiceInfoMiscXML");
+			return false;
+		}
+
+		this->m_nInvokTimeout = pServiceInfoMiscXML->UnsignedAttribute("invok_timeout");
+		this->m_nHeartbeatLimit = pServiceInfoMiscXML->UnsignedAttribute("heartbeat_limit");
+		this->m_nHeartbeatTime = pServiceInfoMiscXML->UnsignedAttribute("heartbeat_time");
 
 		std::string szMasterHost;
 		uint16_t nMasterPort = 0;
@@ -516,6 +532,21 @@ namespace core
 	CLoadBalancePolicyMgr* CCoreApp::getLoadBalancePolicyMgr() const
 	{
 		return this->m_pLoadBalancePolicyMgr;
+	}
+
+	uint32_t CCoreApp::getInvokTimeout() const
+	{
+		return this->m_nInvokTimeout;
+	}
+
+	uint32_t CCoreApp::getHeartbeatLimit() const
+	{
+		return this->m_nHeartbeatLimit;
+	}
+
+	uint32_t CCoreApp::getHeartbeatTime() const
+	{
+		return this->m_nHeartbeatTime;
 	}
 
 }

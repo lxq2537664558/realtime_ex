@@ -10,9 +10,6 @@
 #include "libBaseCommon/debug_helper.h"
 #include "libBaseCommon/base_time.h"
 
-#define CHECK_TIME 10000
-#define MAX_HEARTBEAT_COUNT 60
-
 namespace core
 {
 	
@@ -76,19 +73,10 @@ namespace core
 						break;
 					}
 
-					int16_t nClientMessageSize = (int16_t)nParserSize;
-					// 消息长度的最高位决定了这个消息格式
-					if (nClientMessageSize < 0)
-					{
-						nClientMessageSize = -nClientMessageSize;
-						this->onPacketMsg(eMT_CLIENT|eMT_PROTOBUF, pData, (uint16_t)nClientMessageSize);
-					}
-					else
-					{
-						this->onPacketMsg(eMT_CLIENT, pData, (uint16_t)nClientMessageSize);
-					}
+					uint16_t nClientMessageSize = (uint16_t)nParserSize;
+					this->onPacketMsg(eMT_CLIENT, pData, nClientMessageSize);
 
-					nMessageSize = (uint16_t)nClientMessageSize;
+					nMessageSize = nClientMessageSize;
 				}
 				else
 				{
@@ -139,7 +127,7 @@ namespace core
 		this->m_pHeartbeat = new CTicker();
 		this->m_pHeartbeat->setCallback(std::bind(&CCoreConnection::onHeartbeat, this, std::placeholders::_1));
 
-		CCoreApp::Inst()->registerTicker(this->m_pHeartbeat, CHECK_TIME, CHECK_TIME, 0);
+		CCoreApp::Inst()->registerTicker(this->m_pHeartbeat, CCoreApp::Inst()->getHeartbeatTime() * 1000, CCoreApp::Inst()->getHeartbeatTime() * 1000, 0);
 	}
 
 	uint64_t CCoreConnection::getID() const
@@ -176,7 +164,7 @@ namespace core
 		if (this->m_bHeartbeat)
 			return;
 		
-		if (this->m_nSendHeartbeatCount > MAX_HEARTBEAT_COUNT)
+		if (this->m_nSendHeartbeatCount > CCoreApp::Inst()->getHeartbeatLimit())
 		{
 			this->shutdown(true, "heart beat time out");
 			return;
@@ -207,6 +195,7 @@ namespace core
 		case eMT_RESPONSE:
 		case eMT_SYSTEM:
 		case eMT_FROM_GATE:
+		case eMT_TO_GATE:
 			{
 				message_header header;
 				header.nMessageSize = sizeof(header) + nSize;
@@ -237,6 +226,7 @@ namespace core
 		case eMT_RESPONSE:
 		case eMT_SYSTEM:
 		case eMT_FROM_GATE:
+		case eMT_TO_GATE:
 			{
 				message_header header;
 				header.nMessageSize = sizeof(header) + nSize + nExtraSize;

@@ -97,22 +97,22 @@ namespace core
 		return CCoreApp::Inst()->getTransport()->getServiceSessionInfo();
 	}
 
-	bool CClusterInvoker::send(const SClientSessionInfo& sGateSessionInfo, const google::protobuf::Message* pMessage)
+	bool CClusterInvoker::send(const SClientSessionInfo& sClientSessionInfo, const google::protobuf::Message* pMessage)
 	{
 		DebugAstEx(pMessage != nullptr, false);
 
 		SGateMessageInfo sGateMessageInfo;
-		sGateMessageInfo.nSessionID = sGateSessionInfo.nSessionID;
+		sGateMessageInfo.nSessionID = sClientSessionInfo.nSessionID;
 		sGateMessageInfo.pMessage = const_cast<google::protobuf::Message*>(pMessage);
 
-		return CCoreApp::Inst()->getTransport()->send(sGateSessionInfo.szServiceName, sGateMessageInfo);
+		return CCoreApp::Inst()->getTransport()->send(sClientSessionInfo.szServiceName, sGateMessageInfo);
 	}
 
 	bool CClusterInvoker::forward(uint64_t nSessionID, const message_header* pHeader, ILoadBalancePolicy* pLoadBalancePolicy, uint64_t nLoadBalanceParam)
 	{
 		DebugAstEx(pHeader != nullptr && pLoadBalancePolicy != nullptr, false);
 
-		const std::string& szMessageName = CCoreApp::Inst()->getMessageDirectory()->getMessageName(pHeader->nMessageID);
+		const std::string& szMessageName = CCoreApp::Inst()->getMessageDirectory()->getOtherMessageName(pHeader->nMessageID);
 		const std::string szServiceName = pLoadBalancePolicy->select(szMessageName, nLoadBalanceParam);
 		if (szServiceName.empty())
 			return false;
@@ -124,18 +124,18 @@ namespace core
 		return CCoreApp::Inst()->getTransport()->forward(szServiceName, sGateMessageInfo);
 	}
 
-	bool CClusterInvoker::broadcast(const std::vector<SClientSessionInfo>& vecGateSessionInfo, const google::protobuf::Message* pMessage)
+	bool CClusterInvoker::broadcast(const std::vector<SClientSessionInfo>& vecClientSessionInfo, const google::protobuf::Message* pMessage)
 	{
 		DebugAstEx(pMessage != nullptr, false);
 
-		std::map<std::string, std::vector<uint64_t>> mapGateSessionInfo;
-		for (size_t i = 0; i < vecGateSessionInfo.size(); ++i)
+		std::map<std::string, std::vector<uint64_t>> mapClientSessionInfo;
+		for (size_t i = 0; i < vecClientSessionInfo.size(); ++i)
 		{
-			mapGateSessionInfo[vecGateSessionInfo[i].szServiceName].push_back(vecGateSessionInfo[i].nSessionID);
+			mapClientSessionInfo[vecClientSessionInfo[i].szServiceName].push_back(vecClientSessionInfo[i].nSessionID);
 		}
 
 		bool bRet = true;
-		for (auto iter = mapGateSessionInfo.begin(); iter != mapGateSessionInfo.end(); ++iter)
+		for (auto iter = mapClientSessionInfo.begin(); iter != mapClientSessionInfo.end(); ++iter)
 		{
 			SGateBroadcastMessageInfo sGateBroadcastMessageInfo;
 			sGateBroadcastMessageInfo.vecSessionID = iter->second;
