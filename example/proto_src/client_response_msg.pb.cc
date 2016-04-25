@@ -79,7 +79,7 @@ void protobuf_AddDesc_client_5fresponse_5fmsg_2eproto() {
 
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
     "\n\031client_response_msg.proto\022\004test\"#\n\023cli"
-    "ent_response_msg\022\014\n\004name\030\004 \001(\t", 70);
+    "ent_response_msg\022\014\n\004name\030\001 \001(\t", 70);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "client_response_msg.proto", &protobuf_RegisterTypes);
   client_response_msg::default_instance_ = new client_response_msg();
@@ -177,9 +177,9 @@ bool client_response_msg::MergePartialFromCodedStream(
     tag = p.first;
     if (!p.second) goto handle_unusual;
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // optional string name = 4;
-      case 4: {
-        if (tag == 34) {
+      // optional string name = 1;
+      case 1: {
+        if (tag == 10) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadString(
                 input, this->mutable_name()));
           ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
@@ -218,14 +218,14 @@ failure:
 void client_response_msg::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
   // @@protoc_insertion_point(serialize_start:test.client_response_msg)
-  // optional string name = 4;
+  // optional string name = 1;
   if (has_name()) {
     ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
       this->name().data(), this->name().length(),
       ::google::protobuf::internal::WireFormat::SERIALIZE,
       "name");
     ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      4, this->name(), output);
+      1, this->name(), output);
   }
 
   if (!unknown_fields().empty()) {
@@ -238,7 +238,7 @@ void client_response_msg::SerializeWithCachedSizes(
 ::google::protobuf::uint8* client_response_msg::SerializeWithCachedSizesToArray(
     ::google::protobuf::uint8* target) const {
   // @@protoc_insertion_point(serialize_to_array_start:test.client_response_msg)
-  // optional string name = 4;
+  // optional string name = 1;
   if (has_name()) {
     ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
       this->name().data(), this->name().length(),
@@ -246,7 +246,7 @@ void client_response_msg::SerializeWithCachedSizes(
       "name");
     target =
       ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        4, this->name(), target);
+        1, this->name(), target);
   }
 
   if (!unknown_fields().empty()) {
@@ -261,7 +261,7 @@ int client_response_msg::ByteSize() const {
   int total_size = 0;
 
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    // optional string name = 4;
+    // optional string name = 1;
     if (has_name()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::StringSize(

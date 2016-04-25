@@ -90,10 +90,10 @@ class service_request_msg : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // optional string name = 4;
+  // optional string name = 1;
   inline bool has_name() const;
   inline void clear_name();
-  static const int kNameFieldNumber = 4;
+  static const int kNameFieldNumber = 1;
   inline const ::std::string& name() const;
   inline void set_name(const ::std::string& value);
   inline void set_name(const char* value);
@@ -126,7 +126,7 @@ class service_request_msg : public ::google::protobuf::Message {
 
 // service_request_msg
 
-// optional string name = 4;
+// optional string name = 1;
 inline bool service_request_msg::has_name() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
