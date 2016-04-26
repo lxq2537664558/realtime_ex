@@ -81,7 +81,15 @@ void CGateMessageDispatcher::dispatch(uint64_t nSocketID, uint32_t nMessageType,
 		if (iter == this->m_mapClientCallbackInfo.end())
 		{
 			CGateSession* pGateSession = CGateApp::Inst()->getGateSessionMgr()->getSessionBySocketID(nSocketID);
-			DebugAst(pGateSession != nullptr);
+			if(pGateSession == nullptr)
+			{
+				core::CBaseConnection* pBaseConnection = CGateApp::Inst()->getBaseConnectionMgr()->getBaseConnection(nSocketID);
+				DebugAst(pBaseConnection != nullptr);
+
+				pBaseConnection->shutdown(true, "invalid session");
+				return;
+			}
+
 			this->forward(pGateSession->getSessionID(), pHeader);
 			return;
 		}

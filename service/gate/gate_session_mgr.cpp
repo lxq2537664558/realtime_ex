@@ -22,11 +22,15 @@ CGateSession* CGateSessionMgr::createSession(uint64_t nSocketID, uint64_t nSessi
 		return nullptr;
 
 	CGateSession* pGateSession = new CGateSession();
-	if (pGateSession->init(nSocketID, nSessionID))
+	if (!pGateSession->init(nSocketID, nSessionID))
+	{
+		SAFE_DELETE(pGateSession);
 		return nullptr;
-
+	}
 	this->m_mapSessionIDBySocketID[nSocketID] = nSessionID;
 	this->m_mapGateSessionBySessionID[nSessionID] = pGateSession;
+
+	PrintInfo("create session session_id: "UINT64FMT" socket_id: "UINT64FMT, nSessionID, nSocketID);
 
 	return pGateSession;
 }
@@ -40,16 +44,24 @@ CGateSession* CGateSessionMgr::getSessionBySessionID(uint64_t nSessionID) const
 	return iter->second;
 }
 
-void CGateSessionMgr::delSessionbySessionID(uint64_t nSessionID)
+void CGateSessionMgr::delSessionbySocketID(uint64_t nSocketID)
 {
-	auto iter = this->m_mapGateSessionBySessionID.find(nSessionID);
-	if (iter == this->m_mapGateSessionBySessionID.end())
+	auto iter = this->m_mapSessionIDBySocketID.find(nSocketID);
+	if (iter == this->m_mapSessionIDBySocketID.end())
 		return;
 
-	CGateSession* pGateSession = iter->second;
+	uint64_t nSessionID = iter->second;
+	this->m_mapSessionIDBySocketID.erase(iter);
+
+	auto iterSession = this->m_mapGateSessionBySessionID.find(nSessionID);
+	DebugAst(iterSession != this->m_mapGateSessionBySessionID.end());
+	
+	CGateSession* pGateSession = iterSession->second;
 	SAFE_DELETE(pGateSession);
 
-	this->m_mapGateSessionBySessionID.erase(iter);
+	this->m_mapGateSessionBySessionID.erase(iterSession);
+
+	PrintInfo("destroy session session_id: "UINT64FMT" socket_id: "UINT64FMT, nSessionID, nSocketID);
 }
 
 CGateSession* CGateSessionMgr::getSessionBySocketID(uint64_t nSocketID) const

@@ -16,7 +16,7 @@ public:
 	CGateSession*	createSession(uint64_t nSocketID, uint64_t nSessionID);
 	CGateSession*	getSessionBySessionID(uint64_t nSessionID) const;
 	CGateSession*	getSessionBySocketID(uint64_t nSocketID) const;
-	void			delSessionbySessionID(uint64_t nSessionID);
+	void			delSessionbySocketID(uint64_t nSocketID);
 
 private:
 	std::map<uint64_t, CGateSession*>	m_mapGateSessionBySessionID;

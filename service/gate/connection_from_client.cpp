@@ -24,7 +24,7 @@ void CConnectionFromClient::onConnect(const std::string& szContext)
 
 void CConnectionFromClient::onDisconnect()
 {
-	CGateApp::Inst()->getGateSessionMgr()->delSessionbySessionID(this->getID());
+	CGateApp::Inst()->getGateSessionMgr()->delSessionbySocketID(this->getID());
 }
 
 void CConnectionFromClient::onDispatch(uint32_t nMessageType, const void* pData, uint16_t nSize)

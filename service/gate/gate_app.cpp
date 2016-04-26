@@ -2,6 +2,7 @@
 #include "gate_app.h"
 #include "connection_from_client.h"
 #include "gate_message_dispatcher.h"
+#include "gate_message_handler.h"
 
 #include "libCoreCommon/base_connection_mgr.h"
 #include "libCoreCommon/message_dispatcher.h"
@@ -43,6 +44,12 @@ bool CGateApp::onInit()
 	if (!CGateMessageDispatcher::Inst()->init())
 	{
 		PrintWarning("CGateMessageDispatcher::Inst()->init()");
+		return false;
+	}
+
+	if (!CGateMessageHandler::Inst()->init())
+	{
+		PrintWarning("CGateMessageHandler::Inst()->init()");
 		return false;
 	}
 
