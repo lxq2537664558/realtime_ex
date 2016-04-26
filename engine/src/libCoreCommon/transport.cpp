@@ -180,7 +180,7 @@ namespace core
 			gate_cookice cookice;
 			cookice.nSessionID = sGateMessageInfo.nSessionID;
 
-			pCoreConnectionToService->send(eMT_TO_GATE, &cookice, sizeof(cookice), sGateMessageInfo.pHeader, sGateMessageInfo.pHeader->nMessageSize);
+			pCoreConnectionToService->send(eMT_GATE_FORWARD, &cookice, sizeof(cookice), sGateMessageInfo.pHeader, sGateMessageInfo.pHeader->nMessageSize);
 
 			return true;
 		}
