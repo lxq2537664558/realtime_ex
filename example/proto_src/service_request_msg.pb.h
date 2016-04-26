@@ -102,16 +102,26 @@ class service_request_msg : public ::google::protobuf::Message {
   inline ::std::string* release_name();
   inline void set_allocated_name(::std::string* name);
 
+  // optional uint32 id = 2;
+  inline bool has_id() const;
+  inline void clear_id();
+  static const int kIdFieldNumber = 2;
+  inline ::google::protobuf::uint32 id() const;
+  inline void set_id(::google::protobuf::uint32 value);
+
   // @@protoc_insertion_point(class_scope:test.service_request_msg)
  private:
   inline void set_has_name();
   inline void clear_has_name();
+  inline void set_has_id();
+  inline void clear_has_id();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   ::google::protobuf::uint32 _has_bits_[1];
   mutable int _cached_size_;
   ::std::string* name_;
+  ::google::protobuf::uint32 id_;
   friend void  protobuf_AddDesc_service_5frequest_5fmsg_2eproto();
   friend void protobuf_AssignDesc_service_5frequest_5fmsg_2eproto();
   friend void protobuf_ShutdownFile_service_5frequest_5fmsg_2eproto();
@@ -200,6 +210,30 @@ inline void service_request_msg::set_allocated_name(::std::string* name) {
     name_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   }
   // @@protoc_insertion_point(field_set_allocated:test.service_request_msg.name)
+}
+
+// optional uint32 id = 2;
+inline bool service_request_msg::has_id() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void service_request_msg::set_has_id() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void service_request_msg::clear_has_id() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void service_request_msg::clear_id() {
+  id_ = 0u;
+  clear_has_id();
+}
+inline ::google::protobuf::uint32 service_request_msg::id() const {
+  // @@protoc_insertion_point(field_get:test.service_request_msg.id)
+  return id_;
+}
+inline void service_request_msg::set_id(::google::protobuf::uint32 value) {
+  set_has_id();
+  id_ = value;
+  // @@protoc_insertion_point(field_set:test.service_request_msg.id)
 }
 
 

@@ -21,6 +21,7 @@ void service_request_msg_callback(const std::string& szFromService, uint32_t nMe
 
 	test::service_response_msg msg;
 	msg.set_name(pRequestMsg->name());
+	msg.set_id(pRequestMsg->id());
 
 	core::CClusterInvoker::Inst()->response(&msg);
 }

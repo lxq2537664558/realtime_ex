@@ -45,7 +45,7 @@ google::protobuf::Message* unserialize_protobuf_message_from_buf(const std::stri
 	if (nullptr == pMessage)
 		return nullptr;
 
-	if (!pMessage->ParseFromArray(pHeader + 1, pHeader->nMessageSize - sizeof(core::message_header)))
+	if (!pMessage->ParseFromArray(pHeader + 1, pHeader->nMessageSize - sizeof(message_header)))
 	{
 		SAFE_DELETE(pMessage);
 		return nullptr;
@@ -66,21 +66,27 @@ int32_t serialize_protobuf_message_to_buf(const google::protobuf::Message* pMess
 		return -1;
 
 	pHeader->nMessageID = base::hash(pMessage->GetTypeName().c_str());
-	pHeader->nMessageSize = (uint16_t)(sizeof(core::message_header) + szMessageData.size());
+	pHeader->nMessageSize = (uint16_t)(sizeof(message_header) + szMessageData.size());
 
 	memcpy(pHeader + 1, szMessageData.c_str(), szMessageData.size());
 
-	return (int32_t)(szMessageData.size() + sizeof(core::message_header));
+	return (int32_t)(szMessageData.size() + sizeof(message_header));
 }
 
 struct SNetConnecterHandler :
 	public base::INetConnecterHandler
 {
+	SNetConnecterHandler()
+	{
+		nNextPacketID = 0;
+	}
+
 	virtual uint32_t onRecv(const char* pData, uint32_t nDataSize) override
 	{
+		uint64_t nRecvTime = base::getGmtTime();
 		google::protobuf::Message* pMessage = unserialize_protobuf_message_from_buf("test.client_response_msg", reinterpret_cast<const message_header*>(pData));
 		test::client_response_msg* pMsg = dynamic_cast<test::client_response_msg*>(pMessage);
-		PrintDebug("onRecv %s", pMsg->name().c_str());
+		PrintDebug("onRecv %s %d %d %d", pMsg->name().c_str(), nNextPacketID, pMsg->id(), (uint32_t)(nRecvTime - nSendTime));
 		this->requestMsg("aa");
 		return nDataSize;
 	}
@@ -114,6 +120,7 @@ struct SNetConnecterHandler :
 	{
 		test::client_request_msg msg;
 		msg.set_name(szName);
+		msg.set_id(nNextPacketID);
 		std::string szMessageData;
 		msg.SerializeToString(&szMessageData);
 
@@ -123,6 +130,9 @@ struct SNetConnecterHandler :
 
 		this->m_pNetConnecter->send(&header, sizeof(header));
 		this->m_pNetConnecter->send(szMessageData.c_str(), (uint16_t)szMessageData.size());
+
+		nSendTime = base::getGmtTime();
+		++nNextPacketID;
 	}
 
 	virtual void   onDisconnect() override
@@ -132,6 +142,8 @@ struct SNetConnecterHandler :
 
 public:
 	uint64_t	nID;
+	uint32_t	nNextPacketID;
+	uint64_t	nSendTime;
 };
 
 int32_t main(int argc, char* argv[])
@@ -144,7 +156,7 @@ int32_t main(int argc, char* argv[])
 	SNetAddr sNedAddr;
 	sNedAddr.nPort = 8000;
 	strncpy_s(sNedAddr.szHost, "127.0.0.1", _countof(sNedAddr.szHost));
-	for (size_t i = 0; i < 2000; ++i)
+	for (size_t i = 0; i < 1; ++i)
 	{
 		SNetConnecterHandler* pNetConnecterHandler = new SNetConnecterHandler();
 		pNetConnecterHandler->nID = 10000 + i;

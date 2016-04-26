@@ -21,6 +21,7 @@ void client_request_msg_callback(const core::SClientSessionInfo& sClientSessionI
 
 	test::service_request_msg msg;
 	msg.set_name(pClientMsg->name());
+	msg.set_id(pClientMsg->id());
 
 	core::CClusterInvoker::Inst()->invok_r(&msg, core::CBaseApp::Inst()->getLoadBalancePolicy(eLBPID_Rand), 0, [sClientSessionInfo](uint32_t nMessageType, const google::protobuf::Message* pMessage, core::EResponseResultType eType)->void
 	{
@@ -28,6 +29,7 @@ void client_request_msg_callback(const core::SClientSessionInfo& sClientSessionI
 		DebugAst(pResponseMsg != nullptr);
 		test::client_response_msg msg;
 		msg.set_name(pResponseMsg->name());
+		msg.set_id(pResponseMsg->id());
 		core::CClusterInvoker::Inst()->send(sClientSessionInfo, &msg);
 	});
 }
