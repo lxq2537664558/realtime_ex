@@ -9,9 +9,10 @@ namespace base
 		public noncopyable
 	{
 	public:
-		CNetRecvBuffer(uint32_t nBufSize);
+		CNetRecvBuffer();
 		~CNetRecvBuffer();
 
+		bool		init(uint32_t nBufSize);
 		void		push(uint32_t nSize);
 		void		pop(uint32_t nSize);
 		void		resize(uint32_t nSize);
@@ -34,9 +35,10 @@ namespace base
 		friend class CNetSendBuffer;
 
 	public:
-		CNetSendBufferBlock(uint32_t nBufSize);
+		CNetSendBufferBlock();
 		~CNetSendBufferBlock();
 
+		bool		init(uint32_t nBufSize);
 		void		reset();
 		void		push(const char* pBuf, uint32_t nSize);
 		void		pop(uint32_t nSize);
@@ -68,9 +70,10 @@ namespace base
 		void					putBufferBlock(CNetSendBufferBlock* pBufferBlock);
 
 	public:
-		CNetSendBuffer(uint32_t nBufSize);
+		CNetSendBuffer();
 		~CNetSendBuffer();
 
+		bool					init(uint32_t nBufSize);
 		void					push(const char* pBuf, uint32_t nSize);
 		void					pop(uint32_t nSize);
 		char*					getDataBuffer(uint32_t& nSize) const;

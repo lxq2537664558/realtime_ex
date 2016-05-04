@@ -6,9 +6,9 @@
 
 namespace base
 {
-	CNetRecvBuffer::CNetRecvBuffer(uint32_t nBufSize)
-		: m_pBuf(new char[nBufSize])
-		, m_nBufSize(nBufSize)
+	CNetRecvBuffer::CNetRecvBuffer()
+		: m_pBuf(nullptr)
+		, m_nBufSize(0)
 		, m_nBufPos(0)
 	{
 	}
@@ -16,6 +16,16 @@ namespace base
 	CNetRecvBuffer::~CNetRecvBuffer()
 	{
 		SAFE_DELETE_ARRAY(this->m_pBuf);
+	}
+
+	bool CNetRecvBuffer::init(uint32_t nBufSize)
+	{
+		DebugAstEx(this->m_pBuf == nullptr, false);
+
+		this->m_nBufSize = nBufSize;
+		this->m_pBuf = new char[nBufSize];
+
+		return true;
 	}
 
 	void CNetRecvBuffer::resize(uint32_t nSize)
@@ -68,18 +78,29 @@ namespace base
 		return this->m_nBufSize - this->m_nBufPos;
 	}
 
-	CNetSendBufferBlock::CNetSendBufferBlock(uint32_t nBufSize)
-		: m_pBuf(new char[nBufSize])
+	CNetSendBufferBlock::CNetSendBufferBlock()
+		: m_pBuf(nullptr)
+		, m_pNext(nullptr)
 		, m_nDataBegin(0)
 		, m_nDataEnd(0)
-		, m_pBufSize(nBufSize)
-		, m_pNext(nullptr)
+		, m_pBufSize(0)
 	{
 	}
 
 	CNetSendBufferBlock::~CNetSendBufferBlock()
 	{
 		SAFE_DELETE_ARRAY(this->m_pBuf);
+	}
+
+	bool CNetSendBufferBlock::init(uint32_t nBufSize)
+	{
+		DebugAstEx(this->m_pBuf == nullptr, false);
+
+		this->m_pBuf = new char[nBufSize];
+		this->m_pBufSize = nBufSize;
+		this->reset();
+
+		return true;
 	}
 
 	void CNetSendBufferBlock::reset()
@@ -124,13 +145,12 @@ namespace base
 		return this->m_pBufSize - this->m_nDataEnd;
 	}
 
-	CNetSendBuffer::CNetSendBuffer(uint32_t nBufSize)
+	CNetSendBuffer::CNetSendBuffer()
+		: m_pHead(nullptr)
+		, m_pTail(nullptr)
+		, m_pNoUse(nullptr)
+		, m_nBuffBlockSize(0)
 	{
-		this->m_nBuffBlockSize = nBufSize;
-		this->m_pHead = this->m_pTail = nullptr;
-
-		// 先创建一个buf
-		this->m_pNoUse = new CNetSendBufferBlock(nBufSize);
 	}
 
 	CNetSendBuffer::~CNetSendBuffer()
@@ -150,11 +170,35 @@ namespace base
 		}
 	}
 
+	bool CNetSendBuffer::init(uint32_t nBufSize)
+	{
+		this->m_nBuffBlockSize = nBufSize;
+		this->m_pHead = this->m_pTail = nullptr;
+
+		// 先创建一个buf
+		this->m_pNoUse = new CNetSendBufferBlock();
+		if (!this->m_pNoUse->init(this->m_nBuffBlockSize))
+		{
+			SAFE_DELETE(this->m_pNoUse);
+			return false;
+		}
+
+		return true;
+	}
+
 	CNetSendBufferBlock* CNetSendBuffer::getBufferBlock()
 	{
 		if (this->m_pNoUse == nullptr)
-			return new CNetSendBufferBlock(this->m_nBuffBlockSize);
+		{
+			CNetSendBufferBlock* pBufferBlock = new CNetSendBufferBlock();
+			if (!pBufferBlock->init(this->m_nBuffBlockSize))
+			{
+				SAFE_DELETE(pBufferBlock);
+				return nullptr;
+			}
 
+			return pBufferBlock;
+		}
 		CNetSendBufferBlock* pBufferBlock = this->m_pNoUse;
 		this->m_pNoUse = this->m_pNoUse->m_pNext;
 		pBufferBlock->reset();

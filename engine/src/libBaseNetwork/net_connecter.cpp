@@ -89,8 +89,13 @@ namespace base
 		if (!CNetSocket::init(nSendBufferSize, nRecvBufferSize, pNetEventLoop))
 			return false;
 
-		this->m_pSendBuffer = new CNetSendBuffer(nSendBufferSize);
-		this->m_pRecvBuffer = new CNetRecvBuffer(nRecvBufferSize);
+		this->m_pRecvBuffer = new CNetRecvBuffer();
+		if (!this->m_pRecvBuffer->init(_RECV_BUF_SIZE))
+			return false;
+
+		this->m_pSendBuffer = new CNetSendBuffer();
+		if (!this->m_pSendBuffer->init(_SEND_BUF_SIZE))
+			return false;
 
 		return true;
 	}

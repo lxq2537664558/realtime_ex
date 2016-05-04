@@ -150,4 +150,7 @@ namespace base
 		eNET_Unknown = INVALID_8BIT
 	};
 
+#define _SEND_BUF_SIZE	2048
+#define _RECV_BUF_SIZE	2048
+
 }
