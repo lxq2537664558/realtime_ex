@@ -20,7 +20,7 @@ namespace core
 		return eLBPID_Rand;
 	}
 
-	std::string CLoadBalanceRandPolicy::select(const std::string& szMessageName, uint64_t nContext)
+	std::string CLoadBalanceRandPolicy::select(const std::string& szMessageName, const std::string& szServiceGroup, uint64_t nContext)
 	{
 		const std::set<std::string>& setServiceName = CBaseApp::Inst()->getServiceName(szMessageName);
 		uint32_t nIndex = base::CRandGen::getGlobalRand(0, (uint32_t)setServiceName.size());

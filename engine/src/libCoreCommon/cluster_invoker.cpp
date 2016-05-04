@@ -44,22 +44,22 @@ namespace core
 		return CCoreApp::Inst()->getTransport()->call(szServiceName, sRequestMessageInfo);
 	}
 
-	bool CClusterInvoker::invok(const google::protobuf::Message* pMessage, ILoadBalancePolicy* pLoadBalancePolicy, uint64_t nLoadBalanceParam)
+	bool CClusterInvoker::invok(const google::protobuf::Message* pMessage, const std::string& szServiceGroup, ILoadBalancePolicy* pLoadBalancePolicy, uint64_t nLoadBalanceContext)
 	{
 		DebugAstEx(pMessage != nullptr && pLoadBalancePolicy != nullptr, false);
 
-		const std::string szServiceName = pLoadBalancePolicy->select(pMessage->GetTypeName(), nLoadBalanceParam);
+		const std::string szServiceName = pLoadBalancePolicy->select(pMessage->GetTypeName(), szServiceGroup, nLoadBalanceContext);
 		if (szServiceName.empty())
 			return false;
 
 		return this->invok(szServiceName, pMessage);
 	}
 
-	bool CClusterInvoker::invok_r(const google::protobuf::Message* pMessage, ILoadBalancePolicy* pLoadBalancePolicy, uint64_t nLoadBalanceParam, InvokeCallback callback, uint64_t nContext /* = 0 */)
+	bool CClusterInvoker::invok_r(const google::protobuf::Message* pMessage, const std::string& szServiceGroup, ILoadBalancePolicy* pLoadBalancePolicy, uint64_t nLoadBalanceContext, InvokeCallback callback, uint64_t nContext /* = 0 */)
 	{
 		DebugAstEx(pMessage != nullptr && callback != nullptr && pLoadBalancePolicy != nullptr, false);
 
-		const std::string szServiceName = pLoadBalancePolicy->select(pMessage->GetTypeName(), nLoadBalanceParam);
+		const std::string szServiceName = pLoadBalancePolicy->select(pMessage->GetTypeName(), szServiceGroup, nLoadBalanceContext);
 		if (szServiceName.empty())
 			return false;
 
@@ -108,12 +108,12 @@ namespace core
 		return CCoreApp::Inst()->getTransport()->send(sClientSessionInfo.szServiceName, sGateMessageInfo);
 	}
 
-	bool CClusterInvoker::forward(uint64_t nSessionID, const message_header* pHeader, ILoadBalancePolicy* pLoadBalancePolicy, uint64_t nLoadBalanceParam)
+	bool CClusterInvoker::forward(uint64_t nSessionID, const message_header* pHeader, const std::string& szServiceGroup, ILoadBalancePolicy* pLoadBalancePolicy, uint64_t nLoadBalanceContext)
 	{
 		DebugAstEx(pHeader != nullptr && pLoadBalancePolicy != nullptr, false);
 
 		const std::string& szMessageName = CCoreApp::Inst()->getMessageDirectory()->getOtherMessageName(pHeader->nMessageID);
-		const std::string szServiceName = pLoadBalancePolicy->select(szMessageName, nLoadBalanceParam);
+		const std::string szServiceName = pLoadBalancePolicy->select(szMessageName, szServiceGroup, nLoadBalanceContext);
 		if (szServiceName.empty())
 			return false;
 
