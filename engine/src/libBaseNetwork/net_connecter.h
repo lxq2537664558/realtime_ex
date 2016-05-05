@@ -47,7 +47,7 @@ namespace base
 	private:
 		void						onConnect();
 		void						onRecv();
-		void						commonSend();
+		void						onSend();
 		void						eventSend();
 
 	private:

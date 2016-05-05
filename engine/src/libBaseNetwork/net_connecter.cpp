@@ -193,7 +193,7 @@ namespace base
 		}
 	}
 
-	void CNetConnecter::commonSend()
+	void CNetConnecter::onSend()
 	{
 		while (true)
 		{
@@ -233,7 +233,7 @@ namespace base
 	// 主动调用的
 	void CNetConnecter::activeSend()
 	{
-		this->commonSend();
+		this->onSend();
 		// 必须要加上正在断开的情况，不然有可能有些链接正在断开，但是这个时候发送缓存区中的数据比较大一次发送不完，那么留下的数据可能再也发送不了了，这个情况发送在服务器主动踢人的情况，很有可能这个时候后面的几个消息到达不了客户端了
 		if ((this->m_eConnecterState == eNCS_Connected || this->m_eConnecterState == eNCS_Disconnecting) && !this->m_pSendBuffer->isEmpty())
 			this->enableSend();
@@ -242,7 +242,7 @@ namespace base
 	// 由模型驱动的
 	void CNetConnecter::eventSend()
 	{
-		this->commonSend();
+		this->onSend();
 		if ((this->m_eConnecterState == eNCS_Connected || this->m_eConnecterState == eNCS_Disconnecting) && this->m_pSendBuffer->isEmpty())
 			this->disableSend();
 	}
@@ -339,7 +339,7 @@ namespace base
 		|| (eNCS_Disconnecting == this->m_eConnecterState && (eCT_Send&this->m_nCloseType) != 0))
 			return;
 
-		this->m_pSendBuffer->push((const char*)pData, nDataSize);
+		this->m_pSendBuffer->push(reinterpret_cast<const char*>(pData), nDataSize);
 		uint32_t nSendDataSize = this->m_pSendBuffer->getDataSize();
 
 		if (nSendDataSize >= this->m_nSendBufferSize)
