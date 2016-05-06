@@ -59,6 +59,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestBaseNetwork", "..\test\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestCoreCommon", "..\test\TestCoreCommon\TestCoreCommon.vcxproj", "{CCFF5A17-02E2-4015-85E4-A60A1EB53719}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "deployer", "..\service\deployer\deployer.vcxproj", "{D4D3B97F-6FE8-4582-B608-FDD2A293F50C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Mixed Platforms = Debug|Mixed Platforms
@@ -266,6 +268,16 @@ Global
 		{CCFF5A17-02E2-4015-85E4-A60A1EB53719}.Release|Win32.Build.0 = Release|Win32
 		{CCFF5A17-02E2-4015-85E4-A60A1EB53719}.Release|x64.ActiveCfg = Release|x64
 		{CCFF5A17-02E2-4015-85E4-A60A1EB53719}.Release|x64.Build.0 = Release|x64
+		{D4D3B97F-6FE8-4582-B608-FDD2A293F50C}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
+		{D4D3B97F-6FE8-4582-B608-FDD2A293F50C}.Debug|Mixed Platforms.Build.0 = Debug|Win32
+		{D4D3B97F-6FE8-4582-B608-FDD2A293F50C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{D4D3B97F-6FE8-4582-B608-FDD2A293F50C}.Debug|Win32.Build.0 = Debug|Win32
+		{D4D3B97F-6FE8-4582-B608-FDD2A293F50C}.Debug|x64.ActiveCfg = Debug|Win32
+		{D4D3B97F-6FE8-4582-B608-FDD2A293F50C}.Release|Mixed Platforms.ActiveCfg = Release|Win32
+		{D4D3B97F-6FE8-4582-B608-FDD2A293F50C}.Release|Mixed Platforms.Build.0 = Release|Win32
+		{D4D3B97F-6FE8-4582-B608-FDD2A293F50C}.Release|Win32.ActiveCfg = Release|Win32
+		{D4D3B97F-6FE8-4582-B608-FDD2A293F50C}.Release|Win32.Build.0 = Release|Win32
+		{D4D3B97F-6FE8-4582-B608-FDD2A293F50C}.Release|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -289,5 +301,6 @@ Global
 		{9E42BCDC-6FCB-4206-B2DE-8E949E51F102} = {9B243426-3FEB-467D-91E9-43F5532C5FD4}
 		{B2E8FACE-6836-4883-86A1-2CC21B85D1EF} = {9B243426-3FEB-467D-91E9-43F5532C5FD4}
 		{CCFF5A17-02E2-4015-85E4-A60A1EB53719} = {9B243426-3FEB-467D-91E9-43F5532C5FD4}
+		{D4D3B97F-6FE8-4582-B608-FDD2A293F50C} = {216086F1-3D14-42E1-B4CF-45A5766F0FDE}
 	EndGlobalSection
 EndGlobal
