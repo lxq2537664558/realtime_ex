@@ -47,7 +47,7 @@ namespace core
 		SAFE_RELEASE(this->m_pNetEventLoop);
 	}
 
-	bool CCoreConnectionMgr::init(uint32_t nMaxSocketCount)
+	bool CCoreConnectionMgr::init(uint32_t nMaxConnectionCount)
 	{
 		if (!base::startupNetwork())
 			return false;
@@ -56,7 +56,7 @@ namespace core
 		this->m_pBaseConnectionMgr->m_pCoreConnectionMgr = this;
 
 		this->m_pNetEventLoop = base::createNetEventLoop();
-		return this->m_pNetEventLoop->init(nMaxSocketCount);
+		return this->m_pNetEventLoop->init(nMaxConnectionCount);
 	}
 
 	base::INetConnecterHandler* CCoreConnectionMgr::onAccept(SNetAccepterHandler* pNetAccepterHandler, base::INetConnecter* pNetConnecter)

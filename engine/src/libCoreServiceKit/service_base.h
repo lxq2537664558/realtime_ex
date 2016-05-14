@@ -1,6 +1,10 @@
 #pragma once
 
-#include "core_common.h"
+#include "libCoreCommon/core_common.h"
+
+#include "google/protobuf/message.h"
+
+#include "core_service_kit_define.h"
 
 #include <functional>
 #include <vector>
@@ -38,38 +42,55 @@ namespace core
 		google::protobuf::Message*	pMessage;
 	};
 
+	enum EMessageCacheInfoType
+	{
+		eMCIT_Request,
+		eMCIT_Gate,
+		eMCIT_GateBroadcast,
+		eMCIT_GateForward,
+	};
+
+	struct SMessageCacheHead
+	{
+		uint8_t	nType;
+		CTicker	tickTimeout;
+
+		virtual ~SMessageCacheHead() { }
+	};
+
 	struct SRequestMessageCacheInfo
+		: public SMessageCacheHead
 	{
 		std::vector<char>	vecBuf;
 		InvokeCallback		callback;
 	};
 
 	struct SGateMessageCacheInfo
-	{
-		uint64_t			nSessionID;
-		std::vector<char>	vecBuf;
-	};
-
-	struct SGateForwardMessageCacheInfo
+		: public SMessageCacheHead
 	{
 		uint64_t			nSessionID;
 		std::vector<char>	vecBuf;
 	};
 
 	struct SGateBroadcastMessageCacheInfo
+		: public SMessageCacheHead
 	{
 		std::vector<uint64_t>	vecSessionID;
 		std::vector<char>		vecBuf;
 	};
 
+	struct SGateForwardMessageCacheInfo
+		: public SMessageCacheHead
+	{
+		uint64_t			nSessionID;
+		std::vector<char>	vecBuf;
+	};
+
 	struct SMessageCacheInfo
 	{
-		uint32_t										nTotalSize;
-		bool											bRefuse;
-		std::vector<SRequestMessageCacheInfo*>			vecRequestMessageCacheInfo;
-		std::vector<SGateMessageCacheInfo*>				vecGateMessageCacheInfo;
-		std::vector<SGateForwardMessageCacheInfo*>		vecGateForwardMessageCacheInfo;
-		std::vector<SGateBroadcastMessageCacheInfo*>	vecGateBroadcastMessageCacheInfo;
+		uint32_t								nTotalSize;
+		bool									bRefuse;
+		std::map<uint64_t, SMessageCacheHead*>	mapMessageCacheInfo;
 	};
 
 	struct SResponseWaitInfo

@@ -1,21 +1,20 @@
 #pragma once
 #include "libBaseCommon/noncopyable.h"
-
 #include "libCoreCommon/core_common.h"
 #include "libCoreCommon/base_connection.h"
 
-#include "common_base.h"
+#include "service_base.h"
 
 #include <map>
 
 namespace core
 {
-	class CTransport :
+	class CTransporter :
 		public base::noncopyable
 	{
 	public:
-		CTransport();
-		~CTransport();
+		CTransporter();
+		~CTransporter();
 
 		bool					init();
 
@@ -40,7 +39,9 @@ namespace core
 		SMessageCacheInfo*		getMessageCacheInfo(const std::string& szServiceName);
 		void					onCheckConnect(uint64_t nContext);
 		void					onRequestMessageTimeout(uint64_t nContext);
+		void					onCacheMessageTimeout(uint64_t nContext);
 		uint64_t				genSessionID();
+		uint64_t				genCacheID();
 		
 	private:
 		uint64_t									m_nNextSessionID;
@@ -48,6 +49,8 @@ namespace core
 		CTicker										m_tickCheckConnect;
 		std::map<uint64_t, SResponseWaitInfo*>		m_mapResponseWaitInfo;
 		std::map<std::string, SMessageCacheInfo>	m_mapMessageCacheInfo;
+
+		uint64_t									m_nCacheID;
 		std::vector<char>							m_vecBuf;
 	};
 }

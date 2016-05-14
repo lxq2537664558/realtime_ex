@@ -1,0 +1,122 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="inc">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stdafx.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreServiceKit\cluster_invoker.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreServiceKit\message_dispatcher.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreServiceKit\message_registry.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreServiceKit\proto_system.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreServiceKit\protobuf_helper.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="core_connection_from_service.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="core_connection_to_master.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="core_connection_to_service.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="service_base.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="transporter.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreServiceKit\load_balance.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="core_service_proxy.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreServiceKit\core_service_kit.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="core_service_kit_impl.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreServiceKit\core_service_kit_define.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="load_balance_mgr.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="core_service_invoker.h">
+      <Filter>src</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="cluster_invoker.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="core_connection_from_service.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="core_connection_to_master.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="core_connection_to_service.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="message_dispatcher.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="message_registry.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="protobuf_helper.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="transporter.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="load_balance.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="core_service_kit_impl.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="core_service_proxy.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="core_service_kit.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="load_balance_mgr.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="core_service_invoker.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

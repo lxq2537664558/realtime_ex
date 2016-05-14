@@ -25,16 +25,11 @@
 #include "ticker_mgr.h"
 #include "monitor.h"
 #include "core_connection_mgr.h"
-#include "message_dispatcher.h"
-#include "message_registry.h"
-#include "cluster_invoker.h"
-#include "service_mgr.h"
-
-#include "core_connection_from_service.h"
-#include "core_connection_to_master.h"
-#include "core_connection_to_service.h"
 
 #include "tinyxml2/tinyxml2.h"
+
+#define _Default_Heartbeat_Limit	3
+#define _Default_Heartbeat_Time		10
 
 #ifndef _WIN32
 ///< 环境变量
@@ -94,22 +89,13 @@ namespace core
 	CCoreApp::CCoreApp()
 		: m_pTickerMgr(nullptr)
 		, m_pCoreConnectionMgr(nullptr)
-		, m_pServiceMgr(nullptr)
-		, m_pTransport(nullptr)
-		, m_pMessageDirectory(nullptr)
-		, m_pLoadBalancePolicyMgr(nullptr)
 		, m_nRunState(eARS_Start)
 		, m_bMarkQuit(false)
 		, m_nTotalTime(0)
 		, m_nCycleCount(0)
-		, m_nInvokTimeout(0)
 		, m_nHeartbeatLimit(0)
 		, m_nHeartbeatTime(0)
-		, m_bNormalService(true)
 	{
-		this->m_sServiceBaseInfo.nPort = 0;
-		this->m_sServiceBaseInfo.nRecvBufSize = 0;
-		this->m_sServiceBaseInfo.nSendBufSize = 0;
 	}
 
 	CCoreApp::~CCoreApp()
@@ -117,7 +103,7 @@ namespace core
 
 	}
 
-	bool CCoreApp::run(bool bNormalService, int32_t argc, char** argv, const char* szConfig)
+	bool CCoreApp::run(int32_t argc, char** argv, const char* szConfig)
 	{
 		if (nullptr == szConfig)
 		{
@@ -126,7 +112,6 @@ namespace core
 		}
 
 		this->m_szConfig = szConfig;
-		this->m_bNormalService = bNormalService;
 
 		base::setInstanceName(argv[0]);
 
@@ -149,11 +134,6 @@ namespace core
 		return true;
 	}
 
-	const SServiceBaseInfo& CCoreApp::getServiceBaseInfo() const
-	{
-		return this->m_sServiceBaseInfo;
-	}
-
 	void CCoreApp::registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
 	{
 		this->m_pTickerMgr->registerTicker(pTicker, nStartTime, nIntervalTime, nContext);
@@ -172,21 +152,6 @@ namespace core
 	CCoreConnectionMgr* CCoreApp::getCoreConnectionMgr() const
 	{
 		return this->m_pCoreConnectionMgr;
-	}
-
-	CServiceMgr* CCoreApp::getServiceMgr() const
-	{
-		return this->m_pServiceMgr;
-	}
-
-	CTransport* CCoreApp::getTransport() const
-	{
-		return this->m_pTransport;
-	}
-
-	CMessageDirectory* CCoreApp::getMessageDirectory() const
-	{
-		return this->m_pMessageDirectory;
 	}
 
 	const std::string& CCoreApp::getConfigFileName() const
@@ -235,15 +200,15 @@ namespace core
 			return false;
 		}
 
-		tinyxml2::XMLElement* pServiceInfoXML = pRootXML->FirstChildElement("service_info");
-		if (pServiceInfoXML == nullptr)
+		tinyxml2::XMLElement* pBaseInfoXML = pRootXML->FirstChildElement("base_info");
+		if (pBaseInfoXML == nullptr)
 		{
-			fprintf(stderr, "pServerInfoXML == nullptr\n");
+			fprintf(stderr, "pBaseInfoXML == nullptr\n");
 			return false;
 		}
 
 		// 切换到工作目录
-		const char* szWorkPath = pServiceInfoXML->Attribute("work_path");
+		const char* szWorkPath = pBaseInfoXML->Attribute("work_path");
 		if (szWorkPath == nullptr)
 		{
 			fprintf(stderr, "szWorkPath == nullptr\n");
@@ -258,7 +223,7 @@ namespace core
 		}
 
 		// 设置服务器时间
-		tinyxml2::XMLElement* pServerTimeXML = pServiceInfoXML->FirstChildElement("time");
+		tinyxml2::XMLElement* pServerTimeXML = pBaseInfoXML->FirstChildElement("time");
 		if (pServerTimeXML != nullptr && pServerTimeXML->IntAttribute("enable") != 0)
 		{
 			int32_t nYear = pServerTimeXML->IntAttribute("year");
@@ -336,10 +301,6 @@ namespace core
 			return false;
 		}
 
-		CCoreConnectionFromService::registClassInfo();
-		CCoreConnectionToService::registClassInfo();
-		CCoreConnectionToMaster::registClassInfo();
-
 		if (!this->m_writeBuf.init(UINT16_MAX))
 		{
 			PrintWarning("this->m_writeBuf.init(UINT16_MAX)");
@@ -354,93 +315,32 @@ namespace core
 
 		this->m_pTickerMgr = new core::CTickerMgr();
 
-		uint32_t nMaxSocketCount = (uint32_t)pServiceInfoXML->IntAttribute("max_socket_count");
+		uint32_t nMaxConnectionCount = (uint32_t)pBaseInfoXML->IntAttribute("connections");
 		this->m_pCoreConnectionMgr = new CCoreConnectionMgr();
-		if (!this->m_pCoreConnectionMgr->init(nMaxSocketCount))
+		if (!this->m_pCoreConnectionMgr->init(nMaxConnectionCount))
 		{
-			PrintWarning("this->m_pCoreConnectionMgr->init(nMaxSocketCount)");
+			PrintWarning("this->m_pCoreConnectionMgr->init(nMaxConnectionCount)");
 			return false;
 		}
-
-		this->m_pTransport = new CTransport();
-		if (!this->m_pTransport->init())
+		
+		// 加载服务连接心跳信息
+		tinyxml2::XMLElement* pHeartbeatXML = pBaseInfoXML->FirstChildElement("heartbeat");
+		if (nullptr != pHeartbeatXML)
 		{
-			PrintWarning("this->m_pMessageSend->init()");
-			return false;
+			this->m_nHeartbeatLimit = pHeartbeatXML->UnsignedAttribute("heartbeat_limit");
+			this->m_nHeartbeatTime = pHeartbeatXML->UnsignedAttribute("heartbeat_time");
 		}
-
-		this->m_pMessageDirectory = new CMessageDirectory();
-		if (!this->m_pMessageDirectory->init())
+		else
 		{
-			PrintWarning("this->m_pMessageDirectory->init()");
-			return false;
-		}
-
-		this->m_pLoadBalancePolicyMgr = new CLoadBalancePolicyMgr();
-		if (!this->m_pLoadBalancePolicyMgr->init())
-		{
-			PrintWarning("this->m_pLoadBalancePolicyMgr->init()");
-			return false;
-		}
-
-		if (!CClusterInvoker::Inst()->init())
-		{
-			PrintWarning("CClusterInvoker::Inst()->init()");
-			return false;
-		}
-
-		if (!CMessageRegistry::Inst()->init())
-		{
-			PrintWarning("CMessageRegistry::Inst()->init()");
-			return false;
-		}
-
-		if (!CMessageDispatcher::Inst()->init())
-		{
-			PrintWarning("CMessageDispatcher::Inst()->init()");
-			return false;
-		}
-
-		const char* szServiceType = pServiceInfoXML->Attribute("service_type");
-		const char* szServiceName = pServiceInfoXML->Attribute("service_name");
-		const char* szServiceHost = pServiceInfoXML->Attribute("host");
-		this->m_sServiceBaseInfo.szType = szServiceType;
-		this->m_sServiceBaseInfo.szName = szServiceName;
-		this->m_sServiceBaseInfo.szHost = szServiceHost;
-		this->m_sServiceBaseInfo.nPort = (uint16_t)pServiceInfoXML->UnsignedAttribute("port");
-		this->m_sServiceBaseInfo.nRecvBufSize = pServiceInfoXML->UnsignedAttribute("recv_buf_size");
-		this->m_sServiceBaseInfo.nSendBufSize = pServiceInfoXML->UnsignedAttribute("send_buf_size");
-
-		tinyxml2::XMLElement* pServiceInfoMiscXML = pServiceInfoXML->FirstChildElement("misc");
-		if (nullptr == pServiceInfoMiscXML)
-		{
-			PrintWarning("nullptr == pServiceInfoMiscXML");
-			return false;
-		}
-
-		this->m_nInvokTimeout = pServiceInfoMiscXML->UnsignedAttribute("invok_timeout");
-		this->m_nHeartbeatLimit = pServiceInfoMiscXML->UnsignedAttribute("heartbeat_limit");
-		this->m_nHeartbeatTime = pServiceInfoMiscXML->UnsignedAttribute("heartbeat_time");
-
-		std::string szMasterHost;
-		uint16_t nMasterPort = 0;
-		tinyxml2::XMLElement* pMasterAddrXML = pRootXML->FirstChildElement("connect_master_addr");
-		if (pMasterAddrXML != nullptr)
-		{
-			szMasterHost = pMasterAddrXML->Attribute("host");
-			nMasterPort = (uint16_t)pMasterAddrXML->IntAttribute("port");
-		}
-		this->m_pServiceMgr = new CServiceMgr();
-		if (!this->m_pServiceMgr->init(this->m_bNormalService, szMasterHost, nMasterPort))
-		{
-			PrintWarning("CServiceMgr::Inst()->init(this->m_bNormalService, szMasterHost, nMasterPort)");
+			this->m_nHeartbeatLimit = _Default_Heartbeat_Limit;
+			this->m_nHeartbeatTime = _Default_Heartbeat_Time;
 		}
 
 		SAFE_DELETE(pConfigXML);
 
 		this->m_nRunState = eARS_Normal;
 
-		PrintInfo("CCoreApp::onInit service name: %s", this->m_sServiceBaseInfo.szName.c_str());
+		PrintInfo("CCoreApp::onInit");
 
 		return CBaseApp::Inst()->onInit();
 	}
@@ -453,11 +353,6 @@ namespace core
 
 		SAFE_DELETE(this->m_pCoreConnectionMgr);
 		SAFE_DELETE(this->m_pTickerMgr);
-		SAFE_DELETE(this->m_pServiceMgr);
-
-		CMessageDispatcher::Inst()->release();
-		CMessageRegistry::Inst()->release();
-		CClusterInvoker::Inst()->release();
 
 		CBaseObject::unRegistClassInfo();
 
@@ -527,16 +422,6 @@ namespace core
 		DebugAst(this->m_nRunState == eARS_Quitting);
 
 		this->m_nRunState = eARS_Quit;
-	}
-
-	CLoadBalancePolicyMgr* CCoreApp::getLoadBalancePolicyMgr() const
-	{
-		return this->m_pLoadBalancePolicyMgr;
-	}
-
-	uint32_t CCoreApp::getInvokTimeout() const
-	{
-		return this->m_nInvokTimeout;
 	}
 
 	uint32_t CCoreApp::getHeartbeatLimit() const

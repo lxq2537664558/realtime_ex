@@ -146,7 +146,7 @@ namespace base
 	{
 		DebugAstEx(this->m_nSocketID != _Invalid_SocketID, false);
 
-		if (0 != ::setsockopt(this->m_nSocketID, SOL_SOCKET, SO_RCVBUF, (char*)&this->m_nRecvBufferSize, sizeof(this->m_nRecvBufferSize)))
+		if (this->m_nRecvBufferSize != 0 && 0 != ::setsockopt(this->m_nSocketID, SOL_SOCKET, SO_RCVBUF, (char*)&this->m_nRecvBufferSize, sizeof(this->m_nRecvBufferSize)))
 		{
 			PrintWarning("set socket recvbuf error %d", getLastError());
 			closesocket(this->m_nSocketID);
@@ -154,7 +154,7 @@ namespace base
 			return false;
 		}
 
-		if (0 != ::setsockopt(this->m_nSocketID, SOL_SOCKET, SO_SNDBUF, (char*)&this->m_nSendBufferSize, sizeof(this->m_nSendBufferSize)))
+		if (this->m_nSendBufferSize != 0 && 0 != ::setsockopt(this->m_nSocketID, SOL_SOCKET, SO_SNDBUF, (char*)&this->m_nSendBufferSize, sizeof(this->m_nSendBufferSize)))
 		{
 			PrintWarning("set socket sendbuf error %d", getLastError());
 			closesocket(this->m_nSocketID);

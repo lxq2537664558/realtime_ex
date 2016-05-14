@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "message_registry.h"
-#include "core_app.h"
+#include "core_service_kit_impl.h"
 
 namespace core
 {
@@ -21,21 +21,21 @@ namespace core
 
 	void CMessageRegistry::registerServiceCallback(const std::string& szMessageName, ServiceCallback callback)
 	{
-		CCoreApp::Inst()->getMessageDirectory()->registerCallback(szMessageName, callback);
+		CCoreServiceKitImpl::Inst()->getCoreServiceInvoker()->registerCallback(szMessageName, callback);
 	}
 
 	void CMessageRegistry::registerGateForwardCallback(const std::string& szMessageName, GateForwardCallback callback)
 	{
-		CCoreApp::Inst()->getMessageDirectory()->registerCallback(szMessageName, callback);
+		CCoreServiceKitImpl::Inst()->getCoreServiceInvoker()->registerCallback(szMessageName, callback);
 	}
 
 	void CMessageRegistry::addGlobalBeforeFilter(ServiceGlobalFilter callback)
 	{
-		CCoreApp::Inst()->getMessageDirectory()->addGlobalBeforeFilter(callback);
+		CCoreServiceKitImpl::Inst()->addGlobalBeforeFilter(callback);
 	}
 
 	void CMessageRegistry::addGlobalAfterFilter(ServiceGlobalFilter callback)
 	{
-		CCoreApp::Inst()->getMessageDirectory()->addGlobalAfterFilter(callback);
+		CCoreServiceKitImpl::Inst()->addGlobalAfterFilter(callback);
 	}
 }

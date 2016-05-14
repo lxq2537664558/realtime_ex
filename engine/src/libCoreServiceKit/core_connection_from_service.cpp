@@ -1,10 +1,8 @@
 #include "stdafx.h"
 #include "core_connection_from_service.h"
-#include "core_app.h"
-#include "base_connection_mgr.h"
 #include "proto_system.h"
-#include "base_app.h"
 #include "message_dispatcher.h"
+#include "core_service_kit_impl.h"
 
 namespace core
 {
@@ -29,7 +27,7 @@ namespace core
 	void CCoreConnectionFromService::onDisconnect()
 	{
 		if (!this->m_szServiceName.empty())
-			CCoreApp::Inst()->getServiceMgr()->delConnectionFromService(this->m_szServiceName);
+			CCoreServiceKitImpl::Inst()->delConnectionFromService(this->m_szServiceName);
 	}
 
 	void CCoreConnectionFromService::onDispatch(uint32_t nMessageType, const void* pData, uint16_t nSize)
@@ -54,7 +52,7 @@ namespace core
 				// 这里对其他服务的监听地址不感兴趣
 				this->m_szServiceName = netMsg.szServiceName;
 
-				if (!CCoreApp::Inst()->getServiceMgr()->addConnectionFromService(this))
+				if (!CCoreServiceKitImpl::Inst()->addConnectionFromService(this))
 				{
 					PrintWarning("dup service service_name: %s", this->m_szServiceName.c_str());
 					this->m_szServiceName.clear();

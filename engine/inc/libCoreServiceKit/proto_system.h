@@ -1,7 +1,8 @@
 #pragma once
-#include "core_common.h"
-
+#include "libCoreCommon/core_common.h"
 #include "libBaseCommon/buf_file.h"
+
+#include "core_service_kit_define.h"
 
 #include <vector>
 
@@ -16,6 +17,8 @@ enum ESystemMessageType
 	eSMT_sync_service_message_info		= 5,	// master服务向各个服务同步其他服务的的API信息
 };
 
+namespace core
+{
 message_begin(smt_register_service_base_info, eSMT_register_service_base_info)
 	SServiceBaseInfo	sServiceBaseInfo;
 
@@ -149,17 +152,20 @@ message_begin(smt_notify_service_base_info, eSMT_notify_service_base_info)
 message_end
 
 message_begin(smt_register_service_message_info, eSMT_register_service_message_info)
-	std::vector<SMessageSyncInfo>	vecMessageSyncInfo;
+	std::vector<SMessageProxyInfo>	vecMessageProxyInfo;
 
 	void pack(base::CWriteBuf& writeBuf)
 	{
 		pack_begin(writeBuf);
 
-		uint16_t nCount = (uint16_t)vecMessageSyncInfo.size();
+		uint16_t nCount = (uint16_t)vecMessageProxyInfo.size();
 		writeBuf.write(nCount);
 		for (uint16_t i = 0; i < nCount; ++i)
 		{
-			writeBuf.write(vecMessageSyncInfo[i].szMessageName);
+			writeBuf.write(vecMessageProxyInfo[i].szMessageName);
+			writeBuf.write(vecMessageProxyInfo[i].szServiceName);
+			writeBuf.write(vecMessageProxyInfo[i].szServiceGroup);
+			writeBuf.write(vecMessageProxyInfo[i].nWeight);
 		}
 
 		pack_end(writeBuf);
@@ -171,13 +177,16 @@ message_begin(smt_register_service_message_info, eSMT_register_service_message_i
 
 		uint16_t nCount = 0;
 		readBuf.read(nCount);
-		vecMessageSyncInfo.reserve(nCount);
+		vecMessageProxyInfo.reserve(nCount);
 		for (uint16_t i = 0; i < nCount; ++i)
 		{
-			SMessageSyncInfo sMessageSyncInfo;
-			readBuf.read(sMessageSyncInfo.szMessageName);
+			SMessageProxyInfo sMessageProxyInfo;
+			readBuf.read(sMessageProxyInfo.szMessageName);
+			readBuf.read(sMessageProxyInfo.szServiceName);
+			readBuf.read(sMessageProxyInfo.szServiceGroup);
+			readBuf.read(sMessageProxyInfo.nWeight);
 
-			vecMessageSyncInfo.push_back(sMessageSyncInfo);
+			vecMessageProxyInfo.push_back(sMessageProxyInfo);
 		}
 
 		unpack_end();
@@ -186,18 +195,18 @@ message_end
 
 message_begin(smt_sync_service_message_info, eSMT_sync_service_message_info)
 	std::string						szServiceName;
-	std::vector<SMessageSyncInfo>	vecMessageSyncInfo;
+	std::vector<SMessageProxyInfo>	vecMessageProxyInfo;
 
 	void pack(base::CWriteBuf& writeBuf)
 	{
 		pack_begin(writeBuf);
 
 		writeBuf.write(szServiceName);
-		uint16_t nCount = (uint16_t)vecMessageSyncInfo.size();
+		uint16_t nCount = (uint16_t)vecMessageProxyInfo.size();
 		writeBuf.write(nCount);
 		for (uint16_t i = 0; i < nCount; ++i)
 		{
-			writeBuf.write(vecMessageSyncInfo[i].szMessageName.c_str());
+			writeBuf.write(vecMessageProxyInfo[i].szMessageName.c_str());
 		}
 
 		pack_end(writeBuf);
@@ -210,15 +219,20 @@ message_begin(smt_sync_service_message_info, eSMT_sync_service_message_info)
 		readBuf.read(szServiceName);
 		uint16_t nCount = 0;
 		readBuf.read(nCount);
-		vecMessageSyncInfo.reserve(nCount);
+		vecMessageProxyInfo.reserve(nCount);
 		for (uint16_t i = 0; i < nCount; ++i)
 		{
-			SMessageSyncInfo sMessageSyncInfo;
-			readBuf.read(sMessageSyncInfo.szMessageName);
+			SMessageProxyInfo sMessageProxyInfo;
+			readBuf.read(sMessageProxyInfo.szMessageName);
+			readBuf.read(sMessageProxyInfo.szServiceName);
+			readBuf.read(sMessageProxyInfo.szServiceGroup);
+			readBuf.read(sMessageProxyInfo.nWeight);
 
-			vecMessageSyncInfo.push_back(sMessageSyncInfo);
+			vecMessageProxyInfo.push_back(sMessageProxyInfo);
 		}
 
 		unpack_end();
 	}
 message_end
+
+}

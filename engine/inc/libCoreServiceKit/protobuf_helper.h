@@ -4,7 +4,7 @@
 
 #include "google/protobuf/message.h"
 
-#include "core_common.h"
+#include "libCoreCommon/core_common.h"
 
 namespace core
 {

@@ -24,7 +24,7 @@ namespace core
 		CCoreConnectionMgr();
 		~CCoreConnectionMgr();
 
-		bool				init(uint32_t nMaxSocketCount);
+		bool				init(uint32_t nMaxConnectionCount);
 		bool				connect(const std::string& szHost, uint16_t nPort, const std::string& szContext, uint32_t nClassID, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, ClientDataCallback clientDataCallback);
 		bool				listen(const std::string& szHost, uint16_t nPort, const std::string& szContext, uint32_t nClassID, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, ClientDataCallback clientDataCallback);
 		int32_t				update(int32_t nTime);

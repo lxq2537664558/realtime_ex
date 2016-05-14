@@ -6,8 +6,6 @@
 
 #include "ticker.h"
 
-#include "google/protobuf/message.h"
-
 namespace core
 {
 #pragma pack(push,1)
@@ -20,18 +18,6 @@ namespace core
 		message_header(uint16_t nMessageID) : nMessageID(nMessageID) { }
 		message_header() {}
 	};
-
-	struct request_cookice
-	{
-		uint64_t nSessionID;
-	};
-
-	struct response_cookice
-	{
-		uint64_t nSessionID;
-		uint8_t  nResult;
-	};
-
 #pragma pack(pop)
 
 	inline int32_t default_parser_native_data(const void* pData, uint32_t nDataSize)
@@ -85,9 +71,6 @@ public:\
 
 
 #define _INVALID_SOCKET_ID			-1
-#define _MAX_SERVICE_TYPE_LEN		64
-#define _MAX_SERVICE_NAME_LEN		64
-#define _MAX_SERVICE_API_NAME_LEN	128
 
 enum EMessageType
 {
@@ -105,69 +88,7 @@ enum EMessageType
 	eMT_BROADCAST		= 0x200,	// 广播消息
 };
 
-#pragma pack(push,1)
-struct gate_cookice
-{
-	uint64_t nSessionID;
-};
-struct gate_cookice_broadcast
-{
-	uint16_t nCount;
-};
-#pragma pack(pop)
-
 namespace core
 {
 	typedef std::function<int32_t(const char*, uint32_t)>	ClientDataCallback;
-
-	struct SClientSessionInfo
-	{
-		const std::string&	szServiceName;
-		uint64_t			nSessionID;
-
-		SClientSessionInfo(const std::string&	szServiceName, uint64_t nSessionID)
-			: szServiceName(szServiceName), nSessionID(nSessionID)
-		{}
-	};
-
-	struct SServiceSessionInfo
-	{
-		std::string	szServiceName;
-		uint64_t	nSessionID;
-	};
-
-	enum EResponseResultType
-	{
-		eRRT_OK,
-		eRRT_TIME_OUT,
-		eRRT_ERROR,
-	};
-
-	typedef std::function<void(uint32_t, const google::protobuf::Message*, EResponseResultType)>		InvokeCallback;			// RPC消息响应回调函数类型
-	typedef std::function<void(const std::string&, uint32_t, const google::protobuf::Message*)>			ServiceCallback;		// 服务消息处理函数类型
-	typedef std::function<void(const SClientSessionInfo&, uint32_t, const google::protobuf::Message*)>	GateForwardCallback;	// 经网关服务转发的客户端消息处理函数类型
-	typedef std::function<void(uint64_t, const message_header*)>										ClientCallback;			// 客户端消息处理函数类型
-	typedef std::function<bool(const std::string&, uint32_t, const void*, uint16_t)>					ServiceGlobalFilter;	// 全局的消息过滤器类型
 }
-
-struct SServiceBaseInfo
-{
-	std::string	szType;			// 服务类型
-	std::string	szName;			// 服务名字
-	std::string	szGroup;		// 服务所属的组
-	std::string	szVersion;		// 服务版本
-	std::string	szHost;
-	uint16_t	nPort;			// 0表示该服务没有监听地址
-	uint32_t	nRecvBufSize;
-	uint32_t	nSendBufSize;
-};
-
-struct SMessageSyncInfo
-{
-	std::string	szMessageName;
-};
-
-enum ELoadBalancePolicyID
-{
-	eLBPID_Rand = 1,	// 随机类型
-};

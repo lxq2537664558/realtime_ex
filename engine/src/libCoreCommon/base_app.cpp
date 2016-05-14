@@ -44,14 +44,9 @@ namespace core
 		return g_pCoreApp;
 	}
 
-	bool CBaseApp::run(bool bNormalService, int32_t argc, char** argv, const char* szConfig)
+	bool CBaseApp::run(int32_t argc, char** argv, const char* szConfig)
 	{
-		return CCoreApp::Inst()->run(bNormalService, argc, argv, szConfig);
-	}
-
-	const SServiceBaseInfo& CBaseApp::getServiceBaseInfo() const
-	{
-		return CCoreApp::Inst()->getServiceBaseInfo();
+		return CCoreApp::Inst()->run(argc, argv, szConfig);
 	}
 
 	void CBaseApp::registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
@@ -90,44 +85,4 @@ namespace core
 		
 		CCoreApp::Inst()->doQuit();
 	}
-
-	void CBaseApp::registLoadBalancePolicy(ILoadBalancePolicy* pLoadBalancePolicy)
-	{
-		CCoreApp::Inst()->getLoadBalancePolicyMgr()->registLoadBalancePolicy(pLoadBalancePolicy);
-	}
-
-	ILoadBalancePolicy* CBaseApp::getLoadBalancePolicy(uint32_t nID) const
-	{
-		return CCoreApp::Inst()->getLoadBalancePolicyMgr()->getLoadBalancePolicy(nID);
-	}
-
-	const std::set<std::string>& CBaseApp::getServiceName(const std::string& szMessageName) const
-	{
-		return CCoreApp::Inst()->getMessageDirectory()->getOtherServiceName(szMessageName);
-	}
-
-	const std::string& CBaseApp::getMessageName(uint32_t nMessageID) const
-	{
-		const std::string& szMessageName = CCoreApp::Inst()->getMessageDirectory()->getOwnerMessageName(nMessageID);
-		if (szMessageName.empty())
-			return CCoreApp::Inst()->getMessageDirectory()->getOtherMessageName(nMessageID);
-
-		return szMessageName;
-	}
-
-	uint32_t CBaseApp::getInvokTimeout() const
-	{
-		return CCoreApp::Inst()->getInvokTimeout();
-	}
-
-	uint32_t CBaseApp::getHeartbeatLimit() const
-	{
-		return CCoreApp::Inst()->getHeartbeatLimit();
-	}
-
-	uint32_t CBaseApp::getHeartbeatTime() const
-	{
-		return CCoreApp::Inst()->getHeartbeatTime();
-	}
-
 }

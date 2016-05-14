@@ -2,7 +2,10 @@
 #include "libBaseCommon/singleton.h"
 #include "libCoreCommon/core_common.h"
 
-#include "load_balance_policy.h"
+#include "google/protobuf/message.h"
+
+#include "core_service_kit_define.h"
+#include "load_balance.h"
 
 namespace core
 {
@@ -27,13 +30,13 @@ namespace core
 		*/
 		bool				invok_r(const std::string& szServiceName, const google::protobuf::Message* pMessage, InvokeCallback callback, uint64_t nContext = 0);
 		/**
-		@brief: 通过消息ID调用远程服务，需要提供负载均衡器，远程服务不用返回消息
+		@brief: 通过消息名字调用远程服务，根据负载均衡器选择服务
 		*/
-		bool				invok(const google::protobuf::Message* pMessage, const std::string& szServiceGroup, ILoadBalancePolicy* pLoadBalancePolicy, uint64_t nLoadBalanceContext);
+		bool				invok(const google::protobuf::Message* pMessage, uint64_t nSessionID, const std::string& szServiceGroup);
 		/**
-		@brief: 通过消息ID调用远程服务，需要提供负载均衡器，需要提供远程服务消息返回的响应函数回调
+		@brief: 通过消息名字调用远程服务，根据负载均衡器选择服务，需要提供远程服务消息返回的响应函数回调
 		*/
-		bool				invok_r(const google::protobuf::Message* pMessage, const std::string& szServiceGroup, ILoadBalancePolicy* pLoadBalancePolicy, uint64_t nLoadBalanceContext, InvokeCallback callback, uint64_t nContext = 0);
+		bool				invok_r(const google::protobuf::Message* pMessage, uint64_t nSessionID, const std::string& szServiceGroup, InvokeCallback callback, uint64_t nContext = 0);
 		/**
 		@brief: 响应远程服务的调用，发送响应消息
 		*/
@@ -60,6 +63,6 @@ namespace core
 		/**
 		@brief: 网关服务转发客户端消息
 		*/
-		bool				forward(uint64_t nSessionID, const message_header* pHeader, const std::string& szServiceGroup, ILoadBalancePolicy* pLoadBalancePolicy, uint64_t nLoadBalanceContext);
+		bool				forward(const message_header* pHeader, uint64_t nSessionID, const std::string& szServiceGroup);
 	};
 }
