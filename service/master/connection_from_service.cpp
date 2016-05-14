@@ -3,7 +3,7 @@
 #include "master_app.h"
 
 #include "libCoreCommon/base_connection_mgr.h"
-#include "libCoreCommon/proto_system.h"
+#include "libCoreServiceKit/proto_system.h"
 
 DEFINE_OBJECT(CConnectionFromService, 100)
 
@@ -40,7 +40,7 @@ void CConnectionFromService::onDispatch(uint32_t nMsgType, const void* pData, ui
 
 	if (pHeader->nMessageID == eSMT_register_service_base_info)
 	{
-		smt_register_service_base_info netMsg;
+		core::smt_register_service_base_info netMsg;
 		netMsg.unpack(pData, nSize);
 		
 		this->m_szServiceName = netMsg.sServiceBaseInfo.szName;
@@ -54,16 +54,16 @@ void CConnectionFromService::onDispatch(uint32_t nMsgType, const void* pData, ui
 	}
 	else if (pHeader->nMessageID == eSMT_unregister_service_base_info)
 	{
-		smt_unregister_service_base_info netMsg;
+		core::smt_unregister_service_base_info netMsg;
 		netMsg.unpack(pData, nSize);
 
 		CMasterApp::Inst()->getServiceMgr()->unregisterService(netMsg.szName);
 	}
 	else if (pHeader->nMessageID == eSMT_register_service_message_info)
 	{
-		smt_register_service_message_info netMsg;
+		core::smt_register_service_message_info netMsg;
 		netMsg.unpack(pData, nSize);
 
-		CMasterApp::Inst()->getServiceMgr()->registerMessageInfo(this->m_szServiceName, netMsg.vecMessageSyncInfo);
+		CMasterApp::Inst()->getServiceMgr()->registerMessageInfo(this->m_szServiceName, netMsg.vecMessageProxyInfo);
 	}
 }

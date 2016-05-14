@@ -1,12 +1,23 @@
 <!--服务器配置-->
 <root>
-	<!-- 服务基本信息 sync_log-(日志是否异步输出,0表示同步1表示异步) work_path(工作目录) service_name(服务名字，集群内唯一) host(监听集群内其他服务的ip) port(监听集群内其他服务端口，如果没有监听需求，就填0)-->
-	<service_info sync_log = "0" work_path = "./conf/" max_socket_count = "100000" service_type = "gate" service_name = "gate-1" host = "127.0.0.1" port = "9000" send_buf_size = "102400" recv_buf_size = "102400">
-		<misc invok_timeout = "100000" heartbeat_limit = "100000" heartbeat_time = "10000"/>
+	<!--服务基本信息-->
+	<base_info sync_log = "0" work_path = "./conf/" connections = "100000">
+		<heartbeat heartbeat_limit = "100000" heartbeat_time = "10000"/>
+		<time year = "2013" month = "4" day = "27" hour = "23" minute = "57" second = "0" enable = "0"/>
+	</base_info>
+	
+	<!--服务信息-->
+	<service_info service_type = "gate" service_name = "gate-1" service_group = "test" weight = "1.0">
+		<host_info host = "127.0.0.1" port = "9000" send_buf_size = "102400" recv_buf_size = "102400">
 	</service_info>
-	<time year = "2013" month = "4" day = "27" hour = "23" minute = "57" second = "0" enable = "0"/>
+	
+	<!--服务代理的接口信息以及服务代理信息-->
+	<service_proxy timeout = "100000" loadbalance="*" fail = "failover" retries = "2">
+		<message_proxy name = "bbb" timeout = "100000" loadbalance="*" fail = "failover" retries = "2"/>
+	</service_proxy>
+	
 	<!--监听客户端地址-->
-	<listen_client_addr host = "0.0.0.0" port = "8000" send_buf_size = "200000" recv_buf_size = "200000"/>
+	<client host = "0.0.0.0" port = "8000" send_buf_size = "200000" recv_buf_size = "200000"/>
 	<!--连接master地址-->
-	<connect_master_addr host = "127.0.0.1" port = "10000"/>
+	<master host = "127.0.0.1" port = "10000"/>
 </root>

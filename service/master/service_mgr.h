@@ -2,6 +2,8 @@
 
 #include "libCoreCommon/base_connection.h"
 
+#include "libCoreServiceKit/core_service_kit_define.h"
+
 #include <vector>
 #include <map>
 
@@ -14,16 +16,16 @@ public:
 
 	bool					init();
 	CConnectionFromService*	getServiceConnection(const std::string& szName) const;
-	bool					registerService(CConnectionFromService* pConnectionFromService, const SServiceBaseInfo& sServiceBaseInfo);
+	bool					registerService(CConnectionFromService* pConnectionFromService, const core::SServiceBaseInfo& sServiceBaseInfo);
 	void					unregisterService(const std::string& szServiceName);
-	void					registerMessageInfo(const std::string& szServiceName, const std::vector<SMessageSyncInfo>& vecMessageSyncInfo);
+	void					registerMessageInfo(const std::string& szServiceName, const std::vector<core::SMessageProxyInfo>& vecMessageProxyInfo);
 
 private:
 	struct SServiceInfo
 	{
-		SServiceBaseInfo			sServiceBaseInfo;
-		std::set<std::string>		setServiceMessageName;
-		CConnectionFromService*		pConnectionFromService;
+		core::SServiceBaseInfo							sServiceBaseInfo;
+		std::map<std::string, core::SMessageProxyInfo>	mapMessageProxyName;
+		CConnectionFromService*							pConnectionFromService;
 	};
 
 	std::map<uint32_t, std::string>		m_mapMessageName;

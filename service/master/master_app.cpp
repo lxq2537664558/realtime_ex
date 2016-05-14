@@ -5,6 +5,8 @@
 
 #include "libCoreCommon/base_connection_mgr.h"
 
+#include "tinyxml2/tinyxml2.h"
+
 CMasterApp::CMasterApp()
 	: m_pServiceMgr(nullptr)
 {
@@ -29,7 +31,33 @@ bool CMasterApp::onInit()
 	if (!this->m_pServiceMgr->init())
 		return false;
 
-	this->getBaseConnectionMgr()->listen(this->getServiceBaseInfo().szHost, this->getServiceBaseInfo().nPort, "", _GET_CLASS_NAME(CConnectionFromService), this->getServiceBaseInfo().nSendBufSize, this->getServiceBaseInfo().nRecvBufSize, nullptr);
+	tinyxml2::XMLDocument* pConfigXML = new tinyxml2::XMLDocument();
+	if (pConfigXML->LoadFile(CBaseApp::Inst()->getConfigFileName().c_str()) != tinyxml2::XML_SUCCESS)
+	{
+		PrintWarning("load etc config error");
+		return false;
+	}
+	tinyxml2::XMLElement* pRootXML = pConfigXML->RootElement();
+	if (pRootXML == nullptr)
+	{
+		PrintWarning("pRootXML == nullptr");
+		return false;
+	}
+
+	tinyxml2::XMLElement* pHostInfoXML = pRootXML->FirstChildElement("host_info");
+	if (pHostInfoXML == nullptr)
+	{
+		PrintWarning("pHostInfoXML == nullptr");
+		return false;
+	}
+
+	
+	const std::string szHost = pHostInfoXML->Attribute("host");
+	uint16_t nPort = (uint16_t)pHostInfoXML->UnsignedAttribute("port");
+	uint32_t nRecvBufSize = pHostInfoXML->UnsignedAttribute("recv_buf_size");
+	uint32_t nSendBufSize = pHostInfoXML->UnsignedAttribute("send_buf_size");
+	
+	this->getBaseConnectionMgr()->listen(szHost, nPort, "", _GET_CLASS_NAME(CConnectionFromService), nSendBufSize, nRecvBufSize, nullptr);
 
 	return true;
 }
@@ -52,7 +80,7 @@ CServiceMgr* CMasterApp::getServiceMgr() const
 int32_t main(int32_t argc, char* argv[])
 {
 	CMasterApp* pMasterApp = new CMasterApp();
-	pMasterApp->run(false, argc, argv, "master_config.xml");
+	pMasterApp->run(argc, argv, "master_config.xml");
 
 	return 0;
 }

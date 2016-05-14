@@ -7,7 +7,7 @@
 
 #include "proto_src/login_msg.pb.h"
 
-#include "libCoreCommon/protobuf_helper.h"
+#include "libCoreServiceKit/protobuf_helper.h"
 
 CGateMessageHandler::CGateMessageHandler()
 {

@@ -3,7 +3,7 @@
 #include "gate_message_dispatcher.h"
 #include "gate_app.h"
 
-#include "libCoreCommon/cluster_invoker.h"
+#include "libCoreServiceKit/cluster_invoker.h"
 
 DEFINE_OBJECT(CConnectionFromClient, 100)
 

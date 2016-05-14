@@ -3,10 +3,10 @@
 #include "master_app.h"
 #include "connection_from_service.h"
 
-#include "libCoreCommon/proto_system.h"
 #include "libCoreCommon/base_connection_mgr.h"
-
 #include "libBaseCommon/base_function.h"
+#include "libCoreServiceKit/proto_system.h"
+#include "libCoreServiceKit/core_service_kit_define.h"
 
 CServiceMgr::CServiceMgr()
 {
@@ -32,7 +32,7 @@ CConnectionFromService* CServiceMgr::getServiceConnection(const std::string& szN
 	return iter->second.pConnectionFromService;
 }
 
-bool CServiceMgr::registerService(CConnectionFromService* pConnectionFromService, const SServiceBaseInfo& sServiceBaseInfo)
+bool CServiceMgr::registerService(CConnectionFromService* pConnectionFromService, const core::SServiceBaseInfo& sServiceBaseInfo)
 {
 	DebugAstEx(pConnectionFromService != nullptr, false);
 
@@ -68,7 +68,7 @@ bool CServiceMgr::registerService(CConnectionFromService* pConnectionFromService
 		base::CWriteBuf& writeBuf = CMasterApp::Inst()->getWriteBuf();
 
 		// 同步基本服务信息
-		smt_sync_service_base_info netMsg1;
+		core::smt_sync_service_base_info netMsg1;
 		netMsg1.sServiceBaseInfo = sOtherServiceInfo.sServiceBaseInfo;
 
 		netMsg1.pack(writeBuf);
@@ -77,13 +77,11 @@ bool CServiceMgr::registerService(CConnectionFromService* pConnectionFromService
 
 		// 同步消息基本信息
 		writeBuf.clear();
-		smt_sync_service_message_info netMsg2;
+		core::smt_sync_service_message_info netMsg2;
 		netMsg2.szServiceName = sOtherServiceInfo.sServiceBaseInfo.szName;
-		for (auto iter = sOtherServiceInfo.setServiceMessageName.begin(); iter != sOtherServiceInfo.setServiceMessageName.end(); ++iter)
+		for (auto iter = sOtherServiceInfo.mapMessageProxyName.begin(); iter != sOtherServiceInfo.mapMessageProxyName.end(); ++iter)
 		{
-			SMessageSyncInfo sMessageSyncInfo;
-			sMessageSyncInfo.szMessageName = *iter;
-			netMsg2.vecMessageSyncInfo.push_back(sMessageSyncInfo);
+			netMsg2.vecMessageProxyInfo.push_back(iter->second);
 		}
 
 		netMsg2.pack(writeBuf);
@@ -94,7 +92,7 @@ bool CServiceMgr::registerService(CConnectionFromService* pConnectionFromService
 	// 把这个新加入的服务广播给其他服务
 	base::CWriteBuf& writeBuf = CMasterApp::Inst()->getWriteBuf();
 	
-	smt_sync_service_base_info netMsg;
+	core::smt_sync_service_base_info netMsg;
 	netMsg.sServiceBaseInfo = sServiceBaseInfo;
 	// 监听方跟主动连接方的接收缓存，发送缓存大小对调
 	std::swap(netMsg.sServiceBaseInfo.nRecvBufSize, netMsg.sServiceBaseInfo.nSendBufSize);
@@ -118,15 +116,15 @@ void CServiceMgr::unregisterService(const std::string& szServiceName)
 
 	// 清理该服务的消息
 	SServiceInfo& sServiceInfo = iter->second;
-	for (auto iter = sServiceInfo.setServiceMessageName.begin(); iter != sServiceInfo.setServiceMessageName.end(); ++iter)
+	for (auto iter = sServiceInfo.mapMessageProxyName.begin(); iter != sServiceInfo.mapMessageProxyName.end(); ++iter)
 	{
-		uint32_t nMessageID = base::hash(iter->c_str());
+		uint32_t nMessageID = _GET_MESSAGE_ID(iter->second.szMessageName);
 		this->m_mapMessageName.erase(nMessageID);
 	}
 
 	base::CWriteBuf& writeBuf = CMasterApp::Inst()->getWriteBuf();
 
-	smt_remove_service_base_info netMsg;
+	core::smt_remove_service_base_info netMsg;
 	netMsg.szName = szServiceName;
 
 	netMsg.pack(writeBuf);
@@ -141,7 +139,7 @@ void CServiceMgr::unregisterService(const std::string& szServiceName)
 	PrintInfo("unregister service service_name: %s", szServiceName.c_str());
 }
 
-void CServiceMgr::registerMessageInfo(const std::string& szServiceName, const std::vector<SMessageSyncInfo>& vecMessageSyncInfo)
+void CServiceMgr::registerMessageInfo(const std::string& szServiceName, const std::vector<core::SMessageProxyInfo>& vecMessageProxyInfo)
 {
 	auto iter = this->m_mapServiceInfo.find(szServiceName);
 	if (iter == this->m_mapServiceInfo.end())
@@ -152,42 +150,42 @@ void CServiceMgr::registerMessageInfo(const std::string& szServiceName, const st
 
 	SServiceInfo& sServiceInfo = iter->second;
 	
-	std::vector<SMessageSyncInfo> vecDeltaMessageInfo;
-	for (size_t i = 0; i < vecMessageSyncInfo.size(); ++i)
+	std::vector<core::SMessageProxyInfo> vecDeltaMessageProxyInfo;
+	for (size_t i = 0; i < vecMessageProxyInfo.size(); ++i)
 	{
-		const SMessageSyncInfo& sMessageSyncInfo = vecMessageSyncInfo[i];
-		auto iter = sServiceInfo.setServiceMessageName.find(sMessageSyncInfo.szMessageName);
-		if (iter == sServiceInfo.setServiceMessageName.end())
+		const core::SMessageProxyInfo& sMessageProxyInfo = vecMessageProxyInfo[i];
+		auto iter = sServiceInfo.mapMessageProxyName.find(sMessageProxyInfo.szMessageName);
+		if (iter == sServiceInfo.mapMessageProxyName.end())
 		{
-			sServiceInfo.setServiceMessageName.insert(sMessageSyncInfo.szMessageName);
-			vecDeltaMessageInfo.push_back(sMessageSyncInfo);
+			sServiceInfo.mapMessageProxyName[sMessageProxyInfo.szMessageName] = sMessageProxyInfo;
+			vecDeltaMessageProxyInfo.push_back(sMessageProxyInfo);
 		}
 	}
 
-	for (size_t i = 0; i < vecDeltaMessageInfo.size(); ++i)
+	for (size_t i = 0; i < vecDeltaMessageProxyInfo.size(); ++i)
 	{
-		const SMessageSyncInfo& sMessageSyncInfo = vecDeltaMessageInfo[i];
+		const core::SMessageProxyInfo& sMessageProxyInfo = vecDeltaMessageProxyInfo[i];
 		// 检测hash冲突
-		uint32_t nMessageID = base::hash(sMessageSyncInfo.szMessageName.c_str());
+		uint32_t nMessageID = _GET_MESSAGE_ID(sMessageProxyInfo.szMessageName);
 		auto iter = this->m_mapMessageName.find(nMessageID);
-		if (iter != this->m_mapMessageName.end() && iter->second != sMessageSyncInfo.szMessageName)
+		if (iter != this->m_mapMessageName.end() && iter->second != sMessageProxyInfo.szMessageName)
 		{
-			PrintWarning("dup message name exist_message_name :%s exist_message_id: %d new_message_name: %s new_message_id: %d", sMessageSyncInfo.szMessageName.c_str(), nMessageID, iter->second.c_str(), nMessageID);
+			PrintWarning("dup message name exist_message_name :%s exist_message_id: %d new_message_name: %s new_message_id: %d", sMessageProxyInfo.szMessageName.c_str(), nMessageID, iter->second.c_str(), nMessageID);
 		}
 		else
 		{
-			this->m_mapMessageName[nMessageID] = sMessageSyncInfo.szMessageName;
+			this->m_mapMessageName[nMessageID] = sMessageProxyInfo.szMessageName;
 		}
 	}
 
-	if (!vecDeltaMessageInfo.empty())
+	if (!vecDeltaMessageProxyInfo.empty())
 	{
 		// 把这个新消息信息广播给其他服务
 		base::CWriteBuf& writeBuf = CMasterApp::Inst()->getWriteBuf();
 
-		smt_sync_service_message_info netMsg;
+		core::smt_sync_service_message_info netMsg;
 		netMsg.szServiceName = szServiceName;
-		netMsg.vecMessageSyncInfo = vecDeltaMessageInfo;
+		netMsg.vecMessageProxyInfo = vecDeltaMessageProxyInfo;
 		netMsg.pack(writeBuf);
 
 		std::vector<uint64_t> vecExcludeID;
@@ -196,8 +194,8 @@ void CServiceMgr::registerMessageInfo(const std::string& szServiceName, const st
 		CMasterApp::Inst()->getBaseConnectionMgr()->broadcast(_GET_CLASS_NAME(CConnectionFromService), eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize(), &vecExcludeID);
 	}
 
-	for (size_t i = 0; i < vecDeltaMessageInfo.size(); ++i)
+	for (size_t i = 0; i < vecDeltaMessageProxyInfo.size(); ++i)
 	{
-		PrintInfo("register service message info service_name: %s message_name: %s", szServiceName.c_str(), vecDeltaMessageInfo[i].szMessageName.c_str());
+		PrintInfo("register service message info service_name: %s message_name: %s", szServiceName.c_str(), vecDeltaMessageProxyInfo[i].szMessageName.c_str());
 	}
 }

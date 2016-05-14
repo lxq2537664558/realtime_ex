@@ -61,6 +61,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestCoreCommon", "..\test\T
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "deployer", "..\service\deployer\deployer.vcxproj", "{D4D3B97F-6FE8-4582-B608-FDD2A293F50C}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libCoreServiceKit", "..\engine\src\libCoreServiceKit\libCoreServiceKit.vcxproj", "{5FF8F978-D4C4-47DA-BB2E-382441B238DF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Mixed Platforms = Debug|Mixed Platforms
@@ -278,6 +280,18 @@ Global
 		{D4D3B97F-6FE8-4582-B608-FDD2A293F50C}.Release|Win32.ActiveCfg = Release|Win32
 		{D4D3B97F-6FE8-4582-B608-FDD2A293F50C}.Release|Win32.Build.0 = Release|Win32
 		{D4D3B97F-6FE8-4582-B608-FDD2A293F50C}.Release|x64.ActiveCfg = Release|Win32
+		{5FF8F978-D4C4-47DA-BB2E-382441B238DF}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
+		{5FF8F978-D4C4-47DA-BB2E-382441B238DF}.Debug|Mixed Platforms.Build.0 = Debug|Win32
+		{5FF8F978-D4C4-47DA-BB2E-382441B238DF}.Debug|Win32.ActiveCfg = Debug|Win32
+		{5FF8F978-D4C4-47DA-BB2E-382441B238DF}.Debug|Win32.Build.0 = Debug|Win32
+		{5FF8F978-D4C4-47DA-BB2E-382441B238DF}.Debug|x64.ActiveCfg = Debug|x64
+		{5FF8F978-D4C4-47DA-BB2E-382441B238DF}.Debug|x64.Build.0 = Debug|x64
+		{5FF8F978-D4C4-47DA-BB2E-382441B238DF}.Release|Mixed Platforms.ActiveCfg = Release|Win32
+		{5FF8F978-D4C4-47DA-BB2E-382441B238DF}.Release|Mixed Platforms.Build.0 = Release|Win32
+		{5FF8F978-D4C4-47DA-BB2E-382441B238DF}.Release|Win32.ActiveCfg = Release|Win32
+		{5FF8F978-D4C4-47DA-BB2E-382441B238DF}.Release|Win32.Build.0 = Release|Win32
+		{5FF8F978-D4C4-47DA-BB2E-382441B238DF}.Release|x64.ActiveCfg = Release|x64
+		{5FF8F978-D4C4-47DA-BB2E-382441B238DF}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -302,5 +316,6 @@ Global
 		{B2E8FACE-6836-4883-86A1-2CC21B85D1EF} = {9B243426-3FEB-467D-91E9-43F5532C5FD4}
 		{CCFF5A17-02E2-4015-85E4-A60A1EB53719} = {9B243426-3FEB-467D-91E9-43F5532C5FD4}
 		{D4D3B97F-6FE8-4582-B608-FDD2A293F50C} = {216086F1-3D14-42E1-B4CF-45A5766F0FDE}
+		{5FF8F978-D4C4-47DA-BB2E-382441B238DF} = {A81E5832-B9CD-43FE-8D63-C2F45DBFCE9A}
 	EndGlobalSection
 EndGlobal

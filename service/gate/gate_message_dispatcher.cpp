@@ -7,7 +7,7 @@
 #include "libCoreCommon/base_connection.h"
 #include "libCoreCommon/base_connection_mgr.h"
 #include "libCoreCommon/base_app.h"
-#include "libCoreCommon/cluster_invoker.h"
+#include "libCoreServiceKit/cluster_invoker.h"
 
 CGateMessageDispatcher::CGateMessageDispatcher()
 {
@@ -101,9 +101,9 @@ void CGateMessageDispatcher::dispatch(uint64_t nSocketID, uint32_t nMessageType,
 	}
 	else if ((nMessageType&eMT_TYPE_MASK) == eMT_TO_GATE)
 	{
-		DebugAst(nSize > sizeof(gate_cookice));
+		DebugAst(nSize > sizeof(core::gate_cookice));
 
-		const gate_cookice* pCookice = reinterpret_cast<const gate_cookice*>(pData);
+		const core::gate_cookice* pCookice = reinterpret_cast<const core::gate_cookice*>(pData);
 		CGateSession* pGateSession = CGateApp::Inst()->getGateSessionMgr()->getSessionBySessionID(pCookice->nSessionID);
 		if (nullptr == pGateSession)
 			return;
@@ -116,7 +116,7 @@ void CGateMessageDispatcher::dispatch(uint64_t nSocketID, uint32_t nMessageType,
 		DebugAst(nullptr != pConnectionFromClient);
 
 		const core::message_header* pHeader = reinterpret_cast<const core::message_header*>(pCookice + 1);
-		int16_t nMessageSize = nSize - sizeof(gate_cookice);
+		int16_t nMessageSize = nSize - sizeof(core::gate_cookice);
 		DebugAst(nMessageSize == pHeader->nMessageSize);
 		if (nMessageSize < 0)
 		{
@@ -132,5 +132,5 @@ void CGateMessageDispatcher::forward(uint64_t nSessionID, const core::message_he
 {
 	DebugAst(pHeader != nullptr);
 
-	core::CClusterInvoker::Inst()->forward(nSessionID, pHeader, CGateApp::Inst()->getLoadBalancePolicy(eLBPID_Rand), 0);
+	core::CClusterInvoker::Inst()->forward(pHeader, nSessionID, "");
 }

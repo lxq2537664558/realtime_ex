@@ -5,8 +5,9 @@
 #include "gate_message_handler.h"
 
 #include "libCoreCommon/base_connection_mgr.h"
-#include "libCoreCommon/message_dispatcher.h"
-#include "libCoreCommon/message_registry.h"
+#include "libCoreServiceKit/message_dispatcher.h"
+#include "libCoreServiceKit/message_registry.h"
+#include "libCoreServiceKit/core_service_kit.h"
 
 #include <functional>
 
@@ -38,6 +39,12 @@ CGateApp* CGateApp::Inst()
 bool CGateApp::onInit()
 {
 	CConnectionFromClient::registClassInfo();
+
+	if (!core::CCoreServiceKit::Inst()->init())
+	{
+		PrintWarning("core::CCoreServiceKit::Inst()->init()");
+		return false;
+	}
 
 	core::CMessageRegistry::Inst()->addGlobalBeforeFilter(std::bind(gate_before_filter, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
 	
@@ -72,9 +79,9 @@ bool CGateApp::onInit()
 		return false;
 	}
 	// 启动客户端连接
-	tinyxml2::XMLElement* pListenClientAddrXML = pRootXML->FirstChildElement("listen_client_addr");
+	tinyxml2::XMLElement* pListenClientAddrXML = pRootXML->FirstChildElement("client");
 	DebugAstEx(pListenClientAddrXML != nullptr, false);
-	this->getBaseConnectionMgr()->listen(pListenClientAddrXML->Attribute("host"), (uint16_t)pListenClientAddrXML->IntAttribute("port"), "", _GET_CLASS_NAME(CConnectionFromClient), pListenClientAddrXML->IntAttribute("send_buf_size"), pListenClientAddrXML->IntAttribute("recv_buf_size"), core::default_parser_native_data);
+	this->getBaseConnectionMgr()->listen(pListenClientAddrXML->Attribute("host") != nullptr ? pListenClientAddrXML->Attribute("host") : "0.0.0.0", (uint16_t)pListenClientAddrXML->IntAttribute("port"), "", _GET_CLASS_NAME(CConnectionFromClient), pListenClientAddrXML->IntAttribute("send_buf_size"), pListenClientAddrXML->IntAttribute("recv_buf_size"), core::default_parser_native_data);
 
 	SAFE_DELETE(pConfigXML);
 
@@ -83,7 +90,8 @@ bool CGateApp::onInit()
 
 void CGateApp::onDestroy()
 {
-	SAFE_DELETE(this->m_pGateSessionMgr)
+	SAFE_DELETE(this->m_pGateSessionMgr);
+	core::CCoreServiceKit::Inst()->release();
 }
 
 void CGateApp::onQuit()
@@ -99,7 +107,7 @@ CGateSessionMgr* CGateApp::getGateSessionMgr() const
 int32_t main(int32_t argc, char* argv[])
 {
 	CGateApp* pGateApp = new CGateApp();
-	pGateApp->run(true, argc, argv, "gate_config.xml");
+	pGateApp->run(argc, argv, "gate_config.xml");
 
 	return 0;
 }
