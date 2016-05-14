@@ -162,4 +162,72 @@ namespace core
 		return &iter->second;
 	}
 
+	bool CCoreServiceProxy::addConnectionToService(CCoreConnectionToService* pCoreConnectionToService)
+	{
+		DebugAstEx(pCoreConnectionToService != nullptr, false);
+
+		if (this->m_mapCoreConnectionToService.find(pCoreConnectionToService->getServiceName()) != this->m_mapCoreConnectionToService.end())
+		{
+			PrintWarning("dup service service_name: %s remote_addr: %s %d", pCoreConnectionToService->getServiceName().c_str(), pCoreConnectionToService->getRemoteAddr().szHost, pCoreConnectionToService->getRemoteAddr().nPort);
+			return false;
+		}
+
+		this->m_mapCoreConnectionToService[pCoreConnectionToService->getServiceName()] = pCoreConnectionToService;
+
+		CCoreServiceKitImpl::Inst()->getTransporter()->sendCacheMessage(pCoreConnectionToService->getServiceName());
+
+		return true;
+	}
+
+	CCoreConnectionToService* CCoreServiceProxy::getConnectionToService(const std::string& szName) const
+	{
+		auto iter = this->m_mapCoreConnectionToService.find(szName);
+		if (iter == this->m_mapCoreConnectionToService.end())
+			return nullptr;
+
+		return iter->second;
+	}
+
+	void CCoreServiceProxy::delConnectionToService(const std::string& szName)
+	{
+		auto iter = this->m_mapCoreConnectionToService.find(szName);
+		if (iter == this->m_mapCoreConnectionToService.end())
+			return;
+
+		this->m_mapCoreConnectionToService.erase(iter);
+	}
+
+	CCoreConnectionFromService* CCoreServiceProxy::getConnectionFromService(const std::string& szName) const
+	{
+		auto iter = this->m_mapCoreConnectionFromService.find(szName);
+		if (iter == this->m_mapCoreConnectionFromService.end())
+			return nullptr;
+
+		return iter->second;
+	}
+
+	bool CCoreServiceProxy::addConnectionFromService(CCoreConnectionFromService* pCoreConnectionFromService)
+	{
+		DebugAstEx(pCoreConnectionFromService != nullptr, false);
+
+		auto iter = this->m_mapCoreConnectionFromService.find(pCoreConnectionFromService->getServiceName());
+		if (iter != this->m_mapCoreConnectionFromService.end())
+		{
+			PrintWarning("dup service service_name: %s remote_addr: %s %d", pCoreConnectionFromService->getServiceName().c_str(), pCoreConnectionFromService->getRemoteAddr().szHost, pCoreConnectionFromService->getRemoteAddr().nPort);
+			return false;
+		}
+
+		this->m_mapCoreConnectionFromService[pCoreConnectionFromService->getServiceName()] = pCoreConnectionFromService;
+
+		return true;
+	}
+
+	void CCoreServiceProxy::delConnectionFromService(const std::string& szName)
+	{
+		auto iter = this->m_mapCoreConnectionFromService.find(szName);
+		if (iter == this->m_mapCoreConnectionFromService.end())
+			return;
+
+		this->m_mapCoreConnectionFromService.erase(iter);
+	}
 }

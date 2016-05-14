@@ -168,7 +168,7 @@ namespace core
 	{
 		DebugAstEx(sResponseMessageInfo.pMessage != nullptr, false);
 
-		CCoreConnectionFromService* pCoreConnectionFromService = CCoreServiceKitImpl::Inst()->getConnectionFromService(szServiceName);
+		CCoreConnectionFromService* pCoreConnectionFromService = CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getConnectionFromService(szServiceName);
 		DebugAstEx(pCoreConnectionFromService != nullptr, false);
 
 		uint32_t nMessageSize = sResponseMessageInfo.pMessage->ByteSize();
@@ -195,7 +195,7 @@ namespace core
 	{
 		DebugAstEx(sGateMessageInfo.pHeader != nullptr, false);
 
-		CCoreConnectionToService* pCoreConnectionToService = CCoreServiceKitImpl::Inst()->getConnectionToService(szServiceName);
+		CCoreConnectionToService* pCoreConnectionToService = CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getConnectionToService(szServiceName);
 		if (pCoreConnectionToService != nullptr)
 		{
 			// 填充cookice
@@ -233,7 +233,7 @@ namespace core
 		if (nBufSize < 0)
 			return false;
 
-		CCoreConnectionToService* pCoreConnectionToService = CCoreServiceKitImpl::Inst()->getConnectionToService(szServiceName);
+		CCoreConnectionToService* pCoreConnectionToService = CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getConnectionToService(szServiceName);
 		if (pCoreConnectionToService != nullptr)
 		{
 			// 填充cookice
@@ -271,7 +271,7 @@ namespace core
 		if (nBufSize < 0)
 			return false;
 
-		CCoreConnectionToService* pCoreConnectionToService = CCoreServiceKitImpl::Inst()->getConnectionToService(szServiceName);
+		CCoreConnectionToService* pCoreConnectionToService = CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getConnectionToService(szServiceName);
 		if (pCoreConnectionToService != nullptr)
 		{
 			// 填充cookice
@@ -356,7 +356,7 @@ namespace core
 
 	void CTransporter::sendCacheMessage(const std::string& szServiceName)
 	{
-		CCoreConnectionToService* pCoreConnectionToService = CCoreServiceKitImpl::Inst()->getConnectionToService(szServiceName);
+		CCoreConnectionToService* pCoreConnectionToService = CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getConnectionToService(szServiceName);
 		DebugAst(pCoreConnectionToService != nullptr);
 
 		// 把之前cache的消息发送出去

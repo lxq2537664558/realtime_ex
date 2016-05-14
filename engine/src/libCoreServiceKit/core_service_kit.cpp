@@ -9,6 +9,11 @@ namespace core
 
 	}
 
+	CCoreServiceKit::~CCoreServiceKit()
+	{
+
+	}
+
 	void CCoreServiceKit::release()
 	{
 		CCoreServiceKitImpl::Inst()->release();

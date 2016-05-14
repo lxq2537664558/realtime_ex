@@ -41,20 +41,15 @@ namespace core
 		void							delConnectionFromService(const std::string& szName);
 
 	private:
-		struct SServiceInfo
-		{
-			SServiceBaseInfo			sServiceBaseInfo;
-			CCoreConnectionToService*	pCoreConnectionToService;
-			CCoreConnectionFromService*	pCoreConnectionFromService;
-		};
-
-		std::map<std::string, SServiceBaseInfo>			m_mapServiceBaseInfo;
-		std::map<uint32_t, SMetaMessageProxyInfo>		m_mapMetaMessageProxyInfo;
-		std::map<std::string, SMessageProxyGroupInfo>	m_mapMessageProxyGroupInfo;
-		uint32_t										m_nProxyInvokTimeout;
-		std::string										m_szProxyLoadBalance;
-		std::string										m_szProxyFail;
-		uint32_t										m_nProxyRetries;
+		std::map<std::string, SServiceBaseInfo>				m_mapServiceBaseInfo;
+		std::map<std::string, CCoreConnectionToService*>	m_mapCoreConnectionToService;
+		std::map<std::string, CCoreConnectionFromService*>	m_mapCoreConnectionFromService;
+		std::map<uint32_t, SMetaMessageProxyInfo>			m_mapMetaMessageProxyInfo;
+		std::map<std::string, SMessageProxyGroupInfo>		m_mapMessageProxyGroupInfo;
+		uint32_t											m_nProxyInvokTimeout;
+		std::string											m_szProxyLoadBalance;
+		std::string											m_szProxyFail;
+		uint32_t											m_nProxyRetries;
 
 	};
 }

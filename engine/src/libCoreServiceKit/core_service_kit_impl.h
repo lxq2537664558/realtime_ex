@@ -32,13 +32,6 @@ namespace core
 		CCoreServiceProxy*			getCoreServiceProxy() const;
 		CCoreServiceInvoker*		getCoreServiceInvoker() const;
 
-		CCoreConnectionToService*	getConnectionToService(const std::string& szName) const;
-		bool						addConnectionToService(CCoreConnectionToService* pCoreConnectionToService);
-		void						delConnectionToService(const std::string& szName);
-		CCoreConnectionFromService*	getConnectionFromService(const std::string& szName) const;
-		bool						addConnectionFromService(CCoreConnectionFromService* pCoreConnectionFromService);
-		void						delConnectionFromService(const std::string& szName);
-
 		CCoreConnectionToMaster*	getConnectionToMaster() const;
 
 		const SServiceBaseInfo&		getServiceBaseInfo() const;
@@ -57,21 +50,17 @@ namespace core
 		void						onCheckConnectMaster(uint64_t nContext);
 
 	private:
-		CTicker												m_tickCheckConnectMaster;
+		CTicker								m_tickCheckConnectMaster;
+		CTransporter*						m_pTransporter;
+		CCoreServiceInvoker*				m_pCoreServiceInvoker;
+		CCoreServiceProxy*					m_pCoreServiceProxy;
+		CLoadBalanceMgr*					m_pLoadBalanceMgr;
+		SServiceBaseInfo					m_sServiceBaseInfo;
+		std::string							m_szMasterHost;
+		uint16_t							m_nMasterPort;
 
-		std::map<std::string, CCoreConnectionToService*>	m_mapConnectionToService;
-		std::map<std::string, CCoreConnectionFromService*>	m_mapConnectionFromService;
-
-		CTransporter*										m_pTransporter;
-		CCoreServiceInvoker*								m_pCoreServiceInvoker;
-		CCoreServiceProxy*									m_pCoreServiceProxy;
-		CLoadBalanceMgr*									m_pLoadBalanceMgr;
-		SServiceBaseInfo									m_sServiceBaseInfo;
-		std::string											m_szMasterHost;
-		uint16_t											m_nMasterPort;
-
-		std::vector<ServiceGlobalFilter>					m_vecServiceGlobalBeforeFilter;
-		std::vector<ServiceGlobalFilter>					m_vecServiceGlobalAfterFilter;
+		std::vector<ServiceGlobalFilter>	m_vecServiceGlobalBeforeFilter;
+		std::vector<ServiceGlobalFilter>	m_vecServiceGlobalAfterFilter;
 	};
 
 }

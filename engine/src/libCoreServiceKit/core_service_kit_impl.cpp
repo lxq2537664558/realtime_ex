@@ -202,75 +202,6 @@ namespace core
 		this->m_pTransporter->onConnectRefuse(szContext);
 	}
 
-	CCoreConnectionToService* CCoreServiceKitImpl::getConnectionToService(const std::string& szName) const
-	{
-		auto iter = this->m_mapConnectionToService.find(szName);
-		if (iter == this->m_mapConnectionToService.end())
-			return nullptr;
-
-		return iter->second;
-	}
-
-	bool CCoreServiceKitImpl::addConnectionToService(CCoreConnectionToService* pCoreConnectionToService)
-	{
-		DebugAstEx(pCoreConnectionToService != nullptr, false);
-
-		if (this->m_mapConnectionToService.find(pCoreConnectionToService->getServiceName()) != this->m_mapConnectionToService.end())
-		{
-			PrintWarning("dup service service_name: %s remote_addr: %s %d", pCoreConnectionToService->getServiceName().c_str(), pCoreConnectionToService->getRemoteAddr().szHost, pCoreConnectionToService->getRemoteAddr().nPort);
-			return false;
-		}
-
-		this->m_mapConnectionToService[pCoreConnectionToService->getServiceName()] = pCoreConnectionToService;
-
-		this->getTransporter()->sendCacheMessage(pCoreConnectionToService->getServiceName());
-
-		return true;
-	}
-
-	void CCoreServiceKitImpl::delConnectionToService(const std::string& szName)
-	{
-		auto iter = this->m_mapConnectionToService.find(szName);
-		if (iter == this->m_mapConnectionToService.end())
-			return;
-
-		this->m_mapConnectionToService.erase(iter);
-	}
-
-	CCoreConnectionFromService* CCoreServiceKitImpl::getConnectionFromService(const std::string& szName) const
-	{
-		auto iter = this->m_mapConnectionFromService.find(szName);
-		if (iter == this->m_mapConnectionFromService.end())
-			return nullptr;
-
-		return iter->second;
-	}
-
-	bool CCoreServiceKitImpl::addConnectionFromService(CCoreConnectionFromService* pCoreConnectionFromService)
-	{
-		DebugAstEx(pCoreConnectionFromService != nullptr, false);
-
-		auto iter = this->m_mapConnectionFromService.find(pCoreConnectionFromService->getServiceName());
-		if (iter != this->m_mapConnectionFromService.end())
-		{
-			PrintWarning("dup service service_name: %s remote_addr: %s %d", pCoreConnectionFromService->getServiceName().c_str(), pCoreConnectionFromService->getRemoteAddr().szHost, pCoreConnectionFromService->getRemoteAddr().nPort);
-			return false;
-		}
-
-		this->m_mapConnectionFromService[pCoreConnectionFromService->getServiceName()] = pCoreConnectionFromService;
-	
-		return true;
-	}
-
-	void CCoreServiceKitImpl::delConnectionFromService(const std::string& szName)
-	{
-		auto iter = this->m_mapConnectionFromService.find(szName);
-		if (iter == this->m_mapConnectionFromService.end())
-			return;
-
-		this->m_mapConnectionFromService.erase(iter);
-	}
-
 	CCoreConnectionToMaster* CCoreServiceKitImpl::getConnectionToMaster() const
 	{
 		std::vector<CBaseConnection*> vecBaseConnection;
@@ -305,4 +236,25 @@ namespace core
 	{
 		return this->m_vecServiceGlobalAfterFilter;
 	}
+
+	CTransporter* CCoreServiceKitImpl::getTransporter() const
+	{
+		return this->m_pTransporter;
+	}
+
+	CLoadBalanceMgr* CCoreServiceKitImpl::getLoadBalanceMgr() const
+	{
+		return this->m_pLoadBalanceMgr;
+	}
+
+	CCoreServiceProxy* CCoreServiceKitImpl::getCoreServiceProxy() const
+	{
+		return this->m_pCoreServiceProxy;
+	}
+
+	CCoreServiceInvoker* CCoreServiceKitImpl::getCoreServiceInvoker() const
+	{
+		return this->m_pCoreServiceInvoker;
+	}
+
 }
