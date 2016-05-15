@@ -24,7 +24,7 @@ void client_request_msg_callback(const core::SClientSessionInfo& sClientSessionI
 	msg.set_name(pClientMsg->name());
 	msg.set_id(pClientMsg->id());
 
-	core::CClusterInvoker::Inst()->invok_r(&msg, 0, "", [sClientSessionInfo](uint32_t nMessageType, const google::protobuf::Message* pMessage, core::EResponseResultType eType)->void
+	core::CClusterInvoker::Inst()->invok_r(&msg, 0, "*", [sClientSessionInfo](uint32_t nMessageType, const google::protobuf::Message* pMessage, core::EResponseResultType eType)->void
 	{
 		const test::service_response_msg* pResponseMsg = dynamic_cast<const test::service_response_msg*>(pMessage);
 		DebugAst(pResponseMsg != nullptr);

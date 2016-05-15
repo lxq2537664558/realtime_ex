@@ -159,6 +159,9 @@ namespace core
 		{
 			SMessageProxyGroupInfo& sMessageProxyGroupInfo = iter->second;
 			auto iterService = sMessageProxyGroupInfo.mapMessageProxyInfo.find(szServiceName);
+			if (iterService == sMessageProxyGroupInfo.mapMessageProxyInfo.end())
+				continue;
+
 			if (!iterService->second.szServiceGroup.empty())
 			{
 				int32_t& nTotalWeight = sMessageProxyGroupInfo.mapGroupWeight[iterService->second.szServiceGroup];

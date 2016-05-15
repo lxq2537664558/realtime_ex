@@ -102,7 +102,9 @@ public:
 
 	virtual void onDispatch(uint32_t nMessageType, const void* pData, uint16_t nSize)
 	{
-
+		google::protobuf::Message* pMessage = unserialize_protobuf_message_from_buf("test.client_response_msg", reinterpret_cast<const message_header*>(pData));
+		test::client_response_msg* pMsg = dynamic_cast<test::client_response_msg*>(pMessage);
+		
 	}
 
 private:
@@ -163,7 +165,7 @@ CTestServiceClientApp* CTestServiceClientApp::Inst()
 bool CTestServiceClientApp::onInit()
 {
 	CConnectToService::registClassInfo();
-	this->getBaseConnectionMgr()->connect("127.0.0.1", 8000, "", _GET_CLASS_NAME(CConnectToService), 0, 0, nullptr);
+	this->getBaseConnectionMgr()->connect("127.0.0.1", 8000, "", _GET_CLASS_NAME(CConnectToService), 0, 0, core::default_parser_native_data);
 	return true;
 }
 

@@ -150,6 +150,7 @@ namespace core
 
 		uint64_t nCacheID = this->genCacheID();
 		SRequestMessageCacheInfo* pRequestMessageCacheInfo = new SRequestMessageCacheInfo();
+		pRequestMessageCacheInfo->nType = eMCIT_Request;
 		pRequestMessageCacheInfo->vecBuf.resize(nBufSize);
 		memcpy(&pRequestMessageCacheInfo->vecBuf[0], &this->m_vecBuf[0], nBufSize);
 		pRequestMessageCacheInfo->callback = sRequestMessageInfo.callback;
@@ -211,6 +212,7 @@ namespace core
 
 		uint64_t nCacheID = this->genCacheID();
 		SGateForwardMessageCacheInfo* pGateForwardMessageCacheInfo = new SGateForwardMessageCacheInfo();
+		pGateForwardMessageCacheInfo->nType = eMCIT_GateForward;
 		pGateForwardMessageCacheInfo->vecBuf.resize(sGateMessageInfo.pHeader->nMessageSize);
 		memcpy(&pGateForwardMessageCacheInfo->vecBuf[0], sGateMessageInfo.pHeader, sGateMessageInfo.pHeader->nMessageSize);
 		pGateForwardMessageCacheInfo->nSessionID = sGateMessageInfo.nSessionID;
@@ -249,6 +251,7 @@ namespace core
 
 		uint64_t nCacheID = this->genCacheID();
 		SGateMessageCacheInfo* pGateMessageCacheInfo = new SGateMessageCacheInfo();
+		pGateMessageCacheInfo->nType = eMCIT_Gate;
 		pGateMessageCacheInfo->vecBuf.resize(nBufSize);
 		memcpy(&pGateMessageCacheInfo->vecBuf[0], &this->m_vecBuf[0], nBufSize);
 		pGateMessageCacheInfo->nSessionID = sGateMessageInfo.nSessionID;
@@ -288,6 +291,7 @@ namespace core
 
 		uint64_t nCacheID = this->genCacheID();
 		SGateBroadcastMessageCacheInfo* pGateBroadcastMessageCacheInfo = new SGateBroadcastMessageCacheInfo();
+		pGateBroadcastMessageCacheInfo->nType = eMCIT_GateBroadcast;
 		pGateBroadcastMessageCacheInfo->vecBuf.resize(nBufSize);
 		memcpy(&pGateBroadcastMessageCacheInfo->vecBuf[0], &this->m_vecBuf[0], nBufSize);
 		pGateBroadcastMessageCacheInfo->vecSessionID = sGateBroadcastMessageInfo.vecSessionID;
