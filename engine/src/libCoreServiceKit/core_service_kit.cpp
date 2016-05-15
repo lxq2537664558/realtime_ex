@@ -33,4 +33,10 @@ namespace core
 	{
 		return CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getMessageProxyGroupInfo(szMessageName);
 	}
+
+	const std::string& CCoreServiceKit::getMessageName(uint32_t nMessageID) const
+	{
+		return CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getMessageName(nMessageID);
+	}
+
 }

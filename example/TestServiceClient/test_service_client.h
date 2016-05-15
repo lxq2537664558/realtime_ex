@@ -2,14 +2,14 @@
 
 #include "libCoreCommon/base_app.h"
 
-class CTestServiceApp2
+class CTestServiceClientApp
 	: public core::CBaseApp
 {
 public:
-	CTestServiceApp2();
-	virtual ~CTestServiceApp2();
+	CTestServiceClientApp();
+	virtual ~CTestServiceClientApp();
 
-	static CTestServiceApp2* Inst();
+	static CTestServiceClientApp* Inst();
 
 	virtual bool		onInit();
 	virtual void		onDestroy();

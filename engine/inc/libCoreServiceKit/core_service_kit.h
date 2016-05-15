@@ -22,5 +22,9 @@ namespace core
 		@brief: 获取某一个消息的调用信息
 		*/
 		const SMessageProxyGroupInfo*	getMessageProxyGroupInfo(const std::string& szMessageName) const;
+		/**
+		@brief: 根据消息ID获取消息名字
+		*/
+		const std::string&				getMessageName(uint32_t nMessageID) const;
 	};
 }

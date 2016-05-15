@@ -52,22 +52,25 @@ namespace core
 		DebugAstEx(pMessage != nullptr, false);
 
 		const std::string& szMessageName = pMessage->GetTypeName();
-		const SMetaMessageProxyInfo* pMetaMessageProxyInfo = CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getMetaMessageProxyInfo(_GET_MESSAGE_ID(szMessageName));
+		const SMetaMessageProxyInfo* pMetaMessageProxyInfo = CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getMetaMessageProxyInfo(szMessageName);
 		if (nullptr == pMetaMessageProxyInfo)
 		{
-			PrintWarning("CClusterInvoker::invok error invalid message name session_id: "UINT64FMT" service_group: %s message_name: %s", nSessionID, szServiceGroup.c_str(), szMessageName.c_str());
+			PrintWarning("CClusterInvoker::invok error invalid message name message_name: %s session_id: "UINT64FMT" service_group: %s", szMessageName.c_str(), nSessionID, szServiceGroup.c_str());
 			return false;
 		}
 		ILoadBalance* pLoadBalance = CCoreServiceKitImpl::Inst()->getLoadBalanceMgr()->getLoadBalance(pMetaMessageProxyInfo->szLoadbalanceName);
 		if (nullptr == pLoadBalance)
 		{
-			PrintWarning("CClusterInvoker::invok error invalid load_balance session_id: "UINT64FMT" service_group: %s message_name: %s load_balance_name: %s", nSessionID, szServiceGroup.c_str(), szMessageName.c_str(), pMetaMessageProxyInfo->szLoadbalanceName.c_str());
+			PrintWarning("CClusterInvoker::invok error invalid load_balance message_name: %s session_id: "UINT64FMT" service_group: %s load_balance_name: %s", szMessageName.c_str(), nSessionID, szServiceGroup.c_str(), pMetaMessageProxyInfo->szLoadbalanceName.c_str());
 			return false;
 		}
 
 		const std::string szServiceName = pLoadBalance->select(szMessageName, nSessionID, szServiceGroup);
 		if (szServiceName.empty())
+		{
+			PrintWarning("CClusterInvoker::invok error load_balance select error message_name: %s  session_id: "UINT64FMT" service_group: %s load_balance_name: %s", szMessageName.c_str(), nSessionID, szServiceGroup.c_str(), pMetaMessageProxyInfo->szLoadbalanceName.c_str());
 			return false;
+		}
 
 		return this->invok(szServiceName, pMessage);
 	}
@@ -80,19 +83,22 @@ namespace core
 		const SMetaMessageProxyInfo* pMetaMessageProxyInfo = CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getMetaMessageProxyInfo(szMessageName);
 		if (nullptr == pMetaMessageProxyInfo)
 		{
-			PrintWarning("CClusterInvoker::invok_r error invalid message name session_id: "UINT64FMT" service_group: %s message_name: %s", nSessionID, szServiceGroup.c_str(), szMessageName.c_str());
+			PrintWarning("CClusterInvoker::invok_r error invalid message name message_name: %s session_id: "UINT64FMT" service_group: %s", szMessageName.c_str(), nSessionID, szServiceGroup.c_str());
 			return false;
 		}
 		ILoadBalance* pLoadBalance = CCoreServiceKitImpl::Inst()->getLoadBalanceMgr()->getLoadBalance(pMetaMessageProxyInfo->szLoadbalanceName);
 		if (nullptr == pLoadBalance)
 		{
-			PrintWarning("CClusterInvoker::invok error invalid load_balance session_id: "UINT64FMT" service_group: %s message_name: %s load_balance_name: %s", nSessionID, szServiceGroup.c_str(), szMessageName.c_str(), pMetaMessageProxyInfo->szLoadbalanceName.c_str());
+			PrintWarning("CClusterInvoker::invok_r error invalid load_balance message_name: %s  session_id: "UINT64FMT" service_group: %s load_balance_name: %s", szMessageName.c_str(), nSessionID, szServiceGroup.c_str(), pMetaMessageProxyInfo->szLoadbalanceName.c_str());
 			return false;
 		}
 
 		const std::string szServiceName = pLoadBalance->select(szMessageName, nSessionID, szServiceGroup);
 		if (szServiceName.empty())
+		{
+			PrintWarning("CClusterInvoker::invok_r error load_balance select error message_name: %s  session_id: "UINT64FMT" service_group: %s load_balance_name: %s", szMessageName.c_str(), nSessionID, szServiceGroup.c_str(), pMetaMessageProxyInfo->szLoadbalanceName.c_str());
 			return false;
+		}
 
 		return this->invok_r(szServiceName, pMessage, callback, nContext);
 	}
@@ -143,22 +149,31 @@ namespace core
 	{
 		DebugAstEx(pHeader != nullptr, false);
 
-		const SMetaMessageProxyInfo* pMetaMessageProxyInfo = CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getMetaMessageProxyInfo(pHeader->nMessageID);
+		const std::string& szMessageName = CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getMessageName(pHeader->nMessageID);
+		if (szMessageName.empty())
+		{
+			PrintWarning("CClusterInvoker::forward error invalid message id  message_id: %d session_id: "UINT64FMT" service_group: %s message_id: %d", pHeader->nMessageID, nSessionID, szServiceGroup.c_str(), pHeader->nMessageID);
+			return false;
+		}
+		const SMetaMessageProxyInfo* pMetaMessageProxyInfo = CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getMetaMessageProxyInfo(szMessageName);
 		if (nullptr == pMetaMessageProxyInfo)
 		{
-			PrintWarning("CClusterInvoker::forward error invalid message name session_id: "UINT64FMT" service_group: %s message_id: %d", nSessionID, szServiceGroup.c_str(), pHeader->nMessageID);
+			PrintWarning("CClusterInvoker::forward error invalid message name message_name: %s session_id: "UINT64FMT" service_group: %s message_id: %d", szMessageName.c_str(), nSessionID, szServiceGroup.c_str());
 			return false;
 		}
 		ILoadBalance* pLoadBalance = CCoreServiceKitImpl::Inst()->getLoadBalanceMgr()->getLoadBalance(pMetaMessageProxyInfo->szLoadbalanceName);
 		if (nullptr == pLoadBalance)
 		{
-			PrintWarning("CClusterInvoker::invok error invalid load_balance session_id: "UINT64FMT" service_group: %s message_name: %s load_balance_name: %s", nSessionID, szServiceGroup.c_str(), pMetaMessageProxyInfo->szMessageName.c_str(), pMetaMessageProxyInfo->szLoadbalanceName.c_str());
+			PrintWarning("CClusterInvoker::forward error invalid load_balance session_id: "UINT64FMT" service_group: %s message_name: %s load_balance_name: %s", nSessionID, szServiceGroup.c_str(), pMetaMessageProxyInfo->szMessageName.c_str(), pMetaMessageProxyInfo->szLoadbalanceName.c_str());
 			return false;
 		}
 
-		const std::string szServiceName = pLoadBalance->select(pMetaMessageProxyInfo->szMessageName, nSessionID, szServiceGroup);
+		const std::string szServiceName = pLoadBalance->select(szMessageName, nSessionID, szServiceGroup);
 		if (szServiceName.empty())
+		{
+			PrintWarning("CClusterInvoker::forward error load_balance select error message_name: %s  session_id: "UINT64FMT" service_group: %s load_balance_name: %s", szMessageName.c_str(), nSessionID, szServiceGroup.c_str(), pMetaMessageProxyInfo->szLoadbalanceName.c_str());
 			return false;
+		}
 
 		SGateForwardMessageInfo sGateMessageInfo;
 		sGateMessageInfo.nSessionID = nSessionID;

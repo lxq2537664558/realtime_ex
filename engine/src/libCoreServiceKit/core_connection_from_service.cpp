@@ -49,6 +49,12 @@ namespace core
 					return;
 				}
 
+				if (netMsg.szKey != CCoreServiceKitImpl::Inst()->getServiceBaseInfo().szName)
+				{
+					this->shutdown(true, "error key");
+					return;
+				}
+
 				// 这里对其他服务的监听地址不感兴趣
 				this->m_szServiceName = netMsg.szServiceName;
 

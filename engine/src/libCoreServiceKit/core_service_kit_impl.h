@@ -35,7 +35,6 @@ namespace core
 		CCoreConnectionToMaster*	getConnectionToMaster() const;
 
 		const SServiceBaseInfo&		getServiceBaseInfo() const;
-		void						getServiceName(const std::string& szType, std::vector<std::string>& vecServiceName) const;
 
 		void						addGlobalBeforeFilter(const ServiceGlobalFilter& callback);
 		void						addGlobalAfterFilter(const ServiceGlobalFilter& callback);

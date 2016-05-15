@@ -14,6 +14,9 @@ public:
 	CProfilingMgr();
 	~CProfilingMgr();
 
+	bool init(bool bProfiling);
+	void enableProfiling(bool bProfiling);
+
 	void profilingBeginByLabel(const char* szLabel);
 	void endProfilingByLabel(const char* szLabel);
 	void profilingBeginByAddr(const void* pAddr);
@@ -33,10 +36,12 @@ private:
 	std::unordered_map<const char*, SProfilerInfo>	m_mapProfilingInfoByLabel;
 	std::unordered_map<const void*, SProfilerInfo>	m_mapProfilingInfoByAddr;
 	int64_t											m_nProfilingMgrSpend;
+	bool											m_bProfiling;
 };
 
 CProfilingMgr::CProfilingMgr()
 	: m_nProfilingMgrSpend(0)
+	, m_bProfiling(true)
 {
 }
 
@@ -47,7 +52,7 @@ CProfilingMgr::~CProfilingMgr()
 
 void CProfilingMgr::profilingBeginByLabel(const char* szLabel)
 {
-	if (nullptr == szLabel)
+	if (nullptr == szLabel || !this->m_bProfiling)
 		return;
 
 	int64_t nBeginTime = base::getGmtTime();
@@ -73,7 +78,7 @@ void CProfilingMgr::profilingBeginByLabel(const char* szLabel)
 
 void CProfilingMgr::endProfilingByLabel(const char* szLabel)
 {
-	if (nullptr == szLabel)
+	if (nullptr == szLabel || !this->m_bProfiling)
 		return;
 
 	int64_t nBeginTime = base::getGmtTime();
@@ -104,7 +109,7 @@ void CProfilingMgr::endProfilingByLabel(const char* szLabel)
 
 void CProfilingMgr::profilingBeginByAddr(const void* pAddr)
 {
-	if (nullptr == pAddr)
+	if (nullptr == pAddr || !this->m_bProfiling)
 		return;
 
 	int64_t nBeginTime = base::getGmtTime();
@@ -130,7 +135,7 @@ void CProfilingMgr::profilingBeginByAddr(const void* pAddr)
 
 void CProfilingMgr::endProfilingByAddr(const void* pAddr)
 {
-	if (nullptr == pAddr)
+	if (nullptr == pAddr || !this->m_bProfiling)
 		return;
 
 	int64_t nBeginTime = base::getGmtTime();
@@ -161,7 +166,7 @@ void CProfilingMgr::endProfilingByAddr(const void* pAddr)
 
 void CProfilingMgr::profiling(int64_t nTotalTime)
 {
-	if (nTotalTime <= 0)
+	if (nTotalTime <= 0 || !this->m_bProfiling)
 		return;
 
 	for (auto iter = this->m_mapProfilingInfoByLabel.begin(); iter != this->m_mapProfilingInfoByLabel.end(); ++iter)
@@ -203,17 +208,49 @@ void CProfilingMgr::profiling(int64_t nTotalTime)
 	this->m_nProfilingMgrSpend = 0;
 }
 
+bool CProfilingMgr::init(bool bProfiling)
+{
+	this->m_bProfiling = bProfiling;
+
+	return true;
+}
+
+void CProfilingMgr::enableProfiling(bool bProfiling)
+{
+	this->m_bProfiling = bProfiling;
+
+	base::saveLogEx("Profiling", false, "enable profiling: %s", bProfiling ? "true" : "false");
+
+	if (!this->m_bProfiling)
+	{
+		this->m_mapProfilingInfoByLabel.clear();
+		this->m_mapProfilingInfoByAddr.clear();
+	}
+}
+
 static CProfilingMgr* g_pProfilingMgr = nullptr;
 
 namespace base
 {
-	bool initProfiling()
+	bool initProfiling(bool bProfiling)
 	{
 		if (g_pProfilingMgr != nullptr)
 			return false;
 
 		g_pProfilingMgr = new CProfilingMgr();
-		return true;
+		if (g_pProfilingMgr->init(bProfiling))
+			return true;
+
+		SAFE_DELETE(g_pProfilingMgr);
+		return false;
+	}
+
+	void enableProfiling(bool bProfiling)
+	{
+		if (nullptr == g_pProfilingMgr)
+			return;
+
+		g_pProfilingMgr->enableProfiling(bProfiling);
 	}
 
 	void uninitProfiling()

@@ -23,11 +23,14 @@ namespace core
 		~CCoreServiceProxy();
 
 		bool							init(tinyxml2::XMLElement* pRootXML);
+
 		void							addMessageProxyInfo(const SMessageProxyInfo& sMessageProxyInfo);
 		const SMessageProxyGroupInfo*	getMessageProxyGroupInfo(const std::string& szMessageName) const;
 		const SMetaMessageProxyInfo*	getMetaMessageProxyInfo(const std::string& szMessageName) const;
 		const SMetaMessageProxyInfo*	getMetaMessageProxyInfo(uint32_t nMessageID) const;
 		uint32_t						getProxyInvokTimeout(uint32_t nMessageID) const;
+
+		const std::string&				getMessageName(uint32_t nMessageID) const;
 
 		void							addService(const SServiceBaseInfo& sServiceBaseInfo);
 		void							delService(const std::string& szServiceName);
@@ -46,10 +49,14 @@ namespace core
 		std::map<std::string, CCoreConnectionFromService*>	m_mapCoreConnectionFromService;
 		std::map<uint32_t, SMetaMessageProxyInfo>			m_mapMetaMessageProxyInfo;
 		std::map<std::string, SMessageProxyGroupInfo>		m_mapMessageProxyGroupInfo;
+		std::map<uint32_t, std::string>						m_mapMessageName;
+
 		uint32_t											m_nProxyInvokTimeout;
 		std::string											m_szProxyLoadBalance;
 		std::string											m_szProxyFail;
 		uint32_t											m_nProxyRetries;
 
+		bool												m_bProxyAny;
+		SMetaMessageProxyInfo								m_sAnyMetaMessageProxyInfo;
 	};
 }

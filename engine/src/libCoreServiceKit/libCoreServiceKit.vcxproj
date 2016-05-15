@@ -178,6 +178,11 @@
     <ClCompile Include="transporter.cpp" />
     <ClCompile Include="core_service_proxy.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\libCoreCommon\libCoreCommon.vcxproj">
+      <Project>{ac3ef028-d610-4f35-904f-c981ca278960}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

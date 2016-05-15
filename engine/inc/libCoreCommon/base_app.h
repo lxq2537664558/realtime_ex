@@ -48,6 +48,10 @@ namespace core
 		*/
 		void				unregisterTicker(CTicker* pTicker);
 		/**
+		@brief: 设置性能分析器开关
+		*/
+		void				enableProfiling(bool bProfiling);
+		/**
 		@brief: 获取当前逻辑时间
 		*/
 		int64_t				getLogicTime() const;

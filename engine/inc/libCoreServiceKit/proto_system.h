@@ -130,12 +130,14 @@ message_begin(smt_remove_service_base_info, eSMT_remove_service_base_info)
 message_end
 
 message_begin(smt_notify_service_base_info, eSMT_notify_service_base_info)
+	std::string	szKey;
 	std::string	szServiceName;
-
+	
 	void pack(base::CWriteBuf& writeBuf)
 	{
 		pack_begin(writeBuf);
 
+		writeBuf.write(szKey);
 		writeBuf.write(szServiceName);
 
 		pack_end(writeBuf);
@@ -145,6 +147,7 @@ message_begin(smt_notify_service_base_info, eSMT_notify_service_base_info)
 	{
 		unpack_begin(pBuf, nSize);
 
+		readBuf.read(szKey);
 		readBuf.read(szServiceName);
 
 		unpack_end();
@@ -162,9 +165,9 @@ message_begin(smt_register_service_message_info, eSMT_register_service_message_i
 		writeBuf.write(nCount);
 		for (uint16_t i = 0; i < nCount; ++i)
 		{
-			writeBuf.write(vecMessageProxyInfo[i].szMessageName);
 			writeBuf.write(vecMessageProxyInfo[i].szServiceName);
 			writeBuf.write(vecMessageProxyInfo[i].szServiceGroup);
+			writeBuf.write(vecMessageProxyInfo[i].szMessageName);
 			writeBuf.write(vecMessageProxyInfo[i].nWeight);
 		}
 
@@ -181,9 +184,9 @@ message_begin(smt_register_service_message_info, eSMT_register_service_message_i
 		for (uint16_t i = 0; i < nCount; ++i)
 		{
 			SMessageProxyInfo sMessageProxyInfo;
-			readBuf.read(sMessageProxyInfo.szMessageName);
 			readBuf.read(sMessageProxyInfo.szServiceName);
 			readBuf.read(sMessageProxyInfo.szServiceGroup);
+			readBuf.read(sMessageProxyInfo.szMessageName);
 			readBuf.read(sMessageProxyInfo.nWeight);
 
 			vecMessageProxyInfo.push_back(sMessageProxyInfo);
@@ -206,7 +209,10 @@ message_begin(smt_sync_service_message_info, eSMT_sync_service_message_info)
 		writeBuf.write(nCount);
 		for (uint16_t i = 0; i < nCount; ++i)
 		{
+			writeBuf.write(vecMessageProxyInfo[i].szServiceName.c_str());
+			writeBuf.write(vecMessageProxyInfo[i].szServiceGroup.c_str());
 			writeBuf.write(vecMessageProxyInfo[i].szMessageName.c_str());
+			writeBuf.write(vecMessageProxyInfo[i].nWeight);
 		}
 
 		pack_end(writeBuf);
@@ -223,9 +229,9 @@ message_begin(smt_sync_service_message_info, eSMT_sync_service_message_info)
 		for (uint16_t i = 0; i < nCount; ++i)
 		{
 			SMessageProxyInfo sMessageProxyInfo;
-			readBuf.read(sMessageProxyInfo.szMessageName);
 			readBuf.read(sMessageProxyInfo.szServiceName);
 			readBuf.read(sMessageProxyInfo.szServiceGroup);
+			readBuf.read(sMessageProxyInfo.szMessageName);
 			readBuf.read(sMessageProxyInfo.nWeight);
 
 			vecMessageProxyInfo.push_back(sMessageProxyInfo);

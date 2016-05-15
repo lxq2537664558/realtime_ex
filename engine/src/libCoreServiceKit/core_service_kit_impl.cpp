@@ -15,34 +15,15 @@
 
 #include "tinyxml2/tinyxml2.h"
 
-
-static std::string getLocalHost()
-{
-	// 获得本机主机名
-// 	char szHostName[MAX_PATH] = { 0 };
-// 	gethostname(szHostName, MAX_PATH);
-// 	struct hostent* pHostEnt = gethostbyname(szHostName);
-// 	if (pHostEnt == nullptr)
-// 		return "";
-// 
-// 	const char* szAddr = pHostEnt->h_addr_list[0];
-// 	if (szAddr == nullptr)
-// 		return "";
-// 
-// 	// 将IP地址转化成字符串形式
-// 	struct in_addr addr;
-// 	memmove(&addr, szAddr, pHostEnt->h_length);
-// 	return std::string(inet_ntoa(addr));
-
-	return "";
-}
-
 namespace core
 {
 
 	CCoreServiceKitImpl::CCoreServiceKitImpl()
 		: m_nMasterPort(0)
+		, m_pTransporter(nullptr)
+		, m_pCoreServiceInvoker(nullptr)
 		, m_pCoreServiceProxy(nullptr)
+		, m_pLoadBalanceMgr(nullptr)
 	{
 		this->m_tickCheckConnectMaster.setCallback(std::bind(&CCoreServiceKitImpl::onCheckConnectMaster, this, std::placeholders::_1));
 	
@@ -87,11 +68,7 @@ namespace core
 		tinyxml2::XMLElement* pHostInfoXML = pServiceInfoXML->FirstChildElement("host_info");
 		if (pHostInfoXML != nullptr)
 		{
-			if (pHostInfoXML->Attribute("host") != nullptr)
-				this->m_sServiceBaseInfo.szHost = pHostInfoXML->Attribute("host");
-			else
-				this->m_sServiceBaseInfo.szHost = getLocalHost();
-
+			this->m_sServiceBaseInfo.szHost = pHostInfoXML->Attribute("host");
 			this->m_sServiceBaseInfo.nPort = (uint16_t)pHostInfoXML->UnsignedAttribute("port");
 			this->m_sServiceBaseInfo.nRecvBufSize = pHostInfoXML->UnsignedAttribute("recv_buf_size");
 			this->m_sServiceBaseInfo.nSendBufSize = pHostInfoXML->UnsignedAttribute("send_buf_size");

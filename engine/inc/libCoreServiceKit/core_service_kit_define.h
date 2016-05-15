@@ -27,9 +27,9 @@ namespace core
 
 	struct SMessageProxyInfo
 	{
-		std::string	szMessageName;		// 消息名字
 		std::string	szServiceName;		// 服务名字
 		std::string	szServiceGroup;		// 服务组
+		std::string	szMessageName;		// 消息名字
 		int32_t		nWeight;			// 负载均衡权重
 	};
 

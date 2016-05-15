@@ -9,6 +9,7 @@ namespace core
 	CCoreServiceProxy::CCoreServiceProxy()
 		: m_nProxyInvokTimeout(_DEFAULT_INVOKE_TIMEOUT)
 		, m_nProxyRetries(0)
+		, m_bProxyAny(false)
 	{
 
 	}
@@ -40,6 +41,11 @@ namespace core
 			sMetaMessageProxyInfo.szFail = pMessageProxyXML->Attribute("fail");
 			sMetaMessageProxyInfo.nRetries = pMessageProxyXML->UnsignedAttribute("retries");
 
+			if (sMetaMessageProxyInfo.szMessageName.empty())
+			{
+				PrintWarning("empty message name");
+				return false;
+			}
 			uint32_t nMessageID = base::hash(sMetaMessageProxyInfo.szMessageName.c_str());
 			auto iter = this->m_mapMetaMessageProxyInfo.find(nMessageID);
 			if (iter != this->m_mapMetaMessageProxyInfo.end())
@@ -48,6 +54,12 @@ namespace core
 				return false;
 			}
 
+			if (sMetaMessageProxyInfo.szMessageName == "*")
+			{
+				this->m_bProxyAny = true;
+				this->m_sAnyMetaMessageProxyInfo = sMetaMessageProxyInfo;
+			}
+			
 			this->m_mapMetaMessageProxyInfo[nMessageID] = sMetaMessageProxyInfo;
 		}
 
@@ -56,12 +68,21 @@ namespace core
 
 	void CCoreServiceProxy::addMessageProxyInfo(const SMessageProxyInfo& sMessageProxyInfo)
 	{
-		uint32_t nMessageID = base::hash(sMessageProxyInfo.szMessageName.c_str());
-		if (this->m_mapMetaMessageProxyInfo.find(nMessageID) == this->m_mapMetaMessageProxyInfo.end())
+		uint32_t nMessageID =_GET_MESSAGE_ID(sMessageProxyInfo.szMessageName);
+		if (this->m_mapMetaMessageProxyInfo.find(nMessageID) == this->m_mapMetaMessageProxyInfo.end() && !this->m_bProxyAny)
 			return;
 
+		auto iterName = this->m_mapMessageName.find(nMessageID);
+		if (iterName != this->m_mapMessageName.end() && iterName->second != sMessageProxyInfo.szMessageName)
+		{
+			PrintWarning("dup message id service_name: %s message_id: %d old_message_name: %s new_message_name: %s", sMessageProxyInfo.szServiceName.c_str(), nMessageID, iterName->second.c_str(), sMessageProxyInfo.szMessageName.c_str());
+			return;
+		}
+
 		SMessageProxyGroupInfo& sMessageProxyGroupInfo = this->m_mapMessageProxyGroupInfo[sMessageProxyInfo.szMessageName];
-		
+		if (sMessageProxyGroupInfo.mapMessageProxyInfo.empty())
+			sMessageProxyGroupInfo.nTotalWeight = 0;
+
 		auto iter = sMessageProxyGroupInfo.mapMessageProxyInfo.find(sMessageProxyInfo.szServiceName);
 		if (iter != sMessageProxyGroupInfo.mapMessageProxyInfo.end())
 		{
@@ -74,6 +95,8 @@ namespace core
 		if (!sMessageProxyInfo.szServiceGroup.empty())
 			sMessageProxyGroupInfo.mapGroupWeight[sMessageProxyInfo.szServiceGroup] += sMessageProxyInfo.nWeight;
 		
+		this->m_mapMessageName[nMessageID] = sMessageProxyInfo.szMessageName;
+
 		PrintInfo("add message proxy info service_name: %s service_group: %s message_name: %s", sMessageProxyInfo.szServiceName.c_str(), sMessageProxyInfo.szServiceGroup.c_str(), sMessageProxyInfo.szMessageName.c_str());
 	}
 
@@ -97,7 +120,12 @@ namespace core
 	{
 		auto iter = this->m_mapMetaMessageProxyInfo.find(nMessageID);
 		if (iter == this->m_mapMetaMessageProxyInfo.end())
-			return nullptr;
+		{
+			if (!this->m_bProxyAny)
+				return nullptr;
+			else
+				return &this->m_sAnyMetaMessageProxyInfo;
+		}
 
 		return &iter->second;
 	}
@@ -230,4 +258,17 @@ namespace core
 
 		this->m_mapCoreConnectionFromService.erase(iter);
 	}
+
+	const std::string& CCoreServiceProxy::getMessageName(uint32_t nMessageID) const
+	{
+		auto iter = this->m_mapMessageName.find(nMessageID);
+		if (iter == this->m_mapMessageName.end())
+		{
+			static std::string s_szName;
+			return s_szName;
+		}
+
+		return iter->second;
+	}
+
 }

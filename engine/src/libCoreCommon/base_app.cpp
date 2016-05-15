@@ -23,7 +23,6 @@
 #include "core_app.h"
 #include "core_connection_mgr.h"
 
-
 // 放这里为了调试或者看dump的时候方便
 core::CBaseApp* g_pCoreApp = nullptr;
 
@@ -85,4 +84,10 @@ namespace core
 		
 		CCoreApp::Inst()->doQuit();
 	}
+
+	void CBaseApp::enableProfiling(bool bProfiling)
+	{
+		base::enableProfiling(bProfiling);
+	}
+
 }

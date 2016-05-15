@@ -37,6 +37,7 @@ namespace core
 
 		// 同步服务名字
 		smt_notify_service_base_info netMsg;
+		netMsg.szKey = this->m_szServiceName;
 		netMsg.szServiceName = CCoreServiceKitImpl::Inst()->getServiceBaseInfo().szName;
 		base::CWriteBuf& writeBuf = CBaseApp::Inst()->getWriteBuf();
 		netMsg.pack(writeBuf);

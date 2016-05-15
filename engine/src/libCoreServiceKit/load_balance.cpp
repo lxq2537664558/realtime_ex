@@ -17,7 +17,8 @@ namespace core
 
 	const std::string& CRandomLoadBalance::getName() const
 	{
-		return "random";
+		static std::string szName = "random";
+		return szName;
 	}
 
 	std::string CRandomLoadBalance::select(const std::string& szMessageName, uint64_t nSessionID, const std::string& szServiceGroup)
@@ -27,7 +28,7 @@ namespace core
 			return "";
 
 		uint32_t nTotalWeight = 0;
-		if (!szServiceGroup.empty())
+		if (szServiceGroup != "*")
 		{
 			auto iter = pMessageProxyGroupInfo->mapGroupWeight.find(szServiceGroup);
 			if (iter == pMessageProxyGroupInfo->mapGroupWeight.end())
@@ -45,7 +46,7 @@ namespace core
 		uint32_t nCurWeight = 0;
 		for (auto iter = pMessageProxyGroupInfo->mapMessageProxyInfo.begin(); iter != pMessageProxyGroupInfo->mapMessageProxyInfo.end(); ++iter)
 		{
-			if (!szServiceGroup.empty() && iter->second.szServiceGroup != szServiceGroup)
+			if (szServiceGroup != "*" && iter->second.szServiceGroup != szServiceGroup)
 				continue;
 
 			nCurWeight += iter->second.nWeight;

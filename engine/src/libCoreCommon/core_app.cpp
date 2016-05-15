@@ -295,7 +295,9 @@ namespace core
 			fprintf(stderr, "init log error\n");
 			return false;
 		}
-		if (!base::initProfiling())
+
+		bool bProfiling = (pBaseInfoXML->IntAttribute("profiling") != 0);
+		if (!base::initProfiling(bProfiling))
 		{
 			PrintWarning("base::initProfiling()");
 			return false;

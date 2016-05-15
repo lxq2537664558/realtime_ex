@@ -4,10 +4,11 @@
 #include "stdafx.h"
 #include "test_service_app2.h"
 
-#include "libCoreCommon/message_registry.h"
-#include "libCoreCommon/cluster_invoker.h"
 #include "libCoreCommon/base_app.h"
-#include "libCoreCommon/load_balance_policy.h"
+#include "libCoreServiceKit/message_registry.h"
+#include "libCoreServiceKit/cluster_invoker.h"
+#include "libCoreServiceKit/load_balance.h"
+#include "libCoreServiceKit/core_service_kit.h"
 
 #include "../proto_src/service_request_msg.pb.h"
 #include "../proto_src/client_request_msg.pb.h"
@@ -41,6 +42,7 @@ CTestServiceApp2* CTestServiceApp2::Inst()
 
 bool CTestServiceApp2::onInit()
 {
+	core::CCoreServiceKit::Inst()->init();
 	core::CMessageRegistry::Inst()->registerServiceCallback("test.service_request_msg", &service_request_msg_callback);
 
 	return true;
@@ -58,7 +60,7 @@ void CTestServiceApp2::onQuit()
 int32_t main(int argc, char* argv[])
 {
 	CTestServiceApp2* pTestServiceApp1 = new CTestServiceApp2();
-	pTestServiceApp1->run(true, argc, argv, "test_service_config2.xml");
+	pTestServiceApp1->run(argc, argv, "test_service_config2.xml");
 
 	return 0;
 }

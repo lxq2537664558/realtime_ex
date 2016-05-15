@@ -16,6 +16,7 @@ namespace core
 
 	bool CLoadBalanceMgr::init()
 	{
+		this->registerLoadBalance(new CRandomLoadBalance());
 		return true;
 	}
 
@@ -28,6 +29,9 @@ namespace core
 
 	ILoadBalance* CLoadBalanceMgr::getLoadBalance(const std::string& szName) const
 	{
+		if (szName == "*")
+			return this->getLoadBalance("random");
+		
 		auto iter = this->m_mapLoadBalance.find(szName);
 		if (iter == this->m_mapLoadBalance.end())
 			return nullptr;

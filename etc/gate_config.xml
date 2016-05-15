@@ -1,19 +1,19 @@
 <!--服务器配置-->
 <root>
 	<!--服务基本信息-->
-	<base_info sync_log = "0" work_path = "./conf/" connections = "100000">
+	<base_info sync_log = "0" work_path = "./conf/" profiling = "1" connections = "100000">
 		<heartbeat heartbeat_limit = "100000" heartbeat_time = "10000"/>
 		<time year = "2013" month = "4" day = "27" hour = "23" minute = "57" second = "0" enable = "0"/>
 	</base_info>
 	
 	<!--服务信息-->
 	<service_info service_type = "gate" service_name = "gate-1" service_group = "test" weight = "1.0">
-		<host_info host = "127.0.0.1" port = "9000" send_buf_size = "102400" recv_buf_size = "102400">
+		<host_info host = "127.0.0.1" port = "9000" send_buf_size = "1024" recv_buf_size = "1024"/>
 	</service_info>
 	
 	<!--服务代理的接口信息以及服务代理信息-->
 	<service_proxy timeout = "100000" loadbalance="*" fail = "failover" retries = "2">
-		<message_proxy name = "bbb" timeout = "100000" loadbalance="*" fail = "failover" retries = "2"/>
+		<message_proxy name = "*" timeout = "100000" loadbalance="*" fail = "failover" retries = "2"/>
 	</service_proxy>
 	
 	<!--监听客户端地址-->

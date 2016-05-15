@@ -4,11 +4,9 @@
 #include "stdafx.h"
 #include "test_service_client.h"
 
-#include "libBaseNetwork/network.h"
-#include "libBaseCommon/thread_base.h"
+#include "libCoreCommon/base_connection_mgr.h"
+#include "libCoreCommon/base_connection.h"
 #include "libBaseCommon/base_time.h"
-#include "libBaseCommon/logger.h"
-#include "libBaseCommon/base_function.h"
 
 #include "../proto_src/client_request_msg.pb.h"
 #include "../proto_src/client_response_msg.pb.h"
@@ -73,25 +71,22 @@ int32_t serialize_protobuf_message_to_buf(const google::protobuf::Message* pMess
 	return (int32_t)(szMessageData.size() + sizeof(message_header));
 }
 
-struct SNetConnecterHandler :
-	public base::INetConnecterHandler
+class CConnectToService :
+	public core::CBaseConnection
 {
-	SNetConnecterHandler()
+	DECLARE_OBJECT(CConnectToService)
+
+public:
+	CConnectToService()
 	{
 		nNextPacketID = 0;
 	}
 
-	virtual uint32_t onRecv(const char* pData, uint32_t nDataSize) override
+	virtual ~CConnectToService() 
 	{
-		uint64_t nRecvTime = base::getGmtTime();
-		google::protobuf::Message* pMessage = unserialize_protobuf_message_from_buf("test.client_response_msg", reinterpret_cast<const message_header*>(pData));
-		test::client_response_msg* pMsg = dynamic_cast<test::client_response_msg*>(pMessage);
-		PrintDebug("onRecv %s %d %d %d", pMsg->name().c_str(), nNextPacketID, pMsg->id(), (uint32_t)(nRecvTime - nSendTime));
-		this->requestMsg("aa");
-		return nDataSize;
 	}
-
-	virtual void   onConnect() override
+	
+	virtual void onConnect(const std::string& szContext)
 	{
 		PrintDebug("onConnect");
 
@@ -99,7 +94,18 @@ struct SNetConnecterHandler :
 
 		this->requestMsg("aa");
 	}
+	
+	virtual void onDisconnect()
+	{
+		PrintDebug("onDisconnect");
+	}
 
+	virtual void onDispatch(uint32_t nMessageType, const void* pData, uint16_t nSize)
+	{
+
+	}
+
+private:
 	void login(uint64_t nID)
 	{
 		PrintDebug("Login "UINT64FMT, nID);
@@ -112,8 +118,7 @@ struct SNetConnecterHandler :
 		header.nMessageSize = (uint16_t)(sizeof(header) + szMessageData.size());
 		header.nMessageID = base::hash(msg.GetTypeName().c_str());
 
-		this->m_pNetConnecter->send(&header, sizeof(header));
-		this->m_pNetConnecter->send(szMessageData.c_str(), (uint16_t)szMessageData.size());
+		this->send(eMT_CLIENT, &header, sizeof(header), szMessageData.c_str(), (uint16_t)szMessageData.size());
 	}
 
 	void requestMsg(const std::string& szName)
@@ -128,16 +133,10 @@ struct SNetConnecterHandler :
 		header.nMessageSize = (uint16_t)(sizeof(header) + szMessageData.size());
 		header.nMessageID = base::hash(msg.GetTypeName().c_str());
 
-		this->m_pNetConnecter->send(&header, sizeof(header));
-		this->m_pNetConnecter->send(szMessageData.c_str(), (uint16_t)szMessageData.size());
+		this->send(eMT_CLIENT, &header, sizeof(header), szMessageData.c_str(), (uint16_t)szMessageData.size());
 
 		nSendTime = base::getGmtTime();
 		++nNextPacketID;
-	}
-
-	virtual void   onDisconnect() override
-	{
-		PrintDebug("onDisconnect");
 	}
 
 public:
@@ -146,26 +145,41 @@ public:
 	uint64_t	nSendTime;
 };
 
+DEFINE_OBJECT(CConnectToService, 100)
+
+CTestServiceClientApp::CTestServiceClientApp()
+{
+}
+
+CTestServiceClientApp::~CTestServiceClientApp()
+{
+}
+
+CTestServiceClientApp* CTestServiceClientApp::Inst()
+{
+	return static_cast<CTestServiceClientApp*>(core::CBaseApp::Inst());
+}
+
+bool CTestServiceClientApp::onInit()
+{
+	CConnectToService::registClassInfo();
+	this->getBaseConnectionMgr()->connect("127.0.0.1", 8000, "", _GET_CLASS_NAME(CConnectToService), 0, 0, nullptr);
+	return true;
+}
+
+void CTestServiceClientApp::onDestroy()
+{
+}
+
+void CTestServiceClientApp::onQuit()
+{
+	this->doQuit();
+}
+
 int32_t main(int argc, char* argv[])
 {
-	base::initLog(true);
-	base::startupNetwork();
-
-	base::INetEventLoop* pNetEventLoop = base::createNetEventLoop();
-	pNetEventLoop->init(50000);
-	SNetAddr sNedAddr;
-	sNedAddr.nPort = 8000;
-	strncpy_s(sNedAddr.szHost, "127.0.0.1", _countof(sNedAddr.szHost));
-	for (size_t i = 0; i < 1; ++i)
-	{
-		SNetConnecterHandler* pNetConnecterHandler = new SNetConnecterHandler();
-		pNetConnecterHandler->nID = 10000 + i;
-		pNetEventLoop->connect(sNedAddr, 1024, 1024, pNetConnecterHandler);
-	}
-	while (true)
-	{
-		pNetEventLoop->update(100);
-	}
+	CTestServiceClientApp* pTestServiceClientApp = new CTestServiceClientApp();
+	pTestServiceClientApp->run(argc, argv, "test_service_client_config.xml");
 
 	return 0;
 }
