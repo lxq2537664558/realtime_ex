@@ -5,7 +5,7 @@
 #include "core_service_kit_define.h"
 #include "core_service_kit_impl.h"
 
-#include "libCoreCommon\base_app.h"
+#include "libCoreCommon/base_app.h"
 
 namespace core
 {
