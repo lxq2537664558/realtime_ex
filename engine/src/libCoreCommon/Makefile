@@ -1,8 +1,7 @@
 INCLUDE_DIR := \
 -I../../../engine/inc/libCoreCommon\
 -I../../../engine/inc\
--I../../../3rd/tinyxml2/include\
--I../../../3rd/protobuf/include
+-I../../../3rd/tinyxml2/include
 
 include ../../../build.mk
 
@@ -12,7 +11,6 @@ BIN_PROJECT_NAME := $(BIN_ROOT_DIR)/libCoreCommon.a
 all: c_obj cxx_obj
 	ar rcs $(BIN_PROJECT_NAME) ./*.o
 	cp ../../../3rd/tinyxml2/lib/linux/libtinyxml2.so $(BIN_ROOT_DIR)/
-	cp ../../../3rd/protobuf/lib/linux/libprotobuf.so $(BIN_ROOT_DIR)/
 	
 .PHONY: c_obj
 c_obj: $(C_OBJS)

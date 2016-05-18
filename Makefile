@@ -15,6 +15,7 @@ engine:
 	make -C engine/src/libBaseDatabase;
 	make -C engine/src/libBaseLua;
 	make -C engine/src/libCoreCommon;
+	make -C engine/src/libCoreServiceKit;
 	
 .PHONY: service
 service:

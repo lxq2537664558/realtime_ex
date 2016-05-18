@@ -183,5 +183,6 @@ int32_t main(int argc, char* argv[])
 	CTestServiceClientApp* pTestServiceClientApp = new CTestServiceClientApp();
 	pTestServiceClientApp->run(argc, argv, "test_service_client_config.xml");
 
+	std::
 	return 0;
 }

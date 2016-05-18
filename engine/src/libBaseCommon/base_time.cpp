@@ -144,7 +144,7 @@ namespace base
 		sTime.nMin = ttm.tm_min;
 		sTime.nHour = ttm.tm_hour;
 		sTime.nDay = ttm.tm_mday;
-		sTime.nWDay = ttm.tm_wday + 1;
+		sTime.nWDay = ttm.tm_wday;
 		sTime.nMon = ttm.tm_mon + 1;
 		sTime.nYear = (uint16_t)(1900 + ttm.tm_year);
 
@@ -168,7 +168,7 @@ namespace base
 		sTime.nMin = ttm.tm_min;
 		sTime.nHour = ttm.tm_hour;
 		sTime.nDay = ttm.tm_mday;
-		sTime.nWDay = ttm.tm_wday + 1;
+		sTime.nWDay = ttm.tm_wday;
 		sTime.nMon = ttm.tm_mon + 1;
 		sTime.nYear = (uint16_t)(1900 + ttm.tm_year);
 
