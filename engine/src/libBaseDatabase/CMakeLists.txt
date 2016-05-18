@@ -2,8 +2,11 @@
 # 并将名称保存到 DIR_SRCS 变量
 aux_source_directory(. DIR_SRCS)
 # 设置头文件
-include_directories(../../../engine/inc/libBaseCommon)
+include_directories(../../../engine/inc/libBaseDatabase)
+include_directories(../../../engine/inc)
+include_directories(../../../3rd/mysql/include)
+
 # 设置输出目录
 SET(LIBRARY_OUTPUT_PATH ../../../bin/linux)
 # 生成libCoreCommon.so
-add_library(BaseCommon SHARED ${DIR_SRCS})
+add_library(BaseDatabase SHARED ${DIR_SRCS})

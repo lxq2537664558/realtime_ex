@@ -1,1 +1,6 @@
 add_subdirectory(libBaseCommon)
+add_subdirectory(libBaseNetwork)
+add_subdirectory(libBaseDatabase)
+add_subdirectory(libBaseLua)
+add_subdirectory(libCoreCommon)
+add_subdirectory(libCoreServiceKit)
