@@ -8,5 +8,11 @@ include_directories(../../../3rd/mysql/include)
 
 # 设置输出目录
 SET(LIBRARY_OUTPUT_PATH ../../../bin/linux)
+
 # 生成libCoreCommon.so
 add_library(BaseDatabase SHARED ${DIR_SRCS})
+
+# cmake额外执行的shell脚本
+add_custom_command(TARGET ALL
+    COMMAND cp ../../../3rd/mysql/lib/linux/libmysqlclient_r.so ../../../bin/linux
+)
