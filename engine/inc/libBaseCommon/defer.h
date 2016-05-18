@@ -1,33 +1,31 @@
 #pragma once
 
 #include "base_common.h"
-#include "noncopyable.h"
 
 namespace base
 {
-	template<class FUN>
-	class CDeferWrapper :
-		public noncopyable
+	template<class F>
+	class CDeferWrapper
 	{
 	public:
-		CDeferWrapper(FUN fun) : m_fun(fun)
+		CDeferWrapper(F f) : m_f(f)
 		{
 
 		}
 
 		~CDeferWrapper()
 		{
-			this->m_fun();
+			this->m_f();
 		}
 
 	private:
-		FUN m_fun;
+		F m_f;
 	};
 
-	template<class FUN>
-	CDeferWrapper<FUN> makeDeferWrapper(FUN fun)
+	template<class F>
+	CDeferWrapper<F> makeDeferWrapper(F f)
 	{
-		return CDeferWrapper<FUN>(fun);
+		return CDeferWrapper<F>(f);
 	};
 }
 
