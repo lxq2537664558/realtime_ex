@@ -2,17 +2,21 @@
 
 #include "libCoreCommon/base_connection.h"
 
+#define eBCT_ConnectionFromClient	_BASE_CONNECTION_TYPE_BEGIN
+
 class CConnectionFromService;
 class CConnectionFromClient
 	: public core::CBaseConnection
 {
-	DECLARE_OBJECT(CConnectionFromClient)
-
 public:
 	CConnectionFromClient();
 	virtual ~CConnectionFromClient();
 
-	virtual void	onConnect(const std::string& szContext);
-	virtual void	onDisconnect();
-	virtual void	onDispatch(uint32_t nMessageType, const void* pData, uint16_t nSize);
+	virtual bool		init(const std::string& szContext);
+	virtual uint32_t	getType() const;
+	virtual void		release();
+
+	virtual void		onConnect();
+	virtual void		onDisconnect();
+	virtual void		onDispatch(uint32_t nMessageType, const void* pData, uint16_t nSize);
 };

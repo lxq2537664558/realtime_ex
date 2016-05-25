@@ -17,6 +17,7 @@ namespace core
 	class CCoreConnectionToService;
 	class CCoreConnectionFromService;
 	class CCoreConnectionToMaster;
+	class CServiceConnectionFactory;
 	class CCoreServiceKitImpl :
 		public base::CSingleton<CCoreServiceKitImpl>
 	{
@@ -54,6 +55,7 @@ namespace core
 		CCoreServiceInvoker*				m_pCoreServiceInvoker;
 		CCoreServiceProxy*					m_pCoreServiceProxy;
 		CLoadBalanceMgr*					m_pLoadBalanceMgr;
+		CServiceConnectionFactory*			m_pServiceConnectionFactory;
 		SServiceBaseInfo					m_sServiceBaseInfo;
 		std::string							m_szMasterHost;
 		uint16_t							m_nMasterPort;

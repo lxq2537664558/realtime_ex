@@ -4,6 +4,6 @@ aux_source_directory(. DIR_SRCS)
 # 设置头文件
 include_directories(../../../engine/inc/libBaseCommon)
 # 设置输出目录
-SET(LIBRARY_OUTPUT_PATH ../../../bin/linux)
+SET(LIBRARY_OUTPUT_PATH ${BIN_OUTPUT_PATH})
 # 生成libCoreCommon.so
 add_library(BaseCommon SHARED ${DIR_SRCS})

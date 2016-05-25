@@ -112,4 +112,11 @@ namespace core
 		std::string			szMessageName;
 		GateForwardCallback	gateClientCallback;
 	};
+
+	enum EBaseConnectionType
+	{
+		eBCT_ConnectionFromService	= 10,
+		eBCT_ConnectionToMaster		= 11,
+		eBCT_ConnectionToService	= 12,
+	};
 }

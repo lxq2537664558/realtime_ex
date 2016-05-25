@@ -32,7 +32,7 @@ void CGateMessageDispatcher::registerCallback(const std::string& szMessageName, 
 	auto iter = this->m_mapClientCallbackInfo.find(nMessageID);
 	if (iter != this->m_mapClientCallbackInfo.end())
 	{
-		PrintWarning("dup client message name message_name: %s", szMessageName);
+		PrintWarning("dup client message name message_name: %s", szMessageName.c_str());
 		return;
 	}
 

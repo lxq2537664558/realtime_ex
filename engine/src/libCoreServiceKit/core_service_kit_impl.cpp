@@ -9,6 +9,7 @@
 #include "core_service_kit_define.h"
 #include "core_service_proxy.h"
 #include "load_balance_mgr.h"
+#include "service_connection_factory.h"
 
 #include "libCoreCommon/base_connection_mgr.h"
 #include "libCoreCommon/base_app.h"
@@ -24,6 +25,7 @@ namespace core
 		, m_pCoreServiceInvoker(nullptr)
 		, m_pCoreServiceProxy(nullptr)
 		, m_pLoadBalanceMgr(nullptr)
+		, m_pServiceConnectionFactory(nullptr)
 	{
 		this->m_tickCheckConnectMaster.setCallback(std::bind(&CCoreServiceKitImpl::onCheckConnectMaster, this, std::placeholders::_1));
 	
@@ -73,6 +75,11 @@ namespace core
 			this->m_sServiceBaseInfo.nRecvBufSize = pHostInfoXML->UnsignedAttribute("recv_buf_size");
 			this->m_sServiceBaseInfo.nSendBufSize = pHostInfoXML->UnsignedAttribute("send_buf_size");
 		}
+
+		this->m_pServiceConnectionFactory = new CServiceConnectionFactory();
+		CBaseApp::Inst()->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionFromService, this->m_pServiceConnectionFactory);
+		CBaseApp::Inst()->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionToService, this->m_pServiceConnectionFactory);
+		CBaseApp::Inst()->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionToMaster, this->m_pServiceConnectionFactory);
 
 		this->m_pCoreServiceProxy = new CCoreServiceProxy();
 		if (!this->m_pCoreServiceProxy->init(pRootXML))
@@ -134,7 +141,7 @@ namespace core
 		if (this->m_sServiceBaseInfo.nPort != 0)
 		{
 			// 在所有网卡上监听
-			if (!CBaseApp::Inst()->getBaseConnectionMgr()->listen("0.0.0.0", this->m_sServiceBaseInfo.nPort, "", _GET_CLASS_NAME(CCoreConnectionFromService), this->m_sServiceBaseInfo.nSendBufSize, this->m_sServiceBaseInfo.nRecvBufSize, nullptr))
+			if (!CBaseApp::Inst()->getBaseConnectionMgr()->listen("0.0.0.0", this->m_sServiceBaseInfo.nPort, eBCT_ConnectionFromService, "", this->m_sServiceBaseInfo.nSendBufSize, this->m_sServiceBaseInfo.nRecvBufSize, nullptr))
 				return false;
 		}
 
@@ -143,21 +150,27 @@ namespace core
 		
 		if (!this->m_szMasterHost.empty() && this->m_nMasterPort != 0)
 		{
-			if (!CBaseApp::Inst()->getBaseConnectionMgr()->connect(this->m_szMasterHost, this->m_nMasterPort, "master", _GET_CLASS_NAME(CCoreConnectionToMaster), 1024, 1024, nullptr))
+			if (!CBaseApp::Inst()->getBaseConnectionMgr()->connect(this->m_szMasterHost, this->m_nMasterPort, eBCT_ConnectionToMaster, "master", 1024, 1024, nullptr))
 				return false;
 
 			CBaseApp::Inst()->registerTicker(&this->m_tickCheckConnectMaster, 5 * 1000, 5 * 1000, 0);
 		}
-
-		CCoreConnectionFromService::registClassInfo();
-		CCoreConnectionToService::registClassInfo();
-		CCoreConnectionToMaster::registClassInfo();
 
 		return true;
 	}
 
 	void CCoreServiceKitImpl::release()
 	{
+		CBaseApp::Inst()->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionFromService, nullptr);
+		CBaseApp::Inst()->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionToService, nullptr);
+		CBaseApp::Inst()->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionToMaster, nullptr);
+
+		SAFE_DELETE(this->m_pTransporter);
+		SAFE_DELETE(this->m_pCoreServiceInvoker);
+		SAFE_DELETE(this->m_pCoreServiceProxy);
+		SAFE_DELETE(this->m_pLoadBalanceMgr);
+		SAFE_DELETE(this->m_pServiceConnectionFactory);
+
 		CMessageDispatcher::Inst()->release();
 		CMessageRegistry::Inst()->release();
 		CClusterInvoker::Inst()->release();
@@ -167,7 +180,7 @@ namespace core
 	{
 		if ( !this->m_szMasterHost.empty() && this->m_nMasterPort != 0 && this->getConnectionToMaster() == nullptr)
 		{
-			if (!CBaseApp::Inst()->getBaseConnectionMgr()->connect(this->m_szMasterHost, this->m_nMasterPort, "master", _GET_CLASS_NAME(CCoreConnectionToMaster), 1024, 1024, nullptr))
+			if (!CBaseApp::Inst()->getBaseConnectionMgr()->connect(this->m_szMasterHost, this->m_nMasterPort, eBCT_ConnectionToMaster, "master", 1024, 1024, nullptr))
 			{
 				PrintWarning("connect master error");
 			}
@@ -182,7 +195,7 @@ namespace core
 	CCoreConnectionToMaster* CCoreServiceKitImpl::getConnectionToMaster() const
 	{
 		std::vector<CBaseConnection*> vecBaseConnection;
-		CBaseApp::Inst()->getBaseConnectionMgr()->getBaseConnection(_GET_CLASS_NAME(CCoreConnectionToMaster), vecBaseConnection);
+		CBaseApp::Inst()->getBaseConnectionMgr()->getBaseConnection(eBCT_ConnectionToMaster, vecBaseConnection);
 		if (vecBaseConnection.empty())
 			return nullptr;
 

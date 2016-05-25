@@ -1,7 +1,6 @@
 #pragma once
 
 #include "core_common.h"
-#include "base_object.h"
 
 namespace core
 {
@@ -12,8 +11,7 @@ namespace core
 	/**
 	@brief: 连接基础类，框架的所有连接都继承于这个类
 	*/
-	class CBaseConnection :
-		public CBaseObject
+	class CBaseConnection
 	{
 		friend class CBaseConnectionMgr;
 		friend class CCoreConnection;
@@ -22,6 +20,15 @@ namespace core
 		CBaseConnection();
 		virtual ~CBaseConnection();
 
+		virtual bool			init(const std::string& szContext) { return true; }
+		/**
+		@brief: 获取连接类型
+		*/
+		virtual uint32_t		getType() const = 0;
+		/**
+		@brief: 释放对象
+		*/
+		virtual void			release() = 0;
 		/**
 		@brief: 发送消息
 		*/
@@ -49,7 +56,7 @@ namespace core
 		/**
 		@brief: 连接成功回调
 		*/
-		virtual void			onConnect(const std::string& szContext) = 0;
+		virtual void			onConnect() = 0;
 		/**
 		@brief: 连接断开回调
 		*/

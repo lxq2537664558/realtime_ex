@@ -3,6 +3,7 @@
 
 #include "gate_session_mgr.h"
 
+class CServiceConnectionFactory;
 class CGateApp
 	: public core::CBaseApp
 {
@@ -20,5 +21,6 @@ public:
 	CGateSessionMgr*	getGateSessionMgr() const;
 
 private:
-	CGateSessionMgr*	m_pGateSessionMgr;
+	CGateSessionMgr*			m_pGateSessionMgr;
+	CServiceConnectionFactory*	m_pServiceConnectionFactory;
 };

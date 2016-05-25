@@ -5,7 +5,6 @@
 #include "libCoreCommon/base_connection_mgr.h"
 #include "libCoreServiceKit/proto_system.h"
 
-DEFINE_OBJECT(CConnectionFromService, 100)
 
 CConnectionFromService::CConnectionFromService()
 {
@@ -16,12 +15,28 @@ CConnectionFromService::~CConnectionFromService()
 
 }
 
+
+bool CConnectionFromService::init(const std::string& szContext)
+{
+	return true;
+}
+
+uint32_t CConnectionFromService::getType() const
+{
+	return eBCT_ConnectionFromService;
+}
+
+void CConnectionFromService::release()
+{
+	delete this;
+}
+
 const std::string& CConnectionFromService::getServiceName() const
 {
 	return this->m_szServiceName;
 }
 
-void CConnectionFromService::onConnect(const std::string& szContext)
+void CConnectionFromService::onConnect()
 {
 	
 }

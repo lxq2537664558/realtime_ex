@@ -8,9 +8,6 @@
 
 namespace core
 {
-
-	DEFINE_OBJECT(CCoreConnectionToMaster, 1)
-
 	CCoreConnectionToMaster::CCoreConnectionToMaster()
 	{
 
@@ -21,11 +18,26 @@ namespace core
 
 	}
 
-	void CCoreConnectionToMaster::onConnect(const std::string& szContext)
+	bool CCoreConnectionToMaster::init(const std::string& szContext)
+	{
+		return true;
+	}
+
+	uint32_t CCoreConnectionToMaster::getType() const
+	{
+		return eBCT_ConnectionToMaster;
+	}
+
+	void CCoreConnectionToMaster::release()
+	{
+		delete this;
+	}
+
+	void CCoreConnectionToMaster::onConnect()
 	{
 		// 连接master的连接只能有一个
 		std::vector<CBaseConnection*> vecBaseConnection;
-		CBaseApp::Inst()->getBaseConnectionMgr()->getBaseConnection(_GET_CLASS_NAME(CCoreConnectionToMaster), vecBaseConnection);
+		CBaseApp::Inst()->getBaseConnectionMgr()->getBaseConnection(this->getType(), vecBaseConnection);
 		if (vecBaseConnection.size() > 1)
 		{
 			this->shutdown(false, "dup master connection");

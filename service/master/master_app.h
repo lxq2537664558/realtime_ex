@@ -3,6 +3,7 @@
 
 #include "service_mgr.h"
 
+class CServiceConnectionFactory;
 class CMasterApp
 	: public core::CBaseApp
 {
@@ -20,5 +21,6 @@ public:
 	CServiceMgr*	getServiceMgr() const;
 
 private:
-	CServiceMgr*	m_pServiceMgr;
+	CServiceMgr*				m_pServiceMgr;
+	CServiceConnectionFactory*	m_pServiceConnectionFactory;
 };

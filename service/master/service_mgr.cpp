@@ -49,7 +49,7 @@ bool CServiceMgr::registerService(CConnectionFromService* pConnectionFromService
 
 	// 将其他服务的信息同步给新的服务
 	std::vector<core::CBaseConnection*> vecBaseConnection;
-	CMasterApp::Inst()->getBaseConnectionMgr()->getBaseConnection(_GET_CLASS_NAME(CConnectionFromService), vecBaseConnection);
+	CMasterApp::Inst()->getBaseConnectionMgr()->getBaseConnection(eBCT_ConnectionFromService, vecBaseConnection);
 	for (size_t i = 0; i < vecBaseConnection.size(); ++i)
 	{
 		core::CBaseConnection* pBaseConnection = vecBaseConnection[i];
@@ -101,7 +101,7 @@ bool CServiceMgr::registerService(CConnectionFromService* pConnectionFromService
 
 	std::vector<uint64_t> vecExcludeID;
 	vecExcludeID.push_back(pConnectionFromService->getID());
-	CMasterApp::Inst()->getBaseConnectionMgr()->broadcast(_GET_CLASS_NAME(CConnectionFromService), eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize(), &vecExcludeID);
+	CMasterApp::Inst()->getBaseConnectionMgr()->broadcast(eBCT_ConnectionFromService, eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize(), &vecExcludeID);
 
 	PrintInfo("register service service_name: %s", sServiceBaseInfo.szName.c_str());
 
@@ -132,7 +132,7 @@ void CServiceMgr::unregisterService(const std::string& szServiceName)
 	std::vector<uint64_t> vecExcludeID;
 	if (sServiceInfo.pConnectionFromService != nullptr)
 		vecExcludeID.push_back(sServiceInfo.pConnectionFromService->getID());
-	CMasterApp::Inst()->getBaseConnectionMgr()->broadcast(_GET_CLASS_NAME(CConnectionFromService), eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize(), &vecExcludeID);
+	CMasterApp::Inst()->getBaseConnectionMgr()->broadcast(eBCT_ConnectionFromService, eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize(), &vecExcludeID);
 
 	this->m_mapServiceInfo.erase(iter);
 
@@ -191,7 +191,7 @@ void CServiceMgr::registerMessageInfo(const std::string& szServiceName, const st
 		std::vector<uint64_t> vecExcludeID;
 		if (sServiceInfo.pConnectionFromService != nullptr)
 			vecExcludeID.push_back(sServiceInfo.pConnectionFromService->getID());
-		CMasterApp::Inst()->getBaseConnectionMgr()->broadcast(_GET_CLASS_NAME(CConnectionFromService), eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize(), &vecExcludeID);
+		CMasterApp::Inst()->getBaseConnectionMgr()->broadcast(eBCT_ConnectionFromService, eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize(), &vecExcludeID);
 	}
 
 	for (size_t i = 0; i < vecDeltaMessageProxyInfo.size(); ++i)

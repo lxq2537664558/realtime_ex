@@ -3,6 +3,7 @@
 #include "connection_from_client.h"
 #include "gate_message_dispatcher.h"
 #include "gate_message_handler.h"
+#include "service_connection_factory.h"
 
 #include "libCoreCommon/base_connection_mgr.h"
 #include "libCoreServiceKit/message_dispatcher.h"
@@ -24,6 +25,7 @@ static bool gate_before_filter(const std::string& szFromServiceName, uint32_t nM
 
 CGateApp::CGateApp()
 	: m_pGateSessionMgr(nullptr)
+	, m_pServiceConnectionFactory(nullptr)
 {
 }
 
@@ -38,7 +40,8 @@ CGateApp* CGateApp::Inst()
 
 bool CGateApp::onInit()
 {
-	CConnectionFromClient::registClassInfo();
+	this->m_pServiceConnectionFactory = new CServiceConnectionFactory();
+	this->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionFromClient, this->m_pServiceConnectionFactory);
 
 	if (!core::CCoreServiceKit::Inst()->init())
 	{
@@ -81,7 +84,7 @@ bool CGateApp::onInit()
 	// 启动客户端连接
 	tinyxml2::XMLElement* pListenClientAddrXML = pRootXML->FirstChildElement("client");
 	DebugAstEx(pListenClientAddrXML != nullptr, false);
-	this->getBaseConnectionMgr()->listen(pListenClientAddrXML->Attribute("host") != nullptr ? pListenClientAddrXML->Attribute("host") : "0.0.0.0", (uint16_t)pListenClientAddrXML->IntAttribute("port"), "", _GET_CLASS_NAME(CConnectionFromClient), pListenClientAddrXML->IntAttribute("send_buf_size"), pListenClientAddrXML->IntAttribute("recv_buf_size"), core::default_parser_native_data);
+	this->getBaseConnectionMgr()->listen(pListenClientAddrXML->Attribute("host") != nullptr ? pListenClientAddrXML->Attribute("host") : "0.0.0.0", (uint16_t)pListenClientAddrXML->IntAttribute("port"), eBCT_ConnectionFromClient, "", pListenClientAddrXML->IntAttribute("send_buf_size"), pListenClientAddrXML->IntAttribute("recv_buf_size"), core::default_parser_native_data);
 
 	SAFE_DELETE(pConfigXML);
 
@@ -90,7 +93,11 @@ bool CGateApp::onInit()
 
 void CGateApp::onDestroy()
 {
+	this->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionFromClient, nullptr);
+	
 	SAFE_DELETE(this->m_pGateSessionMgr);
+	SAFE_DELETE(this->m_pServiceConnectionFactory);
+
 	core::CCoreServiceKit::Inst()->release();
 }
 

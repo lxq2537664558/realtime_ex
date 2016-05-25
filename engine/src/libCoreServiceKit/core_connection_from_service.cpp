@@ -6,9 +6,6 @@
 
 namespace core
 {
-
-	DEFINE_OBJECT(CCoreConnectionFromService, 100)
-
 	CCoreConnectionFromService::CCoreConnectionFromService()
 	{
 
@@ -19,7 +16,22 @@ namespace core
 
 	}
 
-	void CCoreConnectionFromService::onConnect(const std::string& szContext)
+	bool CCoreConnectionFromService::init(const std::string& szContext)
+	{
+		return true;
+	}
+
+	uint32_t CCoreConnectionFromService::getType() const
+	{
+		return eBCT_ConnectionFromService;
+	}
+
+	void CCoreConnectionFromService::release()
+	{
+		delete this;
+	}
+
+	void CCoreConnectionFromService::onConnect()
 	{
 		// 这个是被动连接，对方服务信息会由对方服务主动推过来
 	}

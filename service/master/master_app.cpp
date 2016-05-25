@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "master_app.h"
 #include "connection_from_service.h"
-
+#include "service_connection_factory.h"
 
 #include "libCoreCommon/base_connection_mgr.h"
 
@@ -9,6 +9,7 @@
 
 CMasterApp::CMasterApp()
 	: m_pServiceMgr(nullptr)
+	, m_pServiceConnectionFactory(nullptr)
 {
 
 }
@@ -25,8 +26,6 @@ CMasterApp* CMasterApp::Inst()
 
 bool CMasterApp::onInit()
 {
-	CConnectionFromService::registClassInfo();
-	
 	this->m_pServiceMgr = new CServiceMgr();
 	if (!this->m_pServiceMgr->init())
 		return false;
@@ -51,20 +50,25 @@ bool CMasterApp::onInit()
 		return false;
 	}
 
-	
+	this->m_pServiceConnectionFactory = new CServiceConnectionFactory();
+	this->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionFromService, this->m_pServiceConnectionFactory);
+
 	const std::string szHost = pHostInfoXML->Attribute("host");
 	uint16_t nPort = (uint16_t)pHostInfoXML->UnsignedAttribute("port");
 	uint32_t nRecvBufSize = pHostInfoXML->UnsignedAttribute("recv_buf_size");
 	uint32_t nSendBufSize = pHostInfoXML->UnsignedAttribute("send_buf_size");
 	
-	this->getBaseConnectionMgr()->listen(szHost, nPort, "", _GET_CLASS_NAME(CConnectionFromService), nSendBufSize, nRecvBufSize, nullptr);
+	this->getBaseConnectionMgr()->listen(szHost, nPort, eBCT_ConnectionFromService, "", nSendBufSize, nRecvBufSize, nullptr);
 
 	return true;
 }
 
 void CMasterApp::onDestroy()
 {
+	this->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionFromService, nullptr);
+
 	SAFE_DELETE(this->m_pServiceMgr);
+	SAFE_DELETE(this->m_pServiceConnectionFactory);
 }
 
 void CMasterApp::onQuit()

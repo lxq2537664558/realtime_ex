@@ -50,7 +50,6 @@ namespace core
 		CTicker*			m_pHeartbeat;
 		uint32_t			m_nSendHeartbeatCount;
 
-		std::string			m_szContext;
 		uint64_t			m_nID;
 		CBaseConnection*	m_pBaseConnection;	// 这个必须奥保证赋值操作是原子的，所以应该在边界上对齐，不然又可能不是原子的
 		ClientDataCallback	m_clientDataCallback;

@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\inc\libCoreCommon\base_connection.h" />
+    <ClInclude Include="..\..\inc\libCoreCommon\base_connection_factory.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\base_connection_mgr.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\base_app.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\base_object.h" />

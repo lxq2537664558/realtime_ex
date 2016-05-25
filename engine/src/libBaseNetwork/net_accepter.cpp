@@ -130,7 +130,7 @@ namespace base
 		memset(listenAddr.sin_zero, 0, sizeof(listenAddr.sin_zero));
 		if (0 != ::bind(this->m_nSocketID, (sockaddr*)&listenAddr, sizeof(listenAddr)))
 		{
-			PrintWarning("bind socket to %s %d %d error %d", this->m_sLocalAddr.szHost, this->m_sLocalAddr.nPort, getLastError());
+			PrintWarning("bind socket to %s %d error %d", this->m_sLocalAddr.szHost, this->m_sLocalAddr.nPort, getLastError());
 			this->forceClose();
 			return false;
 		}

@@ -6,6 +6,6 @@ include_directories(../../../engine/inc/libBaseNetwork)
 include_directories(../../../engine/inc)
 
 # 设置输出目录
-SET(LIBRARY_OUTPUT_PATH ../../../bin/linux)
+SET(LIBRARY_OUTPUT_PATH ${BIN_OUTPUT_PATH})
 # 生成libCoreCommon.so
 add_library(BaseNetwork SHARED ${DIR_SRCS})

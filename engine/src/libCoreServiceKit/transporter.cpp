@@ -67,7 +67,7 @@ namespace core
 
 			if (sMessageCacheInfo.bRefuse)
 			{
-				CBaseApp::Inst()->getBaseConnectionMgr()->connect(pServiceBaseInfo->szHost, pServiceBaseInfo->nPort, pServiceBaseInfo->szName, _GET_CLASS_NAME(CCoreConnectionToService), pServiceBaseInfo->nSendBufSize, pServiceBaseInfo->nRecvBufSize, nullptr);
+				CBaseApp::Inst()->getBaseConnectionMgr()->connect(pServiceBaseInfo->szHost, pServiceBaseInfo->nPort, eBCT_ConnectionToService, pServiceBaseInfo->szName, pServiceBaseInfo->nSendBufSize, pServiceBaseInfo->nRecvBufSize, nullptr);
 				sMessageCacheInfo.bRefuse = false;
 			}
 			

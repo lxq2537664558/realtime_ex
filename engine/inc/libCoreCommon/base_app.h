@@ -19,6 +19,7 @@ namespace core
 	};
 
 	class CBaseConnectionMgr;
+	class CCoreConnectionMgr;
 	class CCoreApp;
 	/**
 	@brief: 基础框架类
@@ -26,6 +27,7 @@ namespace core
 	class CBaseApp
 	{
 		friend class CCoreApp;
+		friend class CCoreConnectionMgr;
 
 	public:
 		CBaseApp();
@@ -36,47 +38,47 @@ namespace core
 		/**
 		@brief: 启动框架
 		*/
-		bool				run(int32_t argc, char** argv, const char* szConfig);
+		bool						run(int32_t argc, char** argv, const char* szConfig);
 		/**
 		@brief: 注册定时器
 		nStartTime 第一次触发定时器的时间
 		nIntervalTime 第一次触发定时器后接下来定时器触发的间隔时间，如果该值是0就表示这个定时器只触发一次
 		*/
-		void				registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
+		void						registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
 		/**
 		@brief: 反注册定时器
 		*/
-		void				unregisterTicker(CTicker* pTicker);
+		void						unregisterTicker(CTicker* pTicker);
 		/**
 		@brief: 设置性能分析器开关
 		*/
-		void				enableProfiling(bool bProfiling);
+		void						enableProfiling(bool bProfiling);
 		/**
 		@brief: 获取当前逻辑时间
 		*/
-		int64_t				getLogicTime() const;
+		int64_t						getLogicTime() const;
 		/*
 		@brief: 获取连接管理器
 		*/
-		CBaseConnectionMgr*	getBaseConnectionMgr() const;
+		CBaseConnectionMgr*			getBaseConnectionMgr() const;
 		/*
 		@brief: 获取配置文件名
 		*/
-		const std::string&	getConfigFileName() const;
+		const std::string&			getConfigFileName() const;
 		/*
 		@brief: 获取写buf对象，的主要用于消息打包
 		*/
-		base::CWriteBuf&	getWriteBuf() const;
+		base::CWriteBuf&			getWriteBuf() const;
 		
 	protected:
-		virtual bool		onInit() { return true; }
-		virtual void		onProcess() { }
-		virtual void		onDestroy() { }
+		virtual bool				onInit() { return true; }
+		virtual void				onProcess() { }
+		virtual void				onDestroy() { }
 
-		virtual void		onBeforeFrame() { }
-		virtual void		onAfterFrame() { }
+		virtual void				onBeforeFrame() { }
+		virtual void				onAfterFrame() { }
 
-		virtual	void		onQuit() = 0;
-		void				doQuit();
+		virtual	void				onQuit() = 0;
+		void						doQuit();
 	};
 }

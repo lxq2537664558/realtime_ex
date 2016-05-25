@@ -5,8 +5,6 @@
 
 #include "libCoreServiceKit/cluster_invoker.h"
 
-DEFINE_OBJECT(CConnectionFromClient, 100)
-
 CConnectionFromClient::CConnectionFromClient()
 {
 
@@ -17,7 +15,22 @@ CConnectionFromClient::~CConnectionFromClient()
 
 }
 
-void CConnectionFromClient::onConnect(const std::string& szContext)
+bool CConnectionFromClient::init(const std::string& szContext)
+{
+	return true;
+}
+
+uint32_t CConnectionFromClient::getType() const
+{
+	return eBCT_ConnectionFromClient;
+}
+
+void CConnectionFromClient::release()
+{
+	delete this;
+}
+
+void CConnectionFromClient::onConnect()
 {
 
 }

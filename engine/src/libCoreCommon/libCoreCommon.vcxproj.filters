@@ -48,6 +48,9 @@
     <ClInclude Include="ticker_mgr.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreCommon\base_connection_gen.h">
+      <Filter>inc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="base_app.cpp">

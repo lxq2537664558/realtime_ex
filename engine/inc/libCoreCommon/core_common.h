@@ -92,3 +92,5 @@ namespace core
 {
 	typedef std::function<int32_t(const char*, uint32_t)>	ClientDataCallback;
 }
+
+#define _BASE_CONNECTION_TYPE_BEGIN	100

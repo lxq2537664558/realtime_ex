@@ -57,25 +57,19 @@ namespace core
 			this->m_funConnectRefuse(szContext);
 	}
 
-	bool CBaseConnectionMgr::connect(const std::string& szHost, uint16_t nPort, const std::string& szContext, const std::string& szClassName, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, ClientDataCallback clientDataCallback)
+	bool CBaseConnectionMgr::connect(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, ClientDataCallback clientDataCallback)
 	{
-		uint32_t nClassID = CBaseObject::getClassID(szClassName);
-
-		return this->m_pCoreConnectionMgr->connect(szHost, nPort, szContext, nClassID, nSendBufferSize, nRecvBufferSize, clientDataCallback);
+		return this->m_pCoreConnectionMgr->connect(szHost, nPort, nType, szContext, nSendBufferSize, nRecvBufferSize, clientDataCallback);
 	}
 
-	bool CBaseConnectionMgr::listen(const std::string& szHost, uint16_t nPort, const std::string& szContext, const std::string& szClassName, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, ClientDataCallback clientDataCallback)
+	bool CBaseConnectionMgr::listen(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, ClientDataCallback clientDataCallback)
 	{
-		uint32_t nClassID = CBaseObject::getClassID(szClassName);
-
-		return this->m_pCoreConnectionMgr->listen(szHost, nPort, szContext, nClassID, nSendBufferSize, nRecvBufferSize, clientDataCallback);
+		return this->m_pCoreConnectionMgr->listen(szHost, nPort, nType, szContext, nSendBufferSize, nRecvBufferSize, clientDataCallback);
 	}
 
-	uint32_t CBaseConnectionMgr::getBaseConnectionCount(const std::string& szClassName) const
+	uint32_t CBaseConnectionMgr::getBaseConnectionCount(uint32_t nType) const
 	{
-		uint32_t nClassID = CBaseObject::getClassID(szClassName);
-		
-		return this->m_pCoreConnectionMgr->getCoreConnectionCount(nClassID);
+		return this->m_pCoreConnectionMgr->getCoreConnectionCount(nType);
 	}
 
 	CBaseConnection* CBaseConnectionMgr::getBaseConnection(uint64_t nID) const
@@ -87,17 +81,31 @@ namespace core
 		return pCoreConnection->getBaseConnection();
 	}
 
-	void CBaseConnectionMgr::getBaseConnection(const std::string& szClassName, std::vector<CBaseConnection*>& vecBaseConnection) const
+	void CBaseConnectionMgr::getBaseConnection(uint32_t nType, std::vector<CBaseConnection*>& vecBaseConnection) const
 	{
-		uint32_t nClassID = CBaseObject::getClassID(szClassName);
-
-		this->m_pCoreConnectionMgr->getBaseConnection(nClassID, vecBaseConnection);
+		this->m_pCoreConnectionMgr->getBaseConnection(nType, vecBaseConnection);
 	}
 
-	void CBaseConnectionMgr::broadcast(const std::string& szClassName, uint16_t nMsgType, const void* pData, uint16_t nSize, const std::vector<uint64_t>* vecExcludeID)
+	void CBaseConnectionMgr::broadcast(uint32_t nType, uint16_t nMessageType, const void* pData, uint16_t nSize, const std::vector<uint64_t>* vecExcludeID)
 	{
-		uint32_t nClassID = CBaseObject::getClassID(szClassName);
-
-		this->m_pCoreConnectionMgr->broadcast(nClassID, nMsgType, pData, nSize, vecExcludeID);
+		this->m_pCoreConnectionMgr->broadcast(nType, nMessageType, pData, nSize, vecExcludeID);
 	}
+
+	void CBaseConnectionMgr::setBaseConnectionFactory(uint32_t nType, CBaseConnectionFactory* pBaseConnectionFactory)
+	{
+		if (pBaseConnectionFactory == nullptr)
+			this->m_mapBaseConnectionFactory.erase(nType);
+		else
+			this->m_mapBaseConnectionFactory[nType] = pBaseConnectionFactory;
+	}
+
+	CBaseConnectionFactory* CBaseConnectionMgr::getBaseConnectionFactory(uint32_t nType) const
+	{
+		auto iter = this->m_mapBaseConnectionFactory.find(nType);
+		if (iter == this->m_mapBaseConnectionFactory.end())
+			return nullptr;
+
+		return iter->second;
+	}
+
 }

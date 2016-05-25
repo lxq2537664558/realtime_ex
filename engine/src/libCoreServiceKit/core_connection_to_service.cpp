@@ -10,9 +10,6 @@
 
 namespace core
 {
-
-	DEFINE_OBJECT(CCoreConnectionToService, 100)
-
 	CCoreConnectionToService::CCoreConnectionToService()
 	{
 
@@ -23,17 +20,32 @@ namespace core
 
 	}
 
-	void CCoreConnectionToService::onConnect(const std::string& szContext)
+	bool CCoreConnectionToService::init(const std::string& szContext)
+	{
+		this->m_szServiceName = szContext;
+
+		return true;
+	}
+
+	uint32_t CCoreConnectionToService::getType() const
+	{
+		return eBCT_ConnectionToService;
+	}
+
+	void CCoreConnectionToService::release()
+	{
+		delete this;
+	}
+
+	void CCoreConnectionToService::onConnect()
 	{
 		// szContext中存的是服务名字
-		if (CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getConnectionToService(szContext) != nullptr)
+		if (CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getConnectionToService(this->getServiceName()) != nullptr)
 		{
-			PrintWarning("dup service service_name: %s", szContext.c_str());
+			PrintWarning("dup service service_name: %s", this->getServiceName().c_str());
 			this->shutdown(true, "dup service connection");
 			return;
 		}
-
-		this->m_szServiceName = szContext;
 
 		// 同步服务名字
 		smt_notify_service_base_info netMsg;

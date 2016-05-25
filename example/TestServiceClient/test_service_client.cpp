@@ -11,6 +11,7 @@
 #include "../proto_src/client_request_msg.pb.h"
 #include "../proto_src/client_response_msg.pb.h"
 #include "../proto_src/login_msg.pb.h"
+#include "libCoreCommon/base_connection_factory.h"
 
 #pragma pack(push,1)
 // ÏûÏ¢Í·
@@ -74,8 +75,6 @@ int32_t serialize_protobuf_message_to_buf(const google::protobuf::Message* pMess
 class CConnectToService :
 	public core::CBaseConnection
 {
-	DECLARE_OBJECT(CConnectToService)
-
 public:
 	CConnectToService()
 	{
@@ -85,8 +84,13 @@ public:
 	virtual ~CConnectToService() 
 	{
 	}
+
+	virtual bool		init(const std::string& szContext)
+	{}
+	virtual uint32_t	getType() const { return _BASE_CONNECTION_TYPE_BEGIN; }
+	virtual void		release(){ delete this; }
 	
-	virtual void onConnect(const std::string& szContext)
+	virtual void onConnect()
 	{
 		PrintDebug("onConnect");
 
@@ -147,7 +151,25 @@ public:
 	uint64_t	nSendTime;
 };
 
-DEFINE_OBJECT(CConnectToService, 100)
+class CServiceConnectionFactory :
+	public core::CBaseConnectionFactory
+{
+public:
+	CServiceConnectionFactory() { }
+	virtual ~CServiceConnectionFactory() { }
+
+	virtual core::CBaseConnection*	createBaseConnection(uint32_t nType, const std::string& szContext)
+	{
+		CConnectToService* pConnectToService = new CConnectToService();
+		if (!pConnectToService->init(szContext))
+		{
+			SAFE_RELEASE(pConnectToService);
+			return nullptr;
+		}
+
+		return pConnectToService;
+	}
+};
 
 CTestServiceClientApp::CTestServiceClientApp()
 {
@@ -164,8 +186,7 @@ CTestServiceClientApp* CTestServiceClientApp::Inst()
 
 bool CTestServiceClientApp::onInit()
 {
-	CConnectToService::registClassInfo();
-	this->getBaseConnectionMgr()->connect("127.0.0.1", 8000, "", _GET_CLASS_NAME(CConnectToService), 0, 0, core::default_parser_native_data);
+	this->getBaseConnectionMgr()->connect("127.0.0.1", 8000, _BASE_CONNECTION_TYPE_BEGIN, "", 0, 0, core::default_parser_native_data);
 	return true;
 }
 
@@ -183,6 +204,5 @@ int32_t main(int argc, char* argv[])
 	CTestServiceClientApp* pTestServiceClientApp = new CTestServiceClientApp();
 	pTestServiceClientApp->run(argc, argv, "test_service_client_config.xml");
 
-	std::
 	return 0;
 }

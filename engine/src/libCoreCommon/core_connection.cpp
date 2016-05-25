@@ -121,7 +121,7 @@ namespace core
 		DebugAst(this->m_pNetConnecter != nullptr);
 		DebugAst(this->m_pBaseConnection != nullptr);
 
-		this->m_pBaseConnection->onConnect(this->m_szContext);
+		this->m_pBaseConnection->onConnect();
 		CBaseApp::Inst()->getBaseConnectionMgr()->onConnect(this->m_pBaseConnection);
 
 		this->m_pHeartbeat = new CTicker();
