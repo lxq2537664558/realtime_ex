@@ -21,6 +21,7 @@
     <ClInclude Include="core_app.h" />
     <ClInclude Include="core_connection.h" />
     <ClInclude Include="core_connection_mgr.h" />
+    <ClInclude Include="core_connection_monitor.h" />
     <ClInclude Include="fix_memory_pool.h" />
     <ClInclude Include="monitor.h" />
     <ClInclude Include="stdafx.h" />
@@ -34,6 +35,7 @@
     <ClCompile Include="core_app.cpp" />
     <ClCompile Include="core_connection.cpp" />
     <ClCompile Include="core_connection_mgr.cpp" />
+    <ClCompile Include="core_connection_monitor.cpp" />
     <ClCompile Include="fix_memory_pool.cpp" />
     <ClCompile Include="monitor.cpp" />
     <ClCompile Include="stdafx.cpp" />

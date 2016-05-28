@@ -95,6 +95,7 @@ namespace core
 		, m_nCycleCount(0)
 		, m_nHeartbeatLimit(0)
 		, m_nHeartbeatTime(0)
+		, m_nQPS(0)
 	{
 	}
 
@@ -434,6 +435,16 @@ namespace core
 	uint32_t CCoreApp::getHeartbeatTime() const
 	{
 		return this->m_nHeartbeatTime;
+	}
+
+	void CCoreApp::onQPS(uint64_t nContext)
+	{
+		this->m_nQPS = 0;
+	}
+
+	void CCoreApp::incQPS()
+	{
+		++this->m_nQPS;
 	}
 
 }

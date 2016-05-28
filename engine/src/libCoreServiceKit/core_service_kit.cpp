@@ -39,4 +39,14 @@ namespace core
 		return CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getMessageName(nMessageID);
 	}
 
+	void CCoreServiceKit::startNewTrace()
+	{
+
+	}
+
+	void CCoreServiceKit::addTraceExtraInfo(const char* szFormat, ...)
+	{
+
+	}
+
 }

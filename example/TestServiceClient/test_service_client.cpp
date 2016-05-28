@@ -85,8 +85,8 @@ public:
 	{
 	}
 
-	virtual bool		init(const std::string& szContext)
-	{}
+	virtual bool		init(const std::string& szContext) { return true; }
+	
 	virtual uint32_t	getType() const { return _BASE_CONNECTION_TYPE_BEGIN; }
 	virtual void		release(){ delete this; }
 	
@@ -108,7 +108,7 @@ public:
 	{
 		google::protobuf::Message* pMessage = unserialize_protobuf_message_from_buf("test.client_response_msg", reinterpret_cast<const message_header*>(pData));
 		test::client_response_msg* pMsg = dynamic_cast<test::client_response_msg*>(pMessage);
-		
+		PrintDebug("onDispatch %s", pMsg->name().c_str());
 	}
 
 private:
@@ -186,7 +186,9 @@ CTestServiceClientApp* CTestServiceClientApp::Inst()
 
 bool CTestServiceClientApp::onInit()
 {
-	this->getBaseConnectionMgr()->connect("127.0.0.1", 8000, _BASE_CONNECTION_TYPE_BEGIN, "", 0, 0, core::default_parser_native_data);
+	CServiceConnectionFactory* pServiceConnectionFactory = new CServiceConnectionFactory();
+	this->getBaseConnectionMgr()->setBaseConnectionFactory(_BASE_CONNECTION_TYPE_BEGIN, pServiceConnectionFactory);
+	this->getBaseConnectionMgr()->connect("10.0.18.51", 8000, _BASE_CONNECTION_TYPE_BEGIN, "", 0, 0, core::default_parser_native_data);
 	return true;
 }
 

@@ -2,6 +2,7 @@
 #include "libBaseNetwork/network.h"
 
 #include "core_common.h"
+#include "core_connection_monitor.h"
 
 namespace core
 {
@@ -46,12 +47,13 @@ namespace core
 		void				sendHeartbeat();
 
 	private:
-		bool				m_bHeartbeat;
-		CTicker*			m_pHeartbeat;
-		uint32_t			m_nSendHeartbeatCount;
+		bool					m_bHeartbeat;
+		CTicker*				m_pHeartbeat;
+		uint32_t				m_nSendHeartbeatCount;
 
-		uint64_t			m_nID;
-		CBaseConnection*	m_pBaseConnection;	// 这个必须奥保证赋值操作是原子的，所以应该在边界上对齐，不然又可能不是原子的
-		ClientDataCallback	m_clientDataCallback;
+		uint64_t				m_nID;
+		CBaseConnection*		m_pBaseConnection;	// 这个必须奥保证赋值操作是原子的，所以应该在边界上对齐，不然又可能不是原子的
+		CCoreConnectionMonitor	m_monitor;
+		ClientDataCallback		m_clientDataCallback;
 	};
 }

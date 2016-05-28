@@ -221,18 +221,22 @@ namespace core
 	{
 		CBaseConnectionFactory* pBaseConnectionFactory = this->m_pBaseConnectionMgr->getBaseConnectionFactory(nType);
 		if (nullptr == pBaseConnectionFactory)
+		{
+			PrintWarning("can't find base connection factory type: %d context: %s", nType, szContext.c_str());
 			return nullptr;
-
+		}
 		CBaseConnection* pBaseConnection = pBaseConnectionFactory->createBaseConnection(nType, szContext);
 		if (nullptr == pBaseConnection)
+		{
+			PrintWarning("create base connection error type: %d context: %s", nType, szContext.c_str());
 			return nullptr;
-
+		}
 		CCoreConnection* pCoreConnection = new CCoreConnection();
 		if (!pCoreConnection->init(pBaseConnection, this->m_nNextCoreConnectionID++, clientDataCallback))
 		{
 			SAFE_DELETE(pCoreConnection);
-			SAFE_RELEASE(pBaseConnection)
-			
+			SAFE_RELEASE(pBaseConnection);
+			PrintWarning("init core connection error type: %d context: %s", nType, szContext.c_str());
 			return nullptr;
 		}
 

@@ -48,7 +48,10 @@
     <ClInclude Include="ticker_mgr.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreCommon\base_connection_gen.h">
+    <ClInclude Include="core_connection_monitor.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreCommon\base_connection_factory.h">
       <Filter>inc</Filter>
     </ClInclude>
   </ItemGroup>
@@ -87,6 +90,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="ticker_mgr.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="core_connection_monitor.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

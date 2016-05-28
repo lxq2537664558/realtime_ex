@@ -156,6 +156,7 @@ namespace core
 		if (nMessageType == eMT_HEARTBEAT)
 			return;
 
+		CCoreApp::Inst()->incQPS();
 		this->m_pBaseConnection->onDispatch(nMessageType, pData, nSize);
 	}
 

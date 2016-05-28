@@ -60,12 +60,21 @@ namespace core
 		@brief: 获取连接心跳同步时间
 		*/
 		uint32_t			getHeartbeatTime() const;
+		/*
+		@brief: 获取QPS
+		*/
+		uint32_t			getQPS() const;
+		/*
+		@brief: 增加QPS
+		*/
+		void				incQPS();
 
 	private:
 		bool				onInit();
 		bool				onProcess();
 		void				onDestroy();
 		void				onAnalyze();
+		void				onQPS(uint64_t nContext);
 
 	protected:
 		std::string				m_szConfig;
@@ -79,5 +88,7 @@ namespace core
 		uint32_t				m_nHeartbeatLimit;
 		uint32_t				m_nHeartbeatTime;
 		bool					m_bMarkQuit;	// 这个参数作用是只触发一次onQuit
+		uint32_t				m_nQPS;
+		CTicker					m_tickQPS;
 	};
 }

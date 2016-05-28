@@ -26,5 +26,13 @@ namespace core
 		@brief: 根据消息ID获取消息名字
 		*/
 		const std::string&				getMessageName(uint32_t nMessageID) const;
+		/**
+		@brief: 开始一个新的trace
+		*/
+		void							startNewTrace();
+		/**
+		@brief: 添加trace额外信息
+		*/
+		void							addTraceExtraInfo(const char* szFormat, ...);
 	};
 }

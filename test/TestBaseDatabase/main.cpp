@@ -13,38 +13,16 @@ int main()
 	base::initLog(true);
 	base::startupDatabase();
 	base::IDbConnection* pDbConnection = base::createDbFacade()->createConnection();
-	pDbConnection->connect( "127.0.0.1", 3306, "root", "123456", "game_db", "utf8" );
-	char szBuf[4096] = { 0 };
-	base::crt::snprintf( szBuf, _countof(szBuf), "drop table if exists tbl_user;" );
-	pDbConnection->execute( szBuf );
-	base::crt::snprintf( szBuf, _countof(szBuf), 
-		"create table `tbl_user` ("
-		"`id` int(10) unsigned NOT NULL,"
-		"`name` varchar(255) NOT NULL,"
-		"PRIMARY KEY (`id`)"
-		") ENGINE=InnoDB DEFAULT CHARSET=utf8;" );
-	pDbConnection->execute( szBuf );
-
-	int64_t nBeginTime = base::getGmtTime();
-	string szSQL;
-	for( uint32_t i = 0; i < 1000; ++i )
+	pDbConnection->connect( "192.243.45.183", 3306, "CM_yf3", "8GRbg5eo@4QWae", "CM_EN2", "utf8" );
+	base::IDbRecordset* pDbRecordset = pDbConnection->execute( "select name, player_id from player_base where player_id in(293091504, 298609469, 297373912, 273202212, 270517648, 301703830)" );
+	for (uint32_t i = 0; i < pDbRecordset->getRowCount(); ++i)
 	{
-		char szName[256] = { "abc" };
-		base::crt::snprintf( szBuf, _countof(szBuf), "insert into `tbl_user` values (%d, '%s');", i, szName );
-		szSQL = szBuf;
-		pDbConnection->execute( szSQL.c_str() );
+		pDbRecordset->fatchNextRow();
+		std::string szName = pDbRecordset->getData(0);
+		uint64_t nPlayerID = pDbRecordset->getData(1);
+		PrintInfo("name %s", szName.c_str());
 	}
-	int64_t nEndTime = base::getGmtTime();
-	
-	cout << "InnoDB insert 100000 rows cost " << nEndTime-nBeginTime << endl;
-
-
-	base::IDbRecordset* pDbRecordset = pDbConnection->execute( "select name from tbl_user" );
-// 	base::CVariant var( "aaaa" );
-// 	base::CVariant aaa;
-// 	aaa = std::move( var );
-// 	const char* szName = std::move( base::CVariant( "aaaa" ) );
-	base::sleep( ~0 );
+	base::sleep(~0);
 
 	return 0;
 }

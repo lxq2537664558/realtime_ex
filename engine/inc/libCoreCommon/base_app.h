@@ -69,6 +69,10 @@ namespace core
 		@brief: 获取写buf对象，的主要用于消息打包
 		*/
 		base::CWriteBuf&			getWriteBuf() const;
+		/*
+		@brief: 获取QPS
+		*/
+		uint32_t					getQPS() const;
 		
 	protected:
 		virtual bool				onInit() { return true; }
