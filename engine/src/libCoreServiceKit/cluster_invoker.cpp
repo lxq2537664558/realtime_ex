@@ -179,7 +179,7 @@ namespace core
 		sGateMessageInfo.nSessionID = nSessionID;
 		sGateMessageInfo.pHeader = const_cast<message_header*>(pHeader);
 
-		return CCoreServiceKitImpl::Inst()->getTransporter()->forward(szServiceName, sGateMessageInfo);
+		return CCoreServiceKitImpl::Inst()->getTransporter()->forward(szServiceName, szMessageName, sGateMessageInfo);
 	}
 
 	bool CClusterInvoker::broadcast(const std::vector<SClientSessionInfo>& vecClientSessionInfo, const google::protobuf::Message* pMessage)

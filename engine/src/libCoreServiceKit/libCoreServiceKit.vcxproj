@@ -165,6 +165,7 @@
     <ClCompile Include="core_connection_to_master.cpp" />
     <ClCompile Include="core_connection_to_service.cpp" />
     <ClCompile Include="core_service_kit.cpp" />
+    <ClCompile Include="invoker_trace.cpp" />
     <ClCompile Include="load_balance.cpp" />
     <ClCompile Include="load_balance_mgr.cpp" />
     <ClCompile Include="core_service_invoker.cpp" />

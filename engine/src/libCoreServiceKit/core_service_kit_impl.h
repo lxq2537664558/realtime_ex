@@ -9,6 +9,7 @@
 #include "core_service_invoker.h"
 #include "core_service_invoker.h"
 #include "load_balance_mgr.h"
+#include "invoker_trace.h"
 
 #include <map>
 
@@ -32,6 +33,7 @@ namespace core
 		CLoadBalanceMgr*			getLoadBalanceMgr() const;
 		CCoreServiceProxy*			getCoreServiceProxy() const;
 		CCoreServiceInvoker*		getCoreServiceInvoker() const;
+		CInvokerTrace*				getInvokerTrace() const;
 
 		CCoreConnectionToMaster*	getConnectionToMaster() const;
 
@@ -55,6 +57,7 @@ namespace core
 		CCoreServiceInvoker*				m_pCoreServiceInvoker;
 		CCoreServiceProxy*					m_pCoreServiceProxy;
 		CLoadBalanceMgr*					m_pLoadBalanceMgr;
+		CInvokerTrace*						m_pInvokerTrace;
 		CServiceConnectionFactory*			m_pServiceConnectionFactory;
 		SServiceBaseInfo					m_sServiceBaseInfo;
 		std::string							m_szMasterHost;

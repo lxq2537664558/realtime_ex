@@ -85,6 +85,7 @@ namespace core
 	struct gate_cookice
 	{
 		uint64_t nSessionID;
+		uint64_t nTraceID;
 	};
 	
 	struct gate_cookice_broadcast
@@ -95,11 +96,13 @@ namespace core
 	struct request_cookice
 	{
 		uint64_t nSessionID;
+		uint64_t nTraceID;
 	};
 
 	struct response_cookice
 	{
 		uint64_t	nSessionID;
+		uint64_t	nTraceID;
 		uint8_t		nResult;
 		uint16_t	nMessageNameLen;
 		char		szMessageName[1];

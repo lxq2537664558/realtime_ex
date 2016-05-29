@@ -130,5 +130,8 @@
     <ClCompile Include="service_connection_factory.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="invoker_trace.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

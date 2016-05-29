@@ -47,12 +47,15 @@ namespace core
 			// °þµôcookice
 			const message_header* pHeader = reinterpret_cast<const message_header*>(pCookice + 1);
 			const std::string& szMessageName = CCoreServiceKitImpl::Inst()->getCoreServiceInvoker()->getMessageName(pHeader->nMessageID);
+			
+			CCoreServiceKitImpl::Inst()->getInvokerTrace()->beginRecv(pCookice->nTraceID, szMessageName, szFromServiceName);
+
 			ServiceCallback& callback = CCoreServiceKitImpl::Inst()->getCoreServiceInvoker()->getCallback(pHeader->nMessageID);
 			if (callback != nullptr)
 			{
 				google::protobuf::Message* pMessage = unserialize_protobuf_message_from_buf(szMessageName, pHeader);
 				if (nullptr == pMessage)
-					PrintWarning("create message error from_service_name: %s message_name: %s message_id: %d", szFromServiceName.c_str(), szMessageName.c_str(), pHeader->nMessageID);
+					CCoreServiceKitImpl::Inst()->getInvokerTrace()->addTraceExtraInfo("unserialize protobuf message from buf error by message dispatcher");
 				else
 					callback(szFromServiceName, nMessageType, pMessage);
 
@@ -60,15 +63,19 @@ namespace core
 			}
 			sServiceSessionInfo.szServiceName.clear();
 			sServiceSessionInfo.nSessionID = 0;
+
+			CCoreServiceKitImpl::Inst()->getInvokerTrace()->endRecv();
 		}
 		else if ((nMessageType&eMT_TYPE_MASK) == eMT_RESPONSE)
 		{
 			const response_cookice* pCookice = reinterpret_cast<const response_cookice*>(pData);
 
+			CCoreServiceKitImpl::Inst()->getInvokerTrace()->beginRecv(pCookice->nTraceID, pCookice->szMessageName, szFromServiceName);
+
 			SResponseWaitInfo* pResponseWaitInfo = CCoreServiceKitImpl::Inst()->getTransporter()->getResponseWaitInfo(pCookice->nSessionID, true);
 			if (nullptr == pResponseWaitInfo)
 			{
-				PrintWarning("invalid session id from_service_name: %s session_id: "UINT64FMT, szFromServiceName.c_str(), pCookice->nSessionID);
+				CCoreServiceKitImpl::Inst()->getInvokerTrace()->addTraceExtraInfo("invalid session id by message dispatcher"UINT64FMT, pCookice->nSessionID);
 				return;
 			}
 
@@ -80,7 +87,7 @@ namespace core
 				google::protobuf::Message* pMessage = create_protobuf_message(szMessageName);
 				if (nullptr == pMessage)
 				{
-					PrintWarning("create message error from_service_name: %s message_name: %s", szFromServiceName.c_str(), szMessageName.c_str());
+					CCoreServiceKitImpl::Inst()->getInvokerTrace()->addTraceExtraInfo("create protobuf message error by message dispatcher");
 					return;
 				}
 
@@ -90,20 +97,24 @@ namespace core
 				DebugAst(nSize > sizeof(response_cookice) + pCookice->nMessageNameLen);
 				if (!pMessage->ParseFromArray(pMessageData, nSize - sizeof(response_cookice) - pCookice->nMessageNameLen))
 				{
-					PrintWarning("parse message error from_service_name: %s message_name: %s", szFromServiceName.c_str(), szMessageName.c_str());
+					CCoreServiceKitImpl::Inst()->getInvokerTrace()->addTraceExtraInfo("parse message from array error by message dispatcher");
 					return;
 				}
 
 				pResponseWaitInfo->callback(nMessageType, pMessage, (EResponseResultType)pCookice->nResult);
 			}
+
+			CCoreServiceKitImpl::Inst()->getInvokerTrace()->endRecv();
 		}
 		else if ((nMessageType&eMT_TYPE_MASK) == eMT_GATE_FORWARD)
 		{
 			const gate_cookice* pCookice = reinterpret_cast<const gate_cookice*>(pData);
-
+			
 			// °þµôcookice
 			const message_header* pHeader = reinterpret_cast<const message_header*>(pCookice + 1);
 			const std::string& szMessageName = CCoreServiceKitImpl::Inst()->getCoreServiceInvoker()->getMessageName(pHeader->nMessageID);
+
+			CCoreServiceKitImpl::Inst()->getInvokerTrace()->beginRecv(pCookice->nTraceID, szMessageName, szFromServiceName);
 
 			SClientSessionInfo session(szFromServiceName, pCookice->nSessionID);
 
@@ -112,12 +123,14 @@ namespace core
 			{
 				google::protobuf::Message* pMessage = unserialize_protobuf_message_from_buf(szMessageName, pHeader);
 				if (nullptr == pMessage)
-					PrintWarning("create message error from_service_name: %s message_name: %s message_id: %d", szFromServiceName.c_str(), szMessageName.c_str(), pHeader->nMessageID);
+					CCoreServiceKitImpl::Inst()->getInvokerTrace()->addTraceExtraInfo("unserialize protobuf message from buf error by message dispatcher");
 				else
 					callback(session, nMessageType, pMessage);
 
 				SAFE_DELETE(pMessage);
 			}
+
+			CCoreServiceKitImpl::Inst()->getInvokerTrace()->endRecv();
 		}
 
 		const std::vector<ServiceGlobalFilter>& vecServiceGlobalAfterFilter = CCoreServiceKitImpl::Inst()->getGlobalAfterFilter();

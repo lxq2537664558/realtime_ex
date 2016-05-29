@@ -52,8 +52,9 @@ namespace core
 
 	struct SMessageCacheHead
 	{
-		uint8_t	nType;
-		CTicker	tickTimeout;
+		uint8_t		nType;
+		uint64_t	nTraceID;
+		CTicker		tickTimeout;
 
 		virtual ~SMessageCacheHead() { }
 	};
@@ -118,5 +119,11 @@ namespace core
 		eBCT_ConnectionFromService	= 10,
 		eBCT_ConnectionToMaster		= 11,
 		eBCT_ConnectionToService	= 12,
+	};
+
+	struct STraceInfo
+	{
+		uint64_t	nTraceID;
+		std::string	szParentServiceName;
 	};
 }

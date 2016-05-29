@@ -26,6 +26,7 @@ namespace core
 		, m_pCoreServiceProxy(nullptr)
 		, m_pLoadBalanceMgr(nullptr)
 		, m_pServiceConnectionFactory(nullptr)
+		, m_pInvokerTrace(nullptr)
 	{
 		this->m_tickCheckConnectMaster.setCallback(std::bind(&CCoreServiceKitImpl::onCheckConnectMaster, this, std::placeholders::_1));
 	
@@ -245,6 +246,11 @@ namespace core
 	CCoreServiceInvoker* CCoreServiceKitImpl::getCoreServiceInvoker() const
 	{
 		return this->m_pCoreServiceInvoker;
+	}
+
+	CInvokerTrace* CCoreServiceKitImpl::getInvokerTrace() const
+	{
+		return this->m_pInvokerTrace;
 	}
 
 }

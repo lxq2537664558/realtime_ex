@@ -41,12 +41,14 @@ namespace core
 
 	void CCoreServiceKit::startNewTrace()
 	{
-
+		CCoreServiceKitImpl::Inst()->getInvokerTrace()->startNewTrace();
 	}
 
 	void CCoreServiceKit::addTraceExtraInfo(const char* szFormat, ...)
 	{
-
+		va_list arg;
+		va_start(arg, szFormat);
+		CCoreServiceKitImpl::Inst()->getInvokerTrace()->addTraceExtraInfo(szFormat, arg);
+		va_end(arg);
 	}
-
 }
