@@ -116,7 +116,6 @@ namespace core
 		DebugAstEx(sRequestMessageInfo.pMessage != nullptr, false);
 
 		uint64_t nTraceID = CCoreServiceKitImpl::Inst()->getInvokerTrace()->getCurTraceID();
-		CCoreServiceKitImpl::Inst()->getInvokerTrace()->send(sRequestMessageInfo.pMessage->GetTypeName(), szServiceName);
 
 		int32_t nBufSize = serialize_protobuf_message_to_buf(sRequestMessageInfo.pMessage, reinterpret_cast<message_header*>(&this->m_vecBuf[0]), (uint32_t)this->m_vecBuf.size());
 		if (nBufSize < 0)
@@ -177,8 +176,7 @@ namespace core
 		DebugAstEx(sResponseMessageInfo.pMessage != nullptr, false);
 
 		uint64_t nTraceID = CCoreServiceKitImpl::Inst()->getInvokerTrace()->getCurTraceID();
-		CCoreServiceKitImpl::Inst()->getInvokerTrace()->send(sResponseMessageInfo.pMessage->GetTypeName(), szServiceName);
-
+		
 		CCoreConnectionFromService* pCoreConnectionFromService = CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getConnectionFromService(szServiceName);
 		if (pCoreConnectionFromService == nullptr)
 		{
@@ -211,12 +209,11 @@ namespace core
 		return true;
 	}
 
-	bool CTransporter::forward(const std::string& szServiceName, const std::string& szMessageName, const SGateForwardMessageInfo& sGateMessageInfo)
+	bool CTransporter::forward(const std::string& szServiceName, const SGateForwardMessageInfo& sGateMessageInfo)
 	{
 		DebugAstEx(sGateMessageInfo.pHeader != nullptr, false);
 
 		CCoreServiceKitImpl::Inst()->getInvokerTrace()->startNewTrace();
-		CCoreServiceKitImpl::Inst()->getInvokerTrace()->send(szMessageName, szServiceName);
 		uint64_t nTraceID = CCoreServiceKitImpl::Inst()->getInvokerTrace()->getCurTraceID();
 
 		CCoreConnectionToService* pCoreConnectionToService = CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getConnectionToService(szServiceName);
@@ -256,8 +253,7 @@ namespace core
 		DebugAstEx(sGateMessageInfo.pMessage != nullptr, false);
 
 		uint64_t nTraceID = CCoreServiceKitImpl::Inst()->getInvokerTrace()->getCurTraceID();
-		CCoreServiceKitImpl::Inst()->getInvokerTrace()->send(sGateMessageInfo.pMessage->GetTypeName(), szServiceName);
-
+		
 		int32_t nBufSize = serialize_protobuf_message_to_buf(sGateMessageInfo.pMessage, reinterpret_cast<message_header*>(&this->m_vecBuf[0]), (uint32_t)this->m_vecBuf.size());
 		if (nBufSize < 0)
 		{

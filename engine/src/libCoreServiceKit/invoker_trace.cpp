@@ -58,10 +58,10 @@ namespace core
 		PrintTrace("trace_id: "UINT64FMT" end recv time: "UINT64FMT, this->m_nCurTraceID, base::getGmtTime());
 	}
 
-	void CInvokerTrace::send(const std::string& szMessageName, const std::string& szToServiceName)
+	void CInvokerTrace::send(const std::string& szMessageName)
 	{
-		PrintTrace("trace_id: "UINT64FMT" send time: "UINT64FMT" message_id: %s service_name: %s to_service_name: %s",
-			this->m_nCurTraceID, base::getGmtTime(), szMessageName.c_str(), CCoreServiceKitImpl::Inst()->getServiceBaseInfo().szName.c_str(), szToServiceName.c_str());
+		PrintTrace("trace_id: "UINT64FMT" send time: "UINT64FMT" message_name: %s service_name: %s",
+			this->m_nCurTraceID, base::getGmtTime(), szMessageName.c_str(), CCoreServiceKitImpl::Inst()->getServiceBaseInfo().szName.c_str());
 	}
 
 	void CInvokerTrace::startNewTrace()

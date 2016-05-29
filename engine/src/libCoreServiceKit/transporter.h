@@ -21,7 +21,7 @@ namespace core
 		bool					call(const std::string& szServiceName, const SRequestMessageInfo& sRequestMessageInfo);
 		bool					response(const std::string& szServiceName, const SResponseMessageInfo& sResponseMessageInfo);
 
-		bool					forward(const std::string& szServiceName, const std::string& szMessageName, const SGateForwardMessageInfo& sGateMessageInfo);
+		bool					forward(const std::string& szServiceName, const SGateForwardMessageInfo& sGateMessageInfo);
 
 		bool					send(const std::string& szServiceName, const SGateMessageInfo& sGateMessageInfo);
 
