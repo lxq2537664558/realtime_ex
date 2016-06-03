@@ -27,6 +27,4 @@ namespace core
 		uint64_t	m_nCurTraceID;
 		char		m_szExtraInfo[_INVOKER_TRACE_EXTRA_INFO];
 	};
-
-#define PrintTrace	PrintInfo
 }
