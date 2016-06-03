@@ -63,6 +63,6 @@ namespace core
 		/**
 		@brief: 网关服务转发客户端消息
 		*/
-		bool				forward(const message_header* pHeader, uint64_t nSessionID, const std::string& szServiceGroup);
+		bool				forward(uint32_t nMessageID, const void* pData, uint16_t nSize, uint64_t nSessionID, const std::string& szServiceGroup);
 	};
 }

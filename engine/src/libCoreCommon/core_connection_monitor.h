@@ -10,8 +10,8 @@ namespace core
 		CCoreConnectionMonitor();
 		~CCoreConnectionMonitor();
 
-		void	onRecv(const message_header* pHeader);
-		void	onSend(const message_header* pHeader);
+		void	onRecv(uint32_t nSize);
+		void	onSend(uint32_t nSize);
 		void	onConnect();
 		void	onDisconnect();
 

@@ -57,14 +57,14 @@ namespace core
 			this->m_funConnectRefuse(szContext);
 	}
 
-	bool CBaseConnectionMgr::connect(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, ClientDataCallback clientDataCallback)
+	bool CBaseConnectionMgr::connect(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize)
 	{
-		return this->m_pCoreConnectionMgr->connect(szHost, nPort, nType, szContext, nSendBufferSize, nRecvBufferSize, clientDataCallback);
+		return this->m_pCoreConnectionMgr->connect(szHost, nPort, nType, szContext, nSendBufferSize, nRecvBufferSize);
 	}
 
-	bool CBaseConnectionMgr::listen(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, ClientDataCallback clientDataCallback)
+	bool CBaseConnectionMgr::listen(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize)
 	{
-		return this->m_pCoreConnectionMgr->listen(szHost, nPort, nType, szContext, nSendBufferSize, nRecvBufferSize, clientDataCallback);
+		return this->m_pCoreConnectionMgr->listen(szHost, nPort, nType, szContext, nSendBufferSize, nRecvBufferSize);
 	}
 
 	uint32_t CBaseConnectionMgr::getBaseConnectionCount(uint32_t nType) const
@@ -86,7 +86,7 @@ namespace core
 		this->m_pCoreConnectionMgr->getBaseConnection(nType, vecBaseConnection);
 	}
 
-	void CBaseConnectionMgr::broadcast(uint32_t nType, uint16_t nMessageType, const void* pData, uint16_t nSize, const std::vector<uint64_t>* vecExcludeID)
+	void CBaseConnectionMgr::broadcast(uint32_t nType, uint8_t nMessageType, const void* pData, uint16_t nSize, const std::vector<uint64_t>* vecExcludeID)
 	{
 		this->m_pCoreConnectionMgr->broadcast(nType, nMessageType, pData, nSize, vecExcludeID);
 	}

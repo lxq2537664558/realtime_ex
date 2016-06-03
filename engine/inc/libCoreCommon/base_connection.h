@@ -32,15 +32,19 @@ namespace core
 		/**
 		@brief: 发送消息
 		*/
-		void					send(uint16_t nMessageType, const void* pData, uint16_t nSize);
+		void					send(uint8_t nMessageType, const void* pData, uint16_t nSize);
 		/**
 		@brief: 发送消息，可以带上额外数据
 		*/
-		void					send(uint16_t nMessageType, const void* pData, uint16_t nSize, const void* pExtraBuf, uint16_t nExtraSize);
+		void					send(uint8_t nMessageType, const void* pData, uint16_t nSize, const void* pExtraBuf, uint16_t nExtraSize);
 		/**
 		@brief: 关闭连接
 		*/
 		void					shutdown(bool bForce, const std::string& szMsg);
+		/**
+		@brief: 消息解析器
+		*/
+		void					setMessageParser(MessageParser& parser);
 		/**
 		@brief: 获取连接ID
 		*/
@@ -64,7 +68,7 @@ namespace core
 		/**
 		@brief: 消息回调
 		*/
-		virtual void			onDispatch(uint32_t nMessageType, const void* pData, uint16_t nSize) = 0;
+		virtual void			onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize) = 0;
 
 	private:
 		CCoreConnection*	m_pCoreConnection;

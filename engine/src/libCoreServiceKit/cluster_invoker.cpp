@@ -155,14 +155,14 @@ namespace core
 		return CCoreServiceKitImpl::Inst()->getTransporter()->send(sClientSessionInfo.szServiceName, sGateMessageInfo);
 	}
 
-	bool CClusterInvoker::forward(const message_header* pHeader, uint64_t nSessionID, const std::string& szServiceGroup)
+	bool CClusterInvoker::forward(uint32_t nMessageID, const void* pData, uint16_t nSize, uint64_t nSessionID, const std::string& szServiceGroup)
 	{
-		DebugAstEx(pHeader != nullptr, false);
+		DebugAstEx(pData != nullptr, false);
 
-		const std::string& szMessageName = CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getMessageName(pHeader->nMessageID);
+		const std::string& szMessageName = CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getMessageName(nMessageID);
 		if (szMessageName.empty())
 		{
-			PrintWarning("CClusterInvoker::forward error invalid message id  message_id: %d session_id: "UINT64FMT" service_group: %s message_id: %d", pHeader->nMessageID, nSessionID, szServiceGroup.c_str(), pHeader->nMessageID);
+			PrintWarning("CClusterInvoker::forward error invalid message id  message_id: %d session_id: "UINT64FMT" service_group: %s", nMessageID, nSessionID, szServiceGroup.c_str());
 			return false;
 		}
 		
@@ -190,7 +190,9 @@ namespace core
 
 		SGateForwardMessageInfo sGateMessageInfo;
 		sGateMessageInfo.nSessionID = nSessionID;
-		sGateMessageInfo.pHeader = const_cast<message_header*>(pHeader);
+		sGateMessageInfo.pData = const_cast<void*>(pData);
+		sGateMessageInfo.nSize = nSize;
+		sGateMessageInfo.nMessageID = nMessageID;
 
 		return CCoreServiceKitImpl::Inst()->getTransporter()->forward(szServiceName, sGateMessageInfo);
 	}

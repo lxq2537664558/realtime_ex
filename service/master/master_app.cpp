@@ -58,7 +58,7 @@ bool CMasterApp::onInit()
 	uint32_t nRecvBufSize = pHostInfoXML->UnsignedAttribute("recv_buf_size");
 	uint32_t nSendBufSize = pHostInfoXML->UnsignedAttribute("send_buf_size");
 	
-	this->getBaseConnectionMgr()->listen(szHost, nPort, eBCT_ConnectionFromService, "", nSendBufSize, nRecvBufSize, nullptr);
+	this->getBaseConnectionMgr()->listen(szHost, nPort, eBCT_ConnectionFromService, "", nSendBufSize, nRecvBufSize);
 
 	return true;
 }

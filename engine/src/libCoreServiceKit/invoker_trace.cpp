@@ -22,7 +22,7 @@ namespace core
 	{
 		if (base::crt::vsnprintf(this->m_szExtraInfo, sizeof(this->m_szExtraInfo), szFormat, arg) < 0)
 		{
-			PrintWarning("CInvokerTrace::addTraceExtraInfo");
+			PrintWarning("CInvokerTrace::addTraceExtraInfo trace_id: "UINT64FMT, nTraceID);
 			return;
 		}
 

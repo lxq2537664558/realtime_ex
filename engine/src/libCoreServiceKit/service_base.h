@@ -26,8 +26,10 @@ namespace core
 
 	struct SGateForwardMessageInfo
 	{
-		uint64_t		nSessionID;
-		message_header*	pHeader;
+		uint64_t	nSessionID;
+		uint32_t	nMessageID;
+		void*		pData;
+		uint16_t	nSize;
 	};
 
 	struct SGateMessageInfo
@@ -62,6 +64,7 @@ namespace core
 	struct SRequestMessageCacheInfo
 		: public SMessageCacheHead
 	{
+		uint32_t			nMessageID;
 		std::vector<char>	vecBuf;
 		InvokeCallback		callback;
 	};
@@ -69,6 +72,7 @@ namespace core
 	struct SGateMessageCacheInfo
 		: public SMessageCacheHead
 	{
+		uint32_t			nMessageID;
 		uint64_t			nSessionID;
 		std::vector<char>	vecBuf;
 	};
@@ -83,6 +87,7 @@ namespace core
 	struct SGateForwardMessageCacheInfo
 		: public SMessageCacheHead
 	{
+		uint32_t			nMessageID;
 		uint64_t			nSessionID;
 		std::vector<char>	vecBuf;
 	};
@@ -98,6 +103,7 @@ namespace core
 	{
 		CTicker			tickTimeout;
 		uint64_t		nSessionID;
+		uint64_t		nTraceID;
 		std::string		szServiceName;
 		InvokeCallback	callback;
 	};

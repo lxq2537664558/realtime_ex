@@ -78,14 +78,15 @@ namespace core
 	typedef std::function<void(uint32_t, const google::protobuf::Message*, EResponseResultType)>		InvokeCallback;			// RPC消息响应回调函数类型
 	typedef std::function<void(const std::string&, uint32_t, const google::protobuf::Message*)>			ServiceCallback;		// 服务消息处理函数类型
 	typedef std::function<void(const SClientSessionInfo&, uint32_t, const google::protobuf::Message*)>	GateForwardCallback;	// 经网关服务转发的客户端消息处理函数类型
-	typedef std::function<void(uint64_t, const message_header*)>										ClientCallback;			// 客户端消息处理函数类型
-	typedef std::function<bool(const std::string&, uint32_t, const void*, uint16_t)>					ServiceGlobalFilter;	// 全局的消息过滤器类型
+	typedef std::function<void(uint64_t, const client_message_header*)>									ClientCallback;			// 客户端消息处理函数类型
+	typedef std::function<bool(const std::string&, uint8_t, const void*, uint16_t)>						ServiceGlobalFilter;	// 全局的消息过滤器类型
 
 #pragma pack(push,1)
 	struct gate_cookice
 	{
 		uint64_t nSessionID;
 		uint64_t nTraceID;
+		uint32_t nMessageID;
 	};
 	
 	struct gate_cookice_broadcast
@@ -97,6 +98,7 @@ namespace core
 	{
 		uint64_t nSessionID;
 		uint64_t nTraceID;
+		uint32_t nMessageID;
 	};
 
 	struct response_cookice

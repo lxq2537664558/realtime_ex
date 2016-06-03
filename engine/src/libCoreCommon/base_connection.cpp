@@ -20,7 +20,7 @@ namespace core
 	{
 	}
 
-	void CBaseConnection::send(uint16_t nMessageType, const void* pData, uint16_t nSize)
+	void CBaseConnection::send(uint8_t nMessageType, const void* pData, uint16_t nSize)
 	{
 		DebugAst(pData != nullptr);
 		DebugAst(this->m_pCoreConnection != nullptr);
@@ -28,7 +28,7 @@ namespace core
 		this->m_pCoreConnection->send(nMessageType, pData, nSize);
 	}
 
-	void CBaseConnection::send(uint16_t nMessageType, const void* pData, uint16_t nSize, const void* pExtraBuf, uint16_t nExtraSize)
+	void CBaseConnection::send(uint8_t nMessageType, const void* pData, uint16_t nSize, const void* pExtraBuf, uint16_t nExtraSize)
 	{
 		DebugAst(pData != nullptr);
 		DebugAst(this->m_pCoreConnection != nullptr);

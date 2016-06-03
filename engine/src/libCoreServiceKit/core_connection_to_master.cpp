@@ -60,12 +60,12 @@ namespace core
 
 	}
 
-	void CCoreConnectionToMaster::onDispatch(uint32_t nMsgType, const void* pData, uint16_t nSize)
+	void CCoreConnectionToMaster::onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize)
 	{
-		DebugAst(nMsgType == eMT_SYSTEM);
+		DebugAst(nMessageType == eMT_SYSTEM);
 
-		const core::message_header* pHeader = reinterpret_cast<const core::message_header*>(pData);
-		DebugAst(nSize > sizeof(core::message_header));
+		const core::normal_message_header* pHeader = reinterpret_cast<const core::normal_message_header*>(pData);
+		DebugAst(nSize > sizeof(core::normal_message_header));
 
 		if (pHeader->nMessageID == eSMT_sync_service_base_info)
 		{

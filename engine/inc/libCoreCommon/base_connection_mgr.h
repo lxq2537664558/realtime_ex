@@ -31,11 +31,11 @@ namespace core
 		/**
 		@brief: 主动发起一个连接（异步）
 		*/
-		bool					connect(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, ClientDataCallback clientDataCallback);
+		bool					connect(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize);
 		/**
 		@brief: 发起一个监听
 		*/
-		bool					listen(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, ClientDataCallback clientDataCallback);
+		bool					listen(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize);
 
 		/**
 		@brief: 设置某一个类型的连接创建工厂
@@ -60,7 +60,7 @@ namespace core
 		/**
 		@brief: 根据连接的类名来向所有基于这个类创建的连接广播消息
 		*/
-		void					broadcast(uint32_t nType, uint16_t nMessageType, const void* pData, uint16_t nSize, const std::vector<uint64_t>* vecExcludeID);
+		void					broadcast(uint32_t nType, uint8_t nMessageType, const void* pData, uint16_t nSize, const std::vector<uint64_t>* vecExcludeID);
 		/**
 		@brief: 设置全局的连接成功回调
 		*/

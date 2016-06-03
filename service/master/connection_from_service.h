@@ -17,7 +17,7 @@ public:
 
 	virtual void		onConnect();
 	virtual void		onDisconnect();
-	virtual void		onDispatch(uint32_t nMsgType, const void* pData, uint16_t nSize);
+	virtual void		onDispatch(uint8_t nMsgType, const void* pData, uint16_t nSize);
 
 	const std::string&	getServiceName() const;
 

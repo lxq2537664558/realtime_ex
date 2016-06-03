@@ -25,11 +25,11 @@ namespace core
 		~CCoreConnectionMgr();
 
 		bool				init(uint32_t nMaxConnectionCount);
-		bool				connect(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, ClientDataCallback clientDataCallback);
-		bool				listen(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, ClientDataCallback clientDataCallback);
+		bool				connect(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize);
+		bool				listen(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize);
 		int32_t				update(int32_t nTime);
 
-		void				broadcast(uint32_t nType, uint16_t nMessageType, const void* pData, uint16_t nSize, const std::vector<uint64_t>* vecExcludeID);
+		void				broadcast(uint32_t nType, uint8_t nMessageType, const void* pData, uint16_t nSize, const std::vector<uint64_t>* vecExcludeID);
 		
 		void				destroyConnection(CCoreConnection* pCoreConnection);
 		void				getBaseConnection(uint32_t nType, std::vector<CBaseConnection*>& vecBaseConnection) const;
@@ -45,7 +45,6 @@ namespace core
 			std::string			szContext;
 			uint32_t			nType;
 			CCoreConnectionMgr*	pCoreConnectionMgr;
-			ClientDataCallback	clientDataCallback;
 
 			virtual base::INetConnecterHandler* onAccept( base::INetConnecter* pNetConnecter );
 		};
@@ -60,7 +59,6 @@ namespace core
 			std::string			szContext;
 			uint32_t			nType;
 			CCoreConnectionMgr*	pCoreConnectionMgr;
-			ClientDataCallback	clientDataCallback;
 
 			virtual uint32_t	onRecv( const char* pData, uint32_t nDataSize ) { return 0; }
 			virtual void		onConnect();
@@ -81,6 +79,6 @@ namespace core
 		void						onConnect( SNetActiveWaitConnecterHandler* pNetActiveWaitConnecterHandler );
 		void						delActiveWaitConnecterHandler( SNetActiveWaitConnecterHandler* pWaitActiveConnecterHandler );
 
-		CCoreConnection*			createConnection(uint32_t nType, const std::string& szContext, ClientDataCallback clientDataCallback);
+		CCoreConnection*			createConnection(uint32_t nType, const std::string& szContext);
 	};
 }

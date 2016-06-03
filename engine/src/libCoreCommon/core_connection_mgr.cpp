@@ -64,7 +64,7 @@ namespace core
 	{
 		DebugAstEx(pNetConnecter != nullptr && pNetAccepterHandler != nullptr, nullptr);
 
-		CCoreConnection* pCoreConnection = this->createConnection(pNetAccepterHandler->nType, pNetAccepterHandler->szContext, pNetAccepterHandler->clientDataCallback);
+		CCoreConnection* pCoreConnection = this->createConnection(pNetAccepterHandler->nType, pNetAccepterHandler->szContext);
 		DebugAstEx(nullptr != pCoreConnection, nullptr);
 
 		return pCoreConnection;
@@ -74,7 +74,7 @@ namespace core
 	{
 		DebugAst(pNetActiveWaitConnecterHandler != nullptr && pNetActiveWaitConnecterHandler->getNetConnecter() != nullptr);
 
-		CCoreConnection* pCoreConnection = this->createConnection(pNetActiveWaitConnecterHandler->nType, pNetActiveWaitConnecterHandler->szContext, pNetActiveWaitConnecterHandler->clientDataCallback);
+		CCoreConnection* pCoreConnection = this->createConnection(pNetActiveWaitConnecterHandler->nType, pNetActiveWaitConnecterHandler->szContext);
 		if (nullptr == pCoreConnection)
 			return;
 
@@ -92,15 +92,14 @@ namespace core
 		SAFE_DELETE(pWaitActiveConnecterHandler);
 	}
 
-	bool CCoreConnectionMgr::connect(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, ClientDataCallback clientDataCallback)
+	bool CCoreConnectionMgr::connect(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize)
 	{
 		PrintInfo("start connect host: %s  port: %u type: %u context: %s", szHost.c_str(), nPort, nType, szContext.c_str());
 		SNetActiveWaitConnecterHandler* pWaitActiveConnecterHandler = new SNetActiveWaitConnecterHandler();
 		pWaitActiveConnecterHandler->szContext = szContext;
 		pWaitActiveConnecterHandler->nType = nType;
 		pWaitActiveConnecterHandler->pCoreConnectionMgr = this;
-		pWaitActiveConnecterHandler->clientDataCallback = clientDataCallback;
-
+		
 		SNetAddr sNetAddr;
 		base::crt::strncpy(sNetAddr.szHost, _countof(sNetAddr.szHost), szHost.c_str(), _TRUNCATE);
 		sNetAddr.nPort = nPort;
@@ -114,14 +113,13 @@ namespace core
 		return true;
 	}
 
-	bool CCoreConnectionMgr::listen(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, ClientDataCallback clientDataCallback)
+	bool CCoreConnectionMgr::listen(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize)
 	{
 		SNetAccepterHandler* pNetAccepterHandler = new SNetAccepterHandler();
 		pNetAccepterHandler->szContext = szContext;
 		pNetAccepterHandler->nType = nType;
 		pNetAccepterHandler->pCoreConnectionMgr = this;
-		pNetAccepterHandler->clientDataCallback = clientDataCallback;
-
+		
 		SNetAddr sNetAddr;
 		base::crt::strncpy(sNetAddr.szHost, _countof(sNetAddr.szHost), szHost.c_str(), _TRUNCATE);
 		sNetAddr.nPort = nPort;
@@ -185,7 +183,7 @@ namespace core
 		return iter->second;
 	}
 
-	void CCoreConnectionMgr::broadcast(uint32_t nClassID, uint16_t nMessageType, const void* pData, uint16_t nSize, const std::vector<uint64_t>* vecExcludeID)
+	void CCoreConnectionMgr::broadcast(uint32_t nClassID, uint8_t nMessageType, const void* pData, uint16_t nSize, const std::vector<uint64_t>* vecExcludeID)
 	{
 		auto iter = this->m_mapCoreConnectionByTypeID.find(nClassID);
 		if (iter == this->m_mapCoreConnectionByTypeID.end())
@@ -217,7 +215,7 @@ namespace core
 		}
 	}
 
-	CCoreConnection* CCoreConnectionMgr::createConnection(uint32_t nType, const std::string& szContext, ClientDataCallback clientDataCallback)
+	CCoreConnection* CCoreConnectionMgr::createConnection(uint32_t nType, const std::string& szContext)
 	{
 		CBaseConnectionFactory* pBaseConnectionFactory = this->m_pBaseConnectionMgr->getBaseConnectionFactory(nType);
 		if (nullptr == pBaseConnectionFactory)
@@ -232,7 +230,7 @@ namespace core
 			return nullptr;
 		}
 		CCoreConnection* pCoreConnection = new CCoreConnection();
-		if (!pCoreConnection->init(pBaseConnection, this->m_nNextCoreConnectionID++, clientDataCallback))
+		if (!pCoreConnection->init(pBaseConnection, this->m_nNextCoreConnectionID++))
 		{
 			SAFE_DELETE(pCoreConnection);
 			SAFE_RELEASE(pBaseConnection);

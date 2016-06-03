@@ -46,11 +46,11 @@ void CConnectionFromService::onDisconnect()
 	CMasterApp::Inst()->getServiceMgr()->unregisterService(this->m_szServiceName);
 }
 
-void CConnectionFromService::onDispatch(uint32_t nMsgType, const void* pData, uint16_t nSize)
+void CConnectionFromService::onDispatch(uint8_t nMsgType, const void* pData, uint16_t nSize)
 {
 	DebugAst(nMsgType == eMT_SYSTEM);
 
-	const core::message_header* pHeader = reinterpret_cast<const core::message_header*>(pData);
+	const core::normal_message_header* pHeader = reinterpret_cast<const core::normal_message_header*>(pData);
 	DebugAst(nSize > sizeof(core::message_header));
 
 	if (pHeader->nMessageID == eSMT_register_service_base_info)

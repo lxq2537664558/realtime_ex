@@ -37,15 +37,14 @@ namespace core
 		DebugAst(this->m_pHeartbeat == nullptr);
 	}
 
-	bool CCoreConnection::init(CBaseConnection* pBaseConnection, uint64_t nID, ClientDataCallback clientDataCallback)
+	bool CCoreConnection::init(CBaseConnection* pBaseConnection, uint64_t nID)
 	{
 		DebugAstEx(pBaseConnection != nullptr, false);
 
 		this->m_pBaseConnection = pBaseConnection;
 		this->m_pBaseConnection->m_pCoreConnection = this;
 		this->m_nID = nID;
-		this->m_clientDataCallback = clientDataCallback;
-
+		
 		return true;
 	}
 
@@ -59,24 +58,23 @@ namespace core
 			{
 				uint16_t nMessageSize = 0;
 
-				if (this->m_clientDataCallback != nullptr)
+				if (this->m_messageParser != nullptr)
 				{
-					int32_t nParserSize = this->m_clientDataCallback(pData, nDataSize);
+					uint8_t nMessageType = 0;
+					int32_t nParserSize = this->m_messageParser(pData, nDataSize, nMessageType);
 					if (nParserSize == 0)
 						break;
 
 					if (nParserSize <= 0 || nParserSize > UINT16_MAX)
 					{
 						char szBuf[256] = { 0 };
-						base::crt::snprintf(szBuf, _countof(szBuf), "parser client msg error %d", nParserSize);
+						base::crt::snprintf(szBuf, _countof(szBuf), "parser message error %d", nParserSize);
 						this->shutdown(true, szBuf);
 						break;
 					}
 
-					uint16_t nClientMessageSize = (uint16_t)nParserSize;
-					this->onPacketMsg(eMT_CLIENT, pData, nClientMessageSize);
-
-					nMessageSize = nClientMessageSize;
+					nMessageSize = (uint16_t)nParserSize;
+					this->onDispatch(nMessageType, pData, nMessageSize);
 				}
 				else
 				{
@@ -88,7 +86,7 @@ namespace core
 					if (pHeader->nMessageSize < sizeof(message_header))
 					{
 						char szBuf[256] = { 0 };
-						base::crt::snprintf(szBuf, _countof(szBuf), "message size error message_type[%d]", pHeader->nMessageID);
+						base::crt::snprintf(szBuf, _countof(szBuf), "message size error message_type[%d]", pHeader->nMessageSize);
 						this->shutdown(true, szBuf);
 						break;
 					}
@@ -99,7 +97,7 @@ namespace core
 
 					nMessageSize = pHeader->nMessageSize;
 
-					this->onPacketMsg(pHeader->nMessageID, pHeader + 1, pHeader->nMessageSize - sizeof(message_header));
+					this->onDispatch(pHeader->nMessageType, pHeader + 1, pHeader->nMessageSize - sizeof(message_header));
 				}
 
 				nRecvSize += nMessageSize;
@@ -151,12 +149,15 @@ namespace core
 		CCoreApp::Inst()->getCoreConnectionMgr()->destroyConnection(this);
 	}
 
-	void CCoreConnection::onPacketMsg(uint32_t nMessageType, const void* pData, uint16_t nSize)
+	void CCoreConnection::onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize)
 	{
 		if (nMessageType == eMT_HEARTBEAT)
 			return;
 
 		CCoreApp::Inst()->incQPS();
+
+		this->m_monitor.onRecv(nSize);
+
 		this->m_pBaseConnection->onDispatch(nMessageType, pData, nSize);
 	}
 
@@ -180,10 +181,12 @@ namespace core
 		this->send(eMT_HEARTBEAT, &netMsg, sizeof(netMsg));
 	}
 
-	void CCoreConnection::send(uint16_t nMessageType, const void* pData, uint16_t nSize)
+	void CCoreConnection::send(uint8_t nMessageType, const void* pData, uint16_t nSize)
 	{
 		DebugAst(this->m_pNetConnecter != nullptr);
 		DebugAst(pData != nullptr && nSize > 0);
+
+		this->m_monitor.onSend(nSize);
 
 		switch (nMessageType)
 		{
@@ -200,7 +203,7 @@ namespace core
 			{
 				message_header header;
 				header.nMessageSize = sizeof(header) + nSize;
-				header.nMessageID = nMessageType;
+				header.nMessageType = nMessageType;
 				this->m_pNetConnecter->send(&header, sizeof(header));
 				this->m_pNetConnecter->send(pData, nSize);
 			}
@@ -208,10 +211,12 @@ namespace core
 		}
 	}
 
-	void CCoreConnection::send(uint16_t nMessageType, const void* pData, uint16_t nSize, const void* pExtraBuf, uint16_t nExtraSize)
+	void CCoreConnection::send(uint8_t nMessageType, const void* pData, uint16_t nSize, const void* pExtraBuf, uint16_t nExtraSize)
 	{
 		DebugAst(this->m_pNetConnecter != nullptr);
 		DebugAst(pData != nullptr && nSize > 0 && pExtraBuf != nullptr && nExtraSize > 0);
+
+		this->m_monitor.onSend(nSize + nExtraSize);
 
 		switch (nMessageType)
 		{
@@ -231,7 +236,7 @@ namespace core
 			{
 				message_header header;
 				header.nMessageSize = sizeof(header) + nSize + nExtraSize;
-				header.nMessageID = nMessageType;
+				header.nMessageType = nMessageType;
 				this->m_pNetConnecter->send(&header, sizeof(header));
 				this->m_pNetConnecter->send(pData, nSize);
 				this->m_pNetConnecter->send(pExtraBuf, nExtraSize);
@@ -287,4 +292,10 @@ namespace core
 	{
 		return this->m_pBaseConnection;
 	}
+
+	void CCoreConnection::setMessageParser(MessageParser& parser)
+	{
+		this->m_messageParser = parser;
+	}
+
 }

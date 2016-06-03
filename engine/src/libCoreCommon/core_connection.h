@@ -20,9 +20,11 @@ namespace core
 		CCoreConnection();
 		virtual ~CCoreConnection();
 
-		bool				init(CBaseConnection* pBaseConnection, uint64_t nID, ClientDataCallback clientDataCallback);
-		void				send(uint16_t nMessageType, const void* pData, uint16_t nSize);
-		void				send(uint16_t nMessageType, const void* pData, uint16_t nSize, const void* pExtraBuf, uint16_t nExtraSize);
+		bool				init(CBaseConnection* pBaseConnection, uint64_t nID);
+		void				send(uint8_t nMessageType, const void* pData, uint16_t nSize);
+		void				send(uint8_t nMessageType, const void* pData, uint16_t nSize, const void* pExtraBuf, uint16_t nExtraSize);
+		
+		void				setMessageParser(MessageParser& parser);
 
 		uint64_t			getID() const;
 
@@ -43,7 +45,7 @@ namespace core
 		virtual void		onConnect();
 		virtual void		onDisconnect();
 
-		void				onPacketMsg(uint32_t nMessageType, const void* pData, uint16_t nSize);
+		void				onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize);
 		void				sendHeartbeat();
 
 	private:
@@ -51,9 +53,9 @@ namespace core
 		CTicker*				m_pHeartbeat;
 		uint32_t				m_nSendHeartbeatCount;
 
+		MessageParser			m_messageParser;
 		uint64_t				m_nID;
-		CBaseConnection*		m_pBaseConnection;	// 这个必须奥保证赋值操作是原子的，所以应该在边界上对齐，不然又可能不是原子的
+		CBaseConnection*		m_pBaseConnection;
 		CCoreConnectionMonitor	m_monitor;
-		ClientDataCallback		m_clientDataCallback;
 	};
 }

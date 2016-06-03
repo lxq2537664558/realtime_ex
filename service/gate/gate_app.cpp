@@ -14,7 +14,7 @@
 
 #include "tinyxml2/tinyxml2.h"
 
-static bool gate_before_filter(const std::string& szFromServiceName, uint32_t nMessageType, const void* pData, uint16_t nSize)
+static bool gate_before_filter(const std::string& szFromServiceName, uint8_t nMessageType, const void* pData, uint16_t nSize)
 {
 	DebugAstEx(pData != nullptr, false);
 
@@ -84,7 +84,7 @@ bool CGateApp::onInit()
 	// 启动客户端连接
 	tinyxml2::XMLElement* pListenClientAddrXML = pRootXML->FirstChildElement("client");
 	DebugAstEx(pListenClientAddrXML != nullptr, false);
-	this->getBaseConnectionMgr()->listen(pListenClientAddrXML->Attribute("host") != nullptr ? pListenClientAddrXML->Attribute("host") : "0.0.0.0", (uint16_t)pListenClientAddrXML->IntAttribute("port"), eBCT_ConnectionFromClient, "", pListenClientAddrXML->IntAttribute("send_buf_size"), pListenClientAddrXML->IntAttribute("recv_buf_size"), core::default_parser_native_data);
+	this->getBaseConnectionMgr()->listen(pListenClientAddrXML->Attribute("host") != nullptr ? pListenClientAddrXML->Attribute("host") : "0.0.0.0", (uint16_t)pListenClientAddrXML->IntAttribute("port"), eBCT_ConnectionFromClient, "", pListenClientAddrXML->IntAttribute("send_buf_size"), pListenClientAddrXML->IntAttribute("recv_buf_size"));
 
 	SAFE_DELETE(pConfigXML);
 

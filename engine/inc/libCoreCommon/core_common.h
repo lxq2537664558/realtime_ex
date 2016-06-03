@@ -13,36 +13,32 @@ namespace core
 	struct message_header
 	{
 		uint16_t	nMessageSize;	// 包括消息头的
-		uint32_t	nMessageID;	
+		uint8_t		nMessageType;	// 消息类型，类型见下面	
 
-		message_header(uint16_t nMessageID) : nMessageID(nMessageID) { }
+		message_header(uint8_t nMessageType) : nMessageType(nMessageType) { }
 		message_header() {}
 	};
-#pragma pack(pop)
 
-	inline int32_t default_parser_native_data(const void* pData, uint32_t nDataSize)
+	struct client_message_header
 	{
-		// 都不够消息头
-		if (nDataSize < sizeof(message_header))
-			return 0;
+		uint16_t	nMessageSize;	// 包括消息头的
+		uint32_t	nMessageID;
+	};
 
-		const message_header* pHeader = reinterpret_cast<const message_header*>(pData);
-		if (pHeader->nMessageSize < sizeof(message_header))
-			return -1;
+	struct normal_message_header
+	{
+		uint32_t	nMessageID;
 
-		// 不是完整的消息
-		if (nDataSize < pHeader->nMessageSize)
-			return 0;
-
-		return pHeader->nMessageSize;
-	}
+		normal_message_header(uint32_t nMessageID) : nMessageID(nMessageID) { }
+	};
+#pragma pack(pop)
 }
 
 #define message_begin(MessageName, nMessageID) \
-class MessageName : public core::message_header\
+class MessageName : public core::normal_message_header\
 {\
 public:\
-	MessageName() : message_header(nMessageID) { nMessageSize = sizeof(MessageName); }\
+	MessageName() : core::normal_message_header(nMessageID) { }\
 	static  uint16_t	getMessageID() { return nMessageID; }\
 	static  const char*	getMessageName() { return #MessageName; }
 
@@ -50,21 +46,21 @@ public:\
 
 #define pack_begin(writeBuf)\
 	writeBuf.clear();\
-	writeBuf.write(this, sizeof(core::message_header));
+	writeBuf.write(this, sizeof(core::normal_message_header));
 
 #define pack_end(writeBuf)\
 	do\
-			{\
+	{\
 		uint16_t nPos = (uint16_t)writeBuf.getCurSize(); \
 		writeBuf.seek(base::eBST_Begin, 0); \
 		writeBuf.write(nPos); \
 		writeBuf.seek(base::eBST_Begin, nPos);\
-			} while(0)
+	} while(0)
 
 #define unpack_begin(buf, size)\
 	base::CReadBuf readBuf;\
 	readBuf.init(buf, size);\
-	readBuf.read(this, sizeof(core::message_header));
+	readBuf.read(this, sizeof(core::normal_message_header));
 
 #define unpack_end()
 
@@ -90,7 +86,7 @@ enum EMessageType
 
 namespace core
 {
-	typedef std::function<int32_t(const char*, uint32_t)>	ClientDataCallback;
+	typedef std::function<int32_t(const char*, uint32_t, uint8_t&)>	MessageParser;	// 原生消息
 }
 
 #define _BASE_CONNECTION_TYPE_BEGIN	100

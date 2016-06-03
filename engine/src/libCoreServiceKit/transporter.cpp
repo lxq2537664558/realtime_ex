@@ -67,7 +67,7 @@ namespace core
 
 			if (sMessageCacheInfo.bRefuse)
 			{
-				CBaseApp::Inst()->getBaseConnectionMgr()->connect(pServiceBaseInfo->szHost, pServiceBaseInfo->nPort, eBCT_ConnectionToService, pServiceBaseInfo->szName, pServiceBaseInfo->nSendBufSize, pServiceBaseInfo->nRecvBufSize, nullptr);
+				CBaseApp::Inst()->getBaseConnectionMgr()->connect(pServiceBaseInfo->szHost, pServiceBaseInfo->nPort, eBCT_ConnectionToService, pServiceBaseInfo->szName, pServiceBaseInfo->nSendBufSize, pServiceBaseInfo->nRecvBufSize);
 				sMessageCacheInfo.bRefuse = false;
 			}
 			
@@ -117,12 +117,20 @@ namespace core
 
 		uint64_t nTraceID = CCoreServiceKitImpl::Inst()->getInvokerTrace()->getCurTraceID();
 
-		int32_t nBufSize = serialize_protobuf_message_to_buf(sRequestMessageInfo.pMessage, reinterpret_cast<message_header*>(&this->m_vecBuf[0]), (uint32_t)this->m_vecBuf.size());
-		if (nBufSize < 0)
+		uint32_t nMessageSize = sRequestMessageInfo.pMessage->ByteSize();
+		if (nMessageSize >= this->m_vecBuf.size())
 		{
-			CCoreServiceKitImpl::Inst()->getInvokerTrace()->addTraceExtraInfo("serialize protobuf message to buf error by call");
+			CCoreServiceKitImpl::Inst()->getInvokerTrace()->addTraceExtraInfo("request message size too big message_name: %s message_size: %d", sRequestMessageInfo.pMessage->GetTypeName().c_str(), nMessageSize);
 			return false;
 		}
+		
+		if (!sRequestMessageInfo.pMessage->SerializeToArray(&this->m_vecBuf[0], nMessageSize))
+		{
+			CCoreServiceKitImpl::Inst()->getInvokerTrace()->addTraceExtraInfo("serialize protobuf message to buf error");
+			return false;
+		}
+
+		uint32_t nMessageID = _GET_MESSAGE_ID(sRequestMessageInfo.pMessage->GetTypeName());
 		CCoreConnectionToService* pCoreConnectionToService = CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getConnectionToService(szServiceName);
 		if (pCoreConnectionToService != nullptr)
 		{
@@ -134,6 +142,7 @@ namespace core
 				pResponseWaitInfo = new SResponseWaitInfo();
 				pResponseWaitInfo->callback = sRequestMessageInfo.callback;
 				pResponseWaitInfo->nSessionID = nSessionID;
+				pResponseWaitInfo->nTraceID = nTraceID;
 				pResponseWaitInfo->szServiceName = szServiceName;
 				pResponseWaitInfo->tickTimeout.setCallback(std::bind(&CTransporter::onRequestMessageTimeout, this, std::placeholders::_1));
 				CBaseApp::Inst()->registerTicker(&pResponseWaitInfo->tickTimeout, CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getProxyInvokTimeout(_GET_MESSAGE_ID(sRequestMessageInfo.pMessage->GetTypeName())) * 1000, 0, nSessionID);
@@ -145,8 +154,9 @@ namespace core
 			request_cookice cookice;
 			cookice.nSessionID = nSessionID;
 			cookice.nTraceID = nTraceID;
+			cookice.nMessageID = nMessageID;
 
-			pCoreConnectionToService->send(eMT_REQUEST, &cookice, sizeof(cookice), &this->m_vecBuf[0], (uint16_t)nBufSize);
+			pCoreConnectionToService->send(eMT_REQUEST, &cookice, sizeof(cookice), &this->m_vecBuf[0], (uint16_t)nMessageSize);
 
 			return true;
 		}
@@ -156,15 +166,16 @@ namespace core
 		uint64_t nCacheID = this->genCacheID();
 		SRequestMessageCacheInfo* pRequestMessageCacheInfo = new SRequestMessageCacheInfo();
 		pRequestMessageCacheInfo->nTraceID = nTraceID;
+		pRequestMessageCacheInfo->nMessageID = nMessageID;
 		pRequestMessageCacheInfo->nType = eMCIT_Request;
-		pRequestMessageCacheInfo->vecBuf.resize(nBufSize);
-		memcpy(&pRequestMessageCacheInfo->vecBuf[0], &this->m_vecBuf[0], nBufSize);
+		pRequestMessageCacheInfo->vecBuf.resize(nMessageSize);
+		memcpy(&pRequestMessageCacheInfo->vecBuf[0], &this->m_vecBuf[0], nMessageSize);
 		pRequestMessageCacheInfo->callback = sRequestMessageInfo.callback;
 		pRequestMessageCacheInfo->tickTimeout.setCallback(std::bind(&CTransporter::onCacheMessageTimeout, this, std::placeholders::_1));
 		CBaseApp::Inst()->registerTicker(&pRequestMessageCacheInfo->tickTimeout, CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getProxyInvokTimeout(_GET_MESSAGE_ID(sRequestMessageInfo.pMessage->GetTypeName())) * 1000, 0, nCacheID);
 
 		pMessageCacheInfo->mapMessageCacheInfo[nCacheID] = pRequestMessageCacheInfo;
-		pMessageCacheInfo->nTotalSize += nBufSize;
+		pMessageCacheInfo->nTotalSize += nMessageSize;
 
 		this->onCheckConnect(0);
 
@@ -201,7 +212,7 @@ namespace core
 		void* pMessageData = reinterpret_cast<char*>(pCookice + 1) + pCookice->nMessageNameLen;
 		if (!sResponseMessageInfo.pMessage->SerializeToArray(pMessageData, nMessageSize))
 		{
-			CCoreServiceKitImpl::Inst()->getInvokerTrace()->addTraceExtraInfo("serialize to array error by response");
+			CCoreServiceKitImpl::Inst()->getInvokerTrace()->addTraceExtraInfo("serialize to array error");
 			return false;
 		}
 		pCoreConnectionFromService->send(eMT_RESPONSE, pCookice, (uint16_t)(sizeof(response_cookice) + szMessageName.size() + nMessageSize));
@@ -211,7 +222,7 @@ namespace core
 
 	bool CTransporter::forward(const std::string& szServiceName, const SGateForwardMessageInfo& sGateMessageInfo)
 	{
-		DebugAstEx(sGateMessageInfo.pHeader != nullptr, false);
+		DebugAstEx(sGateMessageInfo.pData != nullptr, false);
 
 		CCoreServiceKitImpl::Inst()->getInvokerTrace()->startNewTrace();
 		uint64_t nTraceID = CCoreServiceKitImpl::Inst()->getInvokerTrace()->getCurTraceID();
@@ -223,7 +234,8 @@ namespace core
 			gate_cookice cookice;
 			cookice.nSessionID = sGateMessageInfo.nSessionID;
 			cookice.nTraceID = nTraceID;
-			pCoreConnectionToService->send(eMT_GATE_FORWARD, &cookice, sizeof(cookice), sGateMessageInfo.pHeader, sGateMessageInfo.pHeader->nMessageSize);
+			cookice.nMessageID = sGateMessageInfo.nMessageID;
+			pCoreConnectionToService->send(eMT_GATE_FORWARD, &cookice, sizeof(cookice), sGateMessageInfo.pData, sGateMessageInfo.nSize);
 
 			return true;
 		}
@@ -234,14 +246,15 @@ namespace core
 		SGateForwardMessageCacheInfo* pGateForwardMessageCacheInfo = new SGateForwardMessageCacheInfo();
 		pGateForwardMessageCacheInfo->nType = eMCIT_GateForward;
 		pGateForwardMessageCacheInfo->nTraceID = nTraceID;
-		pGateForwardMessageCacheInfo->vecBuf.resize(sGateMessageInfo.pHeader->nMessageSize);
-		memcpy(&pGateForwardMessageCacheInfo->vecBuf[0], sGateMessageInfo.pHeader, sGateMessageInfo.pHeader->nMessageSize);
+		pGateForwardMessageCacheInfo->nMessageID = sGateMessageInfo.nMessageID;
+		pGateForwardMessageCacheInfo->vecBuf.resize(sGateMessageInfo.nSize);
+		memcpy(&pGateForwardMessageCacheInfo->vecBuf[0], sGateMessageInfo.pData, sGateMessageInfo.nSize);
 		pGateForwardMessageCacheInfo->nSessionID = sGateMessageInfo.nSessionID;
 		pGateForwardMessageCacheInfo->tickTimeout.setCallback(std::bind(&CTransporter::onCacheMessageTimeout, this, std::placeholders::_1));
-		CBaseApp::Inst()->registerTicker(&pGateForwardMessageCacheInfo->tickTimeout, CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getProxyInvokTimeout(sGateMessageInfo.pHeader->nMessageID) * 1000, 0, nCacheID);
+		CBaseApp::Inst()->registerTicker(&pGateForwardMessageCacheInfo->tickTimeout, CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getProxyInvokTimeout(sGateMessageInfo.nMessageID) * 1000, 0, nCacheID);
 
 		pMessageCacheInfo->mapMessageCacheInfo[nCacheID] = pGateForwardMessageCacheInfo;
-		pMessageCacheInfo->nTotalSize += sGateMessageInfo.pHeader->nMessageSize;
+		pMessageCacheInfo->nTotalSize += sGateMessageInfo.nSize;
 
 		this->onCheckConnect(0);
 
@@ -253,13 +266,22 @@ namespace core
 		DebugAstEx(sGateMessageInfo.pMessage != nullptr, false);
 
 		uint64_t nTraceID = CCoreServiceKitImpl::Inst()->getInvokerTrace()->getCurTraceID();
-		
-		int32_t nBufSize = serialize_protobuf_message_to_buf(sGateMessageInfo.pMessage, reinterpret_cast<message_header*>(&this->m_vecBuf[0]), (uint32_t)this->m_vecBuf.size());
-		if (nBufSize < 0)
+
+		uint32_t nMessageSize = sGateMessageInfo.pMessage->ByteSize();
+		if (nMessageSize >= this->m_vecBuf.size())
 		{
-			CCoreServiceKitImpl::Inst()->getInvokerTrace()->addTraceExtraInfo("serialize protobuf message to buf error by send");
+			CCoreServiceKitImpl::Inst()->getInvokerTrace()->addTraceExtraInfo("send message size too big message_name: %s message_size: %d", sGateMessageInfo.pMessage->GetTypeName().c_str(), nMessageSize);
 			return false;
 		}
+		
+		if (!sGateMessageInfo.pMessage->SerializeToArray(&this->m_vecBuf[0], nMessageSize))
+		{
+			CCoreServiceKitImpl::Inst()->getInvokerTrace()->addTraceExtraInfo("serialize protobuf message to buf error");
+			return false;
+		}
+		
+		const std::string szMessageName = sGateMessageInfo.pMessage->GetTypeName();
+		uint32_t nMessageID = _GET_MESSAGE_ID(szMessageName);
 		CCoreConnectionToService* pCoreConnectionToService = CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getConnectionToService(szServiceName);
 		if (pCoreConnectionToService != nullptr)
 		{
@@ -267,8 +289,9 @@ namespace core
 			gate_cookice cookice;
 			cookice.nSessionID = sGateMessageInfo.nSessionID;
 			cookice.nTraceID = nTraceID;
+			cookice.nMessageID = nMessageID;
 
-			pCoreConnectionToService->send(eMT_TO_GATE, &cookice, sizeof(cookice), &this->m_vecBuf[0], (uint16_t)nBufSize);
+			pCoreConnectionToService->send(eMT_TO_GATE, &cookice, sizeof(cookice), &this->m_vecBuf[0], (uint16_t)nMessageSize);
 
 			return true;
 		}
@@ -279,14 +302,15 @@ namespace core
 		SGateMessageCacheInfo* pGateMessageCacheInfo = new SGateMessageCacheInfo();
 		pGateMessageCacheInfo->nType = eMCIT_Gate;
 		pGateMessageCacheInfo->nTraceID = nTraceID;
-		pGateMessageCacheInfo->vecBuf.resize(nBufSize);
-		memcpy(&pGateMessageCacheInfo->vecBuf[0], &this->m_vecBuf[0], nBufSize);
+		pGateMessageCacheInfo->nMessageID = nMessageID;
 		pGateMessageCacheInfo->nSessionID = sGateMessageInfo.nSessionID;
+		pGateMessageCacheInfo->vecBuf.resize(nMessageSize);
+		memcpy(&pGateMessageCacheInfo->vecBuf[0], &this->m_vecBuf[0], nMessageSize);
 		pGateMessageCacheInfo->tickTimeout.setCallback(std::bind(&CTransporter::onCacheMessageTimeout, this, std::placeholders::_1));
 		CBaseApp::Inst()->registerTicker(&pGateMessageCacheInfo->tickTimeout, CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getProxyInvokTimeout(_GET_MESSAGE_ID(sGateMessageInfo.pMessage->GetTypeName())) * 1000, 0, nCacheID);
 
 		pMessageCacheInfo->mapMessageCacheInfo[nCacheID] = pGateMessageCacheInfo;
-		pMessageCacheInfo->nTotalSize += nBufSize;
+		pMessageCacheInfo->nTotalSize += nMessageSize;
 
 		this->onCheckConnect(0);
 
@@ -297,9 +321,18 @@ namespace core
 	{
 		DebugAstEx(sGateBroadcastMessageInfo.pMessage != nullptr && !sGateBroadcastMessageInfo.vecSessionID.empty(), false);
 
-		int32_t nBufSize = serialize_protobuf_message_to_buf(sGateBroadcastMessageInfo.pMessage, reinterpret_cast<message_header*>(&this->m_vecBuf[0]), (uint32_t)this->m_vecBuf.size());
-		if (nBufSize < 0)
+		uint32_t nMessageSize = sGateBroadcastMessageInfo.pMessage->ByteSize();
+		if (nMessageSize >= this->m_vecBuf.size())
+		{
+			PrintWarning("broadcast message size too big message_name: %s message_size: %d", sGateBroadcastMessageInfo.pMessage->GetTypeName().c_str(), nMessageSize);
 			return false;
+		}
+
+		if (!sGateBroadcastMessageInfo.pMessage->SerializeToArray(&this->m_vecBuf[0], nMessageSize))
+		{
+			PrintWarning("serialize protobuf message to buf error");
+			return false;
+		}
 
 		CCoreConnectionToService* pCoreConnectionToService = CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getConnectionToService(szServiceName);
 		if (pCoreConnectionToService != nullptr)
@@ -309,7 +342,7 @@ namespace core
 			pCookice->nCount = (uint16_t)sGateBroadcastMessageInfo.vecSessionID.size();
 			memcpy(pCookice + 1, &sGateBroadcastMessageInfo.vecSessionID[0], sizeof(uint64_t) * sGateBroadcastMessageInfo.vecSessionID.size());
 
-			pCoreConnectionToService->send(eMT_TO_GATE | eMT_BROADCAST, pCookice, (uint16_t)(sizeof(uint64_t) * sGateBroadcastMessageInfo.vecSessionID.size()), &this->m_vecBuf[0], (uint16_t)nBufSize);
+			pCoreConnectionToService->send(eMT_TO_GATE, pCookice, (uint16_t)(sizeof(uint64_t) * sGateBroadcastMessageInfo.vecSessionID.size()), &this->m_vecBuf[0], (uint16_t)nMessageSize);
 
 			return true;
 		}
@@ -319,14 +352,14 @@ namespace core
 		uint64_t nCacheID = this->genCacheID();
 		SGateBroadcastMessageCacheInfo* pGateBroadcastMessageCacheInfo = new SGateBroadcastMessageCacheInfo();
 		pGateBroadcastMessageCacheInfo->nType = eMCIT_GateBroadcast;
-		pGateBroadcastMessageCacheInfo->vecBuf.resize(nBufSize);
-		memcpy(&pGateBroadcastMessageCacheInfo->vecBuf[0], &this->m_vecBuf[0], nBufSize);
+		pGateBroadcastMessageCacheInfo->vecBuf.resize(nMessageSize);
+		memcpy(&pGateBroadcastMessageCacheInfo->vecBuf[0], &this->m_vecBuf[0], nMessageSize);
 		pGateBroadcastMessageCacheInfo->vecSessionID = sGateBroadcastMessageInfo.vecSessionID;
 		pGateBroadcastMessageCacheInfo->tickTimeout.setCallback(std::bind(&CTransporter::onCacheMessageTimeout, this, std::placeholders::_1));
 		CBaseApp::Inst()->registerTicker(&pGateBroadcastMessageCacheInfo->tickTimeout, CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getProxyInvokTimeout(_GET_MESSAGE_ID(sGateBroadcastMessageInfo.pMessage->GetTypeName())) * 1000, 0, nCacheID);
 
 		pMessageCacheInfo->mapMessageCacheInfo[nCacheID] = pGateBroadcastMessageCacheInfo;
-		pMessageCacheInfo->nTotalSize += nBufSize;
+		pMessageCacheInfo->nTotalSize += nMessageSize;
 
 		this->onCheckConnect(0);
 
@@ -349,7 +382,7 @@ namespace core
 			return;
 		}
 
-		PrintWarning("wait response time out session_id: "UINT64FMT" service_name: %s", pResponseWaitInfo->nSessionID, pResponseWaitInfo->szServiceName.c_str());
+		CCoreServiceKitImpl::Inst()->getInvokerTrace()->addTraceExtraInfo("wait response time out session_id: "UINT64FMT" service_name: %s", pResponseWaitInfo->nSessionID, pResponseWaitInfo->szServiceName.c_str());
 
 		if (pResponseWaitInfo->callback)
 			pResponseWaitInfo->callback(0, nullptr, eRRT_TIME_OUT);
@@ -375,7 +408,7 @@ namespace core
 				return;
 			}
 
-			CCoreServiceKitImpl::Inst()->getInvokerTrace()->addTraceExtraInfo(pMessageCacheHead->nTraceID, "timeout");
+			CCoreServiceKitImpl::Inst()->getInvokerTrace()->addTraceExtraInfo(pMessageCacheHead->nTraceID, "cache message timeout");
 			
 			SAFE_DELETE(pMessageCacheHead);
 			sMessageCacheInfo.mapMessageCacheInfo.erase(iterCache);
@@ -416,18 +449,21 @@ namespace core
 						if (pRequestMessageCacheInfo->callback != nullptr)
 						{
 							nSessionID = this->genSessionID();
-							SResponseWaitInfo* pResponseInfo = new SResponseWaitInfo();
-							pResponseInfo->callback = pRequestMessageCacheInfo->callback;
-							pResponseInfo->nSessionID = nSessionID;
-							pResponseInfo->szServiceName = szServiceName;
-							pResponseInfo->tickTimeout.setCallback(std::bind(&CTransporter::onRequestMessageTimeout, this, std::placeholders::_1));
-							CBaseApp::Inst()->registerTicker(&pResponseInfo->tickTimeout, pMessageCacheHead->tickTimeout.getRemainTime(), 0, nSessionID);
+							SResponseWaitInfo* pResponseWaitInfo = new SResponseWaitInfo();
+							pResponseWaitInfo->callback = pRequestMessageCacheInfo->callback;
+							pResponseWaitInfo->nSessionID = nSessionID;
+							pResponseWaitInfo->nTraceID = pRequestMessageCacheInfo->nTraceID;
+							pResponseWaitInfo->szServiceName = szServiceName;
+							pResponseWaitInfo->tickTimeout.setCallback(std::bind(&CTransporter::onRequestMessageTimeout, this, std::placeholders::_1));
+							CBaseApp::Inst()->registerTicker(&pResponseWaitInfo->tickTimeout, pMessageCacheHead->tickTimeout.getRemainTime(), 0, nSessionID);
 
-							this->m_mapResponseWaitInfo[pResponseInfo->nSessionID] = pResponseInfo;
+							this->m_mapResponseWaitInfo[pResponseWaitInfo->nSessionID] = pResponseWaitInfo;
 						}
 						// 野割cookice
 						request_cookice cookice;
 						cookice.nSessionID = nSessionID;
+						cookice.nTraceID = pRequestMessageCacheInfo->nTraceID;
+						cookice.nMessageID = pRequestMessageCacheInfo->nMessageID;
 
 						pCoreConnectionToService->send(eMT_REQUEST, &cookice, sizeof(cookice), &pRequestMessageCacheInfo->vecBuf[0], (uint16_t)pRequestMessageCacheInfo->vecBuf.size());
 					}
@@ -445,6 +481,8 @@ namespace core
 						// 野割cookice
 						gate_cookice cookice;
 						cookice.nSessionID = pGateMessageCacheInfo->nSessionID;
+						cookice.nTraceID = pGateMessageCacheInfo->nTraceID;
+						cookice.nMessageID = pGateMessageCacheInfo->nMessageID;
 
 						pCoreConnectionToService->send(eMT_TO_GATE, &cookice, sizeof(cookice), &pGateMessageCacheInfo->vecBuf[0], (uint16_t)pGateMessageCacheInfo->vecBuf.size());
 					}
@@ -464,7 +502,7 @@ namespace core
 						pCookice->nCount = (uint16_t)pGateBroadcastMessageCacheInfo->vecSessionID.size();
 						memcpy(pCookice + 1, &pGateBroadcastMessageCacheInfo->vecSessionID[0], sizeof(uint64_t) * pGateBroadcastMessageCacheInfo->vecSessionID.size());
 
-						pCoreConnectionToService->send(eMT_TO_GATE | eMT_BROADCAST, pCookice, (uint16_t)(sizeof(uint64_t) * pGateBroadcastMessageCacheInfo->vecSessionID.size()), &pGateBroadcastMessageCacheInfo->vecBuf[0], (uint16_t)pGateBroadcastMessageCacheInfo->vecBuf.size());
+						pCoreConnectionToService->send(eMT_TO_GATE, pCookice, (uint16_t)(sizeof(uint64_t) * pGateBroadcastMessageCacheInfo->vecSessionID.size()), &pGateBroadcastMessageCacheInfo->vecBuf[0], (uint16_t)pGateBroadcastMessageCacheInfo->vecBuf.size());
 					}
 					break;
 
@@ -480,6 +518,8 @@ namespace core
 						// 野割cookice
 						gate_cookice cookice;
 						cookice.nSessionID = pGateForwardMessageCacheInfo->nSessionID;
+						cookice.nTraceID = pGateForwardMessageCacheInfo->nTraceID;
+						cookice.nMessageID = pGateForwardMessageCacheInfo->nMessageID;
 
 						pCoreConnectionToService->send(eMT_GATE_FORWARD, &cookice, sizeof(cookice), &pGateForwardMessageCacheInfo->vecBuf[0], (uint16_t)pGateForwardMessageCacheInfo->vecBuf.size());
 					}

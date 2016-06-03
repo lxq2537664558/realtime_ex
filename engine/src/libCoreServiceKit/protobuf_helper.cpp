@@ -16,13 +16,15 @@ namespace core
 		return pProtoType->New();
 	}
 
-	google::protobuf::Message* unserialize_protobuf_message_from_buf(const std::string& szMessageName, const core::message_header* pHeader)
+	google::protobuf::Message* unserialize_protobuf_message_from_buf(const std::string& szMessageName, const void* pData, uint16_t nSize)
 	{
+		DebugAstEx(pData != nullptr, nullptr);
+
 		google::protobuf::Message* pMessage = create_protobuf_message(szMessageName);
 		if (nullptr == pMessage)
 			return nullptr;
 
-		if (!pMessage->ParseFromArray(pHeader + 1, pHeader->nMessageSize - sizeof(core::message_header)))
+		if (!pMessage->ParseFromArray(pData, nSize))
 		{
 			SAFE_DELETE(pMessage);
 			return nullptr;
@@ -31,22 +33,14 @@ namespace core
 		return pMessage;
 	}
 
-	int32_t serialize_protobuf_message_to_buf(const google::protobuf::Message* pMessage, core::message_header* pHeader, uint32_t nSize)
+	int32_t serialize_protobuf_message_to_buf(const google::protobuf::Message* pMessage, void* pData, uint16_t nSize)
 	{
-		DebugAstEx(pMessage != nullptr, false);
+		DebugAstEx(pMessage != nullptr && pData != nullptr, false);
 
 		std::string szMessageData;
-		if (!pMessage->SerializeToString(&szMessageData))
+		if (!pMessage->SerializeToArray(pData, nSize))
 			return -1;
 
-		if (szMessageData.size() > nSize)
-			return -1;
-
-		pHeader->nMessageID = base::hash(pMessage->GetTypeName().c_str());
-		pHeader->nMessageSize = (uint16_t)(sizeof(core::message_header) + szMessageData.size());
-
-		memcpy(pHeader + 1, szMessageData.c_str(), szMessageData.size());
-
-		return (int32_t)(szMessageData.size() + sizeof(core::message_header));
+		return pMessage->ByteSize();
 	}
 }

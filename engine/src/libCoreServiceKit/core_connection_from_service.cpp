@@ -42,11 +42,11 @@ namespace core
 			CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->delConnectionFromService(this->m_szServiceName);
 	}
 
-	void CCoreConnectionFromService::onDispatch(uint32_t nMessageType, const void* pData, uint16_t nSize)
+	void CCoreConnectionFromService::onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize)
 	{
 		if (nMessageType == eMT_SYSTEM)
 		{
-			const core::message_header* pHeader = reinterpret_cast<const core::message_header*>(pData);
+			const core::normal_message_header* pHeader = reinterpret_cast<const core::normal_message_header*>(pData);
 			DebugAst(nSize > sizeof(core::message_header));
 
 			if (pHeader->nMessageID == eSMT_notify_service_base_info)
