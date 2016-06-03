@@ -54,6 +54,7 @@ namespace core
 
 	struct SMessageCacheHead
 	{
+		uint32_t	nMessageID;
 		uint8_t		nType;
 		uint64_t	nTraceID;
 		CTicker		tickTimeout;

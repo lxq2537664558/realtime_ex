@@ -44,7 +44,7 @@ namespace core
 		/**
 		@brief: 消息解析器
 		*/
-		void					setMessageParser(MessageParser& parser);
+		void					setMessageParser(MessageParser parser);
 		/**
 		@brief: 获取连接ID
 		*/

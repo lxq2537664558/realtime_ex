@@ -75,4 +75,13 @@ namespace core
 
 		return this->m_pCoreConnection->getRemoteAddr();
 	}
+
+	void CBaseConnection::setMessageParser(MessageParser parser)
+	{
+		if (this->m_pCoreConnection == nullptr)
+			return;
+
+		this->m_pCoreConnection->setMessageParser(parser);
+	}
+
 }

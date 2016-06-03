@@ -50,10 +50,10 @@ void CConnectionFromService::onDispatch(uint8_t nMsgType, const void* pData, uin
 {
 	DebugAst(nMsgType == eMT_SYSTEM);
 
-	const core::normal_message_header* pHeader = reinterpret_cast<const core::normal_message_header*>(pData);
-	DebugAst(nSize > sizeof(core::message_header));
+	const core::inside_message_cookice* pCookice = reinterpret_cast<const core::inside_message_cookice*>(pData);
+	DebugAst(nSize > sizeof(core::inside_message_cookice));
 
-	if (pHeader->nMessageID == eSMT_register_service_base_info)
+	if (pCookice->nMessageID == eSMT_register_service_base_info)
 	{
 		core::smt_register_service_base_info netMsg;
 		netMsg.unpack(pData, nSize);
@@ -67,14 +67,14 @@ void CConnectionFromService::onDispatch(uint8_t nMsgType, const void* pData, uin
 			return;
 		}
 	}
-	else if (pHeader->nMessageID == eSMT_unregister_service_base_info)
+	else if (pCookice->nMessageID == eSMT_unregister_service_base_info)
 	{
 		core::smt_unregister_service_base_info netMsg;
 		netMsg.unpack(pData, nSize);
 
 		CMasterApp::Inst()->getServiceMgr()->unregisterService(netMsg.szName);
 	}
-	else if (pHeader->nMessageID == eSMT_register_service_message_info)
+	else if (pCookice->nMessageID == eSMT_register_service_message_info)
 	{
 		core::smt_register_service_message_info netMsg;
 		netMsg.unpack(pData, nSize);

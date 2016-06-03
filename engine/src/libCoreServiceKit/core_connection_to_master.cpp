@@ -64,24 +64,24 @@ namespace core
 	{
 		DebugAst(nMessageType == eMT_SYSTEM);
 
-		const core::normal_message_header* pHeader = reinterpret_cast<const core::normal_message_header*>(pData);
-		DebugAst(nSize > sizeof(core::normal_message_header));
+		const core::inside_message_cookice* pCookice = reinterpret_cast<const core::inside_message_cookice*>(pData);
+		DebugAst(nSize > sizeof(core::inside_message_cookice));
 
-		if (pHeader->nMessageID == eSMT_sync_service_base_info)
+		if (pCookice->nMessageID == eSMT_sync_service_base_info)
 		{
 			smt_sync_service_base_info netMsg;
 			netMsg.unpack(pData, nSize);
 			
 			CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->addService(netMsg.sServiceBaseInfo);
 		}
-		else if (pHeader->nMessageID == eSMT_remove_service_base_info)
+		else if (pCookice->nMessageID == eSMT_remove_service_base_info)
 		{
 			smt_remove_service_base_info netMsg;
 			netMsg.unpack(pData, nSize);
 
 			CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->delService(netMsg.szName);
 		}
-		else if (pHeader->nMessageID == eSMT_sync_service_message_info)
+		else if (pCookice->nMessageID == eSMT_sync_service_message_info)
 		{
 			smt_sync_service_message_info netMsg;
 			netMsg.unpack(pData, nSize);

@@ -82,26 +82,28 @@ namespace core
 	typedef std::function<bool(const std::string&, uint8_t, const void*, uint16_t)>						ServiceGlobalFilter;	// 全局的消息过滤器类型
 
 #pragma pack(push,1)
-	struct gate_cookice
+	struct gate_cookice :
+		public inside_message_cookice
 	{
 		uint64_t nSessionID;
 		uint64_t nTraceID;
-		uint32_t nMessageID;
 	};
 	
-	struct gate_cookice_broadcast
+	struct gate_broadcast_cookice :
+		public inside_message_cookice
 	{
 		uint16_t nCount;
 	};
 
-	struct request_cookice
+	struct request_cookice :
+		public inside_message_cookice
 	{
 		uint64_t nSessionID;
 		uint64_t nTraceID;
-		uint32_t nMessageID;
 	};
 
-	struct response_cookice
+	struct response_cookice :
+		public inside_message_cookice
 	{
 		uint64_t	nSessionID;
 		uint64_t	nTraceID;

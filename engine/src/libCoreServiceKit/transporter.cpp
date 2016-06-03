@@ -321,6 +321,8 @@ namespace core
 	{
 		DebugAstEx(sGateBroadcastMessageInfo.pMessage != nullptr && !sGateBroadcastMessageInfo.vecSessionID.empty(), false);
 
+		const std::string szMessageName = sGateBroadcastMessageInfo.pMessage->GetTypeName();
+		uint32_t nMessageID = _GET_MESSAGE_ID(szMessageName);
 		uint32_t nMessageSize = sGateBroadcastMessageInfo.pMessage->ByteSize();
 		if (nMessageSize >= this->m_vecBuf.size())
 		{
@@ -338,7 +340,8 @@ namespace core
 		if (pCoreConnectionToService != nullptr)
 		{
 			// 野割cookice
-			gate_cookice_broadcast* pCookice = reinterpret_cast<gate_cookice_broadcast*>(new char[sizeof(gate_cookice_broadcast) + sizeof(uint64_t) * sGateBroadcastMessageInfo.vecSessionID.size()]);
+			gate_broadcast_cookice* pCookice = reinterpret_cast<gate_broadcast_cookice*>(new char[sizeof(gate_broadcast_cookice) + sizeof(uint64_t) * sGateBroadcastMessageInfo.vecSessionID.size()]);
+			pCookice->nMessageID = nMessageID;
 			pCookice->nCount = (uint16_t)sGateBroadcastMessageInfo.vecSessionID.size();
 			memcpy(pCookice + 1, &sGateBroadcastMessageInfo.vecSessionID[0], sizeof(uint64_t) * sGateBroadcastMessageInfo.vecSessionID.size());
 
@@ -352,6 +355,7 @@ namespace core
 		uint64_t nCacheID = this->genCacheID();
 		SGateBroadcastMessageCacheInfo* pGateBroadcastMessageCacheInfo = new SGateBroadcastMessageCacheInfo();
 		pGateBroadcastMessageCacheInfo->nType = eMCIT_GateBroadcast;
+		pGateBroadcastMessageCacheInfo->nMessageID = nMessageID;
 		pGateBroadcastMessageCacheInfo->vecBuf.resize(nMessageSize);
 		memcpy(&pGateBroadcastMessageCacheInfo->vecBuf[0], &this->m_vecBuf[0], nMessageSize);
 		pGateBroadcastMessageCacheInfo->vecSessionID = sGateBroadcastMessageInfo.vecSessionID;
@@ -498,8 +502,9 @@ namespace core
 						}
 
 						// 野割cookice
-						gate_cookice_broadcast* pCookice = reinterpret_cast<gate_cookice_broadcast*>(new char[sizeof(gate_cookice_broadcast) + sizeof(uint64_t) * pGateBroadcastMessageCacheInfo->vecSessionID.size()]);
+						gate_broadcast_cookice* pCookice = reinterpret_cast<gate_broadcast_cookice*>(new char[sizeof(gate_broadcast_cookice) + sizeof(uint64_t) * pGateBroadcastMessageCacheInfo->vecSessionID.size()]);
 						pCookice->nCount = (uint16_t)pGateBroadcastMessageCacheInfo->vecSessionID.size();
+						pCookice->nMessageID = pGateBroadcastMessageCacheInfo->nMessageID;
 						memcpy(pCookice + 1, &pGateBroadcastMessageCacheInfo->vecSessionID[0], sizeof(uint64_t) * pGateBroadcastMessageCacheInfo->vecSessionID.size());
 
 						pCoreConnectionToService->send(eMT_TO_GATE, pCookice, (uint16_t)(sizeof(uint64_t) * pGateBroadcastMessageCacheInfo->vecSessionID.size()), &pGateBroadcastMessageCacheInfo->vecBuf[0], (uint16_t)pGateBroadcastMessageCacheInfo->vecBuf.size());

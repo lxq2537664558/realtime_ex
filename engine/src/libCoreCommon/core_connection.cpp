@@ -79,11 +79,11 @@ namespace core
 				else
 				{
 					// 都不够消息头
-					if (nDataSize < sizeof(message_header))
+					if (nDataSize < sizeof(inside_message_header))
 						break;
 
-					const message_header* pHeader = reinterpret_cast<const message_header*>(pData);
-					if (pHeader->nMessageSize < sizeof(message_header))
+					const inside_message_header* pHeader = reinterpret_cast<const inside_message_header*>(pData);
+					if (pHeader->nMessageSize < sizeof(inside_message_header))
 					{
 						char szBuf[256] = { 0 };
 						base::crt::snprintf(szBuf, _countof(szBuf), "message size error message_type[%d]", pHeader->nMessageSize);
@@ -97,7 +97,7 @@ namespace core
 
 					nMessageSize = pHeader->nMessageSize;
 
-					this->onDispatch(pHeader->nMessageType, pHeader + 1, pHeader->nMessageSize - sizeof(message_header));
+					this->onDispatch(pHeader->nMessageType, pHeader + 1, pHeader->nMessageSize - sizeof(inside_message_header));
 				}
 
 				nRecvSize += nMessageSize;
@@ -201,7 +201,7 @@ namespace core
 		case eMT_GATE_FORWARD:
 		case eMT_TO_GATE:
 			{
-				message_header header;
+				inside_message_header header;
 				header.nMessageSize = sizeof(header) + nSize;
 				header.nMessageType = nMessageType;
 				this->m_pNetConnecter->send(&header, sizeof(header));
@@ -234,7 +234,7 @@ namespace core
 		case eMT_GATE_FORWARD:
 		case eMT_TO_GATE:
 			{
-				message_header header;
+				inside_message_header header;
 				header.nMessageSize = sizeof(header) + nSize + nExtraSize;
 				header.nMessageType = nMessageType;
 				this->m_pNetConnecter->send(&header, sizeof(header));
