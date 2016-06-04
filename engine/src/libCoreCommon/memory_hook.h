@@ -2,5 +2,6 @@
 
 namespace core
 {
-	void	saveMemoryLeakToFile(const char* szName);
+	void	beginMemoryLeakChecker();
+	void	endMemoryLeakChecker(const char* szName);
 }

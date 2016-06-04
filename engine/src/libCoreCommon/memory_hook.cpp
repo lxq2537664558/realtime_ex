@@ -26,14 +26,24 @@ namespace core
 		public base::CSingleton<CMemoryHookMgr>
 	{
 	public:
+		CMemoryHookMgr();
+		~CMemoryHookMgr();
+
 		void*	allocate(size_t nSize, void* pCallAddr);
 		void	deallocate(void* pData);
-		void	saveMemoryLeak(const char* szName);
+		void	beginLeakChecker();
+		void	endLeakChecker(const char* szName);
 
 	private:
 		base::CTinyList<SMemoryHookInfoNode>	m_listMemoryHookInfo;
+		bool									m_bCheck;
 		base::spin_mutex						m_lock;
 	};
+
+	CMemoryHookMgr::CMemoryHookMgr()
+		: m_bCheck(false)
+	{
+	}
 
 	void* CMemoryHookMgr::allocate(size_t nSize, void* pCallAddr)
 	{
@@ -41,11 +51,19 @@ namespace core
 		SMemoryHookInfoNode* pMemoryHookInfoNode = reinterpret_cast<SMemoryHookInfoNode*>(pData);
 		pMemoryHookInfoNode->Value.nSize = nSize;
 		pMemoryHookInfoNode->Value.pCallAddr = pCallAddr;
-		pMemoryHookInfoNode->Value.nAllocTime = base::getGmtTime();
 
-		this->m_lock.lock();
-		this->m_listMemoryHookInfo.pushBack(pMemoryHookInfoNode);
-		this->m_lock.unlock();
+		if (this->m_bCheck)
+		{
+			pMemoryHookInfoNode->Value.nAllocTime = base::getGmtTime();
+
+			this->m_lock.lock();
+			this->m_listMemoryHookInfo.pushBack(pMemoryHookInfoNode);
+			this->m_lock.unlock();
+		}
+		else
+		{
+			pMemoryHookInfoNode->Value.nAllocTime = 0;
+		}
 
 		return pMemoryHookInfoNode + 1;
 	}
@@ -55,14 +73,24 @@ namespace core
 		if (nullptr == pData)
 			return;
 
-		SMemoryHookInfoNode* pMemoryHookInfoNode = reinterpret_cast<SMemoryHookInfoNode*>(pData) - 1;
+		SMemoryHookInfoNode* pMemoryHookInfoNode = reinterpret_cast<SMemoryHookInfoNode*>(pData)-1;
 
-		this->m_lock.lock();
-		pMemoryHookInfoNode->remove();
-		this->m_lock.unlock();
+		if (pMemoryHookInfoNode->Value.nAllocTime != 0)
+		{
+			this->m_lock.lock();
+			pMemoryHookInfoNode->remove();
+			this->m_lock.unlock();
+		}
+
+		free(pMemoryHookInfoNode);
 	}
 
-	void CMemoryHookMgr::saveMemoryLeak(const char* szName)
+	void CMemoryHookMgr::beginLeakChecker()
+	{
+		this->m_bCheck = true;
+	}
+
+	void CMemoryHookMgr::endLeakChecker(const char* szName)
 	{
 		if (nullptr == szName)
 			return;
@@ -75,8 +103,10 @@ namespace core
 		if (pFile == nullptr)
 			return;
 
-		for (SMemoryHookInfoNode* pNode = this->m_listMemoryHookInfo.getFront(); pNode != NULL; pNode = pNode->pNext)
+		while (!this->m_listMemoryHookInfo.isEmpty())
 		{
+			SMemoryHookInfoNode* pNode = this->m_listMemoryHookInfo.getFront();
+			pNode->remove();
 #if defined(WIN32)
 			void* pAddr = pNode->Value.pCallAddr;
 			char szSymbolBuf[sizeof(PIMAGEHLP_SYMBOL) + 1024];
@@ -112,12 +142,21 @@ namespace core
 		}
 
 		fclose(pFile);
+
+		this->m_bCheck = false;
 	}
 
-	void saveMemoryLeakToFile(const char* szName)
+	void beginMemoryLeakChecker()
 	{
 #ifdef __MEMORY_HOOK__
-		core::CMemoryHookMgr::Inst()->saveMemoryLeak(szName);
+		core::CMemoryHookMgr::Inst()->beginLeakChecker();
+#endif
+	}
+
+	void endMemoryLeakChecker(const char* szName)
+	{
+#ifdef __MEMORY_HOOK__
+		core::CMemoryHookMgr::Inst()->endLeakChecker(szName);
 #endif
 	}
 }
