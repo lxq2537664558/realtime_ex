@@ -84,7 +84,7 @@ void CGateMessageDispatcher::dispatch(uint64_t nSocketID, uint8_t nMessageType, 
 			CGateSession* pGateSession = CGateApp::Inst()->getGateSessionMgr()->getSessionBySocketID(nSocketID);
 			if(pGateSession == nullptr)
 			{
-				core::CBaseConnection* pBaseConnection = CGateApp::Inst()->getBaseConnectionMgr()->getBaseConnection(nSocketID);
+				core::CBaseConnection* pBaseConnection = CGateApp::Inst()->getBaseConnectionMgr()->getBaseConnectionByID(nSocketID);
 				DebugAst(pBaseConnection != nullptr);
 
 				pBaseConnection->shutdown(true, "invalid session");
@@ -114,7 +114,7 @@ void CGateMessageDispatcher::dispatch(uint64_t nSocketID, uint8_t nMessageType, 
 		
 		core::CCoreServiceKit::Inst()->addTraceExtraInfo("trace_id: "UINT64FMT"send client", pCookice->nTraceID);
 
-		core::CBaseConnection*  pBaseConnection = CGateApp::Inst()->getBaseConnectionMgr()->getBaseConnection(pGateSession->getSocketID());
+		core::CBaseConnection*  pBaseConnection = CGateApp::Inst()->getBaseConnectionMgr()->getBaseConnectionByID(pGateSession->getSocketID());
 		if (nullptr == pBaseConnection)
 		{
 			core::CCoreServiceKit::Inst()->addTraceExtraInfo("invalid connection client_id: "UINT64FMT" message_id: %d", pCookice->nSessionID, pCookice->nMessageID);

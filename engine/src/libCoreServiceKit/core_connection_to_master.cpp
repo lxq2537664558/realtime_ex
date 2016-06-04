@@ -36,8 +36,7 @@ namespace core
 	void CCoreConnectionToMaster::onConnect()
 	{
 		// 连接master的连接只能有一个
-		std::vector<CBaseConnection*> vecBaseConnection;
-		CBaseApp::Inst()->getBaseConnectionMgr()->getBaseConnection(this->getType(), vecBaseConnection);
+		std::vector<CBaseConnection*> vecBaseConnection = CBaseApp::Inst()->getBaseConnectionMgr()->getBaseConnection(this->getType());
 		if (vecBaseConnection.size() > 1)
 		{
 			this->shutdown(false, "dup master connection");

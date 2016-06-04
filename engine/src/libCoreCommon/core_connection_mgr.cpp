@@ -174,7 +174,7 @@ namespace core
 		}
 	}
 
-	CCoreConnection* CCoreConnectionMgr::getCoreConnection(uint64_t nID) const
+	CCoreConnection* CCoreConnectionMgr::getCoreConnectionByID(uint64_t nID) const
 	{
 		auto iter = this->m_mapCoreConnectionByID.find(nID);
 		if (iter == this->m_mapCoreConnectionByID.end())

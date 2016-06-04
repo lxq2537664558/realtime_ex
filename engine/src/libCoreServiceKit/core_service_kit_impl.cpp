@@ -195,8 +195,7 @@ namespace core
 
 	CCoreConnectionToMaster* CCoreServiceKitImpl::getConnectionToMaster() const
 	{
-		std::vector<CBaseConnection*> vecBaseConnection;
-		CBaseApp::Inst()->getBaseConnectionMgr()->getBaseConnection(eBCT_ConnectionToMaster, vecBaseConnection);
+		std::vector<CBaseConnection*> vecBaseConnection = CBaseApp::Inst()->getBaseConnectionMgr()->getBaseConnection(eBCT_ConnectionToMaster);
 		if (vecBaseConnection.empty())
 			return nullptr;
 

@@ -38,13 +38,15 @@ google::protobuf::Message* create_protobuf_message(const std::string& szMessageN
 	return pProtoType->New();
 }
 
-google::protobuf::Message* unserialize_protobuf_message_from_buf(const std::string& szMessageName, const message_header* pHeader)
+google::protobuf::Message* unserialize_protobuf_message_from_buf(const std::string& szMessageName, const void* pData, uint16_t nSize)
 {
+	DebugAstEx(pData != nullptr, nullptr);
+
 	google::protobuf::Message* pMessage = create_protobuf_message(szMessageName);
 	if (nullptr == pMessage)
 		return nullptr;
 
-	if (!pMessage->ParseFromArray(pHeader + 1, pHeader->nMessageSize - sizeof(message_header)))
+	if (!pMessage->ParseFromArray(pData, nSize))
 	{
 		SAFE_DELETE(pMessage);
 		return nullptr;
@@ -72,6 +74,24 @@ int32_t serialize_protobuf_message_to_buf(const google::protobuf::Message* pMess
 	return (int32_t)(szMessageData.size() + sizeof(message_header));
 }
 
+static int32_t client_message_parser(const char* pData, uint32_t nSize, uint8_t& nMessageType)
+{
+	if (nSize < sizeof(core::client_message_header))
+		return 0;
+
+	const core::client_message_header* pHeader = reinterpret_cast<const core::client_message_header*>(pData);
+	if (pHeader->nMessageSize < sizeof(core::client_message_header))
+		return -1;
+
+	// 不是完整的消息
+	if (nSize < pHeader->nMessageSize)
+		return 0;
+
+	nMessageType = eMT_CLIENT;
+
+	return pHeader->nMessageSize;
+}
+
 class CConnectToService :
 	public core::CBaseConnection
 {
@@ -85,7 +105,11 @@ public:
 	{
 	}
 
-	virtual bool		init(const std::string& szContext) { return true; }
+	virtual bool		init(const std::string& szContext)
+	{
+		this->setMessageParser(std::bind(&client_message_parser, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+		return true;
+	}
 	
 	virtual uint32_t	getType() const { return _BASE_CONNECTION_TYPE_BEGIN; }
 	virtual void		release(){ delete this; }
@@ -104,9 +128,9 @@ public:
 		PrintDebug("onDisconnect");
 	}
 
-	virtual void onDispatch(uint32_t nMessageType, const void* pData, uint16_t nSize)
+	virtual void onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize)
 	{
-		google::protobuf::Message* pMessage = unserialize_protobuf_message_from_buf("test.client_response_msg", reinterpret_cast<const message_header*>(pData));
+		google::protobuf::Message* pMessage = unserialize_protobuf_message_from_buf("test.client_response_msg", reinterpret_cast<const core::client_message_header*>(pData)+1, nSize - sizeof(core::client_message_header));
 		test::client_response_msg* pMsg = dynamic_cast<test::client_response_msg*>(pMessage);
 		PrintDebug("onDispatch %s", pMsg->name().c_str());
 	}
@@ -188,7 +212,7 @@ bool CTestServiceClientApp::onInit()
 {
 	CServiceConnectionFactory* pServiceConnectionFactory = new CServiceConnectionFactory();
 	this->getBaseConnectionMgr()->setBaseConnectionFactory(_BASE_CONNECTION_TYPE_BEGIN, pServiceConnectionFactory);
-	this->getBaseConnectionMgr()->connect("10.0.18.51", 8000, _BASE_CONNECTION_TYPE_BEGIN, "", 0, 0, core::default_parser_native_data);
+	this->getBaseConnectionMgr()->connect("10.0.18.51", 8000, _BASE_CONNECTION_TYPE_BEGIN, "", 0, 0);
 	return true;
 }
 

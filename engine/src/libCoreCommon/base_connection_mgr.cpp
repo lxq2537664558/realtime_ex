@@ -72,18 +72,21 @@ namespace core
 		return this->m_pCoreConnectionMgr->getCoreConnectionCount(nType);
 	}
 
-	CBaseConnection* CBaseConnectionMgr::getBaseConnection(uint64_t nID) const
+	CBaseConnection* CBaseConnectionMgr::getBaseConnectionByID(uint64_t nID) const
 	{
-		CCoreConnection* pCoreConnection = this->m_pCoreConnectionMgr->getCoreConnection(nID);
+		CCoreConnection* pCoreConnection = this->m_pCoreConnectionMgr->getCoreConnectionByID(nID);
 		if (nullptr == pCoreConnection)
 			return nullptr;
 
 		return pCoreConnection->getBaseConnection();
 	}
 
-	void CBaseConnectionMgr::getBaseConnection(uint32_t nType, std::vector<CBaseConnection*>& vecBaseConnection) const
+	std::vector<CBaseConnection*> CBaseConnectionMgr::getBaseConnection(uint32_t nType) const
 	{
+		std::vector<CBaseConnection*> vecBaseConnection;
 		this->m_pCoreConnectionMgr->getBaseConnection(nType, vecBaseConnection);
+
+		return vecBaseConnection;
 	}
 
 	void CBaseConnectionMgr::broadcast(uint32_t nType, uint8_t nMessageType, const void* pData, uint16_t nSize, const std::vector<uint64_t>* vecExcludeID)

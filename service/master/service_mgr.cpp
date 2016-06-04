@@ -48,8 +48,7 @@ bool CServiceMgr::registerService(CConnectionFromService* pConnectionFromService
 	this->m_mapServiceInfo[sServiceBaseInfo.szName] = sServiceInfo;
 
 	// 将其他服务的信息同步给新的服务
-	std::vector<core::CBaseConnection*> vecBaseConnection;
-	CMasterApp::Inst()->getBaseConnectionMgr()->getBaseConnection(eBCT_ConnectionFromService, vecBaseConnection);
+	std::vector<core::CBaseConnection*> vecBaseConnection = CMasterApp::Inst()->getBaseConnectionMgr()->getBaseConnection(eBCT_ConnectionFromService);
 	for (size_t i = 0; i < vecBaseConnection.size(); ++i)
 	{
 		core::CBaseConnection* pBaseConnection = vecBaseConnection[i];

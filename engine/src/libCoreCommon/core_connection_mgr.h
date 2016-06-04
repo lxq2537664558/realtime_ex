@@ -33,7 +33,7 @@ namespace core
 		
 		void				destroyConnection(CCoreConnection* pCoreConnection);
 		void				getBaseConnection(uint32_t nType, std::vector<CBaseConnection*>& vecBaseConnection) const;
-		CCoreConnection*	getCoreConnection(uint64_t nID) const;
+		CCoreConnection*	getCoreConnectionByID(uint64_t nID) const;
 		uint32_t			getCoreConnectionCount(uint32_t nType) const;
 
 		CBaseConnectionMgr*	getBaseConnectionMgr() const;
