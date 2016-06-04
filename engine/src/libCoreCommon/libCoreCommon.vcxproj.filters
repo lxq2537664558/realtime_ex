@@ -54,6 +54,9 @@
     <ClInclude Include="..\..\inc\libCoreCommon\base_connection_factory.h">
       <Filter>inc</Filter>
     </ClInclude>
+    <ClInclude Include="memory_hook.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="base_app.cpp">
@@ -93,6 +96,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="core_connection_monitor.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="memory_hook.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

@@ -248,10 +248,11 @@ void CLogger::saveLog(const char* szFileName, bool bConsole, const char* szBuf, 
 		pLogFileInfo->szFileName = szFullFileName;
 		base::crt::snprintf(szFullFileName, _countof(szFullFileName), "%s_%d.log", pLogFileInfo->szFileName.c_str(), pLogFileInfo->nFileIndex);
 #ifdef _WIN32
-		if ((pLogFileInfo->pFile = _fsopen(szFullFileName, "w", _SH_DENYNO)) == nullptr)
+		pLogFileInfo->pFile = _fsopen(szFullFileName, "w", _SH_DENYNO);
 #else
-		if ((pLogFileInfo->pFile = fopen(szFullFileName, "w")) == nullptr)
+		pLogFileInfo->pFile = fopen(szFullFileName, "w");
 #endif
+		if (pLogFileInfo->pFile == nullptr)
 		{
 			delete pLogFileInfo;
 			return;
@@ -275,10 +276,11 @@ void CLogger::saveLog(const char* szFileName, bool bConsole, const char* szBuf, 
 		base::crt::snprintf(szFullFileName, _countof(szFullFileName), "%s_%d.log", pLogFileInfo->szFileName.c_str(), pLogFileInfo->nFileIndex);
 		FILE* pFile = nullptr;
 #ifdef _WIN32
-		if ((pFile = _fsopen(szFullFileName, "w", _SH_DENYNO)) != nullptr)
+		pFile = _fsopen(szFullFileName, "w", _SH_DENYNO);
 #else
-		if ((pFile = fopen(szFullFileName, "w")) != nullptr)
+		pFile = fopen(szFullFileName, "w");
 #endif
+		if (pFile == nullptr)
 		{
 			fflush(pLogFileInfo->pFile);
 			fclose(pLogFileInfo->pFile);
@@ -302,10 +304,11 @@ namespace base
 		base::STime sTime = base::getLocalTimeTM();
 		base::crt::snprintf(szName, _countof(szName), "%s/log/%s.%d.ERROR_%4d_%02d_%02d_%02d_%02d_%02d.log", base::getCurrentWorkPath(), base::getInstanceName(), base::getCurrentProcessID(), sTime.nYear, sTime.nMon, sTime.nDay, sTime.nHour, sTime.nMin, sTime.nSec);
 #ifdef _WIN32
-		if ((g_pError = _fsopen(szName, "w", _SH_DENYNO)) == nullptr)
+		g_pError = _fsopen(szName, "w", _SH_DENYNO);
 #else
-		if ((g_pError = fopen(szName, "w")) == nullptr)
+		g_pError = fopen(szName, "w");
 #endif
+		if (g_pError == nullptr)
 			return false;
 
 		return true;

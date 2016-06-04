@@ -22,6 +22,7 @@
 #include "base_app.h"
 #include "core_app.h"
 #include "core_connection_mgr.h"
+#include "memory_hook.h"
 
 // 放这里为了调试或者看dump的时候方便
 core::CBaseApp* g_pCoreApp = nullptr;
@@ -90,4 +91,8 @@ namespace core
 		base::enableProfiling(bProfiling);
 	}
 
+	void CBaseApp::saveMemoryLeak(const char* szName)
+	{
+		saveMemoryLeakToFile(szName);
+	}
 }

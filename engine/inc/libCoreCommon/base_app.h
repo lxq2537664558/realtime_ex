@@ -73,6 +73,10 @@ namespace core
 		@brief: 获取QPS
 		*/
 		uint32_t					getQPS() const;
+		/*
+		@brief: 保存泄漏的内存信息到文件中
+		*/
+		void						saveMemoryLeak(const char* szName);
 		
 	protected:
 		virtual bool				onInit() { return true; }
