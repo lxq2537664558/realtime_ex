@@ -29,6 +29,25 @@ namespace core
 		rhs.m_pTickerNode = nullptr;
 	}
 
+	CTicker& CTicker::operator = (CTicker&& rhs)
+	{
+		if (this == &rhs)
+			return *this;
+
+		if (this->isRegister())
+			CBaseApp::Inst()->unregisterTicker(this);
+
+		this->m_pTickerNode = rhs.m_pTickerNode;
+		this->m_nIntervalTime = rhs.m_nIntervalTime;
+		this->m_nNextTickTime = rhs.m_nNextTickTime;
+		this->m_nContext = rhs.m_nContext;
+		this->m_callback = rhs.m_callback;
+
+		rhs.m_pTickerNode = nullptr;
+
+		return *this;
+	}
+
 	int64_t CTicker::getIntervalTime() const
 	{
 		return this->m_nIntervalTime;
@@ -62,4 +81,5 @@ namespace core
 	{
 		return this->m_nContext;
 	}
+
 }

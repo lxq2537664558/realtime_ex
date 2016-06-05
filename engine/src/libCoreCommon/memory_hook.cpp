@@ -12,7 +12,7 @@
 #pragma comment( lib, "dbghelp.lib" )
 #endif
 
-//#define __MEMORY_HOOK__
+#define __MEMORY_HOOK__
 #define _MEMORY_DETAIL_STACK_COUNT 10
 
 namespace core
