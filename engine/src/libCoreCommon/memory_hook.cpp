@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "core_common.h"
 
-#include "libBaseCommon\singleton.h"
 #include "libBaseCommon\base_time.h"
 #include "libBaseCommon\spin_mutex.h"
 
@@ -9,7 +8,11 @@
 #include <stdio.h>
 #include <share.h>
 
-#define __MEMORY_HOOK__
+#ifdef _WIN32
+#pragma comment( lib, "dbghelp.lib" )
+#endif
+
+//#define __MEMORY_HOOK__
 
 namespace core
 {
@@ -22,12 +25,13 @@ namespace core
 
 	typedef base::STinyListNode<SMemoryHookInfo> SMemoryHookInfoNode;
 
-	class CMemoryHookMgr :
-		public base::CSingleton<CMemoryHookMgr>
+	class CMemoryHookMgr
 	{
 	public:
 		CMemoryHookMgr();
 		~CMemoryHookMgr();
+
+		static CMemoryHookMgr* Inst();
 
 		void*	allocate(size_t nSize, void* pCallAddr);
 		void	deallocate(void* pData);
@@ -45,12 +49,26 @@ namespace core
 	{
 	}
 
+	CMemoryHookMgr::~CMemoryHookMgr()
+	{
+
+	}
+
+	CMemoryHookMgr* CMemoryHookMgr::Inst()
+	{
+		static CMemoryHookMgr s_Inst;
+
+		return &s_Inst;
+	}
+
 	void* CMemoryHookMgr::allocate(size_t nSize, void* pCallAddr)
 	{
 		void* pData = malloc(nSize + sizeof(SMemoryHookInfoNode));
 		SMemoryHookInfoNode* pMemoryHookInfoNode = reinterpret_cast<SMemoryHookInfoNode*>(pData);
 		pMemoryHookInfoNode->Value.nSize = nSize;
 		pMemoryHookInfoNode->Value.pCallAddr = pCallAddr;
+		pMemoryHookInfoNode->pNext = nullptr;
+		pMemoryHookInfoNode->pPre = nullptr;
 
 		if (this->m_bCheck)
 		{
@@ -103,6 +121,7 @@ namespace core
 		if (pFile == nullptr)
 			return;
 
+		this->m_lock.lock();
 		while (!this->m_listMemoryHookInfo.isEmpty())
 		{
 			SMemoryHookInfoNode* pNode = this->m_listMemoryHookInfo.getFront();
@@ -140,7 +159,7 @@ namespace core
 				free(pSymbol);
 #endif
 		}
-
+		this->m_lock.unlock();
 		fclose(pFile);
 
 		this->m_bCheck = false;

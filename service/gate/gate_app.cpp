@@ -13,6 +13,8 @@
 #include <functional>
 
 #include "tinyxml2/tinyxml2.h"
+#include <dbghelp.h>
+#include "libBaseCommon/base_time.h"
 
 static bool gate_before_filter(const std::string& szFromServiceName, uint8_t nMessageType, const void* pData, uint16_t nSize)
 {

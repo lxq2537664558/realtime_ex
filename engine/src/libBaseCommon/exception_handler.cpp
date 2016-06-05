@@ -120,12 +120,10 @@ public:
 		::SymCleanup(::GetCurrentProcess());
 	}
 
-	bool	loadSymbol();
-	size_t	getStackInfo(uint64_t* pStack, uint32_t nDepth, char* szBuf, size_t nBufSize);
-	size_t	getStackInfo(uint32_t nBegin, uint32_t nEnd, char* szBuf, size_t nBufSize);
-
-private:
-	uint32_t getStack(uint64_t* pStack, uint32_t nBegin, uint32_t nEnd);
+	bool		loadSymbol();
+	size_t		getStackInfo(void** pStack, uint32_t nDepth, char* szBuf, size_t nBufSize);
+	size_t		getStackInfo(uint32_t nBegin, uint32_t nEnd, char* szBuf, size_t nBufSize);
+	uint32_t	getStack(uint32_t nBegin, uint32_t nEnd, void** pStack, uint32_t nStackSize);
 
 private:
 	std::mutex m_mutex;
@@ -133,7 +131,7 @@ private:
 
 CGenWinDump* g_pGenWinDump = nullptr;
 
-uint32_t CGenWinDump::getStack(uint64_t* pStack, uint32_t nBegin, uint32_t nEnd)
+uint32_t CGenWinDump::getStack(uint32_t nBegin, uint32_t nEnd, void** pStack, uint32_t nStackSize)
 {
 	STACKFRAME64 sf;
 	memset(&sf, 0, sizeof(STACKFRAME64));
@@ -174,14 +172,14 @@ uint32_t CGenWinDump::getStack(uint64_t* pStack, uint32_t nBegin, uint32_t nEnd)
 		if (0 == sf.AddrFrame.Offset)
 			break;
 
-		if (i >= nBegin)
-			pStack[i - nBegin] = sf.AddrPC.Offset;
+		if (i >= nBegin && (i - nBegin) < nStackSize)
+			pStack[i - nBegin] = reinterpret_cast<void*>(sf.AddrPC.Offset);
 	}
 
-	return i - nBegin;
+	return __min(i - nBegin, nStackSize);
 }
 
-size_t CGenWinDump::getStackInfo(uint64_t* pStack, uint32_t nDepth, char* szBuf, size_t nBufSize)
+size_t CGenWinDump::getStackInfo(void** pStack, uint32_t nDepth, char* szBuf, size_t nBufSize)
 {
 	if (szBuf == nullptr)
 		return 0;
@@ -193,7 +191,7 @@ size_t CGenWinDump::getStackInfo(uint64_t* pStack, uint32_t nDepth, char* szBuf,
 		PIMAGEHLP_SYMBOL64 pSymbol = (PIMAGEHLP_SYMBOL64)szSymbolBuf;
 		pSymbol->SizeOfStruct = sizeof(szSymbolBuf);
 		pSymbol->MaxNameLength = 1024;
-		DWORD64 pAddr = pStack[i];
+		DWORD64 pAddr = reinterpret_cast<DWORD64>(pStack[i]);
 		HMODULE hModule = (HMODULE)::SymGetModuleBase64(::GetCurrentProcess(), pAddr);
 		std::string szFileName = "?";
 		if (hModule != nullptr)
@@ -239,10 +237,10 @@ size_t CGenWinDump::getStackInfo(uint64_t* pStack, uint32_t nDepth, char* szBuf,
 
 size_t CGenWinDump::getStackInfo(uint32_t nBegin, uint32_t nEnd, char* szBuf, size_t nBufSize)
 {
-	uint64_t nStack[256] = { 0 };
+	void* zStack[256] = { nullptr };
 	this->m_mutex.lock();
-	uint32_t nDepth = this->getStack(nStack, nBegin, nEnd);
-	size_t nLen = this->getStackInfo(nStack, nDepth, szBuf, nBufSize);
+	uint32_t nDepth = this->getStack(nBegin, nEnd, zStack, _countof(zStack));
+	size_t nLen = this->getStackInfo(zStack, nDepth, szBuf, nBufSize);
 	this->m_mutex.unlock();
 
 	return nLen;
@@ -466,6 +464,14 @@ namespace base
 #endif
 	}
 
+	size_t getStack(uint32_t nBegin, uint32_t nEnd, void** pStack, size_t nMaxSize)
+	{
+		if (pStack == nullptr)
+			return 0;
+
+		return g_pGenWinDump->getStack(nBegin, nEnd, pStack, (uint32_t)nMaxSize);
+	}
+
 	size_t getStackInfo(uint32_t nBegin, uint32_t nEnd, char* szInfo, size_t nMaxSize)
 	{
 		if (szInfo == nullptr)
@@ -514,7 +520,7 @@ namespace base
 			return 0;
 
 #ifdef _WIN32
-		return g_pGenWinDump->getStackInfo((uint64_t*)&pAddr, 1, szInfo, nMaxSize);
+		return g_pGenWinDump->getStackInfo((void**)&pAddr, 1, szInfo, nMaxSize);
 #else
 		// 使用这一系列函数必须在编译的时候加上-rdynamic选项
 		char** pSymbol = nullptr;

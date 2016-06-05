@@ -18,6 +18,17 @@ namespace core
 		CBaseApp::Inst()->unregisterTicker(this);
 	}
 
+	CTicker::CTicker(CTicker&& rhs)
+	{
+		this->m_pTickerNode = rhs.m_pTickerNode;
+		this->m_nIntervalTime = rhs.m_nIntervalTime;
+		this->m_nNextTickTime = rhs.m_nNextTickTime;
+		this->m_nContext = rhs.m_nContext;
+		this->m_callback = rhs.m_callback;
+
+		rhs.m_pTickerNode = nullptr;
+	}
+
 	int64_t CTicker::getIntervalTime() const
 	{
 		return this->m_nIntervalTime;
