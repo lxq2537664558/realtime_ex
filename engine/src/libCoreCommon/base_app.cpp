@@ -91,9 +91,9 @@ namespace core
 		base::enableProfiling(bProfiling);
 	}
 
-	void CBaseApp::beginLeakChecker()
+	void CBaseApp::beginLeakChecker(bool bDetail)
 	{
-		beginMemoryLeakChecker();
+		beginMemoryLeakChecker(bDetail);
 	}
 
 	void CBaseApp::endLeakChecker(const char* szName)

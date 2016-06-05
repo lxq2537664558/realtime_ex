@@ -76,7 +76,7 @@ namespace core
 		/*
 		@brief: 开启检测泄漏内存
 		*/
-		void						beginLeakChecker();
+		void						beginLeakChecker(bool bDetail);
 		/*
 		@brief: 结束检测泄漏内存，并将内存泄漏信息保存到指定文件中
 		*/

@@ -2,6 +2,6 @@
 
 namespace core
 {
-	void	beginMemoryLeakChecker();
+	void	beginMemoryLeakChecker(bool bDetail);
 	void	endMemoryLeakChecker(const char* szName);
 }
