@@ -100,10 +100,12 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PreBuildEvent>
-      <Command>del /a $(OutDir)tinyxml2.dll</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>copy /y ..\..\..\3rd\tinyxml2\lib\win32\$(Configuration)\tinyxml2.dll $(OutDir)</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
     <Lib>
       <AdditionalLibraryDirectories>
