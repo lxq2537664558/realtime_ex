@@ -17,6 +17,8 @@
 
 namespace core
 {
+
+#pragma pack(push,1)
 	struct SMemoryHookInfo
 	{
 		size_t		nSize;		// 分配的内存大小
@@ -26,6 +28,7 @@ namespace core
 	};
 
 	typedef base::STinyListNode<SMemoryHookInfo> SMemoryHookInfoNode;
+#pragma pack(pop)
 
 	class CMemoryHookMgr
 	{
@@ -70,6 +73,7 @@ namespace core
 		void* pData = malloc(nSize + sizeof(SMemoryHookInfoNode));
 		SMemoryHookInfoNode* pMemoryHookInfoNode = reinterpret_cast<SMemoryHookInfoNode*>(pData);
 		pMemoryHookInfoNode->Value.nSize = nSize;
+		pMemoryHookInfoNode->Value.bDetail = this->m_bDetail;
 		if (this->m_bDetail)
 		{
 			pMemoryHookInfoNode->Value.pContext = reinterpret_cast<char*>(malloc(_MEMORY_DETAIL_STACK_COUNT * sizeof(void*)));
