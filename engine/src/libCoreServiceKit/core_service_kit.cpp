@@ -29,16 +29,6 @@ namespace core
 		return CCoreServiceKitImpl::Inst()->getServiceBaseInfo();
 	}
 
-	const SMessageProxyGroupInfo* CCoreServiceKit::getMessageProxyGroupInfo(const std::string& szMessageName) const
-	{
-		return CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getMessageProxyGroupInfo(szMessageName);
-	}
-
-	const std::string& CCoreServiceKit::getMessageName(uint32_t nMessageID) const
-	{
-		return CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getMessageName(nMessageID);
-	}
-
 	void CCoreServiceKit::startNewTrace()
 	{
 		CCoreServiceKitImpl::Inst()->getInvokerTrace()->startNewTrace();
@@ -51,4 +41,15 @@ namespace core
 		CCoreServiceKitImpl::Inst()->getInvokerTrace()->addTraceExtraInfo(szFormat, arg);
 		va_end(arg);
 	}
+
+	base::CLuaFacade* CCoreServiceKit::getLuaFacade() const
+	{
+		return CCoreServiceKitImpl::Inst()->getLuaFacade();
+	}
+
+	const std::string& CCoreServiceKit::getMessageName(uint32_t nMessageID) const
+	{
+		return CCoreServiceKitImpl::Inst()->getCoreServiceInvoker()->getMessageName(nMessageID);
+	}
+
 }

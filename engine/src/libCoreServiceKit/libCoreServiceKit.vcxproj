@@ -90,7 +90,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>../../inc;../../inc/libCoreServiceKit;../../../3rd/tinyxml2/include;../../../3rd/protobuf/include;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../inc;../../inc/libCoreServiceKit;../../../3rd/tinyxml2/include;../../../3rd/protobuf/include;../../../3rd/lua/include/;</AdditionalIncludeDirectories>
       <StringPooling>true</StringPooling>
     </ClCompile>
     <Link>
@@ -138,7 +138,6 @@
   <ItemGroup>
     <ClInclude Include="..\..\inc\libCoreServiceKit\cluster_invoker.h" />
     <ClInclude Include="..\..\inc\libCoreServiceKit\core_service_kit.h" />
-    <ClInclude Include="..\..\inc\libCoreServiceKit\load_balance.h" />
     <ClInclude Include="..\..\inc\libCoreServiceKit\message_dispatcher.h" />
     <ClInclude Include="..\..\inc\libCoreServiceKit\message_registry.h" />
     <ClInclude Include="..\..\inc\libCoreServiceKit\protobuf_helper.h" />
@@ -150,7 +149,6 @@
     <ClInclude Include="core_connection_from_service.h" />
     <ClInclude Include="core_connection_to_master.h" />
     <ClInclude Include="core_connection_to_service.h" />
-    <ClInclude Include="load_balance_mgr.h" />
     <ClInclude Include="core_service_invoker.h" />
     <ClInclude Include="core_service_kit_impl.h" />
     <ClInclude Include="core_service_proxy.h" />
@@ -166,8 +164,6 @@
     <ClCompile Include="core_connection_to_service.cpp" />
     <ClCompile Include="core_service_kit.cpp" />
     <ClCompile Include="invoker_trace.cpp" />
-    <ClCompile Include="load_balance.cpp" />
-    <ClCompile Include="load_balance_mgr.cpp" />
     <ClCompile Include="core_service_invoker.cpp" />
     <ClCompile Include="message_dispatcher.cpp" />
     <ClCompile Include="message_registry.cpp" />
@@ -184,6 +180,9 @@
     <ClCompile Include="core_service_proxy.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\libBaseLua\libBaseLua.vcxproj">
+      <Project>{308a2842-363c-4d31-b5bf-3d80cbdcf0d2}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\libCoreCommon\libCoreCommon.vcxproj">
       <Project>{ac3ef028-d610-4f35-904f-c981ca278960}</Project>
     </ProjectReference>

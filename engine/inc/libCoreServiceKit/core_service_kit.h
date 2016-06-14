@@ -1,5 +1,6 @@
 #pragma once
 #include "libBaseCommon/singleton.h"
+#include "libBaseLua/lua_facade.h"
 #include "core_service_kit_define.h"
 
 namespace core
@@ -19,10 +20,6 @@ namespace core
 		*/
 		const SServiceBaseInfo&			getServiceBaseInfo() const;
 		/**
-		@brief: 获取某一个消息的调用信息
-		*/
-		const SMessageProxyGroupInfo*	getMessageProxyGroupInfo(const std::string& szMessageName) const;
-		/**
 		@brief: 根据消息ID获取消息名字
 		*/
 		const std::string&				getMessageName(uint32_t nMessageID) const;
@@ -34,5 +31,9 @@ namespace core
 		@brief: 添加trace额外信息
 		*/
 		void							addTraceExtraInfo(const char* szFormat, ...);
+		/**
+		@brief: 获取lua包装对象
+		*/
+		base::CLuaFacade*				getLuaFacade() const;
 	};
 }

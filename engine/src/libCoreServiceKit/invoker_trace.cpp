@@ -64,6 +64,12 @@ namespace core
 			this->m_nCurTraceID, base::getGmtTime(), szMessageName.c_str(), CCoreServiceKitImpl::Inst()->getServiceBaseInfo().szName.c_str());
 	}
 
+	void CInvokerTrace::send(uint32_t nMessageID)
+	{
+		base::saveLogEx("trace", false, "trace_id: "UINT64FMT" send time: "UINT64FMT" message_id: %d service_name: %s",
+			this->m_nCurTraceID, base::getGmtTime(), nMessageID, CCoreServiceKitImpl::Inst()->getServiceBaseInfo().szName.c_str());
+	}
+
 	void CInvokerTrace::startNewTrace()
 	{
 		this->m_nCurTraceID = this->m_nNextGenTraceID++;

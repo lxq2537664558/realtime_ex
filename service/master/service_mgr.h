@@ -18,8 +18,7 @@ public:
 	CConnectionFromService*	getServiceConnection(const std::string& szName) const;
 	bool					registerService(CConnectionFromService* pConnectionFromService, const core::SServiceBaseInfo& sServiceBaseInfo);
 	void					unregisterService(const std::string& szServiceName);
-	void					registerMessageInfo(const std::string& szServiceName, const std::vector<core::SMessageProxyInfo>& vecMessageProxyInfo);
-
+	
 private:
 	struct SServiceInfo
 	{

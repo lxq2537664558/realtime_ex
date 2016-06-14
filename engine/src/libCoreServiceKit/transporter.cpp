@@ -145,7 +145,7 @@ namespace core
 				pResponseWaitInfo->nTraceID = nTraceID;
 				pResponseWaitInfo->szServiceName = szServiceName;
 				pResponseWaitInfo->tickTimeout.setCallback(std::bind(&CTransporter::onRequestMessageTimeout, this, std::placeholders::_1));
-				CBaseApp::Inst()->registerTicker(&pResponseWaitInfo->tickTimeout, CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getProxyInvokTimeout(_GET_MESSAGE_ID(sRequestMessageInfo.pMessage->GetTypeName())) * 1000, 0, nSessionID);
+				CBaseApp::Inst()->registerTicker(&pResponseWaitInfo->tickTimeout, CCoreServiceKitImpl::Inst()->getInvokeTimeout(), 0, nSessionID);
 
 				this->m_mapResponseWaitInfo[pResponseWaitInfo->nSessionID] = pResponseWaitInfo;
 			}
@@ -172,7 +172,7 @@ namespace core
 		memcpy(&pRequestMessageCacheInfo->vecBuf[0], &this->m_vecBuf[0], nMessageSize);
 		pRequestMessageCacheInfo->callback = sRequestMessageInfo.callback;
 		pRequestMessageCacheInfo->tickTimeout.setCallback(std::bind(&CTransporter::onCacheMessageTimeout, this, std::placeholders::_1));
-		CBaseApp::Inst()->registerTicker(&pRequestMessageCacheInfo->tickTimeout, CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getProxyInvokTimeout(_GET_MESSAGE_ID(sRequestMessageInfo.pMessage->GetTypeName())) * 1000, 0, nCacheID);
+		CBaseApp::Inst()->registerTicker(&pRequestMessageCacheInfo->tickTimeout, CCoreServiceKitImpl::Inst()->getInvokeTimeout(), 0, nCacheID);
 
 		pMessageCacheInfo->mapMessageCacheInfo[nCacheID] = pRequestMessageCacheInfo;
 		pMessageCacheInfo->nTotalSize += nMessageSize;
@@ -251,7 +251,7 @@ namespace core
 		memcpy(&pGateForwardMessageCacheInfo->vecBuf[0], sGateMessageInfo.pData, sGateMessageInfo.nSize);
 		pGateForwardMessageCacheInfo->nSessionID = sGateMessageInfo.nSessionID;
 		pGateForwardMessageCacheInfo->tickTimeout.setCallback(std::bind(&CTransporter::onCacheMessageTimeout, this, std::placeholders::_1));
-		CBaseApp::Inst()->registerTicker(&pGateForwardMessageCacheInfo->tickTimeout, CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getProxyInvokTimeout(sGateMessageInfo.nMessageID) * 1000, 0, nCacheID);
+		CBaseApp::Inst()->registerTicker(&pGateForwardMessageCacheInfo->tickTimeout, CCoreServiceKitImpl::Inst()->getInvokeTimeout(), 0, nCacheID);
 
 		pMessageCacheInfo->mapMessageCacheInfo[nCacheID] = pGateForwardMessageCacheInfo;
 		pMessageCacheInfo->nTotalSize += sGateMessageInfo.nSize;
@@ -307,7 +307,7 @@ namespace core
 		pGateMessageCacheInfo->vecBuf.resize(nMessageSize);
 		memcpy(&pGateMessageCacheInfo->vecBuf[0], &this->m_vecBuf[0], nMessageSize);
 		pGateMessageCacheInfo->tickTimeout.setCallback(std::bind(&CTransporter::onCacheMessageTimeout, this, std::placeholders::_1));
-		CBaseApp::Inst()->registerTicker(&pGateMessageCacheInfo->tickTimeout, CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getProxyInvokTimeout(_GET_MESSAGE_ID(sGateMessageInfo.pMessage->GetTypeName())) * 1000, 0, nCacheID);
+		CBaseApp::Inst()->registerTicker(&pGateMessageCacheInfo->tickTimeout, CCoreServiceKitImpl::Inst()->getInvokeTimeout(), 0, nCacheID);
 
 		pMessageCacheInfo->mapMessageCacheInfo[nCacheID] = pGateMessageCacheInfo;
 		pMessageCacheInfo->nTotalSize += nMessageSize;
@@ -360,7 +360,7 @@ namespace core
 		memcpy(&pGateBroadcastMessageCacheInfo->vecBuf[0], &this->m_vecBuf[0], nMessageSize);
 		pGateBroadcastMessageCacheInfo->vecSessionID = sGateBroadcastMessageInfo.vecSessionID;
 		pGateBroadcastMessageCacheInfo->tickTimeout.setCallback(std::bind(&CTransporter::onCacheMessageTimeout, this, std::placeholders::_1));
-		CBaseApp::Inst()->registerTicker(&pGateBroadcastMessageCacheInfo->tickTimeout, CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getProxyInvokTimeout(_GET_MESSAGE_ID(sGateBroadcastMessageInfo.pMessage->GetTypeName())) * 1000, 0, nCacheID);
+		CBaseApp::Inst()->registerTicker(&pGateBroadcastMessageCacheInfo->tickTimeout, CCoreServiceKitImpl::Inst()->getInvokeTimeout(), 0, nCacheID);
 
 		pMessageCacheInfo->mapMessageCacheInfo[nCacheID] = pGateBroadcastMessageCacheInfo;
 		pMessageCacheInfo->nTotalSize += nMessageSize;

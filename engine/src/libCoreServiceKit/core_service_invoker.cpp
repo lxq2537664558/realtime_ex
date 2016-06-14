@@ -36,8 +36,6 @@ namespace core
 		}
 		this->m_mapServiceCallback[nMessageID] = callback;
 		this->m_mapMessageName[nMessageID] = szMessageName;
-
-		this->sendMessageInfo(szMessageName);
 	}
 
 	void CCoreServiceInvoker::registerCallback(const std::string& szMessageName, const GateForwardCallback& callback)
@@ -52,8 +50,6 @@ namespace core
 		}
 		this->m_mapGateClientCallback[nMessageID] = callback;
 		this->m_mapMessageName[nMessageID] = szMessageName;
-		
-		this->sendMessageInfo(szMessageName);
 	}
 
 	ServiceCallback& CCoreServiceInvoker::getCallback(uint32_t nMessageID)
@@ -84,41 +80,6 @@ namespace core
 	{
 		CCoreConnectionToMaster* pCoreConnectionToMaster = CCoreServiceKitImpl::Inst()->getConnectionToMaster();
 		DebugAst(nullptr != pCoreConnectionToMaster);
-
-		smt_register_service_message_info netMsg;
-		for (auto iter = this->m_mapMessageName.begin(); iter != this->m_mapMessageName.end(); ++iter)
-		{
-			const std::string& szMessageName = iter->second;
-			SMessageProxyInfo sMessageProxyInfo;
-			sMessageProxyInfo.szMessageName = szMessageName;
-			sMessageProxyInfo.szServiceName = CCoreServiceKitImpl::Inst()->getServiceBaseInfo().szName;
-			sMessageProxyInfo.szServiceGroup = CCoreServiceKitImpl::Inst()->getServiceBaseInfo().szGroup;
-			sMessageProxyInfo.nWeight = CCoreServiceKitImpl::Inst()->getServiceBaseInfo().nWeight;
-			netMsg.vecMessageProxyInfo.push_back(sMessageProxyInfo);
-		}
-
-		base::CWriteBuf& writeBuf = CBaseApp::Inst()->getWriteBuf();
-		netMsg.pack(writeBuf);
-		pCoreConnectionToMaster->send(eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
-	}
-
-	void CCoreServiceInvoker::sendMessageInfo(const std::string& szMessageName)
-	{
-		CCoreConnectionToMaster* pCoreConnectionToMaster = CCoreServiceKitImpl::Inst()->getConnectionToMaster();
-		if (nullptr == pCoreConnectionToMaster)
-			return;
-
-		smt_register_service_message_info netMsg;
-		SMessageProxyInfo sMessageProxyInfo;
-		sMessageProxyInfo.szMessageName = szMessageName;
-		sMessageProxyInfo.szServiceName = CCoreServiceKitImpl::Inst()->getServiceBaseInfo().szName;
-		sMessageProxyInfo.szServiceGroup = CCoreServiceKitImpl::Inst()->getServiceBaseInfo().szGroup;
-		sMessageProxyInfo.nWeight = CCoreServiceKitImpl::Inst()->getServiceBaseInfo().nWeight;
-		netMsg.vecMessageProxyInfo.push_back(sMessageProxyInfo);
-		
-		base::CWriteBuf& writeBuf = CBaseApp::Inst()->getWriteBuf();
-		netMsg.pack(writeBuf);
-		pCoreConnectionToMaster->send(eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
 	}
 
 	const std::string& CCoreServiceInvoker::getMessageName(uint32_t nMessageID) const

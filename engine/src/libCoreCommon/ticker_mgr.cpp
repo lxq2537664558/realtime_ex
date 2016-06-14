@@ -40,7 +40,7 @@ namespace core
 		pTicker->m_nNextTickTime = this->m_nLogicTime + nStartTime;
 		pTicker->m_nContext = nContext;
 		pTicker->m_pTickerNode = pTickerNode;
-
+		
 		this->insertTicker(pTickerNode);
 	}
 
@@ -54,6 +54,7 @@ namespace core
 		{
 			pTicker->m_pTickerNode->remove();
 			pTicker->m_pTickerNode->Value.pTicker = nullptr;
+			
 			SAFE_DELETE(pTicker->m_pTickerNode);
 		}
 		else

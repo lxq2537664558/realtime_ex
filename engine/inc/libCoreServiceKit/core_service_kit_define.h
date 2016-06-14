@@ -45,7 +45,6 @@ namespace core
 		std::string	szType;			// 服务类型
 		std::string	szName;			// 服务名字
 		std::string	szGroup;		// 服务所属的组
-		uint32_t	nWeight;		// 服务作为提供者在所有相同提供者中的权重
 		std::string	szHost;
 		uint16_t	nPort;			// 0表示该服务没有监听地址
 		uint32_t	nRecvBufSize;

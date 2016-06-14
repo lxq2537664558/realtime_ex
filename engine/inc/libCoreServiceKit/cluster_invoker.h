@@ -5,7 +5,6 @@
 #include "google/protobuf/message.h"
 
 #include "core_service_kit_define.h"
-#include "load_balance.h"
 
 namespace core
 {
@@ -29,14 +28,6 @@ namespace core
 		@brief: 调用指定远程服务的消息，需要提供远程服务消息返回的响应函数回调
 		*/
 		bool				invok_r(const std::string& szServiceName, const google::protobuf::Message* pMessage, InvokeCallback callback, uint64_t nContext = 0);
-		/**
-		@brief: 通过消息名字调用远程服务，根据负载均衡器选择服务
-		*/
-		bool				invok(const google::protobuf::Message* pMessage, uint64_t nSessionID, const std::string& szServiceGroup);
-		/**
-		@brief: 通过消息名字调用远程服务，根据负载均衡器选择服务，需要提供远程服务消息返回的响应函数回调
-		*/
-		bool				invok_r(const google::protobuf::Message* pMessage, uint64_t nSessionID, const std::string& szServiceGroup, InvokeCallback callback, uint64_t nContext = 0);
 		/**
 		@brief: 响应远程服务的调用，发送响应消息
 		*/
@@ -63,6 +54,6 @@ namespace core
 		/**
 		@brief: 网关服务转发客户端消息
 		*/
-		bool				forward(uint32_t nMessageID, const void* pData, uint16_t nSize, uint64_t nSessionID, const std::string& szServiceGroup);
+		bool				forward(const std::string& szServiceName, uint32_t nMessageID, const void* pData, uint16_t nSize, uint64_t nSessionID);
 	};
 }

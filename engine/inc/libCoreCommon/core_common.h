@@ -81,6 +81,7 @@ enum EMessageType
 	eMT_CLIENT			= 7,		// 客户端消息
 	
 	eMT_TYPE_MASK		= 0x00ff,	// 类型掩码
+	eMT_LUA				= 0x0100,	// lua消息
 
 	// 特殊标记
 	eMT_BROADCAST		= 0x200,	// 广播消息

@@ -21,6 +21,7 @@ namespace core
 		void		beginRecv(uint64_t nTraceID, const std::string& szMessageName, const std::string& szFromServiceName);
 		void		endRecv();
 		void		send(const std::string& szMessageName);
+		void		send(uint32_t nMessageID);
 
 	private:
 		uint64_t	m_nNextGenTraceID;

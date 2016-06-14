@@ -28,9 +28,6 @@ namespace core
 		void							onConnectToMaster();
 
 	private:
-		void							sendMessageInfo(const std::string& szMessageName);
-
-	private:
 		std::map<uint32_t, ServiceCallback>				m_mapServiceCallback;
 		std::map<uint32_t, GateForwardCallback>			m_mapGateClientCallback;
 		std::map<uint32_t, std::string>					m_mapMessageName;

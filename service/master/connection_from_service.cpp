@@ -74,11 +74,4 @@ void CConnectionFromService::onDispatch(uint8_t nMsgType, const void* pData, uin
 
 		CMasterApp::Inst()->getServiceMgr()->unregisterService(netMsg.szName);
 	}
-	else if (pCookice->nMessageID == eSMT_register_service_message_info)
-	{
-		core::smt_register_service_message_info netMsg;
-		netMsg.unpack(pData, nSize);
-
-		CMasterApp::Inst()->getServiceMgr()->registerMessageInfo(this->m_szServiceName, netMsg.vecMessageProxyInfo);
-	}
 }

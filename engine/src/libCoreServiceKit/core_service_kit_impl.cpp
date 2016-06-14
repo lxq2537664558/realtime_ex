@@ -8,7 +8,6 @@
 #include "message_registry.h"
 #include "core_service_kit_define.h"
 #include "core_service_proxy.h"
-#include "load_balance_mgr.h"
 #include "service_connection_factory.h"
 
 #include "libCoreCommon/base_connection_mgr.h"
@@ -16,21 +15,23 @@
 
 #include "tinyxml2/tinyxml2.h"
 
+#define _DEFAULT_INVOKE_TIMEOUT 10000
+
 namespace core
 {
 
 	CCoreServiceKitImpl::CCoreServiceKitImpl()
 		: m_nMasterPort(0)
+		, m_nInvokTimeout(_DEFAULT_INVOKE_TIMEOUT)
 		, m_pTransporter(nullptr)
 		, m_pCoreServiceInvoker(nullptr)
 		, m_pCoreServiceProxy(nullptr)
-		, m_pLoadBalanceMgr(nullptr)
 		, m_pServiceConnectionFactory(nullptr)
 		, m_pInvokerTrace(nullptr)
+		, m_pLuaFacade(nullptr)
 	{
 		this->m_tickCheckConnectMaster.setCallback(std::bind(&CCoreServiceKitImpl::onCheckConnectMaster, this, std::placeholders::_1));
 	
-		this->m_sServiceBaseInfo.nWeight = _SERVICE_WEIGHT_PERCENT_MULT;
 		this->m_sServiceBaseInfo.nPort = 0;
 		this->m_sServiceBaseInfo.nRecvBufSize = 0;
 		this->m_sServiceBaseInfo.nSendBufSize = 0;
@@ -67,7 +68,7 @@ namespace core
 		this->m_sServiceBaseInfo.szType = pServiceInfoXML->Attribute("service_type");
 		this->m_sServiceBaseInfo.szName = pServiceInfoXML->Attribute("service_name");
 		this->m_sServiceBaseInfo.szGroup = pServiceInfoXML->Attribute("service_group");
-		this->m_sServiceBaseInfo.nWeight = (uint32_t)(pServiceInfoXML->FloatAttribute("weight") * _SERVICE_WEIGHT_PERCENT_MULT);
+		this->m_nInvokTimeout = (uint32_t)(pServiceInfoXML->FloatAttribute("invoke_timeout"));
 		tinyxml2::XMLElement* pHostInfoXML = pServiceInfoXML->FirstChildElement("host_info");
 		if (pHostInfoXML != nullptr)
 		{
@@ -83,7 +84,7 @@ namespace core
 		CBaseApp::Inst()->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionToMaster, this->m_pServiceConnectionFactory);
 
 		this->m_pCoreServiceProxy = new CCoreServiceProxy();
-		if (!this->m_pCoreServiceProxy->init(pRootXML))
+		if (!this->m_pCoreServiceProxy->init())
 		{
 			PrintWarning("this->m_pTransporter->init()");
 			return false;
@@ -109,13 +110,6 @@ namespace core
 		if (!this->m_pCoreServiceInvoker->init())
 		{
 			PrintWarning("this->m_pMessageDirectory->init()");
-			return false;
-		}
-
-		this->m_pLoadBalanceMgr = new CLoadBalanceMgr();
-		if (!this->m_pLoadBalanceMgr->init())
-		{
-			PrintWarning("this->m_pLoadBalancePolicyMgr->init()");
 			return false;
 		}
 
@@ -157,6 +151,8 @@ namespace core
 			CBaseApp::Inst()->registerTicker(&this->m_tickCheckConnectMaster, 5 * 1000, 5 * 1000, 0);
 		}
 
+		this->m_pLuaFacade = new base::CLuaFacade();
+
 		return true;
 	}
 
@@ -169,8 +165,8 @@ namespace core
 		SAFE_DELETE(this->m_pTransporter);
 		SAFE_DELETE(this->m_pCoreServiceInvoker);
 		SAFE_DELETE(this->m_pCoreServiceProxy);
-		SAFE_DELETE(this->m_pLoadBalanceMgr);
 		SAFE_DELETE(this->m_pServiceConnectionFactory);
+		SAFE_DELETE(this->m_pLuaFacade);
 
 		CMessageDispatcher::Inst()->release();
 		CMessageRegistry::Inst()->release();
@@ -232,11 +228,6 @@ namespace core
 		return this->m_pTransporter;
 	}
 
-	CLoadBalanceMgr* CCoreServiceKitImpl::getLoadBalanceMgr() const
-	{
-		return this->m_pLoadBalanceMgr;
-	}
-
 	CCoreServiceProxy* CCoreServiceKitImpl::getCoreServiceProxy() const
 	{
 		return this->m_pCoreServiceProxy;
@@ -250,6 +241,16 @@ namespace core
 	CInvokerTrace* CCoreServiceKitImpl::getInvokerTrace() const
 	{
 		return this->m_pInvokerTrace;
+	}
+
+	base::CLuaFacade* CCoreServiceKitImpl::getLuaFacade() const
+	{
+		return this->m_pLuaFacade;
+	}
+
+	uint32_t CCoreServiceKitImpl::getInvokeTimeout() const
+	{
+		return this->m_nInvokTimeout;
 	}
 
 }

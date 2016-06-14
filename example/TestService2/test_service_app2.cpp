@@ -7,7 +7,6 @@
 #include "libCoreCommon/base_app.h"
 #include "libCoreServiceKit/message_registry.h"
 #include "libCoreServiceKit/cluster_invoker.h"
-#include "libCoreServiceKit/load_balance.h"
 #include "libCoreServiceKit/core_service_kit.h"
 
 #include "../proto_src/service_request_msg.pb.h"

@@ -80,15 +80,5 @@ namespace core
 
 			CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->delService(netMsg.szName);
 		}
-		else if (pCookice->nMessageID == eSMT_sync_service_message_info)
-		{
-			smt_sync_service_message_info netMsg;
-			netMsg.unpack(pData, nSize);
-
-			for (size_t i = 0; i < netMsg.vecMessageProxyInfo.size(); ++i)
-			{
-				CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->addMessageProxyInfo(netMsg.vecMessageProxyInfo[i]);
-			}
-		}
 	}
 }

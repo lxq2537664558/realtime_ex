@@ -141,5 +141,5 @@ void CGateMessageDispatcher::forward(uint64_t nSessionID, const core::client_mes
 {
 	DebugAst(pHeader != nullptr);
 
-	core::CClusterInvoker::Inst()->forward(pHeader->nMessageID, pHeader + 1, pHeader->nMessageSize - sizeof(core::client_message_header), nSessionID, "*");
+	core::CClusterInvoker::Inst()->forward("", pHeader->nMessageID, pHeader + 1, pHeader->nMessageSize - sizeof(core::client_message_header), nSessionID);
 }

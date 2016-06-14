@@ -7,7 +7,6 @@
 #include "libCoreCommon/base_app.h"
 #include "libCoreServiceKit/message_registry.h"
 #include "libCoreServiceKit/cluster_invoker.h"
-#include "libCoreServiceKit/load_balance.h"
 
 #include "../proto_src/service_request_msg.pb.h"
 #include "../proto_src/client_request_msg.pb.h"
@@ -24,7 +23,7 @@ void client_request_msg_callback(const core::SClientSessionInfo& sClientSessionI
 	msg.set_name(pClientMsg->name());
 	msg.set_id(pClientMsg->id());
 
-	core::CClusterInvoker::Inst()->invok_r(&msg, 0, "*", [sClientSessionInfo](uint32_t nMessageType, const google::protobuf::Message* pMessage, core::EResponseResultType eType)->void
+	core::CClusterInvoker::Inst()->invok_r("test1-1", &msg, [sClientSessionInfo](uint32_t nMessageType, const google::protobuf::Message* pMessage, core::EResponseResultType eType)->void
 	{
 		const test::service_response_msg* pResponseMsg = dynamic_cast<const test::service_response_msg*>(pMessage);
 		DebugAst(pResponseMsg != nullptr);

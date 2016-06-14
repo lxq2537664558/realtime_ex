@@ -48,6 +48,9 @@
     <ClInclude Include="gate_message_handler.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="service_connection_factory.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -72,6 +75,9 @@
       <Filter>proto_src</Filter>
     </ClCompile>
     <ClCompile Include="gate_message_handler.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="service_connection_factory.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

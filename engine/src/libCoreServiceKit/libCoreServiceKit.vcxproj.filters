@@ -50,9 +50,6 @@
     <ClInclude Include="transporter.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreServiceKit\load_balance.h">
-      <Filter>inc</Filter>
-    </ClInclude>
     <ClInclude Include="core_service_proxy.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -64,9 +61,6 @@
     </ClInclude>
     <ClInclude Include="..\..\inc\libCoreServiceKit\core_service_kit_define.h">
       <Filter>inc</Filter>
-    </ClInclude>
-    <ClInclude Include="load_balance_mgr.h">
-      <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="core_service_invoker.h">
       <Filter>src</Filter>
@@ -109,9 +103,6 @@
     <ClCompile Include="transporter.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="load_balance.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="core_service_kit_impl.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -119,9 +110,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="core_service_kit.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="load_balance_mgr.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="core_service_invoker.cpp">
