@@ -22,9 +22,8 @@ public:
 private:
 	struct SServiceInfo
 	{
-		core::SServiceBaseInfo							sServiceBaseInfo;
-		std::map<std::string, core::SMessageProxyInfo>	mapMessageProxyName;
-		CConnectionFromService*							pConnectionFromService;
+		core::SServiceBaseInfo	sServiceBaseInfo;
+		CConnectionFromService*	pConnectionFromService;
 	};
 
 	std::map<uint32_t, std::string>		m_mapMessageName;

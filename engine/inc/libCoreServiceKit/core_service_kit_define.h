@@ -16,39 +16,16 @@
 
 namespace core
 {
-	struct SMetaMessageProxyInfo
-	{
-		std::string	szMessageName;		// 消息名字
-		std::string	szLoadbalanceName;	// 负载均衡器名字
-		std::string	szFail;				// 失败策略名字
-		uint32_t	nRetries;			// 失败重试次数
-		uint32_t	nTimeout;			// 远程调用超时时间
-	};
-
-	struct SMessageProxyInfo
-	{
-		std::string	szServiceName;		// 服务名字
-		std::string	szServiceGroup;		// 服务组
-		std::string	szMessageName;		// 消息名字
-		int32_t		nWeight;			// 负载均衡权重
-	};
-
-	struct SMessageProxyGroupInfo
-	{
-		std::map<std::string, SMessageProxyInfo>	mapMessageProxyInfo;
-		std::map<std::string, int32_t>				mapGroupWeight;
-		int32_t										nTotalWeight;
-	};
 
 	struct SServiceBaseInfo
 	{
 		std::string	szType;			// 服务类型
 		std::string	szName;			// 服务名字
 		std::string	szGroup;		// 服务所属的组
-		std::string	szHost;
+		std::string	szHost;			// 服务器IP
 		uint16_t	nPort;			// 0表示该服务没有监听地址
-		uint32_t	nRecvBufSize;
-		uint32_t	nSendBufSize;
+		uint32_t	nRecvBufSize;	// 接收缓冲区大小
+		uint32_t	nSendBufSize;	// 发送缓存区大小
 	};
 
 	struct SClientSessionInfo

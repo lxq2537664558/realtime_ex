@@ -102,11 +102,6 @@ void CServiceMgr::unregisterService(const std::string& szServiceName)
 
 	// 清理该服务的消息
 	SServiceInfo& sServiceInfo = iter->second;
-	for (auto iter = sServiceInfo.mapMessageProxyName.begin(); iter != sServiceInfo.mapMessageProxyName.end(); ++iter)
-	{
-		uint32_t nMessageID = _GET_MESSAGE_ID(iter->second.szMessageName);
-		this->m_mapMessageName.erase(nMessageID);
-	}
 
 	base::CWriteBuf& writeBuf = CMasterApp::Inst()->getWriteBuf();
 
