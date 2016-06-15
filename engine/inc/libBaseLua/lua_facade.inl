@@ -72,7 +72,6 @@ namespace base
 	{
 		void*						pf;
 		std::function<RT(Args...)>	invoke;
-		std::tuple<Args...>			args;    //回调函数所需要的参数类型列表
 	};
 
 	struct SPushArgs
@@ -91,27 +90,27 @@ namespace base
 		}
 	};
 
-	template<int32_t ARG_SIZE, typename RT, typename ...Args>
+	template<int32_t ARG_COUNT, typename RT, typename ...Args>
 	struct SParseArgs;
 	
 	template<typename RT, typename ...Args>
-	struct SBuildNowArgs
+	struct SParseNowArg
 	{
 		template<typename T, typename ...RemainArgs, typename ...NowArgs>
-		static int32_t build(lua_State* pL, int32_t& nIndex, SFunctionWrapper<RT, Args...>* pFunctionWrapper, NowArgs&&... args)
+		static int32_t parse(lua_State* pL, int32_t& nIndex, SFunctionWrapper<RT, Args...>* pFunctionWrapper, NowArgs&&... args)
 		{
 			T value = read2Cpp<T>(pL, nIndex++);
-			return SParseArgs<sizeof...(RemainArgs), RT, Args...>::template parse<RemainArgs...>(pL, nIndex, pFunctionWrapper, args..., value);
+			return SParseArgs<sizeof...(RemainArgs), RT, Args...>::parse<RemainArgs...>(pL, nIndex, pFunctionWrapper, args..., value);
 		}
 	};
 
-	template<int32_t ARG_SIZE, typename RT, typename ...Args>
+	template<int32_t ARG_COUNT, typename RT, typename ...Args>
 	struct SParseArgs
 	{
 		template<typename ...RemainArgs, typename ...NowArgs>
 		static int32_t parse(lua_State* pL, int32_t& nIndex, SFunctionWrapper<RT, Args...>* pFunctionWrapper, NowArgs&&... args)
 		{
-			return SBuildNowArgs<RT, Args...>::template build<RemainArgs...>(pL, nIndex, pFunctionWrapper, args...);
+			return SParseNowArg<RT, Args...>::parse<RemainArgs...>(pL, nIndex, pFunctionWrapper, args...);
 		}
 	};
 
@@ -153,16 +152,16 @@ namespace base
 			// 坚决不能调用多余20个参数的C++函数，不然lua栈直接崩溃
 			PROFILING_GUARD(invoke)
 			lua_getglobal(pL, _FACADE_NAME);
-			CLuaFacade* pLuaFacade = (CLuaFacade*)lua_touserdata(pL, -1);
+			CLuaFacade* pLuaFacade = reinterpret_cast<CLuaFacade*>(lua_touserdata(pL, -1));
 			DebugAstEx(pLuaFacade != nullptr, 0);
 
 			pLuaFacade->setActiveLuaState(pL);
 			lua_pop(pL, 1);
-			SFunctionWrapper<RT, Args...>* pFunctionWrapper = (SFunctionWrapper<RT, Args...>*)lua_touserdata(pL, lua_upvalueindex(1));
+			SFunctionWrapper<RT, Args...>* pFunctionWrapper = reinterpret_cast<SFunctionWrapper<RT, Args...>*>(lua_touserdata(pL, lua_upvalueindex(1)));
 			DebugAstEx(pFunctionWrapper != nullptr, 0);
 
 			int32_t nIndex = 1;
-			int32_t nRet = SParseArgs<sizeof...(Args), RT, Args...>::template parse<Args...>(pL, nIndex, pFunctionWrapper);
+			int32_t nRet = SParseArgs<sizeof...(Args), RT, Args...>::parse<Args...>(pL, nIndex, pFunctionWrapper);
 			
 			pLuaFacade->setActiveLuaState(nullptr);
 
@@ -200,7 +199,7 @@ namespace base
 			};
 
 			int32_t nIndex = 2;
-			int32_t nRet = SParseArgs<sizeof...(Args), RT, Args...>::template parse<Args...>(pL, nIndex, pFunctionWrapper);
+			int32_t nRet = SParseArgs<sizeof...(Args), RT, Args...>::parse<Args...>(pL, nIndex, pFunctionWrapper);
 			pLuaFacade->setActiveLuaState(nullptr);
 
 			return nRet;
@@ -311,7 +310,7 @@ namespace base
 		SFunctionWrapper<RT, Args...>* pFunctionWrapper = new SFunctionWrapper<RT, Args...>();
 
 		memcpy(&pFunctionWrapper->pf, &pfFun, sizeof(pFunctionWrapper->pf));
-
+		pFunctionWrapper->invoke = std::bind(pfFun, nullptr);
 		lua_pushstring(this->m_pMainLuaState, szName);
 		lua_pushlightuserdata(this->m_pMainLuaState, pFunctionWrapper);
 		lua_pushcclosure(this->m_pMainLuaState, &SClassInvoke<T, RT, Args...>::invoke, 1);

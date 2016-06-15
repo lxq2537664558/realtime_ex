@@ -149,8 +149,11 @@ int64_t funXX( int8_t a, uint8_t b, int16_t c, uint16_t d, int32_t e, uint32_t f
 	return 1000;
 }
 
-uint64_t funXXX( int64_t a )
+uint64_t funXXX( int32_t a )
 {
+	double b = 0xffffffff;
+	int32_t c = (int32_t)b;
+	uint32_t d = (int32_t)b;
 	return 30000;
 }
 
@@ -172,11 +175,12 @@ CAA* getAA()
 int main(int argc, wchar_t* argv[])
 {
 	base::initLog( false );
+	base::initProfiling(true);
 	base::initProcessExceptionHander();
 	pLua = new base::CLuaFacade();
 	pLua->open();
 	pLua->startDebug("0.0.0.0", 12345);
-	pLua->addSeachPath( "../../../engineTest/TestBaseLua" );
+	pLua->addSeachPath( "../../../test/TestBaseLua" );
 
 	
 	pLua->registerClass<CAA>( "CAA", base::lua_helper::createObject<CAA, int32_t> );

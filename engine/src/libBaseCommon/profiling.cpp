@@ -17,8 +17,8 @@ public:
 	bool init(bool bProfiling);
 	void enableProfiling(bool bProfiling);
 
-	void profilingBeginByLabel(const char* szLabel);
-	void endProfilingByLabel(const char* szLabel);
+	void profilingBeginByLabel(const char* szLabel, uint32_t nContext);
+	void endProfilingByLabel(const char* szLabel, uint32_t nContext);
 	void profilingBeginByAddr(const void* pAddr);
 	void endProfilingByAddr(const void* pAddr);
 	void profiling(int64_t nTotalTime);
@@ -33,10 +33,10 @@ private:
 		uint32_t	nCount;
 	};
 
-	std::unordered_map<const char*, SProfilerInfo>	m_mapProfilingInfoByLabel;
-	std::unordered_map<const void*, SProfilerInfo>	m_mapProfilingInfoByAddr;
-	int64_t											m_nProfilingMgrSpend;
-	bool											m_bProfiling;
+	std::unordered_map<const char*, std::unordered_map<uint32_t, SProfilerInfo>>	m_mapProfilingInfoByLabel;
+	std::unordered_map<const void*, SProfilerInfo>									m_mapProfilingInfoByAddr;
+	int64_t																			m_nProfilingMgrSpend;
+	bool																			m_bProfiling;
 };
 
 CProfilingMgr::CProfilingMgr()
@@ -50,7 +50,7 @@ CProfilingMgr::~CProfilingMgr()
 
 }
 
-void CProfilingMgr::profilingBeginByLabel(const char* szLabel)
+void CProfilingMgr::profilingBeginByLabel(const char* szLabel, uint32_t nContext)
 {
 	if (nullptr == szLabel || !this->m_bProfiling)
 		return;
@@ -59,12 +59,27 @@ void CProfilingMgr::profilingBeginByLabel(const char* szLabel)
 	auto iter = this->m_mapProfilingInfoByLabel.find(szLabel);
 	if (iter != this->m_mapProfilingInfoByLabel.end())
 	{
-		SProfilerInfo& sProfilerInfo = iter->second;
-		sProfilerInfo.nPreTime = base::getGmtTime();
+		auto& mapProfilingInfo = iter->second;
+		auto iterInfo = mapProfilingInfo.find(nContext);
+		if (iterInfo == mapProfilingInfo.end())
+		{
+			SProfilerInfo& sProfilerInfo = mapProfilingInfo[nContext];
+			sProfilerInfo.nPreTime = base::getGmtTime();
+			sProfilerInfo.nCount = 0;
+			sProfilerInfo.nTotalTime = 0;
+			sProfilerInfo.nMaxTime = 0;
+			sProfilerInfo.nMinTime = INVALID_32BIT;
+		}
+		else
+		{
+			SProfilerInfo& sProfilerInfo = iterInfo->second;
+			sProfilerInfo.nPreTime = base::getGmtTime();
+		}
 	}
 	else
 	{
-		SProfilerInfo& sProfilerInfo = this->m_mapProfilingInfoByLabel[szLabel];
+		auto& mapProfilingInfo = this->m_mapProfilingInfoByLabel[szLabel];
+		SProfilerInfo& sProfilerInfo = mapProfilingInfo[nContext];
 		sProfilerInfo.nPreTime = base::getGmtTime();
 		sProfilerInfo.nCount = 0;
 		sProfilerInfo.nTotalTime = 0;
@@ -76,7 +91,7 @@ void CProfilingMgr::profilingBeginByLabel(const char* szLabel)
 	this->m_nProfilingMgrSpend += (nEndTime - nBeginTime);
 }
 
-void CProfilingMgr::endProfilingByLabel(const char* szLabel)
+void CProfilingMgr::endProfilingByLabel(const char* szLabel, uint32_t nContext)
 {
 	if (nullptr == szLabel || !this->m_bProfiling)
 		return;
@@ -93,7 +108,18 @@ void CProfilingMgr::endProfilingByLabel(const char* szLabel)
 		this->m_nProfilingMgrSpend += (nEndTime - nBeginTime);
 		return;
 	}
-	SProfilerInfo& sProfilerInfo = iter->second;
+	auto& mapProfilingInfo = iter->second;
+	auto iterInfo = mapProfilingInfo.find(nContext);
+	if (iterInfo == mapProfilingInfo.end())
+	{
+		PrintWarning("profiling error context: %d", nContext);
+
+		int64_t nEndTime = base::getGmtTime();
+
+		this->m_nProfilingMgrSpend += (nEndTime - nBeginTime);
+		return;
+	}
+	SProfilerInfo& sProfilerInfo = iterInfo->second;
 	int32_t nDetla = int32_t(base::getGmtTime() - sProfilerInfo.nPreTime);
 	if (nDetla < sProfilerInfo.nMinTime)
 		sProfilerInfo.nMinTime = nDetla;
@@ -171,17 +197,22 @@ void CProfilingMgr::profiling(int64_t nTotalTime)
 
 	for (auto iter = this->m_mapProfilingInfoByLabel.begin(); iter != this->m_mapProfilingInfoByLabel.end(); ++iter)
 	{
-		SProfilerInfo& sProfilerInfo = iter->second;
-		float fPercentage = 100 * (float)(sProfilerInfo.nTotalTime / (float)nTotalTime);
-		float fAvgTime = 0.0f;
-		if (sProfilerInfo.nCount != 0)
-			fAvgTime = (float)(sProfilerInfo.nTotalTime / (float)sProfilerInfo.nCount);
-		base::saveLogEx("Profiling", false, "label: %s min_time: %d max_time: %d avg_time: %f total_time: " INT64FMT " percentage: %f hit_count %d", iter->first, sProfilerInfo.nMinTime, sProfilerInfo.nMaxTime, fAvgTime, sProfilerInfo.nTotalTime, fPercentage, sProfilerInfo.nCount);
-		sProfilerInfo.nPreTime = 0;
-		sProfilerInfo.nCount = 0;
-		sProfilerInfo.nTotalTime = 0;
-		sProfilerInfo.nMaxTime = 0;
-		sProfilerInfo.nMinTime = INVALID_32BIT;
+		auto& mapProfilingInfo = iter->second;
+		for (auto iterInfo = mapProfilingInfo.begin(); iterInfo != mapProfilingInfo.end(); ++iterInfo)
+		{
+			uint32_t nContext = iterInfo->first;
+			SProfilerInfo& sProfilerInfo = iterInfo->second;
+			float fPercentage = 100 * (float)(sProfilerInfo.nTotalTime / (float)nTotalTime);
+			float fAvgTime = 0.0f;
+			if (sProfilerInfo.nCount != 0)
+				fAvgTime = (float)(sProfilerInfo.nTotalTime / (float)sProfilerInfo.nCount);
+			base::saveLogEx("Profiling", false, "label: %s context: %u min_time: %d max_time: %d avg_time: %f total_time: " INT64FMT " percentage: %f hit_count %d", iter->first, nContext, sProfilerInfo.nMinTime, sProfilerInfo.nMaxTime, fAvgTime, sProfilerInfo.nTotalTime, fPercentage, sProfilerInfo.nCount);
+			sProfilerInfo.nPreTime = 0;
+			sProfilerInfo.nCount = 0;
+			sProfilerInfo.nTotalTime = 0;
+			sProfilerInfo.nMaxTime = 0;
+			sProfilerInfo.nMinTime = INVALID_32BIT;
+		}
 	}
 
 	char szAddr[256] = { 0 };
@@ -258,14 +289,14 @@ namespace base
 		SAFE_DELETE(g_pProfilingMgr);
 	}
 
-	void profilingBeginByLabel(const char* szLabel)
+	void profilingBeginByLabel(const char* szLabel, uint32_t nContext)
 	{
-		g_pProfilingMgr->profilingBeginByLabel(szLabel);
+		g_pProfilingMgr->profilingBeginByLabel(szLabel, nContext);
 	}
 
-	void profilingEndByLabel(const char* szLabel)
+	void profilingEndByLabel(const char* szLabel, uint32_t nContext)
 	{
-		g_pProfilingMgr->endProfilingByLabel(szLabel);
+		g_pProfilingMgr->endProfilingByLabel(szLabel, nContext);
 	}
 
 	void profilingBeginByAddr(const void* pAddr)
