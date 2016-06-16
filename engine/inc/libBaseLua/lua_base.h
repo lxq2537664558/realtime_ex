@@ -5,12 +5,7 @@
 #include "libBaseCommon/base_exception.h"
 #include "libBaseCommon/debug_helper.h"
 
-extern "C"
-{
-#include "lua-5.1.5/lua.h"
-#include "lua-5.1.5/lualib.h"
-#include "lua-5.1.5/lauxlib.h"
-}
+#include "lua-5.3.3/lua.hpp"
 
 namespace base
 {
@@ -151,57 +146,77 @@ namespace base
 	}
 	template<> inline int8_t read2Cpp(lua_State* pL, int32_t nIndex)
 	{
-		if (!lua_isnumber(pL, nIndex))
+		if (!lua_isinteger(pL, nIndex))
 		{
 			throw base::CBaseException("invalid lua arg(int8)");
 			return 0;
 		}
-		return (int8_t)lua_tonumber(pL, nIndex);
+		return (int8_t)lua_tointeger(pL, nIndex);
 	}
 	template<> inline uint8_t read2Cpp(lua_State* pL, int32_t nIndex)
 	{
-		if (!lua_isnumber(pL, nIndex))
+		if (!lua_isinteger(pL, nIndex))
 		{
 			throw base::CBaseException("invalid lua arg(uint8)");
 			return 0;
 		}
-		return (uint8_t)lua_tonumber(pL, nIndex);
+		return (uint8_t)lua_tointeger(pL, nIndex);
 	}
 	template<> inline int16_t read2Cpp(lua_State* pL, int32_t nIndex)
 	{
-		if (!lua_isnumber(pL, nIndex))
+		if (!lua_isinteger(pL, nIndex))
 		{
 			throw base::CBaseException("invalid lua arg(int16)");
 			return 0;
 		}
-		return (int16_t)lua_tonumber(pL, nIndex);
+		return (int16_t)lua_tointeger(pL, nIndex);
 	}
 	template<> inline uint16_t read2Cpp(lua_State* pL, int32_t nIndex)
 	{
-		if (!lua_isnumber(pL, nIndex))
+		if (!lua_isinteger(pL, nIndex))
 		{
 			throw base::CBaseException("invalid lua arg(uint16)");
 			return 0;
 		}
-		return (uint16_t)lua_tonumber(pL, nIndex);
+		return (uint16_t)lua_tointeger(pL, nIndex);
 	}
 	template<> inline int32_t read2Cpp(lua_State* pL, int32_t nIndex)
 	{
-		if (!lua_isnumber(pL, nIndex))
+		if (!lua_isinteger(pL, nIndex))
 		{
 			throw base::CBaseException("invalid lua arg(int32)");
 			return 0;
 		}
-		return (int32_t)lua_tonumber(pL, nIndex);
+		return (int32_t)lua_tointeger(pL, nIndex);
 	}
 	template<> inline uint32_t read2Cpp(lua_State* pL, int32_t nIndex)
 	{
-		if (!lua_isnumber(pL, nIndex))
+		if (!lua_isinteger(pL, nIndex))
 		{
 			throw base::CBaseException("invalid lua arg(uint32)");
 			return 0;
 		}
-		return (uint32_t)lua_tonumber(pL, nIndex);
+		return (uint32_t)lua_tointeger(pL, nIndex);
+	}
+	template<> inline int64_t read2Cpp(lua_State* pL, int32_t nIndex)
+	{
+		int64_t nRet = 0;
+		if (!lua_isinteger(pL, nIndex))
+		{
+			throw base::CBaseException("invalid lua arg(int64_t)");
+			return 0;
+		}
+		return (int64_t)lua_tointeger(pL, nIndex);
+	}
+	template<> inline uint64_t read2Cpp(lua_State* pL, int32_t nIndex)
+	{
+		uint64_t nRet = 0;
+		if (!lua_isinteger(pL, nIndex))
+		{
+			throw base::CBaseException("invalid lua arg(uint64_t)");
+			return 0;
+		}
+		return (uint64_t)lua_tointeger(pL, nIndex);
 	}
 	template<> inline float read2Cpp(lua_State* pL, int32_t nIndex)
 	{
@@ -220,44 +235,6 @@ namespace base
 			return 0.0;
 		}
 		return (double)lua_tonumber(pL, nIndex);
-	}
-
-	template<> inline int64_t read2Cpp(lua_State* pL, int32_t nIndex)
-	{
-		int64_t nRet = 0;
-		if (lua_isstring(pL, nIndex))
-		{
-			size_t nLen = 0;
-			char* szBuf = (char*)lua_tolstring(pL, nIndex, &nLen);
-			base::crt::atoi64(szBuf, nRet);
-		}
-		else if (lua_isnumber(pL, nIndex))
-			nRet = (int64_t)lua_tonumber(pL, nIndex);
-		else
-		{
-			throw base::CBaseException("invalid lua arg(in64)");
-			return 0;
-		}
-		return nRet;
-	}
-	template<> inline uint64_t read2Cpp(lua_State* pL, int32_t nIndex)
-	{
-		uint64_t nRet = 0;
-		if (lua_isstring(pL, nIndex))
-		{
-			size_t nLen = 0;
-			char* szBuf = (char*)lua_tolstring(pL, nIndex, &nLen);
-			base::crt::atoui64(szBuf, nRet);
-		}
-		else if (lua_isnumber(pL, nIndex))
-			nRet = (uint64_t)lua_tonumber(pL, nIndex);
-		else
-		{
-			throw base::CBaseException("invalid lua arg(uint64)");
-			return 0;
-		}
-
-		return nRet;
 	}
 
 	template<class T>
@@ -337,37 +314,17 @@ namespace base
 		Convert2LuaType<T*>::convertType(pL, val);
 	};
 
-	template<> inline void push2Lua(lua_State* pL, int8_t val)		{ lua_pushnumber(pL, val);	}
-	template<> inline void push2Lua(lua_State* pL, uint8_t val)		{ lua_pushnumber(pL, val);	}
-	template<> inline void push2Lua(lua_State* pL, int16_t val)		{ lua_pushnumber(pL, val);	}
-	template<> inline void push2Lua(lua_State* pL, uint16_t val)	{ lua_pushnumber(pL, val);	}
-	template<> inline void push2Lua(lua_State* pL, int32_t val)		{ lua_pushnumber(pL, val);	}
-	template<> inline void push2Lua(lua_State* pL, uint32_t val)	{ lua_pushnumber(pL, val);	}
+	template<> inline void push2Lua(lua_State* pL, int8_t val)		{ lua_pushinteger(pL, val);	}
+	template<> inline void push2Lua(lua_State* pL, uint8_t val)		{ lua_pushinteger(pL, val); }
+	template<> inline void push2Lua(lua_State* pL, int16_t val)		{ lua_pushinteger(pL, val); }
+	template<> inline void push2Lua(lua_State* pL, uint16_t val)	{ lua_pushinteger(pL, val); }
+	template<> inline void push2Lua(lua_State* pL, int32_t val)		{ lua_pushinteger(pL, val); }
+	template<> inline void push2Lua(lua_State* pL, uint32_t val)	{ lua_pushinteger(pL, val); }
+	template<> inline void push2Lua(lua_State* pL, int64_t val)		{ lua_pushinteger(pL, val); }
+	template<> inline void push2Lua(lua_State* pL, uint64_t val)	{ lua_pushinteger(pL, val); }
 	template<> inline void push2Lua(lua_State* pL, float val)		{ lua_pushnumber(pL, val);	}
 	template<> inline void push2Lua(lua_State* pL, double val)		{ lua_pushnumber(pL, val);	}
 	template<> inline void push2Lua(lua_State* pL, char* val)		{ lua_pushstring(pL, val);	}
 	template<> inline void push2Lua(lua_State* pL, const char* val) { lua_pushstring(pL, val);	}
 	template<> inline void push2Lua(lua_State* pL, bool val)		{ lua_pushboolean(pL, val); }
-	template<> inline void push2Lua(lua_State* pL, int64_t val)
-	{
-		if ((val >> 32) == 0)
-			lua_pushnumber(pL, (lua_Number)val);
-		else
-		{
-			char szBuf[32] = { 0 };
-			base::crt::i64toa(val, szBuf, _countof(szBuf), 10);
-			lua_pushlstring(pL, szBuf, sizeof(szBuf));
-		}
-	}
-	template<> inline void push2Lua(lua_State* pL, uint64_t val)
-	{
-		if ((val >> 32) == 0)
-			lua_pushnumber(pL, (lua_Number)val);
-		else
-		{
-			char szBuf[32] = { 0 };
-			base::crt::ui64toa(val, szBuf, _countof(szBuf), 10);
-			lua_pushlstring(pL, szBuf, sizeof(szBuf));
-		}
-	}
 }

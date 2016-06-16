@@ -11,43 +11,9 @@ namespace base
 {
 	void mark_object(lua_State* pL, lua_State* pNewL, const void* parent, const char* desc);
 
-	void luaL_checkversion(lua_State* pL)
-	{
-		if (lua_pushthread(pL) == 0)
-		{
-			luaL_error(pL, "Must require in main thread");
-		}
-		lua_setfield(pL, LUA_REGISTRYINDEX, "mainthread");
-	}
-
-	void lua_rawsetp(lua_State* pL, int32_t index, const void *p)
-	{
-		if (index < 0)
-		{
-			index += lua_gettop(pL) + 1;
-		}
-		lua_pushlightuserdata(pL, (void*)p);
-		lua_insert(pL, -2);
-		lua_rawset(pL, index);
-	}
-
-	void lua_rawgetp(lua_State* pL, int32_t index, const void *p)
-	{
-		if (index < 0)
-			index += lua_gettop(pL) + 1;
-
-		lua_pushlightuserdata(pL, (void*)p);
-		lua_rawget(pL, index);
-	}
-
-	void lua_getuservalue(lua_State* pL, int32_t index)
-	{
-		lua_getfenv(pL, index);
-	}
-
 	void mark_function_env(lua_State* pL, lua_State* pNewL, const void* t)
 	{
-		lua_getfenv(pL, -1);
+		//lua_getfenv(pL, -1);
 		if (lua_istable(pL, -1))
 			mark_object(pL, pNewL, t, "[environment]");
 		else

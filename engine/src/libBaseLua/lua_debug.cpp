@@ -625,11 +625,11 @@ void CDebugger::listSource(std::string& szExpr)
 static const char* pushnexttemplate(lua_State *pL, const char *szPath)
 {
 	const char *l;
-	while (*szPath == *LUA_PATHSEP)
+	while (*szPath == *";")
 		szPath++;  /* skip separators */
 	if (*szPath == '\0')
 		return nullptr;  /* no more templates */
-	l = strchr(szPath, *LUA_PATHSEP);  /* find next separator */
+	l = strchr(szPath, *";");  /* find next separator */
 	if (l == nullptr)
 		l = szPath + strlen(szPath);
 	lua_pushlstring(pL, szPath, l - szPath);  /* template */
@@ -647,7 +647,7 @@ static const char* getFullName(lua_State *pL, const char *szShortName)
 	lua_pushliteral(pL, "");  /* error accumulator */
 	while ((szPath = pushnexttemplate(pL, szPath)) != nullptr)
 	{
-		const char *szFullName = luaL_gsub(pL, lua_tostring(pL, -1), LUA_PATH_MARK, szShortName);
+		const char *szFullName = luaL_gsub(pL, lua_tostring(pL, -1), "?", szShortName);
 		lua_remove(pL, -2);  /* remove path template */
 		FILE *pFile = fopen(szFullName, "r");
 		if (nullptr != pFile)
@@ -1048,7 +1048,8 @@ bool startLuaDebug(lua_State* pL, const char* szIP, uint16_t nPort)
 		{ nullptr, nullptr }
 	};
 
-	luaL_register(pL, "debugger", zFuncs);
+	lua_newtable(pL);
+	luaL_setfuncs(pL, zFuncs, 0);
 
 	return true;
 }

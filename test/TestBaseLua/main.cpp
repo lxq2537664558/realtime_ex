@@ -183,25 +183,25 @@ int main(int argc, wchar_t* argv[])
 	pLua->addSeachPath( "../../../test/TestBaseLua" );
 
 	
-	pLua->registerClass<CAA>( "CAA", base::lua_helper::createObject<CAA, int32_t> );
-	pLua->registerClassFunction( "fun0", &CAA::fun0 );
-	pLua->registerClassFunction( "fun1", &CAA::fun1 );
-	pLua->registerClassFunction( "fun2", &CAA::fun2 );
-	pLua->registerClassFunction( "fun3", &CAA::fun3 );
-	pLua->registerClassFunction( "fun4", &CAA::fun4 );
-	pLua->registerClassFunction( "fun5", &CAA::fun5 );
-	pLua->registerClassFunction( "fun6", &CAA::fun6 );
-	pLua->registerClassFunction( "fun7", &CAA::fun7 );
-	pLua->registerClassFunction( "fun8", &CAA::fun8 );
-	pLua->registerClassFunction( "fun9", &CAA::fun9 );
-	pLua->registerClassMember( "a", &CAA::a );
+	pLua->registerClass<CAA>("CAA", base::lua_helper::createObject<CAA, int32_t>);
+	pLua->registerClassFunction("fun0", &CAA::fun0);
+	pLua->registerClassFunction("fun1", &CAA::fun1);
+	pLua->registerClassFunction("fun2", &CAA::fun2);
+	pLua->registerClassFunction("fun3", &CAA::fun3);
+	pLua->registerClassFunction("fun4", &CAA::fun4);
+	pLua->registerClassFunction("fun5", &CAA::fun5);
+	pLua->registerClassFunction("fun6", &CAA::fun6);
+	pLua->registerClassFunction("fun7", &CAA::fun7);
+	pLua->registerClassFunction("fun8", &CAA::fun8);
+	pLua->registerClassFunction("fun9", &CAA::fun9);
+	pLua->registerClassMember("a", &CAA::a);
 
-	pLua->registerFunction( "funXX", &funXX );
+	pLua->registerFunction("funXX", &funXX);
 	pLua->registerFunction("fun64", &fun64);
 	pLua->registerFunction("funXXX", &funXXX);
 	pLua->registerFunction("funAA", &funAA);
 	pLua->registerFunction("getAA", &getAA);
-	pLua->loadFile( "test" );
+	pLua->loadFile("test");
 
 	while (true)
 	{

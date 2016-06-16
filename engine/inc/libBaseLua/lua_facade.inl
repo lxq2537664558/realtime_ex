@@ -230,7 +230,16 @@ namespace base
 		DebugAst(SClassName<T>::getName() == nullptr);
 
 		SStackCheck sStackCheck(this->m_pMainLuaState);
-		DebugAst(!checkFieldExist(this->m_pMainLuaState, LUA_GLOBALSINDEX, szClassName));
+
+		lua_getglobal(this->m_pMainLuaState, szClassName);
+		bool bExist = !lua_isnil(this->m_pMainLuaState, -1);
+		lua_pop(this->m_pMainLuaState, 1);
+
+		if (bExist)
+		{
+			PrintWarning("dup registerClass class_name: %s", szClassName);
+			return;
+		}
 
 		SClassName<T>::setName(szClassName);
 
@@ -341,21 +350,28 @@ namespace base
 	void CLuaFacade::registerFunction(const char* szName, RT(*pfFun)(Args...))
 	{
 		DebugAst(pfFun != nullptr && szName != nullptr);
-		DebugAst(!checkFieldExist(this->m_pMainLuaState, LUA_GLOBALSINDEX, szName));
 		
+		lua_getglobal(this->m_pMainLuaState, szName);
+		bool bExist = !lua_isnil(this->m_pMainLuaState, -1);
+		lua_pop(this->m_pMainLuaState, 1);
+
+		if (bExist)
+		{
+			PrintWarning("dup registerFunction function_name: %s", szName);
+			return;
+		}
+
 		SStackCheck sStackCheck(this->m_pMainLuaState);
 
 		SNormalFunctionWrapper<RT, Args...>* pNormalFunctionWrapper = new SNormalFunctionWrapper<RT, Args...>();
 		pNormalFunctionWrapper->pf = pfFun;
 
 		///< top = 1
-		lua_pushstring(this->m_pMainLuaState, szName);
-		///< top = 2
 		lua_pushlightuserdata(this->m_pMainLuaState, pNormalFunctionWrapper);
-		///< top = 3
+		///< top = 2
 		lua_pushcclosure(this->m_pMainLuaState, &SNormalInvoke<RT, Args...>::invoke, 1);
-		///< top = 3(之前的lightuserdata作为函数的upvalue了)
-		lua_rawset(this->m_pMainLuaState, LUA_GLOBALSINDEX);	///< { key:szName, value:CallByLua }
+		///< top = 2(之前的lightuserdata作为函数的upvalue了)
+		lua_setglobal(this->m_pMainLuaState, szName);	///< { key:szName, value:CallByLua }
 		///< top = 1
 	}
 	
@@ -364,7 +380,15 @@ namespace base
 	{
 		DebugAst(szName != nullptr);
 
-		DebugAst(!checkFieldExist(this->m_pMainLuaState, LUA_GLOBALSINDEX, szName));
+		lua_getglobal(this->m_pMainLuaState, szName);
+		bool bExist = !lua_isnil(this->m_pMainLuaState, -1);
+		lua_pop(this->m_pMainLuaState, 1);
+
+		if (bExist)
+		{
+			PrintWarning("dup registerConstData function_name: %s", szName);
+			return;
+		}
 
 		lua_pushnumber(this->m_pMainLuaState, val);
 		lua_setglobal(this->m_pMainLuaState, szName);
@@ -541,8 +565,7 @@ namespace base
 
 		lua_State* pL = this->getActiveLuaState();
 		SStackCheck sStackCheck(pL);
-		lua_pushstring(pL, szFunName);
-		lua_rawget(pL, LUA_GLOBALSINDEX);
+		lua_getglobal(pL, szFunName);
 		if (!lua_isfunction(pL, -1))
 		{
 			PrintWarning("%s is not a lua function", szFunName);
@@ -579,8 +602,7 @@ namespace base
 
 		lua_State* pL = this->getActiveLuaState();
 		SStackCheck sStackCheck(pL);
-		lua_pushstring(pL, szFunName);
-		lua_rawget(pL, LUA_GLOBALSINDEX);
+		lua_getglobal(pL, szFunName);
 		if (!lua_isfunction(pL, -1))
 		{
 			PrintWarning("%s is not a lua function", szFunName);

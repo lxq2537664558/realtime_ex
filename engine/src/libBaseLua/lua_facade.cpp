@@ -215,7 +215,7 @@ namespace base
 	{
 		DebugAstEx(this->m_pMainLuaState == nullptr, false);
 
-		this->m_pMainLuaState = lua_open();
+		this->m_pMainLuaState = luaL_newstate();
 		DebugAstEx(this->m_pMainLuaState != nullptr, false);
 		luaL_openlibs(this->m_pMainLuaState);
 		luaL_Reg zFuncs[] =
@@ -224,7 +224,8 @@ namespace base
 			{ "traceback_count", traceback_count },
 			{ nullptr, nullptr }
 		};
-		luaL_register(this->m_pMainLuaState, "_G", zFuncs);
+		lua_pushglobaltable(this->m_pMainLuaState);
+		luaL_setfuncs(this->m_pMainLuaState, zFuncs, 0);
 
 		lua_pushlightuserdata(this->m_pMainLuaState, this);
 		lua_setglobal(this->m_pMainLuaState, _FACADE_NAME);
