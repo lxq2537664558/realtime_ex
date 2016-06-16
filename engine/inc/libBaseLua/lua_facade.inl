@@ -68,9 +68,24 @@ namespace base
 	}
 
 	template<typename RT, typename ...Args>
-	struct SFunctionWrapper
+	struct SNormalFunctionWrapper
 	{
-		void*						pf;
+		typedef RT(*FUN_TYPE)(Args...);
+
+		FUN_TYPE	pf;
+	};
+
+	template<typename T, typename RT, typename ...Args>
+	struct SClassFunctionWrapper
+	{
+		typedef RT(T::*FUN_TYPE)(Args...);
+
+		FUN_TYPE	pf;
+	};
+
+	template<typename RT, typename ...Args>
+	struct SFunctionBaseWrapper
+	{
 		std::function<RT(Args...)>	invoke;
 	};
 
@@ -97,10 +112,10 @@ namespace base
 	struct SParseNowArg
 	{
 		template<typename T, typename ...RemainArgs, typename ...NowArgs>
-		static int32_t parse(lua_State* pL, int32_t& nIndex, SFunctionWrapper<RT, Args...>* pFunctionWrapper, NowArgs&&... args)
+		static int32_t parse(lua_State* pL, int32_t& nIndex, SFunctionBaseWrapper<RT, Args...>& sFunctionBaseWrapper, NowArgs&&... args)
 		{
 			T value = read2Cpp<T>(pL, nIndex++);
-			return SParseArgs<sizeof...(RemainArgs), RT, Args...>::parse<RemainArgs...>(pL, nIndex, pFunctionWrapper, args..., value);
+			return SParseArgs<sizeof...(RemainArgs), RT, Args...>::parse<RemainArgs...>(pL, nIndex, sFunctionBaseWrapper, args..., value);
 		}
 	};
 
@@ -108,9 +123,9 @@ namespace base
 	struct SParseArgs
 	{
 		template<typename ...RemainArgs, typename ...NowArgs>
-		static int32_t parse(lua_State* pL, int32_t& nIndex, SFunctionWrapper<RT, Args...>* pFunctionWrapper, NowArgs&&... args)
+		static int32_t parse(lua_State* pL, int32_t& nIndex, SFunctionBaseWrapper<RT, Args...>& sFunctionBaseWrapper, NowArgs&&... args)
 		{
-			return SParseNowArg<RT, Args...>::parse<RemainArgs...>(pL, nIndex, pFunctionWrapper, args...);
+			return SParseNowArg<RT, Args...>::parse<RemainArgs...>(pL, nIndex, sFunctionBaseWrapper, args...);
 		}
 	};
 
@@ -118,9 +133,9 @@ namespace base
 	struct SParseArgs<0, RT, Args...>
 	{
 		template<typename ...NowArgs>
-		static int32_t parse(lua_State* pL, int32_t& nIndex, SFunctionWrapper<RT, Args...>* pFunctionWrapper, NowArgs&&... args)
+		static int32_t parse(lua_State* pL, int32_t& nIndex, SFunctionBaseWrapper<RT, Args...>& sFunctionBaseWrapper, NowArgs&&... args)
 		{
-			RT ret = pFunctionWrapper->invoke(args...);
+			RT ret = sFunctionBaseWrapper.invoke(args...);
 			
 			push2Lua(pL, ret);
 			
@@ -132,9 +147,9 @@ namespace base
 	struct SParseArgs<0, void, Args...>
 	{
 		template<typename ...NowArgs>
-		static int32_t parse(lua_State* pL, int32_t& nIndex, SFunctionWrapper<void, Args...>* pFunctionWrapper, NowArgs&&... args)
+		static int32_t parse(lua_State* pL, int32_t& nIndex, SFunctionBaseWrapper<void, Args...>& sFunctionBaseWrapper, NowArgs&&... args)
 		{
-			pFunctionWrapper->invoke(args...);
+			sFunctionBaseWrapper.invoke(args...);
 
 			return 0;
 		}
@@ -157,11 +172,13 @@ namespace base
 
 			pLuaFacade->setActiveLuaState(pL);
 			lua_pop(pL, 1);
-			SFunctionWrapper<RT, Args...>* pFunctionWrapper = reinterpret_cast<SFunctionWrapper<RT, Args...>*>(lua_touserdata(pL, lua_upvalueindex(1)));
-			DebugAstEx(pFunctionWrapper != nullptr, 0);
+			SNormalFunctionWrapper<RT, Args...>* pNormalFunctionWrapper = reinterpret_cast<SNormalFunctionWrapper<RT, Args...>*>(lua_touserdata(pL, lua_upvalueindex(1)));
+			DebugAstEx(pNormalFunctionWrapper != nullptr, 0);
 
+			SFunctionBaseWrapper<RT, Args...> sFunctionBaseWrapper;
+			sFunctionBaseWrapper.invoke = pNormalFunctionWrapper->pf;
 			int32_t nIndex = 1;
-			int32_t nRet = SParseArgs<sizeof...(Args), RT, Args...>::parse<Args...>(pL, nIndex, pFunctionWrapper);
+			int32_t nRet = SParseArgs<sizeof...(Args), RT, Args...>::parse<Args...>(pL, nIndex, sFunctionBaseWrapper);
 			
 			pLuaFacade->setActiveLuaState(nullptr);
 
@@ -181,25 +198,25 @@ namespace base
 			// 坚决不能调用多余20个参数的C++函数，不然lua栈直接崩溃
 			PROFILING_GUARD(invoke)
 			lua_getglobal(pL, _FACADE_NAME);
-			CLuaFacade* pLuaFacade = (CLuaFacade*)lua_touserdata(pL, -1);
+			CLuaFacade* pLuaFacade = reinterpret_cast<CLuaFacade*>(lua_touserdata(pL, -1));
 			DebugAstEx(pLuaFacade != nullptr, 0);
 
 			pLuaFacade->setActiveLuaState(pL);
 			lua_pop(pL, 1);
-			SFunctionWrapper<RT, Args...>* pFunctionWrapper = (SFunctionWrapper<RT, Args...>*)lua_touserdata(pL, lua_upvalueindex(1));
-			DebugAstEx(pFunctionWrapper != nullptr, 0);
+			SClassFunctionWrapper<T, RT, Args...>* pClassFunctionWrapper = reinterpret_cast<SClassFunctionWrapper<T, RT, Args...>*>(lua_touserdata(pL, lua_upvalueindex(1)));
+			DebugAstEx(pClassFunctionWrapper != nullptr, 0);
 			
 			T* pObject = read2Cpp<T*>(pL, 1);
-			pFunctionWrapper->invoke = [&](Args... args)->RT
+			DebugAstEx(pObject != nullptr, 0);
+
+			SFunctionBaseWrapper<RT, Args...> sFunctionBaseWrapper;
+			sFunctionBaseWrapper.invoke = [&](Args... args)->RT
 			{
-				typedef RT(T::*FUN_TYPE)(Args...);
-				FUN_TYPE pf;
-				memcpy(&pf, &pFunctionWrapper->pf, sizeof(pf));
-				return (pObject->*pf)(args...);
+				return (pObject->*pClassFunctionWrapper->pf)(args...);
 			};
 
 			int32_t nIndex = 2;
-			int32_t nRet = SParseArgs<sizeof...(Args), RT, Args...>::parse<Args...>(pL, nIndex, pFunctionWrapper);
+			int32_t nRet = SParseArgs<sizeof...(Args), RT, Args...>::parse<Args...>(pL, nIndex, sFunctionBaseWrapper);
 			pLuaFacade->setActiveLuaState(nullptr);
 
 			return nRet;
@@ -273,12 +290,12 @@ namespace base
 
 		DebugAst(!checkFieldExist(this->m_pMainLuaState, -1, szName));
 
-		SFunctionWrapper<RT, Args...>* pFunctionWrapper = new SFunctionWrapper<RT, Args...>();
+		SClassFunctionWrapper<T, RT, Args...>* pClassFunctionWrapper = new SClassFunctionWrapper<T, RT, Args...>();
 
-		memcpy(&pFunctionWrapper->pf, &pfFun, sizeof(pFunctionWrapper->pf));
+		pClassFunctionWrapper->pf = pfFun;
 		
 		lua_pushstring(this->m_pMainLuaState, szName);
-		lua_pushlightuserdata(this->m_pMainLuaState, pFunctionWrapper);
+		lua_pushlightuserdata(this->m_pMainLuaState, pClassFunctionWrapper);
 		lua_pushcclosure(this->m_pMainLuaState, &SClassInvoke<T, RT, Args...>::invoke, 1);
 		// 之前的lightuserdata作为函数的upvalue了
 		lua_rawset(this->m_pMainLuaState, -3);
@@ -307,10 +324,9 @@ namespace base
 
 		DebugAst(!checkFieldExist(this->m_pMainLuaState, -1, szName));
 
-		SFunctionWrapper<RT, Args...>* pFunctionWrapper = new SFunctionWrapper<RT, Args...>();
-
-		memcpy(&pFunctionWrapper->pf, &pfFun, sizeof(pFunctionWrapper->pf));
-		pFunctionWrapper->invoke = std::bind(pfFun, nullptr);
+		SClassFunctionWrapper<T, RT, Args...>* pFunctionWrapper = new SClassFunctionWrapper<T, RT, Args...>();
+		pFunctionWrapper->pf = reinterpret_cast<SClassFunctionWrapper<T, RT, Args...>::FUN_TYPE>(pfFun);
+		
 		lua_pushstring(this->m_pMainLuaState, szName);
 		lua_pushlightuserdata(this->m_pMainLuaState, pFunctionWrapper);
 		lua_pushcclosure(this->m_pMainLuaState, &SClassInvoke<T, RT, Args...>::invoke, 1);
@@ -329,14 +345,13 @@ namespace base
 		
 		SStackCheck sStackCheck(this->m_pMainLuaState);
 
-		SFunctionWrapper<RT, Args...>* pFunctionWrapper = new SFunctionWrapper<RT, Args...>();
-		pFunctionWrapper->invoke = pfFun;
-		pFunctionWrapper->pf = nullptr;
+		SNormalFunctionWrapper<RT, Args...>* pNormalFunctionWrapper = new SNormalFunctionWrapper<RT, Args...>();
+		pNormalFunctionWrapper->pf = pfFun;
 
 		///< top = 1
 		lua_pushstring(this->m_pMainLuaState, szName);
 		///< top = 2
-		lua_pushlightuserdata(this->m_pMainLuaState, pFunctionWrapper);
+		lua_pushlightuserdata(this->m_pMainLuaState, pNormalFunctionWrapper);
 		///< top = 3
 		lua_pushcclosure(this->m_pMainLuaState, &SNormalInvoke<RT, Args...>::invoke, 1);
 		///< top = 3(之前的lightuserdata作为函数的upvalue了)
@@ -459,8 +474,8 @@ namespace base
 		template<typename T, typename ...Args>
 		int32_t createObject(lua_State* pL)
 		{
-			SFunctionWrapper<void, Args...> sFunctionWrapper;
-			sFunctionWrapper.invoke = [&](Args... args)
+			SFunctionBaseWrapper<void, Args...> sFunctionBaseWrapper;
+			sFunctionBaseWrapper.invoke = [&](Args... args)
 			{
 				T* pObject = new T(args...);
 				lua_getglobal(pL, _WEAK_OBJECT_TBL_NAME);
@@ -499,7 +514,7 @@ namespace base
 			};
 
 			int32_t nIndex = 1;
-			SParseArgs<sizeof...(Args), void, Args...>::template parse<Args...>(pL, nIndex, &sFunctionWrapper);
+			SParseArgs<sizeof...(Args), void, Args...>::parse<Args...>(pL, nIndex, sFunctionBaseWrapper);
 
 			return 1;
 		}
