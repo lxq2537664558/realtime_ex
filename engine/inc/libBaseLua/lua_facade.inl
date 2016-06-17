@@ -662,6 +662,7 @@ namespace base
 		DebugAstEx(szFunName != nullptr, false);
 
 		lua_State* pL = this->getActiveLuaState();
+
 		SStackCheck sStackCheck(pL);
 		lua_getglobal(pL, szFunName);
 		if (!lua_isfunction(pL, -1))
@@ -699,6 +700,7 @@ namespace base
 		DebugAstEx(szFunName != nullptr, false);
 
 		lua_State* pL = this->getActiveLuaState();
+
 		SStackCheck sStackCheck(pL);
 		lua_getglobal(pL, szFunName);
 		if (!lua_isfunction(pL, -1))
