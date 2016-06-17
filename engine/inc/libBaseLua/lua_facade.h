@@ -59,8 +59,8 @@ namespace base
 
 		template<class T, class M>
 		inline void	registerClassMember(const char* szName, const M T::* pMember);
-		template<class T, class M>
-		void		registerClassStaticMember(const char* szName, const M* pMember);
+		template<class M>
+		void		registerClassStaticMember(const char* szClassName, const char* szName, M* pMember);
 
 		template<class T, typename RT, typename ...Args>
 		inline void	registerClassFunction(const char* szName, RT(T::*pfFun)(Args...) const);

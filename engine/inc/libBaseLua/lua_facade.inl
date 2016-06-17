@@ -1,16 +1,40 @@
 
 namespace base
 {
-	inline bool checkFieldExist(lua_State* pL, int32_t nTableIndex, const char* szName)
+	/*
+
+	函数注册过程：
+	一个函数指针由一个SFunctionWrapper对象包裹，作为以__invoke_proxy创建的闭包的upvalue。
+	如果是全局函数就把这个闭包放到global table中（以函数名为KEY，闭包为VALUE）
+	如果是成员函数就把这个闭包放到类的 mt中（以函数名为KEY，闭包为VALUE）
+
+	成员变量注册过程：
+	成员变量在对象中的偏移由SMemberOffsetInfo对象包裹，作为以__property_proxy创建的闭包的upvalue
+	然后以变量名为KEY，闭包为VALUE放到__property表中（__property表是类的mt表的元素）
+
+	__index过程： 
+	1. 取出mt，用名字在mt中查找
+	2. 如果是函数，表示这个元素是成员函数，返回
+	3. 如果是其他（排除nil）的就返回错误
+	4. 如果是nil就取出__property，用名字在__property查找
+	5. 如果是函数，就表示是成员变量，用调用这个函数获取成员变量
+	6. 返回错误
+
+
+	mt
 	{
-		SStackCheck sStackCheck(pL);
-
-		lua_getfield(pL, nTableIndex, szName);
-		bool bExist = !lua_isnil(pL, -1);
-		lua_pop(pL, 1);
-
-		return bExist;
+		__index				= __index_proxy
+		__newindex			= __newindex_proxy
+		__property			= { }
+		__gc				= deleteObject
+		member_function1
+		member_function2
+		member_function3
+		.
+		.
+		.
 	}
+	*/
 
 	inline int32_t __index_proxy(lua_State* pL)
 	{
@@ -20,6 +44,7 @@ namespace base
 
 		lua_pushvalue(pL, 2);
 		lua_rawget(pL, -2);
+		// 成员函数
 		if (lua_isfunction(pL, -1))
 			return 1;
 
@@ -34,9 +59,10 @@ namespace base
 
 		lua_pushvalue(pL, 2);
 		lua_rawget(pL, -2);
+		// 成员变量
 		if (!lua_isfunction(pL, -1))
 			return 0;
-
+		
 		lua_pushvalue(pL, 1);
 		lua_pushboolean(pL, false);
 		lua_call(pL, 2, 1);
@@ -156,72 +182,101 @@ namespace base
 	};
 
 	template<typename RT, typename ...Args>
-	struct SNormalInvoke
+	int32_t __normal_invoke_proxy(lua_State* pL)
 	{
-	public:
-		static int32_t invoke(lua_State* pL)
-		{
-			// 当lua调用C++函数给的参数不够时，在读取栈上的函数时会返回nil对象，BaseScript层会报错
-			// 当lua调用C++函数给的参数多余时，直接忽略
-			// 当lua调用C++函数给的参数类型错误时，在读取栈上的函数时BaseScript层会报错
-			// 坚决不能调用多余20个参数的C++函数，不然lua栈直接崩溃
-			PROFILING_GUARD(invoke)
-			lua_getglobal(pL, _FACADE_NAME);
-			CLuaFacade* pLuaFacade = reinterpret_cast<CLuaFacade*>(lua_touserdata(pL, -1));
-			DebugAstEx(pLuaFacade != nullptr, 0);
+		// 当lua调用C++函数给的参数不够时，在读取栈上的函数时会返回nil对象，BaseScript层会报错
+		// 当lua调用C++函数给的参数多余时，直接忽略
+		// 当lua调用C++函数给的参数类型错误时，在读取栈上的函数时BaseScript层会报错
+		// 坚决不能调用多余20个参数的C++函数，不然lua栈直接崩溃
+		PROFILING_GUARD(__normal_invoke_proxy)
+		lua_getglobal(pL, _FACADE_NAME);
+		CLuaFacade* pLuaFacade = reinterpret_cast<CLuaFacade*>(lua_touserdata(pL, -1));
+		DebugAstEx(pLuaFacade != nullptr, 0);
 
-			pLuaFacade->setActiveLuaState(pL);
-			lua_pop(pL, 1);
-			SNormalFunctionWrapper<RT, Args...>* pNormalFunctionWrapper = reinterpret_cast<SNormalFunctionWrapper<RT, Args...>*>(lua_touserdata(pL, lua_upvalueindex(1)));
-			DebugAstEx(pNormalFunctionWrapper != nullptr, 0);
+		pLuaFacade->setActiveLuaState(pL);
+		lua_pop(pL, 1);
+		SNormalFunctionWrapper<RT, Args...>* pNormalFunctionWrapper = reinterpret_cast<SNormalFunctionWrapper<RT, Args...>*>(lua_touserdata(pL, lua_upvalueindex(1)));
+		DebugAstEx(pNormalFunctionWrapper != nullptr, 0);
 
-			SFunctionBaseWrapper<RT, Args...> sFunctionBaseWrapper;
-			sFunctionBaseWrapper.invoke = pNormalFunctionWrapper->pf;
-			int32_t nIndex = 1;
-			int32_t nRet = SParseArgs<sizeof...(Args), RT, Args...>::parse<Args...>(pL, nIndex, sFunctionBaseWrapper);
-			
-			pLuaFacade->setActiveLuaState(nullptr);
+		SFunctionBaseWrapper<RT, Args...> sFunctionBaseWrapper;
+		sFunctionBaseWrapper.invoke = pNormalFunctionWrapper->pf;
+		int32_t nIndex = 1;
+		int32_t nRet = SParseArgs<sizeof...(Args), RT, Args...>::parse<Args...>(pL, nIndex, sFunctionBaseWrapper);
+		
+		pLuaFacade->setActiveLuaState(nullptr);
 
-			return nRet;
-		}
-	};
-
+		return nRet;
+	}
+	
 	template<typename T, typename RT, typename ...Args>
-	struct SClassInvoke
+	int32_t __class_invoke_proxy(lua_State* pL)
 	{
-	public:
-		static int32_t invoke(lua_State* pL)
+		// 当lua调用C++函数给的参数不够时，在读取栈上的函数时会返回nil对象，BaseScript层会报错
+		// 当lua调用C++函数给的参数多余时，直接忽略
+		// 当lua调用C++函数给的参数类型错误时，在读取栈上的函数时BaseScript层会报错
+		// 坚决不能调用多余20个参数的C++函数，不然lua栈直接崩溃
+		PROFILING_GUARD(__class_invoke_proxy)
+		lua_getglobal(pL, _FACADE_NAME);
+		CLuaFacade* pLuaFacade = reinterpret_cast<CLuaFacade*>(lua_touserdata(pL, -1));
+		DebugAstEx(pLuaFacade != nullptr, 0);
+
+		pLuaFacade->setActiveLuaState(pL);
+		lua_pop(pL, 1);
+		SClassFunctionWrapper<T, RT, Args...>* pClassFunctionWrapper = reinterpret_cast<SClassFunctionWrapper<T, RT, Args...>*>(lua_touserdata(pL, lua_upvalueindex(1)));
+		DebugAstEx(pClassFunctionWrapper != nullptr, 0);
+
+		T* pObject = read2Cpp<T*>(pL, 1);
+		DebugAstEx(pObject != nullptr, 0);
+
+		SFunctionBaseWrapper<RT, Args...> sFunctionBaseWrapper;
+		sFunctionBaseWrapper.invoke = [&](Args... args)->RT
 		{
-			// 当lua调用C++函数给的参数不够时，在读取栈上的函数时会返回nil对象，BaseScript层会报错
-			// 当lua调用C++函数给的参数多余时，直接忽略
-			// 当lua调用C++函数给的参数类型错误时，在读取栈上的函数时BaseScript层会报错
-			// 坚决不能调用多余20个参数的C++函数，不然lua栈直接崩溃
-			PROFILING_GUARD(invoke)
-			lua_getglobal(pL, _FACADE_NAME);
-			CLuaFacade* pLuaFacade = reinterpret_cast<CLuaFacade*>(lua_touserdata(pL, -1));
-			DebugAstEx(pLuaFacade != nullptr, 0);
+			return (pObject->*pClassFunctionWrapper->pf)(args...);
+		};
 
-			pLuaFacade->setActiveLuaState(pL);
-			lua_pop(pL, 1);
-			SClassFunctionWrapper<T, RT, Args...>* pClassFunctionWrapper = reinterpret_cast<SClassFunctionWrapper<T, RT, Args...>*>(lua_touserdata(pL, lua_upvalueindex(1)));
-			DebugAstEx(pClassFunctionWrapper != nullptr, 0);
-			
-			T* pObject = read2Cpp<T*>(pL, 1);
-			DebugAstEx(pObject != nullptr, 0);
+		int32_t nIndex = 2;
+		int32_t nRet = SParseArgs<sizeof...(Args), RT, Args...>::parse<Args...>(pL, nIndex, sFunctionBaseWrapper);
+		pLuaFacade->setActiveLuaState(nullptr);
 
-			SFunctionBaseWrapper<RT, Args...> sFunctionBaseWrapper;
-			sFunctionBaseWrapper.invoke = [&](Args... args)->RT
-			{
-				return (pObject->*pClassFunctionWrapper->pf)(args...);
-			};
+		return nRet;
+	}
 
-			int32_t nIndex = 2;
-			int32_t nRet = SParseArgs<sizeof...(Args), RT, Args...>::parse<Args...>(pL, nIndex, sFunctionBaseWrapper);
-			pLuaFacade->setActiveLuaState(nullptr);
-
-			return nRet;
+	template<class T, class M>
+	inline int32_t __property_proxy(lua_State* pL)
+	{
+		T* pObject = read2Cpp<T*>(pL, 1);
+		bool bWrite = read2Cpp<bool>(pL, 2);
+		SMemberOffsetInfo<T, M>* pMemberOffsetInfo = reinterpret_cast<SMemberOffsetInfo<T, M>*>(lua_touserdata(pL, lua_upvalueindex(1)));
+		if (bWrite)
+		{
+			M m = read2Cpp<M>(pL, 3);
+			pObject->*const_cast<M T::*>(pMemberOffsetInfo->mp) = m;
+			return 0;
 		}
-	};
+		else
+		{
+			push2Lua(pL, pObject->*pMemberOffsetInfo->mp);
+			return 1;
+		}
+	}
+
+	template<class T>
+	inline int32_t __static_property_proxy(lua_State* pL)
+	{
+		bool bWrite = read2Cpp<bool>(pL, 2);
+		T* pValue = reinterpret_cast<T*>(lua_touserdata(pL, lua_upvalueindex(1)));
+		if (bWrite)
+		{
+			T val = read2Cpp<T>(pL, 3);
+			*pValue = val;
+			return 0;
+		}
+		else
+		{
+			push2Lua(pL, *pValue);
+			return 1;
+		}
+	}
 
 	template<class T, class F>
 	void CLuaFacade::registerClass(const char* szClassName, F pfFun)
@@ -262,10 +317,6 @@ namespace base
 		lua_pushcclosure(this->m_pMainLuaState, &__newindex_proxy, 0);	///< top 3->4
 		lua_rawset(this->m_pMainLuaState, -3);							///< top 4->2
 
-		lua_pushstring(this->m_pMainLuaState, "__property");
-		lua_newtable(this->m_pMainLuaState);
-		lua_rawset(this->m_pMainLuaState, -3);
-
 		// metatable.__gc = deleteObject<T>
 		lua_pushstring(this->m_pMainLuaState, "__gc");					///< top 2->3
 		lua_pushcclosure(this->m_pMainLuaState, &lua_helper::deleteObject<T>, 0);	///< top 3->4
@@ -297,7 +348,15 @@ namespace base
 			return;
 		}
 
-		DebugAst(!checkFieldExist(this->m_pMainLuaState, -1, szName));
+		lua_pushstring(this->m_pMainLuaState, szName);
+		lua_rawget(this->m_pMainLuaState, -2);
+		bool bExist = !lua_isnil(this->m_pMainLuaState, -1);
+		lua_pop(this->m_pMainLuaState, 1);
+		if (bExist)
+		{
+			PrintWarning("dup registerClassFunction function_name: %s", szName);
+			return;
+		}
 
 		SClassFunctionWrapper<T, RT, Args...>* pClassFunctionWrapper = new SClassFunctionWrapper<T, RT, Args...>();
 
@@ -305,7 +364,7 @@ namespace base
 		
 		lua_pushstring(this->m_pMainLuaState, szName);
 		lua_pushlightuserdata(this->m_pMainLuaState, pClassFunctionWrapper);
-		lua_pushcclosure(this->m_pMainLuaState, &SClassInvoke<T, RT, Args...>::invoke, 1);
+		lua_pushcclosure(this->m_pMainLuaState, &__class_invoke_proxy<T, RT, Args...>, 1);
 		// 之前的lightuserdata作为函数的upvalue了
 		lua_rawset(this->m_pMainLuaState, -3);
 
@@ -331,14 +390,22 @@ namespace base
 			return;
 		}
 
-		DebugAst(!checkFieldExist(this->m_pMainLuaState, -1, szName));
+		lua_pushstring(this->m_pMainLuaState, szName);
+		lua_rawget(this->m_pMainLuaState, -2);
+		bool bExist = !lua_isnil(this->m_pMainLuaState, -1);
+		lua_pop(this->m_pMainLuaState, 1);
+		if (bExist)
+		{
+			PrintWarning("dup registerClassFunction function_name: %s", szName);
+			return;
+		}
 
 		SClassFunctionWrapper<T, RT, Args...>* pFunctionWrapper = new SClassFunctionWrapper<T, RT, Args...>();
 		pFunctionWrapper->pf = reinterpret_cast<SClassFunctionWrapper<T, RT, Args...>::FUN_TYPE>(pfFun);
 		
 		lua_pushstring(this->m_pMainLuaState, szName);
 		lua_pushlightuserdata(this->m_pMainLuaState, pFunctionWrapper);
-		lua_pushcclosure(this->m_pMainLuaState, &SClassInvoke<T, RT, Args...>::invoke, 1);
+		lua_pushcclosure(this->m_pMainLuaState, &__class_invoke_proxy<T, RT, Args...>, 1);
 		// 之前的lightuserdata作为函数的upvalue了
 		lua_rawset(this->m_pMainLuaState, -3);
 
@@ -369,7 +436,7 @@ namespace base
 		///< top = 1
 		lua_pushlightuserdata(this->m_pMainLuaState, pNormalFunctionWrapper);
 		///< top = 2
-		lua_pushcclosure(this->m_pMainLuaState, &SNormalInvoke<RT, Args...>::invoke, 1);
+		lua_pushcclosure(this->m_pMainLuaState, &__normal_invoke_proxy<RT, Args...>, 1);
 		///< top = 2(之前的lightuserdata作为函数的upvalue了)
 		lua_setglobal(this->m_pMainLuaState, szName);	///< { key:szName, value:CallByLua }
 		///< top = 1
@@ -402,25 +469,6 @@ namespace base
 	};
 
 	template<class T, class M>
-	inline int32_t __property_proxy(lua_State* pL)
-	{
-		T* pObject = read2Cpp<T*>(pL, 1);
-		bool bWrite = read2Cpp<bool>(pL, 2);
-		SMemberOffsetInfo<T, M>* pMemberOffsetInfo = (SMemberOffsetInfo<T, M>*)lua_touserdata(pL, lua_upvalueindex(1));
-		if (bWrite)
-		{
-			M m = read2Cpp<M>(pL, 3);
-			pObject->*const_cast<M T::*>(pMemberOffsetInfo->mp) = m;
-			return 0;
-		}
-		else
-		{
-			push2Lua(pL, pObject->*pMemberOffsetInfo->mp);
-			return 1;
-		}
-	}
-
-	template<class T, class M>
 	void CLuaFacade::registerClassMember(const char* szName, const M T::* pMember)
 	{
 		SStackCheck sStackCheck(this->m_pMainLuaState);
@@ -438,8 +486,32 @@ namespace base
 
 		lua_pushstring(this->m_pMainLuaState, "__property");
 		lua_rawget(this->m_pMainLuaState, -2);
+		if (lua_isnil(this->m_pMainLuaState, -1))
+		{
+			lua_pop(this->m_pMainLuaState, 1);
+			lua_newtable(this->m_pMainLuaState);
+			lua_pushstring(this->m_pMainLuaState, "__property");
+			lua_pushvalue(this->m_pMainLuaState, -2);
+			lua_rawset(this->m_pMainLuaState, -4);
+		}
+		else
+		{
+			if (!lua_istable(this->m_pMainLuaState, -1))
+			{
+				PrintWarning("unkonw class __property class %s", SClassName<T>::getName());
+				return;
+			}
+		}
 
-		DebugAst(!checkFieldExist(this->m_pMainLuaState, -1, szName));
+		lua_pushstring(this->m_pMainLuaState, szName);
+		lua_rawget(this->m_pMainLuaState, -2);
+		bool bExist = !lua_isnil(this->m_pMainLuaState, -1);
+		lua_pop(this->m_pMainLuaState, 1);
+		if (bExist)
+		{
+			PrintWarning("dup registerClassMember member_name: %s", szName);
+			return;
+		}
 
 		///< top = 2 
 		lua_pushstring(this->m_pMainLuaState, szName);
@@ -457,34 +529,60 @@ namespace base
 		///< top = 1
 	}
 
-	template<class T, class M>
-	void CLuaFacade::registerClassStaticMember(const char* szName, const M* pMember)
+	template<class M>
+	void CLuaFacade::registerClassStaticMember(const char* szClassName, const char* szName, M* pMember)
 	{
-		DebugAst(pMember != nullptr);
+		DebugAst(pMember != nullptr && szClassName != nullptr);
 
 		SStackCheck sStackCheck(this->m_pMainLuaState);
 		///< top = 1
-		luaL_getmetatable(this->m_pMainLuaState, SClassName<T>::getName());
+		luaL_getmetatable(this->m_pMainLuaState, szClassName);
 		///< top = 2
 		if (!lua_istable(this->m_pMainLuaState, -1))
 		{
-			PrintWarning("please register class %s", SClassName<T>::getName());
+			PrintWarning("please register class %s", szClassName);
 			lua_pop(this->m_pMainLuaState, 1);
 			///< top = 1
 			DebugAst(false);
 			return;
 		}
 
-		DebugAst(!checkFieldExist(this->m_pMainLuaState, -1, szName));
+		lua_pushstring(this->m_pMainLuaState, "__property");
+		lua_rawget(this->m_pMainLuaState, -2);
+		if (lua_isnil(this->m_pMainLuaState, -1))
+		{
+			lua_pop(this->m_pMainLuaState, 1);
+			lua_newtable(this->m_pMainLuaState);
+			lua_pushstring(this->m_pMainLuaState, "__property");
+			lua_pushvalue(this->m_pMainLuaState, -2);
+			lua_rawset(this->m_pMainLuaState, -4);
+		}
+		else
+		{
+			if (!lua_istable(this->m_pMainLuaState, -1))
+			{
+				PrintWarning("unkonw class __property class %s", szClassName);
+				return;
+			}
+		}
+
+		lua_pushstring(this->m_pMainLuaState, szName);
+		lua_rawget(this->m_pMainLuaState, -2);
+		bool bExist = !lua_isnil(this->m_pMainLuaState, -1);
+		lua_pop(this->m_pMainLuaState, 1);
+		if (bExist)
+		{
+			PrintWarning("dup registerClassStaticMember member_name: %s", szName);
+			return;
+		}
 
 		///< top = 2 
 		lua_pushstring(this->m_pMainLuaState, szName);
 		///< top = 3
-		SMemberOffsetInfo<T, M>* pMemberOffsetInfo = new SMemberOffsetInfo<T, M>();
-		pMemberOffsetInfo->mp = pMember;
-		lua_pushlightuserdata(this->m_pMainLuaState, pMemberOffsetInfo);
+		
+		lua_pushlightuserdata(this->m_pMainLuaState, pMember);
 		///< top = 4
-		lua_pushcclosure(this->m_pMainLuaState, &__property_proxy<T, M>, 1);
+		lua_pushcclosure(this->m_pMainLuaState, &__static_property_proxy<M>, 1);
 		///< top = 4
 		lua_rawset(this->m_pMainLuaState, -3);
 		///< top = 2
