@@ -1,13 +1,16 @@
-function aa( a )
-	return 100 + a
+function lua_fun2(b)
+	print(b)
+	coroutine.yield()
 end
 
-function lua_fun( a )
-	print("aaa"..a)
-	funXXX(0xffffffff);
-	print(0xffffffff)
-	local pA = CAA.new(100);
-	pA:fun3(1, 2, 3);
+function lua_fun(a)
+	local co = coroutine.create(
+	function()
+		local pAA = CAA.new(100)
+		pAA:fun3(1, 2, 3)
+	end)
 	
-	return 30000;
+	coroutine.resume(co)
+	coroutine.resume(co)
+	return 100
 end

@@ -50,7 +50,8 @@ public:
 
 	void fun3( int a, int b, int c ) const
 	{
-		cout << "fun3" << endl;
+		cout << "fun3 " << a << " " << b << " " << c << endl;
+		pLua->call("lua_fun2", 666);
 		//return 0;
 	}
 
@@ -149,7 +150,7 @@ int64_t funXX( int8_t a, uint8_t b, int16_t c, uint16_t d, int32_t e, uint32_t f
 	return 1000;
 }
 
-uint64_t funXXX( int32_t a )
+uint64_t funXXX( int64_t a )
 {
 	double b = 0xffffffff;
 	int32_t c = (int32_t)b;
@@ -195,6 +196,7 @@ int main(int argc, wchar_t* argv[])
 	pLua->registerClassFunction("fun8", &CAA::fun8);
 	pLua->registerClassFunction("fun9", &CAA::fun9);
 	pLua->registerClassMember("a", &CAA::a);
+	pLua->registerClassStaticMember("CAA", "s", &CAA::s);
 
 	pLua->registerFunction("funXX", &funXX);
 	pLua->registerFunction("fun64", &fun64);
