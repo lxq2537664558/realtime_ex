@@ -15,7 +15,7 @@
 
 namespace core
 {
-	class CCoreConnectionToService;
+	class CCoreServiceConnection;
 	class CCoreConnectionFromService;
 	class CCoreConnectionToMaster;
 	class CServiceConnectionFactory;

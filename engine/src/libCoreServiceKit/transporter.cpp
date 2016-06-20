@@ -1,8 +1,7 @@
 #include "stdafx.h"
 #include "transporter.h"
 #include "message_dispatcher.h"
-#include "core_connection_to_service.h"
-#include "core_connection_from_service.h"
+#include "core_service_connection.h"
 #include "protobuf_helper.h"
 #include "core_service_kit_define.h"
 #include "core_service_kit_impl.h"
@@ -65,11 +64,11 @@ namespace core
 
 			if (sMessageCacheInfo.bRefuse)
 			{
-				CBaseApp::Inst()->getBaseConnectionMgr()->connect(pServiceBaseInfo->szHost, pServiceBaseInfo->nPort, eBCT_ConnectionToService, pServiceBaseInfo->szName, pServiceBaseInfo->nSendBufSize, pServiceBaseInfo->nRecvBufSize);
+				CBaseApp::Inst()->getBaseConnectionMgr()->connect(pServiceBaseInfo->szHost, pServiceBaseInfo->nPort, eBCT_ConnectionService, pServiceBaseInfo->szName, pServiceBaseInfo->nSendBufSize, pServiceBaseInfo->nRecvBufSize);
 				sMessageCacheInfo.bRefuse = false;
 			}
 			
-			CCoreConnectionToService* pCoreConnectionToService = CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getConnectionToService(pServiceBaseInfo->szName);
+			CCoreServiceConnection* pCoreConnectionToService = CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getServiceConnection(pServiceBaseInfo->szName);
 			if (pCoreConnectionToService != nullptr)
 				this->sendCacheMessage(pServiceBaseInfo->szName);
 		}
@@ -115,7 +114,7 @@ namespace core
 
 		uint64_t nTraceID = CCoreServiceKitImpl::Inst()->getInvokerTrace()->getCurTraceID();
 		
-		CCoreConnectionToService* pCoreConnectionToService = CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getConnectionToService(szServiceName);
+		CCoreServiceConnection* pCoreConnectionToService = CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getServiceConnection(szServiceName);
 		if (pCoreConnectionToService != nullptr)
 		{
 			uint64_t nSessionID = 0;
@@ -170,10 +169,10 @@ namespace core
 
 		uint64_t nTraceID = CCoreServiceKitImpl::Inst()->getInvokerTrace()->getCurTraceID();
 		
-		CCoreConnectionFromService* pCoreConnectionFromService = CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getConnectionFromService(szServiceName);
-		if (pCoreConnectionFromService == nullptr)
+		CCoreServiceConnection* pCoreServiceConnection = CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getServiceConnection(szServiceName);
+		if (pCoreServiceConnection == nullptr)
 		{
-			CCoreServiceKitImpl::Inst()->getInvokerTrace()->addTraceExtraInfo("pCoreConnectionFromService == nullptr by response");
+			CCoreServiceKitImpl::Inst()->getInvokerTrace()->addTraceExtraInfo("pCoreServiceConnection == nullptr by response");
 			return false;
 		}
 
@@ -182,7 +181,7 @@ namespace core
 		cookice.nSessionID = sResponseMessageInfo.nSessionID;
 		cookice.nResult = sResponseMessageInfo.nResult;
 		
-		pCoreConnectionFromService->send(eMT_RESPONSE, &cookice, sizeof(cookice), sResponseMessageInfo.pData, sResponseMessageInfo.pData->nMessageSize);
+		pCoreServiceConnection->send(eMT_RESPONSE, &cookice, sizeof(cookice), sResponseMessageInfo.pData, sResponseMessageInfo.pData->nMessageSize);
 
 		return true;
 	}
@@ -194,7 +193,7 @@ namespace core
 		CCoreServiceKitImpl::Inst()->getInvokerTrace()->startNewTrace();
 		uint64_t nTraceID = CCoreServiceKitImpl::Inst()->getInvokerTrace()->getCurTraceID();
 
-		CCoreConnectionToService* pCoreConnectionToService = CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getConnectionToService(szServiceName);
+		CCoreServiceConnection* pCoreConnectionToService = CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getServiceConnection(szServiceName);
 		if (pCoreConnectionToService != nullptr)
 		{
 			// 填充cookice
@@ -233,7 +232,7 @@ namespace core
 
 		uint64_t nTraceID = CCoreServiceKitImpl::Inst()->getInvokerTrace()->getCurTraceID();
 		
-		CCoreConnectionToService* pCoreConnectionToService = CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getConnectionToService(szServiceName);
+		CCoreServiceConnection* pCoreConnectionToService = CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getServiceConnection(szServiceName);
 		if (pCoreConnectionToService != nullptr)
 		{
 			// 填充cookice
@@ -270,7 +269,7 @@ namespace core
 	{
 		DebugAstEx(sGateBroadcastMessageInfo.pData != nullptr && !sGateBroadcastMessageInfo.vecSessionID.empty(), false);
 
-		CCoreConnectionToService* pCoreConnectionToService = CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getConnectionToService(szServiceName);
+		CCoreServiceConnection* pCoreConnectionToService = CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getServiceConnection(szServiceName);
 		if (pCoreConnectionToService != nullptr)
 		{
 			static char szBuf[4096] = { 0 };
@@ -357,7 +356,7 @@ namespace core
 
 	void CTransporter::sendCacheMessage(const std::string& szServiceName)
 	{
-		CCoreConnectionToService* pCoreConnectionToService = CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getConnectionToService(szServiceName);
+		CCoreServiceConnection* pCoreConnectionToService = CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getServiceConnection(szServiceName);
 		DebugAst(pCoreConnectionToService != nullptr);
 
 		// 把之前cache的消息发送出去

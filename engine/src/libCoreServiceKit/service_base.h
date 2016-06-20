@@ -115,9 +115,8 @@ namespace core
 
 	enum EBaseConnectionType
 	{
-		eBCT_ConnectionFromService	= 10,
-		eBCT_ConnectionToMaster		= 11,
-		eBCT_ConnectionToService	= 12,
+		eBCT_ConnectionToMaster		= 10,
+		eBCT_ConnectionService	= 11,
 	};
 
 	struct STraceInfo

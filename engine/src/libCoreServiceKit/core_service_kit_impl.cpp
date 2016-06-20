@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "core_service_kit_impl.h"
-#include "core_connection_to_service.h"
-#include "core_connection_from_service.h"
+#include "core_service_connection.h"
 #include "core_connection_to_master.h"
 #include "message_dispatcher.h"
 #include "cluster_invoker.h"
@@ -79,8 +78,7 @@ namespace core
 		}
 
 		this->m_pServiceConnectionFactory = new CServiceConnectionFactory();
-		CBaseApp::Inst()->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionFromService, this->m_pServiceConnectionFactory);
-		CBaseApp::Inst()->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionToService, this->m_pServiceConnectionFactory);
+		CBaseApp::Inst()->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionService, this->m_pServiceConnectionFactory);
 		CBaseApp::Inst()->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionToMaster, this->m_pServiceConnectionFactory);
 
 		this->m_pCoreServiceProxy = new CCoreServiceProxy();
@@ -136,7 +134,7 @@ namespace core
 		if (this->m_sServiceBaseInfo.nPort != 0)
 		{
 			// 在所有网卡上监听
-			if (!CBaseApp::Inst()->getBaseConnectionMgr()->listen("0.0.0.0", this->m_sServiceBaseInfo.nPort, eBCT_ConnectionFromService, "", this->m_sServiceBaseInfo.nSendBufSize, this->m_sServiceBaseInfo.nRecvBufSize))
+			if (!CBaseApp::Inst()->getBaseConnectionMgr()->listen("0.0.0.0", this->m_sServiceBaseInfo.nPort, eBCT_ConnectionService, "", this->m_sServiceBaseInfo.nSendBufSize, this->m_sServiceBaseInfo.nRecvBufSize))
 				return false;
 		}
 
@@ -158,8 +156,7 @@ namespace core
 
 	void CCoreServiceKitImpl::release()
 	{
-		CBaseApp::Inst()->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionFromService, nullptr);
-		CBaseApp::Inst()->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionToService, nullptr);
+		CBaseApp::Inst()->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionService, nullptr);
 		CBaseApp::Inst()->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionToMaster, nullptr);
 
 		SAFE_DELETE(this->m_pTransporter);

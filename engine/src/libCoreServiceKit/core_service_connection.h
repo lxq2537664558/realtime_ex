@@ -4,12 +4,12 @@
 
 namespace core
 {
-	class CCoreConnectionFromService
+	class CCoreServiceConnection
 		: public core::CBaseConnection
 	{
 	public:
-		CCoreConnectionFromService();
-		virtual ~CCoreConnectionFromService();
+		CCoreServiceConnection();
+		virtual ~CCoreServiceConnection();
 
 		virtual bool		init(const std::string& szContext);
 		virtual uint32_t	getType() const;
