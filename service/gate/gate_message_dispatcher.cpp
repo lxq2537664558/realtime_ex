@@ -76,7 +76,7 @@ void CGateMessageDispatcher::dispatch(uint64_t nSocketID, uint8_t nMessageType, 
 
 	if ((nMessageType&eMT_TYPE_MASK) == eMT_CLIENT)
 	{
-		const core::client_message_header* pHeader = reinterpret_cast<const core::client_message_header*>(pData);
+		const core::message_header* pHeader = reinterpret_cast<const core::message_header*>(pData);
 
 		auto iter = this->m_mapClientCallbackInfo.find(pHeader->nMessageID);
 		if (iter == this->m_mapClientCallbackInfo.end())
@@ -111,35 +111,27 @@ void CGateMessageDispatcher::dispatch(uint64_t nSocketID, uint8_t nMessageType, 
 			PrintWarning("nullptr == pGateSession session_id: "UINT64FMT, pCookice->nSessionID);
 			return;
 		}
+
+		const core::message_header* pHeader = reinterpret_cast<const core::message_header*>(pCookice + 1);
 		
 		core::CCoreServiceKit::Inst()->addTraceExtraInfo("trace_id: "UINT64FMT"send client", pCookice->nTraceID);
 
 		core::CBaseConnection*  pBaseConnection = CGateApp::Inst()->getBaseConnectionMgr()->getBaseConnectionByID(pGateSession->getSocketID());
 		if (nullptr == pBaseConnection)
 		{
-			core::CCoreServiceKit::Inst()->addTraceExtraInfo("invalid connection client_id: "UINT64FMT" message_id: %d", pCookice->nSessionID, pCookice->nMessageID);
+			core::CCoreServiceKit::Inst()->addTraceExtraInfo("invalid connection client_id: "UINT64FMT" message_id: %d", pCookice->nSessionID, pHeader->nMessageID);
 			return;
 		}
 		CConnectionFromClient* pConnectionFromClient = dynamic_cast<CConnectionFromClient*>(pBaseConnection);
 		DebugAst(nullptr != pConnectionFromClient);
 
-		int32_t nMessageSize = nSize - sizeof(core::gate_cookice);
-		if (nMessageSize < 0)
-		{
-			core::CCoreServiceKit::Inst()->addTraceExtraInfo("invalid message size client_id: "UINT64FMT" message_id: %d message_size: %d", pCookice->nSessionID, pCookice->nMessageID, nMessageSize);
-			return;
-		}
-
-		core::client_message_header header;
-		header.nMessageID = pCookice->nMessageID;
-		header.nMessageSize = (uint16_t)(nMessageSize + sizeof(core::client_message_header));
-		pConnectionFromClient->send(eMT_CLIENT, &header, sizeof(core::client_message_header), pCookice + 1, (uint16_t)nMessageSize);
+		pConnectionFromClient->send(eMT_CLIENT, pHeader, pHeader->nMessageSize);
 	}
 }
 
-void CGateMessageDispatcher::forward(uint64_t nSessionID, const core::client_message_header* pHeader)
+void CGateMessageDispatcher::forward(uint64_t nSessionID, const core::message_header* pHeader)
 {
 	DebugAst(pHeader != nullptr);
 
-	core::CClusterInvoker::Inst()->forward("", pHeader->nMessageID, pHeader + 1, pHeader->nMessageSize - sizeof(core::client_message_header), nSessionID);
+	core::CClusterInvoker::Inst()->forward("", nSessionID, pHeader);
 }

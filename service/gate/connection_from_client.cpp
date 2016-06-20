@@ -7,11 +7,11 @@
 
 static int32_t client_message_parser(const char* pData, uint32_t nSize, uint8_t& nMessageType)
 {
-	if (nSize < sizeof(core::client_message_header))
+	if (nSize < sizeof(core::message_header))
 		return 0;
 
-	const core::client_message_header* pHeader = reinterpret_cast<const core::client_message_header*>(pData);
-	if (pHeader->nMessageSize < sizeof(core::client_message_header))
+	const core::message_header* pHeader = reinterpret_cast<const core::message_header*>(pData);
+	if (pHeader->nMessageSize < sizeof(core::message_header))
 		return -1;
 
 	// 不是完整的消息

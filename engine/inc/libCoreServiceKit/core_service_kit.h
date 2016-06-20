@@ -20,10 +20,6 @@ namespace core
 		*/
 		const SServiceBaseInfo&			getServiceBaseInfo() const;
 		/**
-		@brief: 根据消息ID获取消息名字
-		*/
-		const std::string&				getMessageName(uint32_t nMessageID) const;
-		/**
 		@brief: 开始一个新的trace
 		*/
 		void							startNewTrace();

@@ -18,12 +18,10 @@ namespace core
 
 		bool							init();
 
-		void							registerCallback(const std::string& szMessageName, const ServiceCallback& callback);
-		void							registerCallback(const std::string& szMessageName, const GateForwardCallback& callback);
+		void							registerCallback(uint16_t nMessageID, const ServiceCallback& callback);
+		void							registerCallback(uint16_t nMessageID, const GateForwardCallback& callback);
 		ServiceCallback&				getCallback(uint32_t nMessageID);
 		GateForwardCallback&			getGateClientCallback(uint32_t nMessageID);
-
-		const std::string&				getMessageName(uint32_t nMessageID) const;
 
 		void							onConnectToMaster();
 

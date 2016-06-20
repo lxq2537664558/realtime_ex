@@ -46,10 +46,4 @@ namespace core
 	{
 		return CCoreServiceKitImpl::Inst()->getLuaFacade();
 	}
-
-	const std::string& CCoreServiceKit::getMessageName(uint32_t nMessageID) const
-	{
-		return CCoreServiceKitImpl::Inst()->getCoreServiceInvoker()->getMessageName(nMessageID);
-	}
-
 }

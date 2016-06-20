@@ -18,10 +18,9 @@ namespace core
 		void		addTraceExtraInfo(uint64_t nTraceID, const char* szFormat, va_list arg);
 		void		addTraceExtraInfo(const char* szFormat, ...);
 		void		addTraceExtraInfo(uint64_t nTraceID, const char* szFormat, ...);
-		void		beginRecv(uint64_t nTraceID, const std::string& szMessageName, const std::string& szFromServiceName);
+		void		beginRecv(uint64_t nTraceID, uint16_t nMessageID, const std::string& szFromServiceName);
 		void		endRecv();
-		void		send(const std::string& szMessageName);
-		void		send(uint32_t nMessageID);
+		void		send(uint16_t nMessageID);
 
 	private:
 		uint64_t	m_nNextGenTraceID;

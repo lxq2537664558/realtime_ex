@@ -45,10 +45,10 @@ namespace core
 		va_end(arg);
 	}
 
-	void CInvokerTrace::beginRecv(uint64_t nTraceID, const std::string& szMessageName, const std::string& szFromServiceName)
+	void CInvokerTrace::beginRecv(uint64_t nTraceID, uint16_t nMessageID, const std::string& szFromServiceName)
 	{
-		base::saveLogEx("trace", false, "trace_id: "UINT64FMT" begin recv time: "UINT64FMT" message_name: %s service_name: %s from_service_name: %s",
-			nTraceID, base::getGmtTime(), szMessageName.c_str(), CCoreServiceKitImpl::Inst()->getServiceBaseInfo().szName.c_str(), szFromServiceName.c_str());
+		base::saveLogEx("trace", false, "trace_id: "UINT64FMT" begin recv time: "UINT64FMT" message_id: %d service_name: %s from_service_name: %s",
+			nTraceID, base::getGmtTime(), nMessageID, CCoreServiceKitImpl::Inst()->getServiceBaseInfo().szName.c_str(), szFromServiceName.c_str());
 		
 		this->m_nCurTraceID = nTraceID;
 	}
@@ -58,13 +58,7 @@ namespace core
 		base::saveLogEx("trace", false, "trace_id: "UINT64FMT" end recv time: "UINT64FMT, this->m_nCurTraceID, base::getGmtTime());
 	}
 
-	void CInvokerTrace::send(const std::string& szMessageName)
-	{
-		base::saveLogEx("trace", false, "trace_id: "UINT64FMT" send time: "UINT64FMT" message_name: %s service_name: %s",
-			this->m_nCurTraceID, base::getGmtTime(), szMessageName.c_str(), CCoreServiceKitImpl::Inst()->getServiceBaseInfo().szName.c_str());
-	}
-
-	void CInvokerTrace::send(uint32_t nMessageID)
+	void CInvokerTrace::send(uint16_t nMessageID)
 	{
 		base::saveLogEx("trace", false, "trace_id: "UINT64FMT" send time: "UINT64FMT" message_id: %d service_name: %s",
 			this->m_nCurTraceID, base::getGmtTime(), nMessageID, CCoreServiceKitImpl::Inst()->getServiceBaseInfo().szName.c_str());

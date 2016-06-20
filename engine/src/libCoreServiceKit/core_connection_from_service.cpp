@@ -46,10 +46,10 @@ namespace core
 	{
 		if (nMessageType == eMT_SYSTEM)
 		{
-			const core::inside_message_cookice* pCookice = reinterpret_cast<const core::inside_message_cookice*>(pData);
-			DebugAst(nSize > sizeof(core::inside_message_cookice));
+			const core::message_header* pHeader = reinterpret_cast<const core::message_header*>(pData);
+			DebugAst(nSize > sizeof(core::message_header));
 
-			if (pCookice->nMessageID == eSMT_notify_service_base_info)
+			if (pHeader->nMessageID == eSMT_notify_service_base_info)
 			{
 				DebugAst(this->m_szServiceName.empty());
 

@@ -10,37 +10,23 @@ namespace core
 {
 #pragma pack(push,1)
 	// 消息头
-	struct inside_message_header
+	struct message_header
 	{
 		uint16_t	nMessageSize;	// 包括消息头的
-		uint8_t		nMessageType;	// 消息类型，类型见下面	
+		uint16_t	nMessageID;
 
-		inside_message_header(uint8_t nMessageType) : nMessageType(nMessageType) { }
-		inside_message_header() {}
+		message_header(uint16_t nMessageID) : nMessageID(nMessageID) { }
+		message_header() {}
 	};
 
-	struct client_message_header
-	{
-		uint16_t	nMessageSize;	// 包括消息头的
-		uint32_t	nMessageID;
-	};
-
-	struct inside_message_cookice
-	{
-		uint32_t	nMessageID;
-
-		inside_message_cookice(uint32_t nMessageID) : nMessageID(nMessageID) { }
-		inside_message_cookice() { nMessageID = 0; }
-		~inside_message_cookice() { }
-	};
 #pragma pack(pop)
 }
 
 #define message_begin(MessageName, nMessageID) \
-class MessageName : public core::inside_message_cookice\
+class MessageName : public core::message_header\
 {\
 public:\
-	MessageName() : core::inside_message_cookice(nMessageID) { }\
+	MessageName() : core::message_header(nMessageID) { }\
 	static  uint16_t	getMessageID() { return nMessageID; }\
 	static  const char*	getMessageName() { return #MessageName; }
 
@@ -48,7 +34,7 @@ public:\
 
 #define pack_begin(writeBuf)\
 	writeBuf.clear();\
-	writeBuf.write(this, sizeof(core::inside_message_cookice));
+	writeBuf.write(this, sizeof(core::message_header));
 
 #define pack_end(writeBuf)\
 	do\
@@ -62,7 +48,7 @@ public:\
 #define unpack_begin(buf, size)\
 	base::CReadBuf readBuf;\
 	readBuf.init(buf, size);\
-	readBuf.read(this, sizeof(core::inside_message_cookice));
+	readBuf.read(this, sizeof(core::message_header));
 
 #define unpack_end()
 

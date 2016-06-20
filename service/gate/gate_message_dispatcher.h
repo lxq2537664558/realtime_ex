@@ -34,7 +34,7 @@ public:
 			getCallback(uint32_t nMessageID);
 
 private:
-	void	forward(uint64_t nSessionID, const core::client_message_header* pHeader);
+	void	forward(uint64_t nSessionID, const core::message_header* pHeader);
 
 private:
 	struct SClientCallbackInfo

@@ -2,8 +2,6 @@
 
 #include "libCoreCommon/core_common.h"
 
-#include "google/protobuf/message.h"
-
 #include "core_service_kit_define.h"
 
 #include <functional>
@@ -13,35 +11,33 @@ namespace core
 {
 	struct SRequestMessageInfo
 	{
-		google::protobuf::Message*	pMessage;
-		InvokeCallback				callback;
+		message_header*	pData;
+		InvokeCallback	callback;
 	};
 
 	struct SResponseMessageInfo
 	{
-		uint64_t					nSessionID;
-		google::protobuf::Message*	pMessage;
-		uint8_t						nResult;
+		uint64_t		nSessionID;
+		message_header*	pData;
+		uint8_t			nResult;
 	};
 
 	struct SGateForwardMessageInfo
 	{
-		uint64_t	nSessionID;
-		uint32_t	nMessageID;
-		void*		pData;
-		uint16_t	nSize;
+		uint64_t		nSessionID;
+		message_header*	pData;
 	};
 
 	struct SGateMessageInfo
 	{
-		uint64_t					nSessionID;
-		google::protobuf::Message*	pMessage;
+		uint64_t		nSessionID;
+		message_header*	pData;
 	};
 
 	struct SGateBroadcastMessageInfo
 	{
-		std::vector<uint64_t>		vecSessionID;
-		google::protobuf::Message*	pMessage;
+		std::vector<uint64_t>	vecSessionID;
+		message_header*			pData;
 	};
 
 	enum EMessageCacheInfoType
@@ -54,7 +50,6 @@ namespace core
 
 	struct SMessageCacheHead
 	{
-		uint32_t	nMessageID;
 		uint8_t		nType;
 		uint64_t	nTraceID;
 		CTicker		tickTimeout;
@@ -65,7 +60,6 @@ namespace core
 	struct SRequestMessageCacheInfo
 		: public SMessageCacheHead
 	{
-		uint32_t			nMessageID;
 		std::vector<char>	vecBuf;
 		InvokeCallback		callback;
 	};
@@ -73,7 +67,6 @@ namespace core
 	struct SGateMessageCacheInfo
 		: public SMessageCacheHead
 	{
-		uint32_t			nMessageID;
 		uint64_t			nSessionID;
 		std::vector<char>	vecBuf;
 	};
@@ -88,7 +81,6 @@ namespace core
 	struct SGateForwardMessageCacheInfo
 		: public SMessageCacheHead
 	{
-		uint32_t			nMessageID;
 		uint64_t			nSessionID;
 		std::vector<char>	vecBuf;
 	};
