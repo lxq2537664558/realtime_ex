@@ -10,48 +10,6 @@
 #include <sys/time.h>
 #endif
 
-static int64_t getProcessPassTime()
-{
-#ifdef _WIN32
-	struct SFreq
-	{
-		LARGE_INTEGER	freq;
-		int64_t			nFirstCheckTime;
-		SFreq()
-		{
-			if (!QueryPerformanceFrequency(&freq))
-			{
-				fprintf(stderr, "cur machine cout support QueryPerformanceFrequency\n");
-			}
-
-			LARGE_INTEGER counter;
-			QueryPerformanceCounter(&counter);
-
-			nFirstCheckTime = (counter.QuadPart * 1000) / freq.QuadPart;
-		}
-	};
-
-	static struct SFreq sFreq;
-
-	LARGE_INTEGER counter;
-	QueryPerformanceCounter(&counter);
-
-	int64_t nTime = (counter.QuadPart * 1000) / sFreq.freq.QuadPart;
-
-	return nTime - sFreq.nFirstCheckTime;
-#else
-	// 在 x86-64 平台上，clock_gettime 不是系统调用，而是用vdso机制做的，就一个函数调用开销
-	// 在编译链接时需加上 -lrt ;因为在librt中实现了clock_gettime函数
-	// CLOCK_MONOTONIC:从系统启动这一刻起开始计时,不受系统时间被用户改变的影响
-	int64_t nTime = 0;
-	struct timespec ts;
-	if (clock_gettime(CLOCK_MONOTONIC, &ts) == 0)
-		nTime = ((int64_t)ts.tv_sec) * 1000 + ts.tv_nsec / 1000000;
-	///< 上面不做强转的话如果编译成32位程序就会出现49天问题
-	return nTime;
-#endif
-}
-
 // 为了保证初始化顺序，下面的时间只能通过结构体静态变量的方式获取
 static int64_t& getGmtProcessStartTimePoint()
 {
@@ -60,7 +18,7 @@ static int64_t& getGmtProcessStartTimePoint()
 		int64_t nGmtStartProcessTime;
 		SGmtProcessStartTimePoint()
 		{
-			this->nGmtStartProcessTime = ((int64_t)time(nullptr)) * 1000 - getProcessPassTime();
+			this->nGmtStartProcessTime = ((int64_t)time(nullptr)) * 1000 - base::getProcessPassTime() / 1000;
 		}
 	};
 
@@ -70,9 +28,51 @@ static int64_t& getGmtProcessStartTimePoint()
 
 namespace base
 {
+	static int64_t getProcessPassTime()
+	{
+#ifdef _WIN32
+		struct SFreq
+		{
+			LARGE_INTEGER	freq;
+			int64_t			nFirstCheckTime;
+			SFreq()
+			{
+				if (!QueryPerformanceFrequency(&freq))
+				{
+					fprintf(stderr, "cur machine cout support QueryPerformanceFrequency\n");
+				}
+
+				LARGE_INTEGER counter;
+				QueryPerformanceCounter(&counter);
+
+				nFirstCheckTime = (counter.QuadPart * 1000000) / freq.QuadPart;
+			}
+		};
+
+		static struct SFreq sFreq;
+
+		LARGE_INTEGER counter;
+		QueryPerformanceCounter(&counter);
+
+		int64_t nTime = (counter.QuadPart * 1000000) / sFreq.freq.QuadPart;
+
+		return nTime - sFreq.nFirstCheckTime;
+#else
+		// 在 x86-64 平台上，clock_gettime 不是系统调用，而是用vdso机制做的，就一个函数调用开销
+		// 在编译链接时需加上 -lrt ;因为在librt中实现了clock_gettime函数
+		// CLOCK_MONOTONIC:从系统启动这一刻起开始计时,不受系统时间被用户改变的影响
+		int64_t nTime = 0;
+		struct timespec ts;
+		if (clock_gettime(CLOCK_MONOTONIC, &ts) == 0)
+			nTime = ((int64_t)ts.tv_sec) * 1000000 + ts.tv_nsec / 1000;
+		///< 上面不做强转的话如果编译成32位程序就会出现49天问题
+		return nTime;
+#endif
+	}
+
 	int64_t getGmtTime()
 	{
-		return getGmtProcessStartTimePoint() + getProcessPassTime();
+		return getGmtProcessStartTimePoint() + getProcessPassTime() / 1000;
 	}
 
 	int32_t getZoneTime()
@@ -330,7 +330,7 @@ namespace base
 
 	void setGmtTime(int64_t nTime)
 	{
-		getGmtProcessStartTimePoint() = nTime - getProcessPassTime();
+		getGmtProcessStartTimePoint() = nTime - getProcessPassTime() / 1000;
 	}
 
 

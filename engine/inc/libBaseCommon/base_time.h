@@ -75,6 +75,10 @@ namespace base
 	@brief: 设置格林威治时间
 	*/
 	__BASE_COMMON_API__ void	setGmtTime(int64_t nTime);
+	/**
+	@brief: 获取进程启动到现在的时间（高精度，微妙）
+	*/
+	__BASE_COMMON_API__ int64_t	getProcessPassTime();
 
 
 	/**

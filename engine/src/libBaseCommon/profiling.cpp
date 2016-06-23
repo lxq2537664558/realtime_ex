@@ -55,7 +55,7 @@ void CProfilingMgr::profilingBeginByLabel(const char* szLabel, uint32_t nContext
 	if (nullptr == szLabel || !this->m_bProfiling)
 		return;
 
-	int64_t nBeginTime = base::getGmtTime();
+	int64_t nBeginTime = base::getProcessPassTime();
 	auto iter = this->m_mapProfilingInfoByLabel.find(szLabel);
 	if (iter != this->m_mapProfilingInfoByLabel.end())
 	{
@@ -64,7 +64,7 @@ void CProfilingMgr::profilingBeginByLabel(const char* szLabel, uint32_t nContext
 		if (iterInfo == mapProfilingInfo.end())
 		{
 			SProfilerInfo& sProfilerInfo = mapProfilingInfo[nContext];
-			sProfilerInfo.nPreTime = base::getGmtTime();
+			sProfilerInfo.nPreTime = base::getProcessPassTime();
 			sProfilerInfo.nCount = 0;
 			sProfilerInfo.nTotalTime = 0;
 			sProfilerInfo.nMaxTime = 0;
@@ -73,20 +73,20 @@ void CProfilingMgr::profilingBeginByLabel(const char* szLabel, uint32_t nContext
 		else
 		{
 			SProfilerInfo& sProfilerInfo = iterInfo->second;
-			sProfilerInfo.nPreTime = base::getGmtTime();
+			sProfilerInfo.nPreTime = base::getProcessPassTime();
 		}
 	}
 	else
 	{
 		auto& mapProfilingInfo = this->m_mapProfilingInfoByLabel[szLabel];
 		SProfilerInfo& sProfilerInfo = mapProfilingInfo[nContext];
-		sProfilerInfo.nPreTime = base::getGmtTime();
+		sProfilerInfo.nPreTime = base::getProcessPassTime();
 		sProfilerInfo.nCount = 0;
 		sProfilerInfo.nTotalTime = 0;
 		sProfilerInfo.nMaxTime = 0;
 		sProfilerInfo.nMinTime = INVALID_32BIT;
 	}
-	int64_t nEndTime = base::getGmtTime();
+	int64_t nEndTime = base::getProcessPassTime();
 
 	this->m_nProfilingMgrSpend += (nEndTime - nBeginTime);
 }
@@ -96,14 +96,14 @@ void CProfilingMgr::endProfilingByLabel(const char* szLabel, uint32_t nContext)
 	if (nullptr == szLabel || !this->m_bProfiling)
 		return;
 
-	int64_t nBeginTime = base::getGmtTime();
+	int64_t nBeginTime = base::getProcessPassTime();
 
 	auto iter = this->m_mapProfilingInfoByLabel.find(szLabel);
 	if (iter == this->m_mapProfilingInfoByLabel.end())
 	{
 		PrintWarning("profiling error label: %s", szLabel);
 
-		int64_t nEndTime = base::getGmtTime();
+		int64_t nEndTime = base::getProcessPassTime();
 
 		this->m_nProfilingMgrSpend += (nEndTime - nBeginTime);
 		return;
@@ -114,13 +114,13 @@ void CProfilingMgr::endProfilingByLabel(const char* szLabel, uint32_t nContext)
 	{
 		PrintWarning("profiling error context: %d", nContext);
 
-		int64_t nEndTime = base::getGmtTime();
+		int64_t nEndTime = base::getProcessPassTime();
 
 		this->m_nProfilingMgrSpend += (nEndTime - nBeginTime);
 		return;
 	}
 	SProfilerInfo& sProfilerInfo = iterInfo->second;
-	int32_t nDetla = int32_t(base::getGmtTime() - sProfilerInfo.nPreTime);
+	int32_t nDetla = int32_t(base::getProcessPassTime() - sProfilerInfo.nPreTime);
 	if (nDetla < sProfilerInfo.nMinTime)
 		sProfilerInfo.nMinTime = nDetla;
 	if (nDetla > sProfilerInfo.nMaxTime)
@@ -128,7 +128,7 @@ void CProfilingMgr::endProfilingByLabel(const char* szLabel, uint32_t nContext)
 	sProfilerInfo.nTotalTime += nDetla;
 	++sProfilerInfo.nCount;
 
-	int64_t nEndTime = base::getGmtTime();
+	int64_t nEndTime = base::getProcessPassTime();
 
 	this->m_nProfilingMgrSpend += (nEndTime - nBeginTime);
 }
@@ -138,23 +138,23 @@ void CProfilingMgr::profilingBeginByAddr(const void* pAddr)
 	if (nullptr == pAddr || !this->m_bProfiling)
 		return;
 
-	int64_t nBeginTime = base::getGmtTime();
+	int64_t nBeginTime = base::getProcessPassTime();
 	auto iter = this->m_mapProfilingInfoByAddr.find(pAddr);
 	if (iter != this->m_mapProfilingInfoByAddr.end())
 	{
 		SProfilerInfo& sProfilerInfo = iter->second;
-		sProfilerInfo.nPreTime = base::getGmtTime();
+		sProfilerInfo.nPreTime = base::getProcessPassTime();
 	}
 	else
 	{
 		SProfilerInfo& sProfilerInfo = this->m_mapProfilingInfoByAddr[pAddr];
-		sProfilerInfo.nPreTime = base::getGmtTime();
+		sProfilerInfo.nPreTime = base::getProcessPassTime();
 		sProfilerInfo.nCount = 0;
 		sProfilerInfo.nTotalTime = 0;
 		sProfilerInfo.nMaxTime = 0;
 		sProfilerInfo.nMinTime = INVALID_32BIT;
 	}
-	int64_t nEndTime = base::getGmtTime();
+	int64_t nEndTime = base::getProcessPassTime();
 
 	this->m_nProfilingMgrSpend += (nEndTime - nBeginTime);
 }
@@ -164,20 +164,20 @@ void CProfilingMgr::endProfilingByAddr(const void* pAddr)
 	if (nullptr == pAddr || !this->m_bProfiling)
 		return;
 
-	int64_t nBeginTime = base::getGmtTime();
+	int64_t nBeginTime = base::getProcessPassTime();
 
 	auto iter = this->m_mapProfilingInfoByAddr.find(pAddr);
 	if (iter == this->m_mapProfilingInfoByAddr.end())
 	{
 		PrintWarning("profiling error addr: 0x%x", pAddr);
 
-		int64_t nEndTime = base::getGmtTime();
+		int64_t nEndTime = base::getProcessPassTime();
 
 		this->m_nProfilingMgrSpend += (nEndTime - nBeginTime);
 		return;
 	}
 	SProfilerInfo& sProfilerInfo = iter->second;
-	int32_t nDetla = int32_t(base::getGmtTime() - sProfilerInfo.nPreTime);
+	int32_t nDetla = int32_t(base::getProcessPassTime() - sProfilerInfo.nPreTime);
 	if (nDetla < sProfilerInfo.nMinTime)
 		sProfilerInfo.nMinTime = nDetla;
 	if (nDetla > sProfilerInfo.nMaxTime)
@@ -185,7 +185,7 @@ void CProfilingMgr::endProfilingByAddr(const void* pAddr)
 	sProfilerInfo.nTotalTime += nDetla;
 	++sProfilerInfo.nCount;
 
-	int64_t nEndTime = base::getGmtTime();
+	int64_t nEndTime = base::getProcessPassTime();
 
 	this->m_nProfilingMgrSpend += (nEndTime - nBeginTime);
 }

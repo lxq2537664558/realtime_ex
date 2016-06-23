@@ -377,7 +377,7 @@ namespace core
 		if (nVMem >= 1024 * 1024 * 1024)
 			exit(0);
 
-		int64_t nBeginTime = base::getGmtTime();
+		int64_t nBeginTime = base::getProcessPassTime();
 
 		CBaseApp::Inst()->onBeforeFrame();
 
@@ -401,7 +401,7 @@ namespace core
 		if (this->m_nRunState == eARS_Quit)
 			return false;
 
-		int64_t nEndTime = base::getLocalTime();
+		int64_t nEndTime = base::getProcessPassTime();
 		this->m_nTotalTime = this->m_nTotalTime + (uint32_t)(nEndTime - nBeginTime);
 
 		if (this->m_nCycleCount % 100 == 0)
