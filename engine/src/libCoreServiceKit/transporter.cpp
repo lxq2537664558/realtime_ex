@@ -119,13 +119,14 @@ namespace core
 		{
 			uint64_t nSessionID = 0;
 			SResponseWaitInfo* pResponseWaitInfo = nullptr;
-			if (sRequestMessageInfo.callback != nullptr)
+			if (sRequestMessageInfo.callback != nullptr || sRequestMessageInfo.nCoroutineID != 0)
 			{
 				nSessionID = this->genSessionID();
 				pResponseWaitInfo = new SResponseWaitInfo();
 				pResponseWaitInfo->callback = sRequestMessageInfo.callback;
 				pResponseWaitInfo->nSessionID = nSessionID;
 				pResponseWaitInfo->nTraceID = nTraceID;
+				pResponseWaitInfo->nCoroutineID = sRequestMessageInfo.nCoroutineID;
 				pResponseWaitInfo->szServiceName = szServiceName;
 				pResponseWaitInfo->tickTimeout.setCallback(std::bind(&CTransporter::onRequestMessageTimeout, this, std::placeholders::_1));
 				CBaseApp::Inst()->registerTicker(&pResponseWaitInfo->tickTimeout, CCoreServiceKitImpl::Inst()->getInvokeTimeout(), 0, nSessionID);
@@ -137,7 +138,7 @@ namespace core
 			request_cookice cookice;
 			cookice.nSessionID = nSessionID;
 			cookice.nTraceID = nTraceID;
-
+			
 			pCoreConnectionToService->send(eMT_REQUEST, &cookice, sizeof(cookice), sRequestMessageInfo.pData, sRequestMessageInfo.pData->nMessageSize);
 
 			return true;

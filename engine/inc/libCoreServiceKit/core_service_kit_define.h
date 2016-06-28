@@ -40,6 +40,7 @@ namespace core
 	{
 		std::string	szServiceName;
 		uint64_t	nSessionID;
+
 	};
 
 	enum EResponseResultType

@@ -9,9 +9,9 @@
 namespace base
 {
 	CLuaFacade::CLuaFacade()
+		: m_pMainLuaState(nullptr)
+		, m_pActiveLuaState(nullptr)
 	{
-		this->m_pMainLuaState = nullptr;
-		this->m_pActiveLuaState = nullptr;
 	}
 
 	CLuaFacade::~CLuaFacade()
@@ -76,7 +76,7 @@ namespace base
 				return;
 			}
 
-			SObjectWraper* pObjectWraper = (SObjectWraper*)lua_touserdata(pL, -1);
+			SObjectWraper* pObjectWraper = reinterpret_cast<SObjectWraper*>(lua_touserdata(pL, -1));
 			if (nullptr == pObjectWraper)
 			{
 				lua_settop(pL, tbl);
@@ -105,7 +105,7 @@ namespace base
 			return;
 		}
 
-		SObjectWraper* pObjectWraper = (SObjectWraper*)lua_touserdata(pL, -1);
+		SObjectWraper* pObjectWraper = reinterpret_cast<SObjectWraper*>(lua_touserdata(pL, -1));
 		if (nullptr == pObjectWraper)
 		{
 			lua_settop(pL, tbl);
@@ -147,7 +147,7 @@ namespace base
 			lua_settop(pL, tbl);
 			return;
 		}
-		SObjectWraper* pObjectWraper = (SObjectWraper*)lua_touserdata(pL, -1);
+		SObjectWraper* pObjectWraper = reinterpret_cast<SObjectWraper*>(lua_touserdata(pL, -1));
 		if (nullptr == pObjectWraper)
 		{
 			lua_settop(pL, tbl);
@@ -193,7 +193,7 @@ namespace base
 			lua_settop(pL, tbl);
 			return;
 		}
-		SObjectWraper* pObjectWraper = (SObjectWraper*)lua_touserdata(pL, -1);
+		SObjectWraper* pObjectWraper = reinterpret_cast<SObjectWraper*>(lua_touserdata(pL, -1));
 		if (nullptr == pObjectWraper)
 		{
 			lua_settop(pL, tbl);

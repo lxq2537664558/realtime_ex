@@ -49,7 +49,7 @@ namespace base
 		this->m_nMaxSocketCount = nMaxSocketCount;
 		return true;
 	}
-	
+
 	bool CNetEventLoop::listen(const SNetAddr& netAddr, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, INetAccepterHandler* pHandler)
 	{
 		if (nRecvBufferSize == 0 || nSendBufferSize == 0)
@@ -88,7 +88,7 @@ namespace base
 		delete this;
 	}
 
-	int32_t CNetEventLoop::update(int32_t nTime)
+	void CNetEventLoop::update(int32_t nTime)
 	{
 		for (auto iter = this->m_listCloseSocket.begin(); iter != this->m_listCloseSocket.end(); ++iter)
 		{
@@ -138,7 +138,7 @@ namespace base
 					continue;
 
 				bEmpty = false;
-				
+
 				FD_SET(pNetSocket->GetSocketID(), &error_set);
 
 				if (0 != (pNetSocket->getEvent()&eNET_Recv))
@@ -157,7 +157,7 @@ namespace base
 			if (SOCKET_ERROR == nRet)
 			{
 				PrintWarning("select error %d ", getLastError());
-				return false;
+				return;
 			}
 			if (0 == nRet)
 				continue;
@@ -186,28 +186,32 @@ namespace base
 		}
 #else
 		if (this->m_nSocketCount == 0)
-			return 0;
+			return;
 
-		int32_t nActiveCount = epoll_wait(this->m_nEpoll, &this->m_vecEpollEvent[0], this->m_vecEpollEvent.size(), nTime);
-		if (nActiveCount > 0)
+		do
 		{
-			for (int32_t i = 0; i < nActiveCount; ++i)
+			int32_t nActiveCount = epoll_wait(this->m_nEpoll, &this->m_vecEpollEvent[0], this->m_vecEpollEvent.size(), nTime);
+			if (nActiveCount > 0)
 			{
-				CNetSocket* pNetSocket = static_cast<CNetSocket*>(this->m_vecEpollEvent[i].data.ptr);
-				if (pNetSocket != nullptr)
-					pNetSocket->onEvent(this->m_vecEpollEvent[i].events);
+				for (int32_t i = 0; i < nActiveCount; ++i)
+				{
+					CNetSocket* pNetSocket = static_cast<CNetSocket*>(this->m_vecEpollEvent[i].data.ptr);
+					if (pNetSocket != nullptr)
+						pNetSocket->onEvent(this->m_vecEpollEvent[i].events);
+				}
+				break;
 			}
-		}
-		else if (nActiveCount < 0)
-		{
-			if (getLastError() == NW_EINTR)
-				return 0;
+			else if (nActiveCount < 0)
+			{
+				if (getLastError() == NW_EINTR)
+					continue;
 
-			PrintWarning("epoll_wait error %d", getLastError());
-			return nActiveCount;
-		}
+				PrintWarning("epoll_wait error %d", getLastError());
+				break;
+			}
+		} while(true);
 #endif
-		return nActiveCount;
+		return;
 	}
 
 #ifndef _WIN32

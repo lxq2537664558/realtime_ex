@@ -23,6 +23,10 @@ namespace core
 		*/
 		bool				invok(const std::string& szServiceName, const message_header* pData);
 		/**
+		@brief: 调用指定远程服务的消息，逻辑上阻塞
+		*/
+		uint32_t			invok(const std::string& szServiceName, const message_header* pData, message_header*& pResultData);
+		/**
 		@brief: 调用指定远程服务的消息，需要提供远程服务消息返回的响应函数回调
 		*/
 		bool				invok_r(const std::string& szServiceName, const message_header* pData, InvokeCallback callback, uint64_t nContext = 0);

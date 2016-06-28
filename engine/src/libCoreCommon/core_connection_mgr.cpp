@@ -133,9 +133,9 @@ namespace core
 		return true;
 	}
 
-	int32_t CCoreConnectionMgr::update(int32_t nTime)
+	void CCoreConnectionMgr::update(int32_t nTime)
 	{
-		return this->m_pNetEventLoop->update(nTime);
+		this->m_pNetEventLoop->update(nTime);
 	}
 
 	CBaseConnectionMgr* CCoreConnectionMgr::getBaseConnectionMgr() const

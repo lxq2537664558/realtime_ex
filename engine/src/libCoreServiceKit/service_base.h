@@ -13,6 +13,7 @@ namespace core
 	{
 		message_header*	pData;
 		InvokeCallback	callback;
+		uint64_t		nCoroutineID;
 	};
 
 	struct SResponseMessageInfo
@@ -97,6 +98,7 @@ namespace core
 		CTicker			tickTimeout;
 		uint64_t		nSessionID;
 		uint64_t		nTraceID;
+		uint64_t		nCoroutineID;
 		std::string		szServiceName;
 		InvokeCallback	callback;
 	};

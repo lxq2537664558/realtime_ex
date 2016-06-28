@@ -36,6 +36,352 @@ namespace base
 	}
 	*/
 
+#define _WEAK_OBJECT_TBL_NAME	"weak_object_table"
+#define _REF_OBJECT_TBL_NAME	"ref_object_table"
+#define _FACADE_NAME			"facade"
+
+
+	struct SObjectWraper
+	{
+		void*	pObject;	// 真正的对象
+		bool	bGc;		// true 表示这个对象的生命周期完全是由lua控制的（lua创建，lua销毁），false 表示这个对象的生命周期不是由lua控制的，一般是返回值，参数什么的，此种对象不应该在lua中保存，否则该对象的删除就会出现混乱
+		int32_t	nRefCount;	// 对于生命周期由lua控制的对象，该变量标示在C++层面引用计数次数，对于不是由lua控制生命周期的对象，该变量没有意义
+	};
+
+	template<class T>
+	struct SClassName
+	{
+		static inline void setName(const char* szClassName)
+		{
+			s_szClassName = szClassName;
+		}
+		static inline const char* getName()
+		{
+			return s_szClassName;
+		}
+
+		static const char* s_szClassName;
+	};
+	template<class T>
+	const char* SClassName<T>::s_szClassName;
+
+	struct SStackCheck
+	{
+		int32_t		m_nTop;
+		lua_State*	m_pL;
+
+		SStackCheck(lua_State* pL)
+		{
+			this->m_pL = pL;
+			this->m_nTop = lua_gettop(this->m_pL);
+		}
+
+		~SStackCheck()
+		{
+			int32_t nTop = lua_gettop(this->m_pL);
+			if (nTop != this->m_nTop)
+			{
+				PrintWarning("lua stack error");
+			}
+		}
+	};
+
+	inline void printStack(lua_State* pL, int32_t n)
+	{
+		SStackCheck sStackCheck(pL);
+
+		lua_Debug ar;
+		if (lua_getstack(pL, n, &ar))
+		{
+			lua_getinfo(pL, "Sln", &ar);
+
+			if (ar.name != NULL)
+				PrintInfo("\tstack[%d] -> line %d : %s()[%s : line %d]", n, ar.currentline, ar.name, ar.short_src, ar.linedefined);
+			else
+				PrintInfo("\tstack[%d] -> line %d : unknown[%s : line %d]", n, ar.currentline, ar.short_src, ar.linedefined);
+
+			printStack(pL, n + 1);
+		}
+	}
+
+	// 不支持非指针对象传递
+	template<class T>
+	struct SLua2CppType
+	{
+		inline static T convert(lua_State* pL, int32_t nIndex)
+		{
+#ifdef _WIN32
+			// 下面代码故意语法错误的，不要去改
+			err;
+			// 上面代码故意语法错误的，不要去改
+#else
+			return T();
+#endif
+		}
+	};
+
+	template<class T>
+	struct SLua2CppType<T*>
+	{
+		inline static T* convert(lua_State* pL, int32_t nIndex)
+		{
+			SObjectWraper* pObjectWraper = reinterpret_cast<SObjectWraper*>(lua_touserdata(pL, nIndex));
+			DebugAstEx(pObjectWraper != nullptr, nullptr);
+			return static_cast<T*>(pObjectWraper->pObject);
+		}
+	};
+
+	template<class T>
+	inline T read2Cpp(lua_State* pL, int32_t nIndex, bool& bError)
+	{
+		bError = false;
+		if (!lua_isuserdata(pL, nIndex))
+		{
+			bError = true;
+
+			return nullptr;
+		}
+
+		return SLua2CppType<T>::convert(pL, nIndex);
+	};
+
+	template<> inline void read2Cpp(lua_State* pL, int32_t nIndex, bool& bError) {}
+
+	template<> inline bool read2Cpp(lua_State* pL, int32_t nIndex, bool& bError)
+	{
+		bError = false;
+		if (!lua_isboolean(pL, nIndex))
+		{
+			bError = true;
+
+			return false;
+		}
+		return lua_toboolean(pL, nIndex) ? true : false;
+	}
+	template<> inline char* read2Cpp(lua_State* pL, int32_t nIndex, bool& bError)
+	{
+		bError = false;
+		if (!lua_isstring(pL, nIndex))
+		{
+			bError = true;
+
+			return nullptr;
+		}
+		return (char*)lua_tostring(pL, nIndex);
+	}
+	template<> inline const char* read2Cpp(lua_State* pL, int32_t nIndex, bool& bError)
+	{
+		bError = false;
+		if (!lua_isstring(pL, nIndex))
+		{
+			bError = true;
+
+			return nullptr;
+		}
+		return (const char*)lua_tostring(pL, nIndex);
+	}
+	template<> inline int8_t read2Cpp(lua_State* pL, int32_t nIndex, bool& bError)
+	{
+		bError = false;
+		if (!lua_isinteger(pL, nIndex))
+		{
+			bError = true;
+
+			return 0;
+		}
+		return (int8_t)lua_tointeger(pL, nIndex);
+	}
+	template<> inline uint8_t read2Cpp(lua_State* pL, int32_t nIndex, bool& bError)
+	{
+		bError = false;
+		if (!lua_isinteger(pL, nIndex))
+		{
+			bError = true;
+
+			return 0;
+		}
+		return (uint8_t)lua_tointeger(pL, nIndex);
+	}
+	template<> inline int16_t read2Cpp(lua_State* pL, int32_t nIndex, bool& bError)
+	{
+		bError = false;
+		if (!lua_isinteger(pL, nIndex))
+		{
+			bError = true;
+
+			return 0;
+		}
+		return (int16_t)lua_tointeger(pL, nIndex);
+	}
+	template<> inline uint16_t read2Cpp(lua_State* pL, int32_t nIndex, bool& bError)
+	{
+		bError = false;
+		if (!lua_isinteger(pL, nIndex))
+		{
+			bError = true;
+
+			return 0;
+		}
+		return (uint16_t)lua_tointeger(pL, nIndex);
+	}
+	template<> inline int32_t read2Cpp(lua_State* pL, int32_t nIndex, bool& bError)
+	{
+		bError = false;
+		if (!lua_isinteger(pL, nIndex))
+		{
+			bError = true;
+
+			return 0;
+		}
+		return (int32_t)lua_tointeger(pL, nIndex);
+	}
+	template<> inline uint32_t read2Cpp(lua_State* pL, int32_t nIndex, bool& bError)
+	{
+		bError = false;
+		if (!lua_isinteger(pL, nIndex))
+		{
+			bError = true;
+
+			return 0;
+		}
+		return (uint32_t)lua_tointeger(pL, nIndex);
+	}
+	template<> inline int64_t read2Cpp(lua_State* pL, int32_t nIndex, bool& bError)
+	{
+		bError = false;
+		if (!lua_isinteger(pL, nIndex))
+		{
+			bError = true;
+
+			return 0;
+		}
+		return (int64_t)lua_tointeger(pL, nIndex);
+	}
+	template<> inline uint64_t read2Cpp(lua_State* pL, int32_t nIndex, bool& bError)
+	{
+		bError = false;
+		if (!lua_isinteger(pL, nIndex))
+		{
+			bError = true;
+
+			return 0;
+		}
+		return (uint64_t)lua_tointeger(pL, nIndex);
+	}
+	template<> inline float read2Cpp(lua_State* pL, int32_t nIndex, bool& bError)
+	{
+		bError = false;
+		if (!lua_isnumber(pL, nIndex))
+		{
+			bError = true;
+
+			return 0.0f;
+		}
+		return (float)lua_tonumber(pL, nIndex);
+	}
+	template<> inline double read2Cpp(lua_State* pL, int32_t nIndex, bool& bError)
+	{
+		bError = false;
+		if (!lua_isnumber(pL, nIndex))
+		{
+			bError = true;
+
+			return 0.0;
+		}
+		return (double)lua_tonumber(pL, nIndex);
+	}
+
+	template<class T>
+	struct Convert2LuaType
+	{
+		inline static void convertType(lua_State* pL, T& val)
+		{
+			DebugAst("unsupport ref and value");
+		}
+	};
+
+	template<class T>
+	struct Convert2LuaType<const T*>
+	{
+		inline static void convertType(lua_State* pL, const T* val)
+		{
+			lua_getglobal(pL, _WEAK_OBJECT_TBL_NAME);
+			int32_t tbl = lua_gettop(pL);
+			///< 获取弱表中的包裹对象
+			lua_pushlightuserdata(pL, (void*)val);
+			lua_rawget(pL, -2);
+			if (lua_isnil(pL, -1))
+			{
+				lua_pop(pL, 1);
+
+				///< 创建对象的包裹内存块
+				SObjectWraper* pObjectWraper = reinterpret_cast<SObjectWraper*>(lua_newuserdata(pL, sizeof(SObjectWraper)));
+
+				pObjectWraper->pObject = (void*)val;
+				pObjectWraper->bGc = false;
+				pObjectWraper->nRefCount = 0;
+				luaL_getmetatable(pL, SClassName<T>::getName());
+				///< 设置对象的metatable
+				lua_setmetatable(pL, -2);
+
+				lua_pushlightuserdata(pL, (void*)val);
+				lua_pushvalue(pL, -2);
+				///< 将对象设置进弱表中 weak_object_table[pObject] = pObjectWraper
+				lua_rawset(pL, tbl);
+			}
+			else
+			{
+				SObjectWraper* pObjectWraper = reinterpret_cast<SObjectWraper*>(lua_touserdata(pL, -1));
+				if (pObjectWraper == nullptr)
+					lua_pushnil(pL);
+				if (pObjectWraper->pObject == nullptr)
+					lua_pushnil(pL);
+			}
+
+			lua_replace(pL, tbl);
+			lua_settop(pL, tbl);
+		}
+	};
+
+	template<class T>
+	struct Convert2LuaType<T*>
+	{
+		inline static void convertType(lua_State* pL, T* val)
+		{
+			Convert2LuaType<const T*>::convertType(pL, val);
+		}
+	};
+
+	template<class T>
+	inline void push2Lua(lua_State* pL, T val)
+	{
+#ifdef _WIN32
+		///< 下面代码故意语法错误的，不要去改
+		if
+			///< 上面代码故意语法错误的，不要去改
+#endif
+	}
+
+	template<class T>
+	inline void push2Lua(lua_State* pL, T* val)
+	{
+		Convert2LuaType<T*>::convertType(pL, val);
+	};
+
+	template<> inline void push2Lua(lua_State* pL, int8_t val)		{ lua_pushinteger(pL, val); }
+	template<> inline void push2Lua(lua_State* pL, uint8_t val)		{ lua_pushinteger(pL, val); }
+	template<> inline void push2Lua(lua_State* pL, int16_t val)		{ lua_pushinteger(pL, val); }
+	template<> inline void push2Lua(lua_State* pL, uint16_t val)	{ lua_pushinteger(pL, val); }
+	template<> inline void push2Lua(lua_State* pL, int32_t val)		{ lua_pushinteger(pL, val); }
+	template<> inline void push2Lua(lua_State* pL, uint32_t val)	{ lua_pushinteger(pL, val); }
+	template<> inline void push2Lua(lua_State* pL, int64_t val)		{ lua_pushinteger(pL, val); }
+	template<> inline void push2Lua(lua_State* pL, uint64_t val)	{ lua_pushinteger(pL, val); }
+	template<> inline void push2Lua(lua_State* pL, float val)		{ lua_pushnumber(pL, val); }
+	template<> inline void push2Lua(lua_State* pL, double val)		{ lua_pushnumber(pL, val); }
+	template<> inline void push2Lua(lua_State* pL, char* val)		{ lua_pushstring(pL, val); }
+	template<> inline void push2Lua(lua_State* pL, const char* val) { lua_pushstring(pL, val); }
+	template<> inline void push2Lua(lua_State* pL, bool val)		{ lua_pushboolean(pL, val); }
+
 	inline int32_t __index_proxy(lua_State* pL)
 	{
 		lua_getmetatable(pL, 1);
@@ -140,7 +486,10 @@ namespace base
 		template<typename T, typename ...RemainArgs, typename ...NowArgs>
 		static int32_t parse(lua_State* pL, int32_t& nIndex, SFunctionBaseWrapper<RT, Args...>& sFunctionBaseWrapper, NowArgs&&... args)
 		{
-			T value = read2Cpp<T>(pL, nIndex++);
+			bool bError = false;
+			T value = read2Cpp<T>(pL, nIndex++, bError);
+			DebugAstEx(!bError, 0);
+			
 			return SParseArgs<sizeof...(RemainArgs), RT, Args...>::parse<RemainArgs...>(pL, nIndex, sFunctionBaseWrapper, args..., value);
 		}
 	};
@@ -191,15 +540,16 @@ namespace base
 		PROFILING_GUARD(__normal_invoke_proxy)
 		lua_getglobal(pL, _FACADE_NAME);
 		CLuaFacade* pLuaFacade = reinterpret_cast<CLuaFacade*>(lua_touserdata(pL, -1));
+		lua_pop(pL, 1);
 		DebugAstEx(pLuaFacade != nullptr, 0);
 
 		pLuaFacade->setActiveLuaState(pL);
-		lua_pop(pL, 1);
 		SNormalFunctionWrapper<RT, Args...>* pNormalFunctionWrapper = reinterpret_cast<SNormalFunctionWrapper<RT, Args...>*>(lua_touserdata(pL, lua_upvalueindex(1)));
 		DebugAstEx(pNormalFunctionWrapper != nullptr, 0);
 
 		SFunctionBaseWrapper<RT, Args...> sFunctionBaseWrapper;
 		sFunctionBaseWrapper.invoke = pNormalFunctionWrapper->pf;
+
 		int32_t nIndex = 1;
 		int32_t nRet = SParseArgs<sizeof...(Args), RT, Args...>::parse<Args...>(pL, nIndex, sFunctionBaseWrapper);
 		
@@ -211,22 +561,23 @@ namespace base
 	template<typename T, typename RT, typename ...Args>
 	int32_t __class_invoke_proxy(lua_State* pL)
 	{
-		// 当lua调用C++函数给的参数不够时，在读取栈上的函数时会返回nil对象，BaseScript层会报错
+		// 当lua调用C++函数给的参数不够时，在读取栈上的函数时会返回nil对象，libBaseLua会报错
 		// 当lua调用C++函数给的参数多余时，直接忽略
-		// 当lua调用C++函数给的参数类型错误时，在读取栈上的函数时BaseScript层会报错
+		// 当lua调用C++函数给的参数类型错误时，在读取栈上的函数时libBaseLua会报错
 		// 坚决不能调用多余20个参数的C++函数，不然lua栈直接崩溃
 		PROFILING_GUARD(__class_invoke_proxy)
 		lua_getglobal(pL, _FACADE_NAME);
 		CLuaFacade* pLuaFacade = reinterpret_cast<CLuaFacade*>(lua_touserdata(pL, -1));
+		lua_pop(pL, 1);
 		DebugAstEx(pLuaFacade != nullptr, 0);
 
 		pLuaFacade->setActiveLuaState(pL);
-		lua_pop(pL, 1);
 		SClassFunctionWrapper<T, RT, Args...>* pClassFunctionWrapper = reinterpret_cast<SClassFunctionWrapper<T, RT, Args...>*>(lua_touserdata(pL, lua_upvalueindex(1)));
 		DebugAstEx(pClassFunctionWrapper != nullptr, 0);
 
-		T* pObject = read2Cpp<T*>(pL, 1);
-		DebugAstEx(pObject != nullptr, 0);
+		bool bError = false;
+		T* pObject = read2Cpp<T*>(pL, 1, bError);
+		DebugAstEx(!bError && pObject != nullptr, 0);
 
 		SFunctionBaseWrapper<RT, Args...> sFunctionBaseWrapper;
 		sFunctionBaseWrapper.invoke = [&](Args... args)->RT
@@ -244,12 +595,18 @@ namespace base
 	template<class T, class M>
 	inline int32_t __property_proxy(lua_State* pL)
 	{
-		T* pObject = read2Cpp<T*>(pL, 1);
-		bool bWrite = read2Cpp<bool>(pL, 2);
+		bool bError = false;
+		T* pObject = read2Cpp<T*>(pL, 1, bError);
+		DebugAstEx(!bError && pObject != nullptr, 0);
+
+		bool bWrite = read2Cpp<bool>(pL, 2, bError);
+		DebugAstEx(!bError, 0);
+		
 		SMemberOffsetInfo<T, M>* pMemberOffsetInfo = reinterpret_cast<SMemberOffsetInfo<T, M>*>(lua_touserdata(pL, lua_upvalueindex(1)));
 		if (bWrite)
 		{
-			M m = read2Cpp<M>(pL, 3);
+			M m = read2Cpp<M>(pL, 3, bError);
+			DebugAstEx(!bError, 0);
 			pObject->*const_cast<M T::*>(pMemberOffsetInfo->mp) = m;
 			return 0;
 		}
@@ -263,11 +620,14 @@ namespace base
 	template<class T>
 	inline int32_t __static_property_proxy(lua_State* pL)
 	{
-		bool bWrite = read2Cpp<bool>(pL, 2);
+		bool bError = false;
+		bool bWrite = read2Cpp<bool>(pL, 2, bError);
+		DebugAstEx(!bError, 0);
 		T* pValue = reinterpret_cast<T*>(lua_touserdata(pL, lua_upvalueindex(1)));
 		if (bWrite)
 		{
-			T val = read2Cpp<T>(pL, 3);
+			T val = read2Cpp<T>(pL, 3, bError);
+			DebugAstEx(!bError, 0);
 			*pValue = val;
 			return 0;
 		}
@@ -301,29 +661,29 @@ namespace base
 		char szCreateBuf[256] = { 0 };
 		base::crt::snprintf(szCreateBuf, _countof(szCreateBuf), "%s_create", szClassName);
 		// 设置创建对象函数
-		lua_pushcclosure(this->m_pMainLuaState, pfFun, 0);				///< top 1->2
-		lua_setglobal(this->m_pMainLuaState, szCreateBuf);				///< top 2->1
+		lua_pushcclosure(this->m_pMainLuaState, pfFun, 0);
+		lua_setglobal(this->m_pMainLuaState, szCreateBuf);
 
 		// 创建这个class的metatable
-		luaL_newmetatable(this->m_pMainLuaState, szClassName);			///< top 1->2
+		luaL_newmetatable(this->m_pMainLuaState, szClassName);
 
 		// metatable.__index = __index
-		lua_pushstring(this->m_pMainLuaState, "__index");					///< top 2->3
-		lua_pushcclosure(this->m_pMainLuaState, &__index_proxy, 0);		///< top 3->4
-		lua_rawset(this->m_pMainLuaState, -3);							///< top 4->2
+		lua_pushstring(this->m_pMainLuaState, "__index");
+		lua_pushcclosure(this->m_pMainLuaState, &__index_proxy, 0);
+		lua_rawset(this->m_pMainLuaState, -3);
 
 		// metatable.__newindex = __newindex
-		lua_pushstring(this->m_pMainLuaState, "__newindex");				///< top 2->3
-		lua_pushcclosure(this->m_pMainLuaState, &__newindex_proxy, 0);	///< top 3->4
-		lua_rawset(this->m_pMainLuaState, -3);							///< top 4->2
+		lua_pushstring(this->m_pMainLuaState, "__newindex");
+		lua_pushcclosure(this->m_pMainLuaState, &__newindex_proxy, 0);
+		lua_rawset(this->m_pMainLuaState, -3);
 
 		// metatable.__gc = deleteObject<T>
-		lua_pushstring(this->m_pMainLuaState, "__gc");					///< top 2->3
-		lua_pushcclosure(this->m_pMainLuaState, &lua_helper::deleteObject<T>, 0);	///< top 3->4
-		lua_rawset(this->m_pMainLuaState, -3);							///< top 4->2
+		lua_pushstring(this->m_pMainLuaState, "__gc");
+		lua_pushcclosure(this->m_pMainLuaState, &lua_helper::deleteObject<T>, 0);
+		lua_rawset(this->m_pMainLuaState, -3);
 
 		// pop metatable
-		lua_pop(this->m_pMainLuaState, 1);								///< top 2->1
+		lua_pop(this->m_pMainLuaState, 1);
 
 		char szBuf[256] = { 0 };
 		base::crt::snprintf(szBuf, _countof(szBuf), "%s = {} function %s.new(...) return %s_create(...) end", szClassName, szClassName, szClassName);
@@ -336,14 +696,12 @@ namespace base
 		DebugAst(pfFun != nullptr && szName != nullptr);
 
 		SStackCheck sStackCheck(this->m_pMainLuaState);
-		///< top = 1
+
 		luaL_getmetatable(this->m_pMainLuaState, SClassName<T>::getName());
-		///< top = 2
 		if (!lua_istable(this->m_pMainLuaState, -1))
 		{
 			PrintWarning("please register class %s", SClassName<T>::getName());
 			lua_pop(this->m_pMainLuaState, 1);
-			///< top = 1
 			DebugAst(false);
 			return;
 		}
@@ -365,11 +723,9 @@ namespace base
 		lua_pushstring(this->m_pMainLuaState, szName);
 		lua_pushlightuserdata(this->m_pMainLuaState, pClassFunctionWrapper);
 		lua_pushcclosure(this->m_pMainLuaState, &__class_invoke_proxy<T, RT, Args...>, 1);
-		// 之前的lightuserdata作为函数的upvalue了
 		lua_rawset(this->m_pMainLuaState, -3);
 
 		lua_pop(this->m_pMainLuaState, 1);
-		///< top = 1
 	}
 	
 	template<typename T, typename RT, typename ...Args>
@@ -378,14 +734,12 @@ namespace base
 		DebugAst(pfFun != nullptr && szName != nullptr);
 
 		SStackCheck sStackCheck(this->m_pMainLuaState);
-		///< top = 1
+
 		luaL_getmetatable(this->m_pMainLuaState, SClassName<T>::getName());
-		///< top = 2
 		if (!lua_istable(this->m_pMainLuaState, -1))
 		{
 			PrintWarning("please register class %s", SClassName<T>::getName());
 			lua_pop(this->m_pMainLuaState, 1);
-			///< top = 1
 			DebugAst(false);
 			return;
 		}
@@ -406,11 +760,9 @@ namespace base
 		lua_pushstring(this->m_pMainLuaState, szName);
 		lua_pushlightuserdata(this->m_pMainLuaState, pFunctionWrapper);
 		lua_pushcclosure(this->m_pMainLuaState, &__class_invoke_proxy<T, RT, Args...>, 1);
-		// 之前的lightuserdata作为函数的upvalue了
 		lua_rawset(this->m_pMainLuaState, -3);
 
 		lua_pop(this->m_pMainLuaState, 1);
-		///< top = 1
 	}
 
 	template<typename RT, typename ...Args>
@@ -433,13 +785,9 @@ namespace base
 		SNormalFunctionWrapper<RT, Args...>* pNormalFunctionWrapper = new SNormalFunctionWrapper<RT, Args...>();
 		pNormalFunctionWrapper->pf = pfFun;
 
-		///< top = 1
 		lua_pushlightuserdata(this->m_pMainLuaState, pNormalFunctionWrapper);
-		///< top = 2
 		lua_pushcclosure(this->m_pMainLuaState, &__normal_invoke_proxy<RT, Args...>, 1);
-		///< top = 2(之前的lightuserdata作为函数的upvalue了)
 		lua_setglobal(this->m_pMainLuaState, szName);	///< { key:szName, value:CallByLua }
-		///< top = 1
 	}
 	
 	template<class T>
@@ -472,14 +820,11 @@ namespace base
 	void CLuaFacade::registerClassMember(const char* szName, const M T::* pMember)
 	{
 		SStackCheck sStackCheck(this->m_pMainLuaState);
-		///< top = 1
 		luaL_getmetatable(this->m_pMainLuaState, SClassName<T>::getName());
-		///< top = 2
 		if (!lua_istable(this->m_pMainLuaState, -1))
 		{
 			PrintWarning("please register class %s", SClassName<T>::getName());
 			lua_pop(this->m_pMainLuaState, 1);
-			///< top = 1
 			DebugAst(false);
 			return;
 		}
@@ -513,20 +858,14 @@ namespace base
 			return;
 		}
 
-		///< top = 2 
-		lua_pushstring(this->m_pMainLuaState, szName);
-		///< top = 3
 		SMemberOffsetInfo<T, M>* pMemberOffsetInfo = new SMemberOffsetInfo<T, M>();
 		pMemberOffsetInfo->mp = pMember;
+		lua_pushstring(this->m_pMainLuaState, szName);
 		lua_pushlightuserdata(this->m_pMainLuaState, pMemberOffsetInfo);
-		///< top = 4
 		lua_pushcclosure(this->m_pMainLuaState, &__property_proxy<T, M>, 1);
-		///< top = 4
 		lua_rawset(this->m_pMainLuaState, -3);
-		///< top = 2
-		lua_pop(this->m_pMainLuaState, 1);
-		lua_pop(this->m_pMainLuaState, 1);
-		///< top = 1
+
+		lua_pop(this->m_pMainLuaState, 2);
 	}
 
 	template<class M>
@@ -535,14 +874,11 @@ namespace base
 		DebugAst(pMember != nullptr && szClassName != nullptr);
 
 		SStackCheck sStackCheck(this->m_pMainLuaState);
-		///< top = 1
 		luaL_getmetatable(this->m_pMainLuaState, szClassName);
-		///< top = 2
 		if (!lua_istable(this->m_pMainLuaState, -1))
 		{
 			PrintWarning("please register class %s", szClassName);
 			lua_pop(this->m_pMainLuaState, 1);
-			///< top = 1
 			DebugAst(false);
 			return;
 		}
@@ -576,19 +912,14 @@ namespace base
 			return;
 		}
 
-		///< top = 2 
 		lua_pushstring(this->m_pMainLuaState, szName);
-		///< top = 3
+		
 		
 		lua_pushlightuserdata(this->m_pMainLuaState, pMember);
-		///< top = 4
 		lua_pushcclosure(this->m_pMainLuaState, &__static_property_proxy<M>, 1);
-		///< top = 4
 		lua_rawset(this->m_pMainLuaState, -3);
-		///< top = 2
-		lua_pop(this->m_pMainLuaState, 1);
-		lua_pop(this->m_pMainLuaState, 1);
-		///< top = 1
+
+		lua_pop(this->m_pMainLuaState, 2);
 	}
 
 	namespace lua_helper
@@ -607,11 +938,10 @@ namespace base
 				lua_rawget(pL, -2);
 				if (lua_isnil(pL, -1))
 				{
-					// pop nil
 					lua_pop(pL, 1);
 
 					// 创建对象的包裹内存块
-					SObjectWraper* pObjectWraper = (SObjectWraper*)lua_newuserdata(pL, sizeof(SObjectWraper));
+					SObjectWraper* pObjectWraper = reinterpret_cast<SObjectWraper*>(lua_newuserdata(pL, sizeof(SObjectWraper)));
 					pObjectWraper->pObject = pObject;
 					pObjectWraper->bGc = true;
 					pObjectWraper->nRefCount = 0;
@@ -635,23 +965,41 @@ namespace base
 				}
 			};
 
+			lua_getglobal(pL, _FACADE_NAME);
+			CLuaFacade* pLuaFacade = reinterpret_cast<CLuaFacade*>(lua_touserdata(pL, -1));
+			lua_pop(pL, 1);
+			DebugAstEx(pLuaFacade != nullptr, 0);
+
+			pLuaFacade->setActiveLuaState(pL);
+
 			int32_t nIndex = 1;
 			SParseArgs<sizeof...(Args), void, Args...>::parse<Args...>(pL, nIndex, sFunctionBaseWrapper);
-
+			
+			pLuaFacade->setActiveLuaState(nullptr);
+			
 			return 1;
 		}
 
 		template<class T>
 		int32_t deleteObject(lua_State* pL)
 		{
-			SObjectWraper* pObjectWraper = static_cast<SObjectWraper*>(lua_touserdata(pL, 1));
+			SObjectWraper* pObjectWraper = reinterpret_cast<SObjectWraper*>(lua_touserdata(pL, 1));
 			if (!pObjectWraper->bGc)
 			{
 				pObjectWraper->pObject = nullptr;
 				return 0;
 			}
-			delete (T*)(pObjectWraper->pObject);
+			lua_getglobal(pL, _FACADE_NAME);
+			CLuaFacade* pLuaFacade = reinterpret_cast<CLuaFacade*>(lua_touserdata(pL, -1));
+			lua_pop(pL, 1);
+			DebugAstEx(pLuaFacade != nullptr, 0);
+
+			pLuaFacade->setActiveLuaState(pL);
+
+			delete reinterpret_cast<T*>(pObjectWraper->pObject);
 			pObjectWraper->pObject = nullptr;
+
+			pLuaFacade->setActiveLuaState(nullptr);
 			return 0;
 		}
 	}
@@ -685,12 +1033,11 @@ namespace base
 		int32_t nRet = lua_pcall(pL, sizeof...(Args), 0, nErrorIdx);
 		if (nRet != 0)
 		{
-			lua_pop(pL, 1);	// pop错误值
+			lua_pop(pL, 1);
 		}
 
-		lua_pop(pL, 1);	// pop error fun
-		lua_pop(pL, 1);	// pop fun
-
+		lua_pop(pL, 2);
+		
 		return nRet == 0;
 	}
 
@@ -724,16 +1071,9 @@ namespace base
 		int32_t nRet = lua_pcall(pL, sizeof...(Args), 1, nErrorIdx);
 		if (nRet == 0)
 		{
-			try
-			{
-				ret = read2Cpp<RT>(pL, -1);
-			}
-			catch (base::CBaseException& exp)
-			{
-				PrintWarning("read lua function ret error %s", exp.getInfo());
-				ok = false;
-			}
-			catch (...)
+			bool bError = false;
+			ret = read2Cpp<RT>(pL, -1, bError);
+			if (bError)
 			{
 				PrintWarning("read lua function ret error");
 				ok = false;
@@ -741,14 +1081,12 @@ namespace base
 		}
 		else
 		{
-			lua_pop(pL, 1);	// pop错误值
+			lua_pop(pL, 1);
 			ok = false;
 		}
 
-		lua_pop(pL, 1);	// pop result
-		lua_pop(pL, 1);	// pop error fun
-		lua_pop(pL, 1);	// pop fun
-
+		lua_pop(pL, 3);
+		
 		return ok;
 	}
 }

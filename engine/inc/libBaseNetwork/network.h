@@ -229,7 +229,7 @@ namespace base
 		/**
 		@brief: 推动网络事件循环器
 		*/
-		virtual int32_t update(int32_t nTime) = 0;
+		virtual void	update(int32_t nTime) = 0;
 		/**
 		@brief: 释放网络事件循环器
 		*/

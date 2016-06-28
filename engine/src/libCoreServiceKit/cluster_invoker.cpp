@@ -6,6 +6,7 @@
 #include "service_base.h"
 
 #include "libBaseCommon/debug_helper.h"
+#include "libCoreCommon/coroutine.h"
 
 
 namespace core
@@ -31,8 +32,29 @@ namespace core
 		SRequestMessageInfo sRequestMessageInfo;
 		sRequestMessageInfo.pData = const_cast<message_header*>(pData);
 		sRequestMessageInfo.callback = nullptr;
-		
+		sRequestMessageInfo.nCoroutineID = 0;
+
 		return CCoreServiceKitImpl::Inst()->getTransporter()->call(szServiceName, sRequestMessageInfo);
+	}
+
+	uint32_t CClusterInvoker::invok(const std::string& szServiceName, const message_header* pData, message_header*& pResultData)
+	{
+		DebugAstEx(pData != nullptr, false);
+
+		SRequestMessageInfo sRequestMessageInfo;
+		sRequestMessageInfo.pData = const_cast<message_header*>(pData);
+		sRequestMessageInfo.callback = nullptr;
+		sRequestMessageInfo.nCoroutineID = core::coroutine::getCurrentCoroutineID();
+
+		bool bRet = CCoreServiceKitImpl::Inst()->getTransporter()->call(szServiceName, sRequestMessageInfo);
+		if (bRet)
+			return eRRT_ERROR;
+
+		core::coroutine::yield();
+		uint32_t nRet = reinterpret_cast<uint32_t>(core::coroutine::recvMessage(core::coroutine::getCurrentCoroutineID()));
+		pResultData = reinterpret_cast<message_header*>(core::coroutine::recvMessage(core::coroutine::getCurrentCoroutineID()));
+
+		return nRet;
 	}
 
 	bool CClusterInvoker::invok_r(const std::string& szServiceName, const message_header* pData, InvokeCallback callback, uint64_t nContext /* = 0 */)
@@ -42,6 +64,7 @@ namespace core
 		SRequestMessageInfo sRequestMessageInfo;
 		sRequestMessageInfo.pData = const_cast<message_header*>(pData);
 		sRequestMessageInfo.callback = callback;
+		sRequestMessageInfo.nCoroutineID = 0;
 		
 		return CCoreServiceKitImpl::Inst()->getTransporter()->call(szServiceName, sRequestMessageInfo);
 	}

@@ -1,8 +1,10 @@
 #pragma once
 
 #include "libBaseCommon/debug_helper.h"
+#include "libBaseCommon/profiling.h"
+#include "libBaseCommon/base_function.h"
 
-#include "lua_base.h"
+#include "lua-5.3.3/lua.hpp"
 
 namespace base
 {
@@ -41,7 +43,7 @@ namespace base
 		void		addSeachPath(const char* szPath);
 		bool		startDebug(const char* szIP, uint16_t nPort);
 		void		updateDebug();
-
+		
 		void		setActiveLuaState(lua_State* pL);
 
 		// 这两个函数主要用于生命周期由lua控制的对象，在C++层面持有时，为了防止lua gc回收这个对象而做的引用计数

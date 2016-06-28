@@ -28,8 +28,9 @@
 
 #include "tinyxml2/tinyxml2.h"
 
-#define _Default_Heartbeat_Limit	3
-#define _Default_Heartbeat_Time		10
+#define _DEFAULT_HEARTBEAT_LIMIT	3
+#define _DEFAULT_HEARTBEAT_TIME		10
+#define _MAIN_CO_STACK_SIZE			10*1024*1024
 
 #ifndef _WIN32
 ///< 环境变量
@@ -89,6 +90,7 @@ namespace core
 	CCoreApp::CCoreApp()
 		: m_pTickerMgr(nullptr)
 		, m_pCoreConnectionMgr(nullptr)
+		, m_pCoroutineMgr(nullptr)
 		, m_nRunState(eARS_Start)
 		, m_bMarkQuit(false)
 		, m_nTotalTime(0)
@@ -153,6 +155,11 @@ namespace core
 	CCoreConnectionMgr* CCoreApp::getCoreConnectionMgr() const
 	{
 		return this->m_pCoreConnectionMgr;
+	}
+
+	CCoroutineMgr* CCoreApp::getCoroutineMgr() const
+	{
+		return this->m_pCoroutineMgr;
 	}
 
 	const std::string& CCoreApp::getConfigFileName() const
@@ -316,8 +323,13 @@ namespace core
 			return false;
 		}
 
+		this->m_pCoroutineMgr = new CCoroutineMgr();
 		this->m_pTickerMgr = new core::CTickerMgr();
-
+		if (!this->m_pCoroutineMgr->init(_MAIN_CO_STACK_SIZE))
+		{
+			PrintWarning("this->m_pCoroutineMgr->init(_MAIN_CO_STACK_SIZE)");
+			return false;
+		}
 		uint32_t nMaxConnectionCount = (uint32_t)pBaseInfoXML->IntAttribute("connections");
 		this->m_pCoreConnectionMgr = new CCoreConnectionMgr();
 		if (!this->m_pCoreConnectionMgr->init(nMaxConnectionCount))
@@ -335,8 +347,8 @@ namespace core
 		}
 		else
 		{
-			this->m_nHeartbeatLimit = _Default_Heartbeat_Limit;
-			this->m_nHeartbeatTime = _Default_Heartbeat_Time;
+			this->m_nHeartbeatLimit = _DEFAULT_HEARTBEAT_LIMIT;
+			this->m_nHeartbeatTime = _DEFAULT_HEARTBEAT_TIME;
 		}
 
 		SAFE_DELETE(pConfigXML);
@@ -356,6 +368,7 @@ namespace core
 
 		SAFE_DELETE(this->m_pCoreConnectionMgr);
 		SAFE_DELETE(this->m_pTickerMgr);
+		SAFE_DELETE(this->m_pCoroutineMgr);
 
 		CBaseObject::unRegistClassInfo();
 

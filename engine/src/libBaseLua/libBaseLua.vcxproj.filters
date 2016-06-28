@@ -12,9 +12,6 @@
     <ClInclude Include="..\..\inc\libBaseLua\lua_facade.h">
       <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\inc\libBaseLua\lua_base.h">
-      <Filter>inc</Filter>
-    </ClInclude>
     <ClInclude Include="lua_debug.h">
       <Filter>src</Filter>
     </ClInclude>

@@ -6,6 +6,7 @@
 
 #include "libBaseCommon/debug_helper.h"
 #include "libBaseCommon/defer.h"
+#include "libCoreCommon/coroutine.h"
 
 namespace core
 {
@@ -53,8 +54,10 @@ namespace core
 
 			ServiceCallback& callback = CCoreServiceKitImpl::Inst()->getCoreServiceInvoker()->getCallback(pHeader->nMessageID);
 			if (callback != nullptr)
-				callback(szFromServiceName, nMessageType, pHeader);
-			
+			{
+				uint64_t nCoroutineID = core::coroutine::startCoroutine([&](uint64_t){ callback(szFromServiceName, nMessageType, pHeader); });
+				core::coroutine::resume(nCoroutineID, 0);
+			}
 			sServiceSessionInfo.szServiceName.clear();
 			sServiceSessionInfo.nSessionID = 0;
 
@@ -78,8 +81,18 @@ namespace core
 			Defer(delete pResponseWaitInfo);
 
 			if (pResponseWaitInfo->callback != nullptr)
+			{
 				pResponseWaitInfo->callback(nMessageType, pHeader, (EResponseResultType)pCookice->nResult);
-
+			}
+			else
+			{
+				if (pResponseWaitInfo->nCoroutineID != 0)
+				{
+					core::coroutine::sendMessage(pResponseWaitInfo->nCoroutineID, reinterpret_cast<void*>(pCookice->nResult));
+					core::coroutine::sendMessage(pResponseWaitInfo->nCoroutineID, const_cast<message_header*>(pHeader));
+					core::coroutine::resume(pResponseWaitInfo->nCoroutineID, 0);
+				}
+			}
 			CCoreServiceKitImpl::Inst()->getInvokerTrace()->endRecv();
 		}
 		else if ((nMessageType&eMT_TYPE_MASK) == eMT_GATE_FORWARD)
@@ -94,8 +107,10 @@ namespace core
 
 			GateForwardCallback& callback = CCoreServiceKitImpl::Inst()->getCoreServiceInvoker()->getGateClientCallback(pHeader->nMessageID);
 			if (callback != nullptr)
-				callback(session, nMessageType, pHeader);
-
+			{
+				uint64_t nCoroutineID = core::coroutine::startCoroutine([&](uint64_t){ callback(session, nMessageType, pHeader); });
+				core::coroutine::resume(nCoroutineID, 0);
+			}
 			CCoreServiceKitImpl::Inst()->getInvokerTrace()->endRecv();
 		}
 

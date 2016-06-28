@@ -106,7 +106,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\inc\libBaseLua\lua_facade.h" />
-    <ClInclude Include="..\..\inc\libBaseLua\lua_base.h" />
     <ClInclude Include="lua_debug.h" />
   </ItemGroup>
   <ItemGroup>

@@ -57,6 +57,15 @@
     <ClInclude Include="memory_hook.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreCommon\coroutine.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="coroutine_mgr.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="coroutine_impl.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="base_app.cpp">
@@ -99,6 +108,15 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="memory_hook.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="coroutine_mgr.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="coroutine.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="coroutine_impl.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
