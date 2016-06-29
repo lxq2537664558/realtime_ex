@@ -490,7 +490,7 @@ namespace base
 			T value = read2Cpp<T>(pL, nIndex++, bError);
 			DebugAstEx(!bError, 0);
 			
-			return SParseArgs<sizeof...(RemainArgs), RT, Args...>::parse<RemainArgs...>(pL, nIndex, sFunctionBaseWrapper, args..., value);
+			return SParseArgs<sizeof...(RemainArgs), RT, Args...>::template parse<RemainArgs...>(pL, nIndex, sFunctionBaseWrapper, args..., value);
 		}
 	};
 
@@ -500,7 +500,7 @@ namespace base
 		template<typename ...RemainArgs, typename ...NowArgs>
 		static int32_t parse(lua_State* pL, int32_t& nIndex, SFunctionBaseWrapper<RT, Args...>& sFunctionBaseWrapper, NowArgs&&... args)
 		{
-			return SParseNowArg<RT, Args...>::parse<RemainArgs...>(pL, nIndex, sFunctionBaseWrapper, args...);
+			return SParseNowArg<RT, Args...>::template parse<RemainArgs...>(pL, nIndex, sFunctionBaseWrapper, args...);
 		}
 	};
 
@@ -530,6 +530,13 @@ namespace base
 		}
 	};
 
+	template<class T, class M>
+	struct SMemberOffsetInfo
+	{
+		typedef const M T::*mp_t;
+		mp_t mp;
+	};
+
 	template<typename RT, typename ...Args>
 	int32_t __normal_invoke_proxy(lua_State* pL)
 	{
@@ -551,7 +558,7 @@ namespace base
 		sFunctionBaseWrapper.invoke = pNormalFunctionWrapper->pf;
 
 		int32_t nIndex = 1;
-		int32_t nRet = SParseArgs<sizeof...(Args), RT, Args...>::parse<Args...>(pL, nIndex, sFunctionBaseWrapper);
+		int32_t nRet = SParseArgs<sizeof...(Args), RT, Args...>::template parse<Args...>(pL, nIndex, sFunctionBaseWrapper);
 		
 		pLuaFacade->setActiveLuaState(nullptr);
 
@@ -586,7 +593,7 @@ namespace base
 		};
 
 		int32_t nIndex = 2;
-		int32_t nRet = SParseArgs<sizeof...(Args), RT, Args...>::parse<Args...>(pL, nIndex, sFunctionBaseWrapper);
+		int32_t nRet = SParseArgs<sizeof...(Args), RT, Args...>::template parse<Args...>(pL, nIndex, sFunctionBaseWrapper);
 		pLuaFacade->setActiveLuaState(nullptr);
 
 		return nRet;
@@ -755,7 +762,7 @@ namespace base
 		}
 
 		SClassFunctionWrapper<T, RT, Args...>* pFunctionWrapper = new SClassFunctionWrapper<T, RT, Args...>();
-		pFunctionWrapper->pf = reinterpret_cast<SClassFunctionWrapper<T, RT, Args...>::FUN_TYPE>(pfFun);
+		pFunctionWrapper->pf = reinterpret_cast<typename SClassFunctionWrapper<T, RT, Args...>::FUN_TYPE>(pfFun);
 		
 		lua_pushstring(this->m_pMainLuaState, szName);
 		lua_pushlightuserdata(this->m_pMainLuaState, pFunctionWrapper);
@@ -808,13 +815,6 @@ namespace base
 		lua_pushnumber(this->m_pMainLuaState, val);
 		lua_setglobal(this->m_pMainLuaState, szName);
 	}
-
-	template<class T, class M>
-	struct SMemberOffsetInfo
-	{
-		typedef const M T::*mp_t;
-		mp_t mp;
-	};
 
 	template<class T, class M>
 	void CLuaFacade::registerClassMember(const char* szName, const M T::* pMember)
@@ -973,7 +973,7 @@ namespace base
 			pLuaFacade->setActiveLuaState(pL);
 
 			int32_t nIndex = 1;
-			SParseArgs<sizeof...(Args), void, Args...>::parse<Args...>(pL, nIndex, sFunctionBaseWrapper);
+			SParseArgs<sizeof...(Args), void, Args...>::template parse<Args...>(pL, nIndex, sFunctionBaseWrapper);
 			
 			pLuaFacade->setActiveLuaState(nullptr);
 			

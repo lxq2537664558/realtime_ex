@@ -9,11 +9,7 @@ include_directories(../../../3rd/lua/include)
 # 设置输出目录
 SET(LIBRARY_OUTPUT_PATH ${BIN_OUTPUT_PATH})
 
-# 生成libCoreCommon.so
+# 生成libBaseLua.so
 add_library(BaseLua SHARED ${DIR_SRCS})
 
-# cmake额外执行的shell脚本
-add_custom_command(TARGET BaseLua
-	POST_BUILD
-    COMMAND cp ../../../3rd/lua/lib/linux/liblua.so ${BIN_OUTPUT_PATH}
-)
+target_link_libraries(BaseLua ../../../3rd/lua/lib/linux/liblua.a)

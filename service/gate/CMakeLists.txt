@@ -8,12 +8,13 @@ list(APPEND LIST_SRCS ${PROTO_SRCS})
 include_directories(../../engine/inc)
 include_directories(../../engine/inc/libCoreServiceKit)
 include_directories(../../3rd/tinyxml2/include)
+include_directories(../../3rd/lua/include)
 include_directories(../../3rd/protobuf/include)
 
 # 设置输出目录
 set(EXECUTABLE_OUTPUT_PATH ${BIN_OUTPUT_PATH})
 # 设置链接的库
-set(LINK_LIBS ${BIN_OUTPUT_PATH}/libBaseCommon.so ${BIN_OUTPUT_PATH}/libBaseNetwork.so ${BIN_OUTPUT_PATH}/libCoreCommon.a ${BIN_OUTPUT_PATH}/libCoreServiceKit.a ${BIN_OUTPUT_PATH}/libprotobuf.so ${BIN_OUTPUT_PATH}/libtinyxml2.so rt)
+set(LINK_LIBS ${BIN_OUTPUT_PATH}/libBaseCommon.so ${BIN_OUTPUT_PATH}/libBaseNetwork.so ${BIN_OUTPUT_PATH}/libBaseLua.so ${BIN_OUTPUT_PATH}/libCoreCommon.a ${BIN_OUTPUT_PATH}/libCoreServiceKit.a ${BIN_OUTPUT_PATH}/libprotobuf.so ${BIN_OUTPUT_PATH}/libtinyxml2.so rt)
 # 设置链接选项
 set(CMAKE_EXE_LINKER_FLAGS "")
 # 设置运行时查找lib的路径

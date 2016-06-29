@@ -7,10 +7,6 @@
 
 #include <algorithm>
 
-#ifndef _WIN32
-#include <ucontext.h>
-#endif
-
 namespace core
 {
 
@@ -98,7 +94,6 @@ namespace core
 #else
 		if (nID == 1)
 		{
-			this->m_nContext = nContext;
 			this->m_eState = eCS_READY;
 			this->m_nID = nID;
 			return true;
@@ -121,6 +116,7 @@ namespace core
 		this->m_fn = fn;
 		this->m_eState = eCS_READY;
 		this->m_nID = nID;
+		this->m_nContext = 0;
 
 		return true;
 	}

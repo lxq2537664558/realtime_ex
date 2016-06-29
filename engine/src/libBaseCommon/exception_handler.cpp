@@ -469,7 +469,25 @@ namespace base
 		if (pStack == nullptr)
 			return 0;
 
+#ifdef _WIN32
 		return g_pGenWinDump->getStack(nBegin, nEnd, pStack, (uint32_t)nMaxSize);
+#else
+		if (nEnd > _MAX_STACK_SIZE)
+			return 0;
+
+		// 使用这一系列函数必须在编译的时候加上-rdynamic选项
+		void* pAddress[_MAX_STACK_SIZE] = { nullptr };
+		size_t nSize = backtrace(pAddress, nEnd);
+		size_t i = nBegin;
+		for (; i < nSize; ++i)
+		{
+			pStack[i - nBegin] = pAddress[i];
+			if (i - nBegin >= nMaxSize)
+				break;
+		}
+		
+		return i - nBegin;
+#endif
 	}
 
 	size_t getStackInfo(uint32_t nBegin, uint32_t nEnd, char* szInfo, size_t nMaxSize)
@@ -488,10 +506,10 @@ namespace base
 		char szSymbol[4096] = { 0 };
 		void* pAddress[_MAX_STACK_SIZE] = { nullptr };
 		char** pSymbol = nullptr;
-		size_t size = backtrace(pAddress, nEnd);
-		pSymbol = (char**)backtrace_symbols(pAddress, size);
-		uint32_t nSymbolSize = 0;
-		for (uint32_t i = nBegin; i < size && pSymbol != nullptr; ++i)
+		size_t nSize = backtrace(pAddress, nEnd);
+		pSymbol = (char**)backtrace_symbols(pAddress, nSize);
+		size_t nSymbolSize = 0;
+		for (size_t i = nBegin; i < nSize && pSymbol != nullptr; ++i)
 		{
 			uint32_t nSymbolLen = strlen(pSymbol[i]);
 			if (nSymbolSize + nSymbolLen >= _countof(szSymbol))

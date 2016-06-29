@@ -28,7 +28,7 @@ static int64_t& getGmtProcessStartTimePoint()
 
 namespace base
 {
-	static int64_t getProcessPassTime()
+	int64_t getProcessPassTime()
 	{
 #ifdef _WIN32
 		struct SFreq

@@ -7,6 +7,10 @@
 #include <functional>
 #include <list>
 
+#ifndef _WIN32
+#include <ucontext.h>
+#endif
+
 namespace core
 {
 	class CCoroutineMgr;

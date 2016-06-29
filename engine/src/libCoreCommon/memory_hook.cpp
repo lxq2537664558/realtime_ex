@@ -1,15 +1,17 @@
 #include "stdafx.h"
 #include "core_common.h"
 
-#include "libBaseCommon\base_time.h"
-#include "libBaseCommon\spin_mutex.h"
+#include "libBaseCommon/base_time.h"
+#include "libBaseCommon/spin_mutex.h"
 
-#include <dbghelp.h>
 #include <stdio.h>
-#include <share.h>
 
 #ifdef _WIN32
+#include <share.h>
+#include <dbghelp.h>
 #pragma comment( lib, "dbghelp.lib" )
+#else
+#include <execinfo.h>
 #endif
 
 #define __MEMORY_HOOK__

@@ -5,6 +5,7 @@ aux_source_directory(. DIR_SRCS)
 include_directories(../../../engine/inc/libCoreServiceKit)
 include_directories(../../../engine/inc)
 include_directories(../../../3rd/tinyxml2/include)
+include_directories(../../../3rd/lua/include)
 include_directories(../../../3rd/protobuf/include)
 
 # ÉèÖÃÊä³öÄ¿Â¼

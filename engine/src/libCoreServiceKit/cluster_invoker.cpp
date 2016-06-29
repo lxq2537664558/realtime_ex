@@ -49,9 +49,9 @@ namespace core
 		bool bRet = CCoreServiceKitImpl::Inst()->getTransporter()->call(szServiceName, sRequestMessageInfo);
 		if (bRet)
 			return eRRT_ERROR;
-
+		
 		core::coroutine::yield();
-		uint32_t nRet = reinterpret_cast<uint32_t>(core::coroutine::recvMessage(core::coroutine::getCurrentCoroutineID()));
+		uint32_t nRet = (uint32_t)reinterpret_cast<uint64_t>(core::coroutine::recvMessage(core::coroutine::getCurrentCoroutineID()));
 		pResultData = reinterpret_cast<message_header*>(core::coroutine::recvMessage(core::coroutine::getCurrentCoroutineID()));
 
 		return nRet;

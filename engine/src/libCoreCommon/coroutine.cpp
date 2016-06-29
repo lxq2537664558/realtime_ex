@@ -42,7 +42,7 @@ namespace core
 			return pCoroutineImpl->getState();
 		}
 
-		uint64_t getCurrentCoroutine()
+		uint64_t getCurrentCoroutineID()
 		{
 			return CCoreApp::Inst()->getCoroutineMgr()->getCurrentCoroutine()->getCoroutineID();
 		}
