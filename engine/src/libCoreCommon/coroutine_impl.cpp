@@ -14,8 +14,7 @@ namespace core
 	{
 		CCoroutineImpl* pCoroutineImpl = reinterpret_cast<CCoroutineImpl*>(pParm);
 		pCoroutineImpl->m_fn(pCoroutineImpl->m_nContext);
-		pCoroutineImpl->m_bEnd = true;
-		pCoroutineImpl->yield();
+		pCoroutineImpl->yield(eCYT_Dead);
 	};
 
 	void CCoroutineImpl::saveStack()
@@ -40,7 +39,6 @@ namespace core
 		: m_nID(0)
 		, m_pParentCoroutine(nullptr)
 		, m_nContext(0)
-		, m_bEnd(false)
 		, m_eState(eCS_DEAD)
 #ifdef _WIN32
 		, m_hHandle(nullptr)
@@ -121,7 +119,7 @@ namespace core
 		return true;
 	}
 
-	uint64_t CCoroutineImpl::yield()
+	uint64_t CCoroutineImpl::yield(ECoroutineYieldType eType)
 	{
 		DebugAstEx(this->m_eState == eCS_RUNNING, 0);
 
@@ -134,10 +132,12 @@ namespace core
 		CCoreApp::Inst()->getCoroutineMgr()->setCurrentCoroutine(this->m_pParentCoroutine);
 
 		this->m_pParentCoroutine->m_eState = eCS_RUNNING;
-		if (this->m_bEnd)
-			this->m_eState = eCS_DEAD;
+		if (eType == eCYT_Dead)
+			this->setState(eCS_DEAD);
+		else if (eType == eCYT_Normal)
+			this->setState(eCS_SUSPEND);
 		else
-			this->m_eState = eCS_SUSPEND;
+			this->setState(eCS_SLEEP);
 
 		this->m_pParentCoroutine = nullptr;
 
@@ -166,13 +166,20 @@ namespace core
 
 	void CCoroutineImpl::resume(uint64_t nContext)
 	{
+		if (this->getState() == eCS_SLEEP)
+		{
+			PrintWarning("coroutine is sleep can't resume coroutine_id: "UINT64FMT, this->getCoroutineID());
+			return;
+		}
+
 		DebugAst(this->getState() == eCS_READY || this->getState() == eCS_SUSPEND);
+
 		CCoroutineImpl* pCurrentCoroutine = CCoreApp::Inst()->getCoroutineMgr()->getCurrentCoroutine();
 		DebugAst(pCurrentCoroutine != nullptr);
 
 		bool bRestoreStack = (this->getState() == eCS_SUSPEND);
-		this->m_eState = eCS_RUNNING;
-		pCurrentCoroutine->m_eState = eCS_SUSPEND;
+		this->setState(eCS_RUNNING);
+		pCurrentCoroutine->setState(eCS_SUSPEND);
 		CCoreApp::Inst()->getCoroutineMgr()->setCurrentCoroutine(this);
 		this->m_pParentCoroutine = pCurrentCoroutine;
 		this->m_nContext = nContext;
@@ -190,6 +197,11 @@ namespace core
 	uint32_t CCoroutineImpl::getState() const
 	{
 		return this->m_eState;
+	}
+
+	void CCoroutineImpl::setState(uint32_t nState)
+	{
+		this->m_eState = (ECoroutineState)nState;
 	}
 
 	uint64_t CCoroutineImpl::getCoroutineID() const

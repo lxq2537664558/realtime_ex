@@ -30,7 +30,7 @@ namespace core
 
 		uint64_t yield()
 		{
-			return CCoreApp::Inst()->getCoroutineMgr()->getCurrentCoroutine()->yield();
+			return CCoreApp::Inst()->getCoroutineMgr()->getCurrentCoroutine()->yield(eCYT_Normal);
 		}
 
 		uint32_t getState(uint64_t nID)

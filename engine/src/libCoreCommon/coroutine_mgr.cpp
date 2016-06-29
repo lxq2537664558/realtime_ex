@@ -113,7 +113,7 @@ namespace core
 
 		this->m_mapWaitCoroutineInfo[this->m_pCurrentCoroutine->getCoroutineID()] = sWaitCoroutineInfo;
 
-		this->m_pCurrentCoroutine->yield();
+		this->m_pCurrentCoroutine->yield(eCYT_Sleep);
 	}
 
 	void CCoroutineMgr::onWaitTicker(uint64_t nContext)
@@ -131,6 +131,7 @@ namespace core
 
 		DebugAst(pCoroutineImpl != nullptr);
 
+		pCoroutineImpl->setState(eCS_SUSPEND);
 		pCoroutineImpl->resume(0);
 	}
 }
