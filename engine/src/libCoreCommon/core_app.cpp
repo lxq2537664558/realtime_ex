@@ -324,12 +324,14 @@ namespace core
 		}
 
 		this->m_pCoroutineMgr = new CCoroutineMgr();
-		this->m_pTickerMgr = new core::CTickerMgr();
 		if (!this->m_pCoroutineMgr->init(_MAIN_CO_STACK_SIZE))
 		{
 			PrintWarning("this->m_pCoroutineMgr->init(_MAIN_CO_STACK_SIZE)");
 			return false;
 		}
+		PrintInfo("main coroutine id: "UINT64FMT, coroutine::getCurrentID());
+
+		this->m_pTickerMgr = new core::CTickerMgr();
 		uint32_t nMaxConnectionCount = (uint32_t)pBaseInfoXML->IntAttribute("connections");
 		this->m_pCoreConnectionMgr = new CCoreConnectionMgr();
 		if (!this->m_pCoreConnectionMgr->init(nMaxConnectionCount))

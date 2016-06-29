@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "coroutine_mgr.h"
 #include "coroutine_impl.h"
+#include "core_app.h"
 
 #include "libBaseCommon/debug_helper.h"
 
@@ -100,4 +101,36 @@ namespace core
 		this->m_listRecycleCoroutineImpl.push_back(pCoroutineImpl);
 	}
 
+	void CCoroutineMgr::sleep(uint64_t ms)
+	{
+		DebugAst(this->m_mapWaitCoroutineInfo.find(this->m_pCurrentCoroutine->getCoroutineID()) == this->m_mapWaitCoroutineInfo.end());
+
+		SWaitCoroutineInfo sWaitCoroutineInfo;
+		sWaitCoroutineInfo.pCoroutineImpl = this->m_pCurrentCoroutine;
+		sWaitCoroutineInfo.pTicker = new CTicker();
+		sWaitCoroutineInfo.pTicker->setCallback(std::bind(&CCoroutineMgr::onWaitTicker, this, std::placeholders::_1));
+		CCoreApp::Inst()->registerTicker(sWaitCoroutineInfo.pTicker, ms, 0, this->m_pCurrentCoroutine->getCoroutineID());
+
+		this->m_mapWaitCoroutineInfo[this->m_pCurrentCoroutine->getCoroutineID()] = sWaitCoroutineInfo;
+
+		this->m_pCurrentCoroutine->yield();
+	}
+
+	void CCoroutineMgr::onWaitTicker(uint64_t nContext)
+	{
+		auto iter = this->m_mapWaitCoroutineInfo.find(nContext);
+		if (iter == this->m_mapWaitCoroutineInfo.end())
+		{
+			PrintWarning("unknown wait coroutine id: "UINT64FMT, nContext);
+			return;
+		}
+
+		SAFE_DELETE(iter->second.pTicker);
+		CCoroutineImpl* pCoroutineImpl = iter->second.pCoroutineImpl;
+		this->m_mapWaitCoroutineInfo.erase(iter);
+
+		DebugAst(pCoroutineImpl != nullptr);
+
+		pCoroutineImpl->resume(0);
+	}
 }

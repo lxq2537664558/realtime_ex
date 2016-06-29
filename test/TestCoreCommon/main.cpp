@@ -16,8 +16,8 @@ void fun1(uint64_t nContext)
 {
 	while (true)
 	{
-		nContext = core::coroutine::yield();
-		//PrintDebug("111111111 %d", (uint32_t)nContext);
+		core::coroutine::sleep(1000);
+		PrintDebug("111111111 %d", (uint32_t)nContext);
 	}
 }
 
@@ -27,12 +27,18 @@ class CTestApp :
 public:
 	virtual bool onInit()
 	{
-		uint64_t nID = core::coroutine::startCoroutine(std::bind(&fun1, std::placeholders::_1));
-		for (uint32_t i = 0; i < 1000000000; ++i)
-		{
-			//PrintDebug("222222");
-			core::coroutine::resume(nID, i);
-		}
+		uint64_t nID = core::coroutine::start(std::bind(&fun1, std::placeholders::_1));
+		
+		core::coroutine::resume(nID, 100);
+
+		nID = core::coroutine::start(std::bind(&fun1, std::placeholders::_1));
+
+		core::coroutine::resume(nID, 200);
+
+		nID = core::coroutine::start(std::bind(&fun1, std::placeholders::_1));
+
+		core::coroutine::resume(nID, 300);
+		
 		return true;
 	}
 

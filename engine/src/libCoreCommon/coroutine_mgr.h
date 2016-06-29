@@ -2,6 +2,7 @@
 #include "libBaseCommon/noncopyable.h"
 
 #include "coroutine_impl.h"
+#include "ticker.h"
 
 #include <map>
 #include <list>
@@ -26,14 +27,26 @@ namespace core
 
 		void			setCurrentCoroutine(CCoroutineImpl* pCoroutineImpl);
 		CCoroutineImpl*	getCurrentCoroutine() const;
+
+		void			sleep(uint64_t ms);
 		
 	private:
-		uint64_t							m_nNextCoroutineID;
-		std::map<uint64_t, CCoroutineImpl*>	m_mapCoroutineImpl;
-		std::list<CCoroutineImpl*>			m_listRecycleCoroutineImpl;
-		CCoroutineImpl*						m_pCurrentCoroutine;
-		CCoroutineImpl*						m_pRootCoroutine;
-		char*								m_pMainStack;
-		uint32_t							m_nMainStackSize;
+		void			onWaitTicker(uint64_t nContext);
+
+	private:
+		struct SWaitCoroutineInfo
+		{
+			CTicker*		pTicker;
+			CCoroutineImpl*	pCoroutineImpl;
+		};
+
+		uint64_t								m_nNextCoroutineID;
+		std::map<uint64_t, CCoroutineImpl*>		m_mapCoroutineImpl;
+		std::map<uint64_t, SWaitCoroutineInfo>	m_mapWaitCoroutineInfo;
+		std::list<CCoroutineImpl*>				m_listRecycleCoroutineImpl;
+		CCoroutineImpl*							m_pCurrentCoroutine;
+		CCoroutineImpl*							m_pRootCoroutine;
+		char*									m_pMainStack;
+		uint32_t								m_nMainStackSize;
 	};
 }

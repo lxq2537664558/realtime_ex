@@ -9,7 +9,7 @@ include_directories(../../../3rd/lua/include)
 # 设置输出目录
 SET(LIBRARY_OUTPUT_PATH ${BIN_OUTPUT_PATH})
 
+link_directories(${PROJECT_SOURCE_DIR}/3rd/lua/lib/linux/)
 # 生成libBaseLua.so
 add_library(BaseLua SHARED ${DIR_SRCS})
-
-target_link_libraries(BaseLua ../../../3rd/lua/lib/linux/liblua.a)
+target_link_libraries(BaseLua liblua.a)

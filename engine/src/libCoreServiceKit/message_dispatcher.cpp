@@ -55,8 +55,8 @@ namespace core
 			ServiceCallback& callback = CCoreServiceKitImpl::Inst()->getCoreServiceInvoker()->getCallback(pHeader->nMessageID);
 			if (callback != nullptr)
 			{
-				uint64_t nCoroutineID = core::coroutine::startCoroutine([&](uint64_t){ callback(szFromServiceName, nMessageType, pHeader); });
-				core::coroutine::resume(nCoroutineID, 0);
+				uint64_t nCoroutineID = coroutine::start([&](uint64_t){ callback(szFromServiceName, nMessageType, pHeader); });
+				coroutine::resume(nCoroutineID, 0);
 			}
 			sServiceSessionInfo.szServiceName.clear();
 			sServiceSessionInfo.nSessionID = 0;
@@ -88,9 +88,9 @@ namespace core
 			{
 				if (pResponseWaitInfo->nCoroutineID != 0)
 				{
-					core::coroutine::sendMessage(pResponseWaitInfo->nCoroutineID, reinterpret_cast<void*>(pCookice->nResult));
-					core::coroutine::sendMessage(pResponseWaitInfo->nCoroutineID, const_cast<message_header*>(pHeader));
-					core::coroutine::resume(pResponseWaitInfo->nCoroutineID, 0);
+					coroutine::sendMessage(pResponseWaitInfo->nCoroutineID, reinterpret_cast<void*>(pCookice->nResult));
+					coroutine::sendMessage(pResponseWaitInfo->nCoroutineID, const_cast<message_header*>(pHeader));
+					coroutine::resume(pResponseWaitInfo->nCoroutineID, 0);
 				}
 			}
 			CCoreServiceKitImpl::Inst()->getInvokerTrace()->endRecv();
@@ -108,8 +108,8 @@ namespace core
 			GateForwardCallback& callback = CCoreServiceKitImpl::Inst()->getCoreServiceInvoker()->getGateClientCallback(pHeader->nMessageID);
 			if (callback != nullptr)
 			{
-				uint64_t nCoroutineID = core::coroutine::startCoroutine([&](uint64_t){ callback(session, nMessageType, pHeader); });
-				core::coroutine::resume(nCoroutineID, 0);
+				uint64_t nCoroutineID = coroutine::start([&](uint64_t){ callback(session, nMessageType, pHeader); });
+				coroutine::resume(nCoroutineID, 0);
 			}
 			CCoreServiceKitImpl::Inst()->getInvokerTrace()->endRecv();
 		}

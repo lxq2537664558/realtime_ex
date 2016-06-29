@@ -11,11 +11,6 @@ include_directories(../../../3rd/protobuf/include)
 # 设置输出目录
 SET(LIBRARY_OUTPUT_PATH ${BIN_OUTPUT_PATH})
 
-# 生成libCoreCommon.so
+# 生成libCoreServiceKit.a
 add_library(CoreServiceKit ${DIR_SRCS})
-
-# cmake额外执行的shell脚本
-add_custom_command(TARGET CoreServiceKit
-	POST_BUILD
-    COMMAND cp ../../../3rd/protobuf/lib/linux/libprotobuf.so ${BIN_OUTPUT_PATH}
-)
+target_link_libraries(CoreServiceKit libCoreCommon.a)

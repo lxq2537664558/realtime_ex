@@ -25,7 +25,7 @@ namespace core
 
 		void sleep(int64_t ms)
 		{
-
+			CCoreApp::Inst()->getCoroutineMgr()->sleep(ms);
 		}
 
 		uint64_t yield()
@@ -42,12 +42,12 @@ namespace core
 			return pCoroutineImpl->getState();
 		}
 
-		uint64_t getCurrentCoroutineID()
+		uint64_t getCurrentID()
 		{
 			return CCoreApp::Inst()->getCoroutineMgr()->getCurrentCoroutine()->getCoroutineID();
 		}
 
-		uint64_t startCoroutine(std::function<void(uint64_t)> fn)
+		uint64_t start(std::function<void(uint64_t)> fn)
 		{
 			CCoroutineImpl* pCoroutineImpl = CCoreApp::Inst()->getCoroutineMgr()->startCoroutine(fn);
 			if (nullptr == pCoroutineImpl)

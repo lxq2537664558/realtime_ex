@@ -44,15 +44,15 @@ namespace core
 		SRequestMessageInfo sRequestMessageInfo;
 		sRequestMessageInfo.pData = const_cast<message_header*>(pData);
 		sRequestMessageInfo.callback = nullptr;
-		sRequestMessageInfo.nCoroutineID = core::coroutine::getCurrentCoroutineID();
+		sRequestMessageInfo.nCoroutineID = coroutine::getCurrentID();
 
 		bool bRet = CCoreServiceKitImpl::Inst()->getTransporter()->call(szServiceName, sRequestMessageInfo);
 		if (bRet)
 			return eRRT_ERROR;
 		
-		core::coroutine::yield();
-		uint32_t nRet = (uint32_t)reinterpret_cast<uint64_t>(core::coroutine::recvMessage(core::coroutine::getCurrentCoroutineID()));
-		pResultData = reinterpret_cast<message_header*>(core::coroutine::recvMessage(core::coroutine::getCurrentCoroutineID()));
+		coroutine::yield();
+		uint32_t nRet = (uint32_t)reinterpret_cast<uint64_t>(coroutine::recvMessage(coroutine::getCurrentID()));
+		pResultData = reinterpret_cast<message_header*>(coroutine::recvMessage(coroutine::getCurrentID()));
 
 		return nRet;
 	}
