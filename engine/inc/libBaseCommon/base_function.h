@@ -54,9 +54,9 @@ namespace base
 	{
 		__BASE_COMMON_API__ size_t	strnlen(const char* szBuf, size_t nMaxSize);
 
-		__BASE_COMMON_API__ bool	strncpy(char* szDest, size_t nDestSize, const char* szSource, size_t nCount);
+		__BASE_COMMON_API__ bool	strcpy(char* szDest, size_t nDestSize, const char* szSource);
 
-		__BASE_COMMON_API__ bool	strncat(char* szDest, size_t nDestSize, const char* szSource, size_t nCount);
+		__BASE_COMMON_API__ bool	strncpy(char* szDest, size_t nDestSize, const char* szSource, size_t nCount);
 
 		__BASE_COMMON_API__ size_t	snprintf(char* szBuf, size_t nBufSize, const char* szFormat, ...);
 

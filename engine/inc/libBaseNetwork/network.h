@@ -18,13 +18,13 @@ struct SNetAddr
 	SNetAddr(const char* szIP, uint16_t nPort)
 		: nPort(nPort)
 	{
-		base::crt::strncpy(this->szHost, _countof(this->szHost), szIP, _TRUNCATE);
+		base::crt::strcpy(this->szHost, _countof(this->szHost), szIP);
 	}
 
 	SNetAddr()
 		: nPort(0)
 	{
-		base::crt::strncpy(this->szHost, _countof(this->szHost), "0.0.0.0", _TRUNCATE);
+		base::crt::strcpy(this->szHost, _countof(this->szHost), "0.0.0.0");
 	}
 
 	bool operator == (const SNetAddr& rhs) const
@@ -229,7 +229,7 @@ namespace base
 		/**
 		@brief: 推动网络事件循环器
 		*/
-		virtual void	update(int32_t nTime) = 0;
+		virtual void	update(int64_t nTime) = 0;
 		/**
 		@brief: 释放网络事件循环器
 		*/

@@ -52,11 +52,6 @@ namespace base
 
 	bool CNetEventLoop::listen(const SNetAddr& netAddr, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, INetAccepterHandler* pHandler)
 	{
-		if (nRecvBufferSize == 0 || nSendBufferSize == 0)
-		{
-			PrintWarning("invalid buf size recv_buf_size: %d send_buf_size: %d", nRecvBufferSize, nSendBufferSize);
-			return false;
-		}
 		CNetAccepter* pNetAccepter = new CNetAccepter();
 		if (!pNetAccepter->init(nSendBufferSize, nRecvBufferSize, this))
 		{
@@ -88,7 +83,7 @@ namespace base
 		delete this;
 	}
 
-	void CNetEventLoop::update(int32_t nTime)
+	void CNetEventLoop::update(int64_t nTime)
 	{
 		for (auto iter = this->m_listCloseSocket.begin(); iter != this->m_listCloseSocket.end(); ++iter)
 		{
@@ -115,79 +110,58 @@ namespace base
 		///< 下面的代码还是发送不完，下一帧中要不在上面的循环里面发送（应用层又发送了数据），要么在下面代码中发送
 
 #ifdef _WIN32
-		int32_t nActiveCount = 0;
-		uint32_t nGroupCount = this->m_nSocketCount / FD_SETSIZE + (this->m_nSocketCount % FD_SETSIZE == 0 ? 0 : 1);
-		for (uint32_t nGroupIndex = 0; nGroupIndex < nGroupCount; ++nGroupIndex)
+		fd_set readfds;
+		fd_set writefds;
+		fd_set exceptfds;
+		FD_ZERO(&readfds);
+		FD_ZERO(&writefds);
+		FD_ZERO(&exceptfds);
+		///< 每次都监听写事件可能会导致busy loop，windows下随他吧，只保证正确性，不保证性能
+		
+		for (int32_t i = 0; i < this->m_nSocketCount; ++i)
 		{
-			fd_set read_set;
-			fd_set write_set;
-			fd_set error_set;
-			FD_ZERO(&read_set);
-			FD_ZERO(&write_set);
-			FD_ZERO(&error_set);
-			///< 每次都监听写事件可能会导致busy loop，暂时没有解决这个问题，过段时间解决吧
-			bool bEmpty = true;
-			for (int32_t i = 0; i < FD_SETSIZE; ++i)
-			{
-				int32_t nSocketIndex = nGroupIndex * FD_SETSIZE + i;
-				if (nSocketIndex >= this->m_nSocketCount)
-					break;
-
-				CNetSocket* pNetSocket = this->m_vecSocket[nSocketIndex];
-				if (nullptr == pNetSocket)
-					continue;
-
-				bEmpty = false;
-
-				FD_SET(pNetSocket->GetSocketID(), &error_set);
-
-				if (0 != (pNetSocket->getEvent()&eNET_Recv))
-					FD_SET(pNetSocket->GetSocketID(), &read_set);
-				if (0 != (pNetSocket->getEvent()&eNET_Send))
-					FD_SET(pNetSocket->GetSocketID(), &write_set);
-			}
-
-			if (bEmpty)
+			CNetSocket* pNetSocket = this->m_vecSocket[i];
+			if (nullptr == pNetSocket)
 				continue;
 
-			struct timeval timeout;
-			timeout.tv_sec = 0;
-			timeout.tv_usec = nTime;
-			int32_t nRet = select(FD_SETSIZE, &read_set, &write_set, &error_set, &timeout);
-			if (SOCKET_ERROR == nRet)
-			{
-				PrintWarning("select error %d ", getLastError());
-				return;
-			}
-			if (0 == nRet)
-				continue;
+			FD_SET(pNetSocket->GetSocketID(), &exceptfds);
 
-			///< 绝对不会在下面这个循环中去删除Socket的
-			for (int32_t i = 0; i < FD_SETSIZE; ++i)
-			{
-				int32_t nSocketIndex = nGroupIndex*FD_SETSIZE + i;
-				if (nSocketIndex >= this->m_nSocketCount)
-					break;
-
-				CNetSocket* pNetSocket = this->m_vecSocket[nSocketIndex];
-				if (nullptr == pNetSocket)
-					continue;
-
-				uint32_t nEvent = 0;
-				if (FD_ISSET(pNetSocket->GetSocketID(), &read_set))
-					nEvent |= eNET_Recv;
-				if (FD_ISSET(pNetSocket->GetSocketID(), &write_set))
-					nEvent |= eNET_Send;
-				if (FD_ISSET(pNetSocket->GetSocketID(), &error_set))
-					nEvent |= eNET_Error;
-				++nActiveCount;
-				pNetSocket->onEvent(nEvent);
-			}
+			if (0 != (pNetSocket->getEvent()&eNET_Recv))
+				FD_SET(pNetSocket->GetSocketID(), &readfds);
+			if (0 != (pNetSocket->getEvent()&eNET_Send))
+				FD_SET(pNetSocket->GetSocketID(), &writefds);
 		}
-#else
-		if (this->m_nSocketCount == 0)
+
+		struct timeval timeout;
+		timeout.tv_sec = (int32_t)((nTime * 1000) / 1000000);
+		timeout.tv_usec = (int32_t)((nTime * 1000) % 1000000);
+		int32_t nRet = select(0, &readfds, &writefds, &exceptfds, &timeout);
+		if (SOCKET_ERROR == nRet)
+		{
+			PrintWarning("select error %d ", getLastError());
+			return;
+		}
+		if (0 == nRet)
 			return;
 
+		///< 绝对不会在下面这个循环中去删除Socket的
+		for (int32_t i = 0; i < this->m_nSocketCount; ++i)
+		{
+			CNetSocket* pNetSocket = this->m_vecSocket[i];
+			if (nullptr == pNetSocket)
+				continue;
+
+			uint32_t nEvent = 0;
+			if (FD_ISSET(pNetSocket->GetSocketID(), &readfds))
+				nEvent |= eNET_Recv;
+			if (FD_ISSET(pNetSocket->GetSocketID(), &writefds))
+				nEvent |= eNET_Send;
+			if (FD_ISSET(pNetSocket->GetSocketID(), &exceptfds))
+				nEvent |= eNET_Error;
+			
+			pNetSocket->onEvent(nEvent);
+		}
+#else
 		do
 		{
 			int32_t nActiveCount = epoll_wait(this->m_nEpoll, &this->m_vecEpollEvent[0], this->m_vecEpollEvent.size(), nTime);

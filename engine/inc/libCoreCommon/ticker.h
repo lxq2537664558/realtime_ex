@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "libBaseCommon/debug_helper.h"
-#include "libBaseCommon/tiny_list.h"
+#include "libBaseCommon/link.h"
 #include "libBaseCommon/noncopyable.h"
 #include "libBaseCommon/noninheritable.h"
 
@@ -14,7 +14,7 @@ namespace core
 	{
 		CTicker*	pTicker;
 	};
-	typedef base::STinyListNode<STickerNodeInfo> TickerNode_t;
+	typedef base::TLinkNode<STickerNodeInfo> TickerNode_t;
 
 	// 定时器对象不支持直接拷贝，因为直接拷贝时如果有定时行为，这个行为是带过去呢还是拷贝一个空的定时器呢？
 	// 这里定时器对象的拷贝只直接用move的方式，一旦移动过去，原来的定时器就不具有刚刚注册的定时器特性了（假如定时器已经注册了）

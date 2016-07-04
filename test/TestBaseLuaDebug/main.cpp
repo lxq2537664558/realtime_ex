@@ -28,7 +28,7 @@ int main(int argc, wchar_t* argv[])
 
 	SNetAddr sNetAddr;
 	sNetAddr.nPort = 10086;
-	base::crt::strncpy( sNetAddr.szIP, SNetAddr::__IP_Size, "0.0.0.0", _TRUNCATE );
+	base::crt::strncpy( sNetAddr.szIP, SNetAddr::__IP_Size, "0.0.0.0" );
 
 	g_pLua = new base::CLuaFacade();
 	g_pLua->open();

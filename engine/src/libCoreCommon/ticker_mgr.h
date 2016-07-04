@@ -10,25 +10,37 @@ namespace core
 	private:
 		enum
 		{
-			__TIME_WHEEL_SIZE		= 0x00010000,	///< 刻度尺的长度 大部分情况下这个长度应该足够了，很少会有定时长度超过2^16（65536）ms的，即使存在也没事
-			__TIME_WHEEL_MASK		= 0x0000ffff,	///< 定时时间掩码
+			__TIME_NEAR_BITS		= 16,
+			__TIME_CASCADE_BITS		= 8,
+			__TIME_CASCADE_COUNT	= 3,
+			__TIME_NEAR_SIZE		= 1 << __TIME_NEAR_BITS,
+			__TIME_NEAR_MASK		= __TIME_NEAR_SIZE - 1,
+			__TIME_CASCADE_SIZE		= 1 << __TIME_CASCADE_BITS,
+			__TIME_CASCADE_MASK		= __TIME_CASCADE_SIZE - 1,
+			
 			__TIME_WHEEL_PRECISION	= 10,			///< 精度10ms
 		};
-
-	private:
-		base::CTinyList<TickerNode_t>	m_listTicker[__TIME_WHEEL_SIZE];		///< 各个定时器挂在对应刻度的列表上， 可能两个触发时间相差2^16ms的定时器会挂在想通链表上，需要做处理
-		std::vector<TickerNode_t*>		m_vecTempTickerNode;
-		int64_t							m_nLogicTime;							///< 当前刻度时间
 
 	public:
 		CTickerMgr();
 		~CTickerMgr();
 
-		void				insertTicker(TickerNode_t* pTickerNode);
 		void				registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
 		void				unregisterTicker(CTicker* pTicker);
 		void				update();
 		inline uint64_t		getLogicTime() const { return this->m_nLogicTime; }
 		uint32_t			getNearestTime() const;
+
+	private:
+		void				insertTicker(TickerNode_t* pTickerNode);
+		void				cascadeTicker();
+
+	private:
+		base::TLink<TickerNode_t>	m_listNearTicker[__TIME_NEAR_SIZE];								// 最近运行到的时间刻度
+		base::TLink<TickerNode_t>	m_listCascadeTicker[__TIME_CASCADE_COUNT][__TIME_CASCADE_SIZE];	// 联级时间刻度
+		base::TLink<TickerNode_t>	m_listFarTicker;												// 最远的定时器链表
+
+		std::vector<TickerNode_t*>	m_vecTempTickerNode;
+		int64_t						m_nLogicTime;													// 当前刻度时间
 	};
 }

@@ -172,7 +172,7 @@ namespace base
 		::getpeername(this->m_nSocketID, &remoteAddr, &nPeerAddrLen);
 		// 不能用::htons https://bbs.archlinux.org/viewtopic.php?id=53751
 		this->m_sRemoteAddr.nPort = ntohs((reinterpret_cast<sockaddr_in*>(&remoteAddr))->sin_port);
-		base::crt::strncpy(this->m_sRemoteAddr.szHost, _countof(this->m_sRemoteAddr.szHost), inet_ntoa((reinterpret_cast<sockaddr_in*>(&remoteAddr))->sin_addr), _TRUNCATE);
+		base::crt::strcpy(this->m_sRemoteAddr.szHost, _countof(this->m_sRemoteAddr.szHost), inet_ntoa((reinterpret_cast<sockaddr_in*>(&remoteAddr))->sin_addr));
 	}
 
 	void CNetSocket::setLocalAddr()
@@ -182,7 +182,7 @@ namespace base
 		::getsockname(this->m_nSocketID, &localAddr, &nLocalAddrLen);
 		// 不能用::htons https://bbs.archlinux.org/viewtopic.php?id=53751
 		this->m_sLocalAddr.nPort = ntohs((reinterpret_cast<sockaddr_in*>(&localAddr))->sin_port);
-		base::crt::strncpy(this->m_sLocalAddr.szHost, _countof(this->m_sLocalAddr.szHost), inet_ntoa((reinterpret_cast<sockaddr_in*>(&localAddr))->sin_addr), _TRUNCATE);
+		base::crt::strcpy(this->m_sLocalAddr.szHost, _countof(this->m_sLocalAddr.szHost), inet_ntoa((reinterpret_cast<sockaddr_in*>(&localAddr))->sin_addr));
 	}
 
 	void CNetSocket::setSocketID(int32_t nSocketID)

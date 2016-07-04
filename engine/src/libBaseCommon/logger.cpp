@@ -43,12 +43,12 @@ static uint32_t formatLog(char* szBuf, uint32_t nBufSize, const char* szSection,
 	if (nLen >= _LOG_BUF_SIZE - 1)
 	{
 		// ½Ø¶Ï
-		base::crt::strncpy(szBuf + nBufSize - 3, 3, "\r\n", _TRUNCATE);
+		base::crt::strcpy(szBuf + nBufSize - 3, 3, "\r\n");
 		nLen = _LOG_BUF_SIZE - 1;
 	}
 	else
 	{
-		base::crt::strncpy(szBuf + nLen, nBufSize - nLen, "\r\n", _TRUNCATE);
+		base::crt::strcpy(szBuf + nLen, nBufSize - nLen, "\r\n");
 		nLen = nLen + 2;
 	}
 
@@ -343,7 +343,7 @@ namespace base
 		pLogInfo->nBufSize = nSize;
 		pLogInfo->szFileName[0] = 0;
 		pLogInfo->bConsole = bConsole;
-		base::crt::strncpy(pLogInfo->szBuf, nSize + 1, szBuf, _TRUNCATE);
+		base::crt::strcpy(pLogInfo->szBuf, nSize + 1, szBuf);
 
 		g_pLogger->pushLog(pLogInfo);
 	}
@@ -363,9 +363,9 @@ namespace base
 
 		SLogInfo* pLogInfo = reinterpret_cast<SLogInfo*>(new char[sizeof(SLogInfo) + nSize + 1]);
 		pLogInfo->nBufSize = nSize;
-		base::crt::strncpy(pLogInfo->szFileName, _LOG_FILE_NAME_SIZE, szFileName, _TRUNCATE);
+		base::crt::strcpy(pLogInfo->szFileName, _LOG_FILE_NAME_SIZE, szFileName);
 		pLogInfo->bConsole = bConsole;
-		base::crt::strncpy(pLogInfo->szBuf, nSize + 1, szBuf, _TRUNCATE);
+		base::crt::strcpy(pLogInfo->szBuf, nSize + 1, szBuf);
 
 		g_pLogger->pushLog(pLogInfo);
 	}

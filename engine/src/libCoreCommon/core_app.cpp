@@ -31,6 +31,7 @@
 #define _DEFAULT_HEARTBEAT_LIMIT	3
 #define _DEFAULT_HEARTBEAT_TIME		10
 #define _MAIN_CO_STACK_SIZE			10*1024*1024
+#define _DEFAULT_SAMPLING_TIME		1000
 
 #ifndef _WIN32
 ///< 环境变量
@@ -304,7 +305,18 @@ namespace core
 			return false;
 		}
 
-		bool bProfiling = (pBaseInfoXML->IntAttribute("profiling") != 0);
+		bool bProfiling = false;
+		tinyxml2::XMLElement* pProfilingXML = pBaseInfoXML->FirstChildElement("profiling");
+		if (pProfilingXML != nullptr)
+		{
+			this->m_nSamplingTime = (uint32_t)pProfilingXML->IntAttribute("sampling_time");
+			bProfiling = true;
+		}
+		else
+		{
+			this->m_nSamplingTime = _DEFAULT_SAMPLING_TIME;
+		}
+		
 		if (!base::initProfiling(bProfiling))
 		{
 			PrintWarning("base::initProfiling()");
@@ -386,23 +398,27 @@ namespace core
 
 	bool CCoreApp::onProcess()
 	{
-		uint64_t nMem = 0;
-		uint64_t nVMem = 0;
-		base::getMemoryUsage(nMem, nVMem);
-		if (nVMem >= 1024 * 1024 * 1024)
-			exit(0);
-
 		int64_t nBeginTime = base::getProcessPassTime();
 
+		PROFILING_BEGIN(CBaseApp::Inst()->onBeforeFrame)
 		CBaseApp::Inst()->onBeforeFrame();
+		PROFILING_END(CBaseApp::Inst()->onBeforeFrame)
 
+		PROFILING_BEGIN(this->m_pCoreConnectionMgr->update)
 		this->m_pCoreConnectionMgr->update(this->m_pTickerMgr->getNearestTime());
+		PROFILING_END(this->m_pCoreConnectionMgr->update)
 
+		PROFILING_BEGIN(this->m_pTickerMgr->update)
 		this->m_pTickerMgr->update();
+		PROFILING_END(this->m_pTickerMgr->update)
 
+		PROFILING_BEGIN(CBaseApp::Inst()->onProcess)
 		CBaseApp::Inst()->onProcess();
+		PROFILING_END(CBaseApp::Inst()->onProcess)
 
+		PROFILING_BEGIN(CBaseApp::Inst()->onProcess)
 		CBaseApp::Inst()->onAfterFrame();
+		PROFILING_END(CBaseApp::Inst()->onProcess)
 
 		if (this->m_nRunState == eARS_Quitting && !this->m_bMarkQuit)
 		{
@@ -418,8 +434,9 @@ namespace core
 
 		int64_t nEndTime = base::getProcessPassTime();
 		this->m_nTotalTime = this->m_nTotalTime + (uint32_t)(nEndTime - nBeginTime);
+		++this->m_nCycleCount;
 
-		if (this->m_nCycleCount % 100 == 0)
+		if (this->m_nTotalTime / 1000 >= this->m_nSamplingTime)
 		{
 			this->onAnalyze();
 #ifdef __PROFILING_OPEN

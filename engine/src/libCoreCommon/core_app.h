@@ -90,6 +90,7 @@ namespace core
 		base::CWriteBuf			m_writeBuf;
 		uint32_t				m_nCycleCount;
 		uint32_t				m_nTotalTime;
+		uint32_t				m_nSamplingTime;
 		volatile uint32_t		m_nRunState;
 		uint32_t				m_nHeartbeatLimit;
 		uint32_t				m_nHeartbeatTime;

@@ -443,7 +443,7 @@ namespace base
 		{
 			size_t nLen = base::crt::strnlen(value, -1) + 1;
 			this->m_szStr = new char[nLen];
-			base::crt::strncpy(this->m_szStr, nLen, value, _TRUNCATE);
+			base::crt::strcpy(this->m_szStr, nLen, value);
 		}
 	}
 }

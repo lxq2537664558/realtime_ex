@@ -4,6 +4,8 @@
 #include "libBaseCommon/logger.h"
 
 #ifdef _WIN32
+#undef FD_SETSIZE
+#define FD_SETSIZE 1024
 #include <winsock2.h> // 这个头文件必须放在winsock.h前面，winsock.h有几个另外的头文件包含他
 #include <ws2tcpip.h>
 #include <errno.h>

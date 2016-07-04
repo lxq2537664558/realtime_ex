@@ -101,7 +101,7 @@ namespace core
 		pWaitActiveConnecterHandler->pCoreConnectionMgr = this;
 		
 		SNetAddr sNetAddr;
-		base::crt::strncpy(sNetAddr.szHost, _countof(sNetAddr.szHost), szHost.c_str(), _TRUNCATE);
+		base::crt::strcpy(sNetAddr.szHost, _countof(sNetAddr.szHost), szHost.c_str());
 		sNetAddr.nPort = nPort;
 		if (!this->m_pNetEventLoop->connect(sNetAddr, nSendBufferSize, nRecvBufferSize, pWaitActiveConnecterHandler))
 		{
@@ -121,7 +121,7 @@ namespace core
 		pNetAccepterHandler->pCoreConnectionMgr = this;
 		
 		SNetAddr sNetAddr;
-		base::crt::strncpy(sNetAddr.szHost, _countof(sNetAddr.szHost), szHost.c_str(), _TRUNCATE);
+		base::crt::strcpy(sNetAddr.szHost, _countof(sNetAddr.szHost), szHost.c_str());
 		sNetAddr.nPort = nPort;
 		if (!this->m_pNetEventLoop->listen(sNetAddr, nSendBufferSize, nRecvBufferSize, pNetAccepterHandler))
 		{
@@ -133,7 +133,7 @@ namespace core
 		return true;
 	}
 
-	void CCoreConnectionMgr::update(int32_t nTime)
+	void CCoreConnectionMgr::update(int64_t nTime)
 	{
 		this->m_pNetEventLoop->update(nTime);
 	}

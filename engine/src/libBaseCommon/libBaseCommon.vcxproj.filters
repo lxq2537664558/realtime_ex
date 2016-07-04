@@ -54,9 +54,6 @@
     <ClInclude Include="..\..\inc\libBaseCommon\vector2.h">
       <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\inc\libBaseCommon\tiny_list.h">
-      <Filter>inc</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\inc\libBaseCommon\base_time.h">
       <Filter>inc</Filter>
     </ClInclude>
@@ -87,11 +84,9 @@
     <ClInclude Include="..\..\inc\libBaseCommon\singleton.h">
       <Filter>inc</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\inc\libBaseCommon\tiny_list.inl">
+    <ClInclude Include="..\..\inc\libBaseCommon\link.h">
       <Filter>inc</Filter>
-    </None>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="base_exception.cpp">
@@ -136,5 +131,10 @@
     <ClCompile Include="buf_file.cpp">
       <Filter>src</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\inc\libBaseCommon\link.inl">
+      <Filter>inc</Filter>
+    </None>
   </ItemGroup>
 </Project>

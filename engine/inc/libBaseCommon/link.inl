@@ -3,7 +3,7 @@
 namespace base
 {
 	template<class T>
-	STinyListNode<T>::STinyListNode()
+	TLinkNode<T>::TLinkNode()
 	{
 		this->pNext = nullptr;
 		this->pPre = nullptr;
@@ -11,13 +11,13 @@ namespace base
 	}
 
 	template<class T>
-	STinyListNode<T>::~STinyListNode()
+	TLinkNode<T>::~TLinkNode()
 	{
 		this->remove();
 	}
 
 	template<class T>
-	void STinyListNode<T>::remove()
+	void TLinkNode<T>::remove()
 	{
 		if (this->pNext != nullptr && this->pPre != nullptr)
 		{
@@ -29,13 +29,13 @@ namespace base
 	}
 
 	template<class T>
-	bool STinyListNode<T>::isHang() const
+	bool TLinkNode<T>::isLink() const
 	{
 		return this->pNext != nullptr && this->pPre != nullptr;
 	}
 
-	template<class NodeType>
-	CTinyList<NodeType>::CTinyList()
+	template<class T>
+	TLink<T>::TLink()
 	{
 		this->m_head.pNext = &this->m_tail;
 		this->m_tail.pPre = &this->m_head;
@@ -44,18 +44,18 @@ namespace base
 		this->m_tail.pNext = nullptr;
 	}
 
-	template<class NodeType>
-	CTinyList<NodeType>::~CTinyList()
+	template<class T>
+	TLink<T>::~TLink()
 	{
 		// nothing
 	}
 
-	template<class NodeType>
-	bool CTinyList<NodeType>::pushBack(NodeType *pNode)
+	template<class T>
+	bool TLink<T>::pushTail(T *pNode)
 	{
 		DebugAstEx(pNode != nullptr, false);
 
-		if (pNode->isHang())
+		if (pNode->isLink())
 			return false;
 
 		pNode->pNext = &this->m_tail;
@@ -66,21 +66,21 @@ namespace base
 		return true;
 	}
 
-	template<class NodeType>
-	NodeType* CTinyList<NodeType>::getBack()
+	template<class T>
+	T* TLink<T>::getTail()
 	{
-		if (this->isEmpty())
+		if (this->empty())
 			return nullptr;
 
 		return this->m_tail.pPre;
 	}
 
-	template<class NodeType>
-	bool CTinyList<NodeType>::pushFront(NodeType *pNode)
+	template<class T>
+	bool TLink<T>::pushHead(T *pNode)
 	{
 		DebugAstEx(pNode != nullptr, false);
 
-		if (pNode->isHang())
+		if (pNode->isLink())
 			return false;
 
 		pNode->pPre = &this->m_head;
@@ -91,23 +91,39 @@ namespace base
 		return true;
 	}
 
-	template<class NodeType>
-	NodeType* CTinyList<NodeType>::getFront()
+	template<class T>
+	T* TLink<T>::getHead()
 	{
-		if (this->isEmpty())
+		if (this->empty())
 			return nullptr;
 
 		return this->m_head.pNext;
 	}
 
-	template<class NodeType>
-	bool CTinyList<NodeType>::isEmpty() const
+	template<class T>
+	bool TLink<T>::insert(T* pWhere, T* pNode)
+	{
+		DebugAstEx(pNode != nullptr && pWhere != nullptr, false);
+
+		if (pNode->isLink() || !pWhere->isLink())
+			return false;
+
+		pNode->pNext = pWhere->pNext;
+		pNode->pPre = pWhere;
+		pWhere->pNext->pPre = pNode;
+		pWhere->pNext = pNode;
+
+		return true;
+	}
+
+	template<class T>
+	bool TLink<T>::empty() const
 	{
 		return this->m_head.pNext == &this->m_tail;
 	}
 
-	template<class NodeType>
-	void CTinyList<NodeType>::splice(CTinyList<NodeType>& rhs)
+	template<class T>
+	void TLink<T>::splice(TLink<T>& rhs)
 	{
 		rhs.m_head = this->m_head;
 		rhs.m_tail = this->m_tail;

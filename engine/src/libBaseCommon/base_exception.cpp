@@ -22,7 +22,7 @@ namespace base
 		{
 			size_t nLen = base::crt::strnlen(szInfo, -1);
 			this->m_szInfo = new char[nLen + 1];
-			base::crt::strncpy(this->m_szInfo, nLen + 1, szInfo, _TRUNCATE);
+			base::crt::strcpy(this->m_szInfo, nLen + 1, szInfo);
 		}
 	}
 
@@ -35,7 +35,7 @@ namespace base
 		{
 			size_t nLen = base::crt::strnlen(rhs.m_szInfo, -1);
 			this->m_szInfo = new char[nLen + 1];
-			base::crt::strncpy(this->m_szInfo, nLen + 1, rhs.m_szInfo, _TRUNCATE);
+			base::crt::strcpy(this->m_szInfo, nLen + 1, rhs.m_szInfo);
 		}
 	}
 
@@ -53,7 +53,7 @@ namespace base
 		{
 			size_t nLen = base::crt::strnlen(rhs.m_szInfo, -1);
 			this->m_szInfo = new char[nLen + 1];
-			base::crt::strncpy(this->m_szInfo, nLen + 1, rhs.m_szInfo, _TRUNCATE);
+			base::crt::strcpy(this->m_szInfo, nLen + 1, rhs.m_szInfo);
 		}
 
 		return *this;

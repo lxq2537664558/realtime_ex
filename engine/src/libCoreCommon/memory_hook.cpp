@@ -29,7 +29,7 @@ namespace core
 		bool		bDetail;	// 是否是详细信息
 	};
 
-	typedef base::STinyListNode<SMemoryHookInfo> SMemoryHookInfoNode;
+	typedef base::TLinkNode<SMemoryHookInfo> SMemoryHookInfoNode;
 #pragma pack(pop)
 
 	class CMemoryHookMgr
@@ -46,10 +46,10 @@ namespace core
 		void	endLeakChecker(const char* szName);
 
 	private:
-		base::CTinyList<SMemoryHookInfoNode>	m_listMemoryHookInfo;
-		bool									m_bCheck;
-		bool									m_bDetail;
-		base::spin_mutex						m_lock;
+		base::TLink<SMemoryHookInfoNode>	m_listMemoryHookInfo;
+		bool								m_bCheck;
+		bool								m_bDetail;
+		base::spin_mutex					m_lock;
 	};
 
 	CMemoryHookMgr::CMemoryHookMgr()
@@ -93,7 +93,7 @@ namespace core
 			pMemoryHookInfoNode->Value.nAllocTime = base::getGmtTime();
 
 			this->m_lock.lock();
-			this->m_listMemoryHookInfo.pushBack(pMemoryHookInfoNode);
+			this->m_listMemoryHookInfo.pushTail(pMemoryHookInfoNode);
 			this->m_lock.unlock();
 		}
 		else
@@ -177,9 +177,9 @@ namespace core
 		};
 
 		this->m_lock.lock();
-		while (!this->m_listMemoryHookInfo.isEmpty())
+		while (!this->m_listMemoryHookInfo.empty())
 		{
-			SMemoryHookInfoNode* pNode = this->m_listMemoryHookInfo.getFront();
+			SMemoryHookInfoNode* pNode = this->m_listMemoryHookInfo.getHead();
 			pNode->remove();
 
 			if (pNode->Value.bDetail)
