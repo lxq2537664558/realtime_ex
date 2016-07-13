@@ -67,7 +67,7 @@ namespace base
 
 	CVariant::CVariant(const char* value)
 	{
-		///< 必须设置成None，不然Clear函数中会删除一个无效的指针
+		// 必须设置成None，不然Clear函数中会删除一个无效的指针
 		this->m_eType = eVVT_None;
 		this->setString(value);
 	}
@@ -76,7 +76,7 @@ namespace base
 	{
 		if (value == nullptr || len == 0)
 		{
-			///< 必须设置成None，不然Clear函数中会删除一个无效的指针
+			// 必须设置成None，不然Clear函数中会删除一个无效的指针
 			this->m_eType = eVVT_None;
 			this->clear();
 		}
@@ -433,7 +433,7 @@ namespace base
 
 		this->m_eType = eVVT_String;
 
-		///< 有可能默认是nullptr
+		// 有可能默认是nullptr
 		if (nullptr == value)
 		{
 			this->m_szStr = new char[1];

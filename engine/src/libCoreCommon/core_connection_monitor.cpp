@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "core_connection_monitor.h"
-#include "core_app.h"
+#include "base_app_impl.h"
 
 #include <map>
 
@@ -126,12 +126,12 @@ namespace core
 	void CCoreConnectionMonitor::onConnect()
 	{
 		if (!this->m_tickMonitor.isRegister())
-			CCoreApp::Inst()->registerTicker(&this->m_tickMonitor, 1000, 1000, 0);
+			CBaseAppImpl::Inst()->registerTicker(&this->m_tickMonitor, 1000, 1000, 0);
 	}
 
 	void CCoreConnectionMonitor::onDisconnect()
 	{
 		if (this->m_tickMonitor.isRegister())
-			CCoreApp::Inst()->unregisterTicker(&this->m_tickMonitor);
+			CBaseAppImpl::Inst()->unregisterTicker(&this->m_tickMonitor);
 	}
 }

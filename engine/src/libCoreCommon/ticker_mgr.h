@@ -18,7 +18,6 @@ namespace core
 			__TIME_CASCADE_SIZE		= 1 << __TIME_CASCADE_BITS,
 			__TIME_CASCADE_MASK		= __TIME_CASCADE_SIZE - 1,
 			
-			__TIME_WHEEL_PRECISION	= 10,			///< ¾«¶È10ms
 		};
 
 	public:
@@ -29,8 +28,7 @@ namespace core
 		void				unregisterTicker(CTicker* pTicker);
 		void				update();
 		inline uint64_t		getLogicTime() const { return this->m_nLogicTime; }
-		uint32_t			getNearestTime() const;
-
+		
 	private:
 		void				insertTicker(TickerNode_t* pTickerNode);
 		void				cascadeTicker();

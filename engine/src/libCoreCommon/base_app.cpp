@@ -20,7 +20,7 @@
 #include "libBaseCommon/logger.h"
 
 #include "base_app.h"
-#include "core_app.h"
+#include "base_app_impl.h"
 #include "core_connection_mgr.h"
 #include "memory_hook.h"
 
@@ -46,44 +46,44 @@ namespace core
 
 	bool CBaseApp::run(int32_t argc, char** argv, const char* szConfig)
 	{
-		return CCoreApp::Inst()->run(argc, argv, szConfig);
+		return CBaseAppImpl::Inst()->run(argc, argv, szConfig);
 	}
 
 	void CBaseApp::registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
 	{
-		CCoreApp::Inst()->registerTicker(pTicker, nStartTime, nIntervalTime, nContext);
+		CBaseAppImpl::Inst()->registerTicker(pTicker, nStartTime, nIntervalTime, nContext);
 	}
 
 	void CBaseApp::unregisterTicker(CTicker* pTicker)
 	{
-		CCoreApp::Inst()->unregisterTicker(pTicker);
+		CBaseAppImpl::Inst()->unregisterTicker(pTicker);
 	}
 
 	int64_t CBaseApp::getLogicTime() const
 	{
-		return CCoreApp::Inst()->getLogicTime();
+		return CBaseAppImpl::Inst()->getLogicTime();
 	}
 
 	CBaseConnectionMgr* CBaseApp::getBaseConnectionMgr() const
 	{
-		return CCoreApp::Inst()->getCoreConnectionMgr()->getBaseConnectionMgr();
+		return CBaseAppImpl::Inst()->getBaseConnectionMgr();
 	}
 
 	const std::string& CBaseApp::getConfigFileName() const
 	{
-		return CCoreApp::Inst()->getConfigFileName();
+		return CBaseAppImpl::Inst()->getConfigFileName();
 	}
 
 	base::CWriteBuf& CBaseApp::getWriteBuf() const
 	{
-		return CCoreApp::Inst()->getWriteBuf();
+		return CBaseAppImpl::Inst()->getWriteBuf();
 	}
 
 	void CBaseApp::doQuit()
 	{
 		PrintInfo("CBaseApp::doQuit");
 		
-		CCoreApp::Inst()->doQuit();
+		CBaseAppImpl::Inst()->doQuit();
 	}
 
 	void CBaseApp::enableProfiling(bool bProfiling)

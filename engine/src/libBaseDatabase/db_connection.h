@@ -28,12 +28,14 @@ namespace base
 		virtual IDbRecordset*	execute(const char* szSql);
 		virtual bool			ping();
 		virtual uint64_t		getAffectedRow() const;
+		virtual void*			getMysql() const;
+		virtual void			escape(char* szDst, const char* szSrc, size_t nLength);
 
 		void					delRecordsetCount(CDbRecordset* pDbRecordset);
 		void					delStmtCountCount(CDbStatement* pDbStatement);
 
 	private:
-		MYSQL*						m_pMySql;
+		MYSQL*						m_pMysql;
 		CDbFacade*					m_pDbFacade;
 		std::list<CDbRecordset*>	m_listDbRecordset;
 		std::list<CDbStatement*>	m_listDbStatement;

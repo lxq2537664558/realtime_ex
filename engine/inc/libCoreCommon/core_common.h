@@ -78,4 +78,22 @@ namespace core
 	typedef std::function<int32_t(const char*, uint32_t, uint8_t&)>	MessageParser;	// 原生消息
 }
 
+inline int32_t default_client_message_parser(const char* pData, uint32_t nSize, uint8_t& nMessageType)
+{
+	if (nSize < sizeof(core::message_header))
+		return 0;
+
+	const core::message_header* pHeader = reinterpret_cast<const core::message_header*>(pData);
+	if (pHeader->nMessageSize < sizeof(core::message_header))
+		return -1;
+
+	// 不是完整的消息
+	if (nSize < pHeader->nMessageSize)
+		return 0;
+
+	nMessageType = eMT_CLIENT;
+
+	return pHeader->nMessageSize;
+}
+
 #define _BASE_CONNECTION_TYPE_BEGIN	100

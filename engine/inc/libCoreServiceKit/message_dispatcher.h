@@ -20,6 +20,6 @@ namespace core
 		/**
 		@brief: 消息派发函数，由各个消息源调用来派发消息
 		*/
-		void dispatch(const std::string& szFromServiceName, uint8_t nMessageType, const void* pData, uint16_t nSize);
+		bool dispatch(const std::string& szFromServiceName, uint8_t nMessageType, const void* pData, uint16_t nSize);
 	};
 }

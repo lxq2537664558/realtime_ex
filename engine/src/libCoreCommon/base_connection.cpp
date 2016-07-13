@@ -4,16 +4,22 @@
 #include "core_connection.h"
 #include "base_app.h"
 #include "core_common.h"
+#include "message_command.h"
+#include "message_queue.h"
+#include "net_runnable.h"
 
 #include "libBaseCommon/debug_helper.h"
 #include "libBaseCommon/base_time.h"
 
+#define _HEART_BEAT_TIME 5000
 
 namespace core
 {
 	CBaseConnection::CBaseConnection()
-		: m_pCoreConnection(nullptr)
+		: m_nID(0)
+		, m_bHeartbeat(false)
 	{
+		this->m_heartbeat.setCallback(std::bind(&CBaseConnection::onHeartbeat, this, std::placeholders::_1));
 	}
 
 	CBaseConnection::~CBaseConnection()
@@ -23,65 +29,105 @@ namespace core
 	void CBaseConnection::send(uint8_t nMessageType, const void* pData, uint16_t nSize)
 	{
 		DebugAst(pData != nullptr);
-		DebugAst(this->m_pCoreConnection != nullptr);
+		SMCT_SEND_SOCKET_DATA* pContext = reinterpret_cast<SMCT_SEND_SOCKET_DATA*>(new char[sizeof(SMCT_SEND_SOCKET_DATA)+nSize]);
+		pContext->nMessageType = nMessageType;
+		pContext->nSocketID = this->getID();
+		memcpy(pContext + 1, pData, nSize);
 
-		this->m_pCoreConnection->send(nMessageType, pData, nSize);
+		SMessagePacket sMessagePacket;
+		sMessagePacket.nType = eMCT_SEND_SOCKET_DATA;
+		sMessagePacket.pData = pContext;
+		sMessagePacket.nDataSize = sizeof(SMCT_SEND_SOCKET_DATA)+nSize;
+
+		CNetRunnable::Inst()->getMessageQueue()->pushMessagePacket(sMessagePacket);
 	}
 
 	void CBaseConnection::send(uint8_t nMessageType, const void* pData, uint16_t nSize, const void* pExtraBuf, uint16_t nExtraSize)
 	{
 		DebugAst(pData != nullptr);
-		DebugAst(this->m_pCoreConnection != nullptr);
 
 		if (pExtraBuf == nullptr || nExtraSize == 0)
 			return this->send(nMessageType, pData, nSize);
 
-		return this->m_pCoreConnection->send(nMessageType, pData, nSize, pExtraBuf, nExtraSize);
+		SMCT_SEND_SOCKET_DATA* pContext = reinterpret_cast<SMCT_SEND_SOCKET_DATA*>(new char[sizeof(SMCT_SEND_SOCKET_DATA)+nSize + nExtraSize]);
+		pContext->nMessageType = nMessageType;
+		pContext->nSocketID = this->getID();
+		memcpy(pContext + 1, pData, nSize);
+		memcpy(reinterpret_cast<char*>(pContext + 1) + nSize, pExtraBuf, nExtraSize);
+
+		SMessagePacket sMessagePacket;
+		sMessagePacket.nType = eMCT_SEND_SOCKET_DATA;
+		sMessagePacket.pData = pContext;
+		sMessagePacket.nDataSize = sizeof(SMCT_SEND_SOCKET_DATA)+nSize + nExtraSize;
+
+		CNetRunnable::Inst()->getMessageQueue()->pushMessagePacket(sMessagePacket);
 	}
 
 	void CBaseConnection::shutdown(bool bForce, const std::string& szMsg)
 	{
-		DebugAst(this->m_pCoreConnection != nullptr);
+		SMCT_REQUEST_SOCKET_SHUTDOWN* pContext = new SMCT_REQUEST_SOCKET_SHUTDOWN();
+		pContext->nSocketID = this->getID();
+		pContext->bForce = bForce;
+		pContext->szMsg = szMsg;
 
-		this->m_pCoreConnection->shutdown(bForce, szMsg);
+		SMessagePacket sMessagePacket;
+		sMessagePacket.nType = eMCT_REQUEST_SOCKET_SHUTDOWN;
+		sMessagePacket.pData = pContext;
+		sMessagePacket.nDataSize = sizeof(SMCT_REQUEST_SOCKET_SHUTDOWN);
+
+		CNetRunnable::Inst()->getMessageQueue()->pushMessagePacket(sMessagePacket);
+	}
+
+	void CBaseConnection::enableHeartbeat(bool bEnable)
+	{
+		this->m_bHeartbeat = bEnable;
+
+		if (this->m_heartbeat.isRegister())
+			CBaseApp::Inst()->unregisterTicker(&this->m_heartbeat);
+
+		if (this->m_bHeartbeat)
+			CBaseApp::Inst()->registerTicker(&this->m_heartbeat, _HEART_BEAT_TIME, _HEART_BEAT_TIME, 0);
+
+		SMCT_ENABLE_HEARTBEAT* pContext = new SMCT_ENABLE_HEARTBEAT();
+		pContext->nSocketID = this->getID();
+		pContext->nEnable = bEnable;
+
+		SMessagePacket sMessagePacket;
+		sMessagePacket.nType = eMCT_ENABLE_HEARTBEAT;
+		sMessagePacket.pData = pContext;
+		sMessagePacket.nDataSize = sizeof(SMCT_ENABLE_HEARTBEAT);
+
+		CNetRunnable::Inst()->getMessageQueue()->pushMessagePacket(sMessagePacket);
 	}
 
 	uint64_t CBaseConnection::getID() const
 	{
-		if (nullptr == this->m_pCoreConnection)
-			return 0;
-
-		return this->m_pCoreConnection->getID();
+		return this->m_nID;
 	}
 
 	const SNetAddr& CBaseConnection::getLocalAddr() const
 	{
-		if (nullptr == this->m_pCoreConnection)
-		{
-			static SNetAddr s_Default;
-			return s_Default;
-		}
-
-		return this->m_pCoreConnection->getLocalAddr();
+		return this->m_sLocalAddr;
 	}
 
 	const SNetAddr& CBaseConnection::getRemoteAddr() const
 	{
-		if (nullptr == this->m_pCoreConnection)
-		{
-			static SNetAddr s_Default;
-			return s_Default;
-		}
-
-		return this->m_pCoreConnection->getRemoteAddr();
+		return this->m_sRemoteAddr;
 	}
 
-	void CBaseConnection::setMessageParser(MessageParser parser)
+	void CBaseConnection::onHeartbeat(uint64_t nContext)
 	{
-		if (this->m_pCoreConnection == nullptr)
+		if (this->m_bHeartbeat)
 			return;
 
-		this->m_pCoreConnection->setMessageParser(parser);
-	}
+		SMCT_SEND_HEARTBEAT* pContext = new SMCT_SEND_HEARTBEAT();
+		pContext->nSocketID = this->getID();
+		
+		SMessagePacket sMessagePacket;
+		sMessagePacket.nType = eMCT_SEND_HEARTBEAT;
+		sMessagePacket.pData = pContext;
+		sMessagePacket.nDataSize = sizeof(SMCT_SEND_HEARTBEAT);
 
+		CNetRunnable::Inst()->getMessageQueue()->pushMessagePacket(sMessagePacket);
+	}
 }

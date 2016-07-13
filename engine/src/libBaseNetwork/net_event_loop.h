@@ -19,7 +19,7 @@ namespace base
 	class CNetConnecter;
 	class CNetSendBufferBlock;
 
-	///< 整个网络层，在Windows下采用select模型，在linux下采用epoll的水平触发模式
+	// 整个网络层，在Windows下采用select模型，在linux下采用epoll的水平触发模式
 	class CNetEventLoop :
 		public INetEventLoop
 	{

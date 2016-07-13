@@ -20,19 +20,24 @@
 #define _LOG_BUF_SIZE		1024
 #define _LOG_FILE_NAME_SIZE 32
 
-static uint32_t formatLog(char* szBuf, uint32_t nBufSize, const char* szSection, const char* szFormat, va_list arg)
+static uint32_t formatLog(char* szBuf, uint32_t nBufSize, const char* szPrefix, const char* szFormat, va_list arg, uint8_t* nDay)
 {
-	if (nullptr == szFormat || szBuf == nullptr || szSection == nullptr)
+	if (nullptr == szFormat || szBuf == nullptr || szPrefix == nullptr)
 		return 0;
 
 	int64_t nCurTime = base::getLocalTime();
+	base::STime sTime = base::getLocalTimeTM(nCurTime);
 	char szTime[20] = { 0 };
-	base::formatLocalTime(szTime, _countof(szTime), nCurTime);
+	base::crt::snprintf(szTime, _countof(szTime), "%04d-%02d-%02d %02d:%02d:%02d",
+		sTime.nYear, sTime.nMon, sTime.nDay, sTime.nHour, sTime.nMin, sTime.nSec);
+
+	if (nDay != nullptr)
+		*nDay = (uint8_t)sTime.nDay;
 
 	if (base::crt::snprintf(szBuf, nBufSize, "%s.%03d ", szTime, (uint32_t)(nCurTime % 1000)) < 0)
 		return 0;
 
-	if (szSection[0] != 0 && base::crt::snprintf(szBuf, nBufSize, "[%s] ", szTime, szSection) < 0)
+	if (szPrefix[0] != 0 && base::crt::snprintf(szBuf, nBufSize, "[%s] ", szTime, szPrefix) < 0)
 		return 0;
 	
 	size_t nLen = base::crt::strnlen(szBuf, nBufSize);
@@ -55,16 +60,30 @@ static uint32_t formatLog(char* szBuf, uint32_t nBufSize, const char* szSection,
 	return (uint32_t)nLen;
 }
 
+static std::string formatLogName(const char* szPath, const char* szSuffix)
+{
+	base::STime sTime = base::getLocalTimeTM();
+	char szBuf[MAX_PATH] = { 0 };
+	if (szSuffix[0] == 0)
+		base::crt::snprintf(szBuf, _countof(szBuf), "%s/%s.%4d_%02d_%02d_%02d_%02d_%02d.%d", szPath, base::getInstanceName(), sTime.nYear, sTime.nMon, sTime.nDay, sTime.nHour, sTime.nMin, sTime.nSec, base::getCurrentProcessID());
+	else
+		base::crt::snprintf(szBuf, _countof(szBuf), "%s/%s.%4d_%02d_%02d_%02d_%02d_%02d.%d_%s", szPath, base::getInstanceName(), sTime.nYear, sTime.nMon, sTime.nDay, sTime.nHour, sTime.nMin, sTime.nSec, base::getCurrentProcessID(), szSuffix);
+	
+	return szBuf;
+}
+
 struct SLogInfo
 {
-	char		szFileName[_LOG_FILE_NAME_SIZE];
+	char		szSuffix[_LOG_FILE_NAME_SIZE];
 	uint32_t	nBufSize;
-	bool		bConsole;
+	uint8_t		bConsole;
+	uint8_t		nDay;
 	char		szBuf[1];
 
 	SLogInfo()
 		: nBufSize(0)
 		, bConsole(false)
+		, nDay(0)
 	{
 	}
 };
@@ -76,9 +95,12 @@ public:
 	CLogger();
 	virtual ~CLogger();
 
-	bool				init(bool bAsync);
+	bool				init(bool bAsync, const char* szPath);
 	void				uninit();
 	void				pushLog(SLogInfo* pLogInfo);
+	const char*			getPath() const;
+	void				enableDebugLog(bool bEnable);
+	bool				isEnableDebugLog() const;
 
 private:
 	virtual bool		onInit() { return true; }
@@ -86,15 +108,15 @@ private:
 	virtual bool		onProcess();
 
 	void				flushLog();
-	void				saveLog(const char* szFileName, bool bConsole, const char* szBuf, uint32_t nBufSize);
+	void				saveLog(SLogInfo* pLogInfo);
 
 private:
 	struct SLogFileInfo
 	{
-		std::string	szFileName;
-		uint32_t	nFileIndex;
+		uint32_t	nNextFileIndex;
 		size_t		nFileSize;
 		FILE*		pFile;
+		uint8_t		nLastLogDay;
 	};
 
 	char									m_szPath[MAX_PATH];
@@ -104,11 +126,13 @@ private:
 	base::spin_mutex						m_lock;
 	base::CThreadBase*						m_pThreadBase;
 	bool									m_bAsync;
+	bool									m_bEnableDebuglog;
 };
 
 CLogger::CLogger()
 	: m_pThreadBase(nullptr)
 	, m_bAsync(false)
+	, m_bEnableDebuglog(true)
 {
 	memset(this->m_szPath, 0, _countof(this->m_szPath));
 	this->m_nLastFlushTime = base::getGmtTime() / 1000;
@@ -132,9 +156,42 @@ CLogger::~CLogger()
 	this->m_mapLogFileInfo.clear();
 }
 
-bool CLogger::init(bool bAsync)
+bool CLogger::init(bool bAsync, const char* szPath)
 {
-	base::crt::snprintf(this->m_szPath, _countof(this->m_szPath), "%s/log", base::getCurrentWorkPath());
+	if (szPath == nullptr)
+		return false;
+
+	std::string szTempPath = szPath;
+	if (szTempPath.empty())
+		return false;
+
+	std::string::size_type pos = szTempPath.find(".");
+	if (std::string::npos != pos && pos == 0)
+	{
+		szTempPath.replace(pos, 1, "");
+		szTempPath.insert(0, base::getCurrentWorkPath());
+	}
+	
+	while (std::string::npos != (pos = szTempPath.find("\\")))
+	{
+		szTempPath.replace(pos, 1, "/");
+		pos += 1;
+	}
+
+	pos = szTempPath.find_last_of("/");
+	if (pos != szTempPath.size() - 1)
+		szTempPath.insert(szTempPath.size(), "/");
+
+	pos = 0;
+	while (std::string::npos != (pos = szTempPath.find("/", pos)))
+	{
+		std::string szSubPath = szTempPath.substr(0, pos);
+		pos += 1;
+		if (!base::createDir(szSubPath.c_str()))
+			return false;
+	}
+
+	base::crt::snprintf(this->m_szPath, _countof(this->m_szPath), "%s%s", szTempPath.c_str(), base::getInstanceName());
 
 	if (!base::createDir(this->m_szPath))
 		return false;
@@ -159,6 +216,21 @@ void CLogger::uninit()
 	this->m_pThreadBase = nullptr;
 }
 
+const char* CLogger::getPath() const
+{
+	return this->m_szPath;
+}
+
+void CLogger::enableDebugLog(bool bEnable)
+{
+	this->m_bEnableDebuglog = bEnable;
+}
+
+bool CLogger::isEnableDebugLog() const
+{
+	return this->m_bEnableDebuglog;
+}
+
 void CLogger::pushLog(SLogInfo* pLogInfo)
 {
 	if (nullptr == pLogInfo)
@@ -172,7 +244,7 @@ void CLogger::pushLog(SLogInfo* pLogInfo)
 	}
 	else
 	{
-		this->saveLog(pLogInfo->szFileName, pLogInfo->bConsole, pLogInfo->szBuf, pLogInfo->nBufSize);
+		this->saveLog(pLogInfo);
 	}
 }
 
@@ -198,7 +270,7 @@ bool CLogger::onProcess()
 		}
 		else
 		{
-			this->saveLog(pLogInfo->szFileName, pLogInfo->bConsole, pLogInfo->szBuf, pLogInfo->nBufSize);
+			this->saveLog(pLogInfo);
 		}
 
 		char* szBuf = reinterpret_cast<char*>(pLogInfo);
@@ -226,67 +298,59 @@ void CLogger::flushLog()
 	}
 }
 
-void CLogger::saveLog(const char* szFileName, bool bConsole, const char* szBuf, uint32_t nBufSize)
+void CLogger::saveLog(SLogInfo* pLogInfo)
 {
-	if (bConsole)
-		std::cout << szBuf;
+	if (pLogInfo->bConsole)
+		std::cout << pLogInfo->szBuf;
 
 	SLogFileInfo* pLogFileInfo = nullptr;
-	auto iter = this->m_mapLogFileInfo.find(szFileName);
+	auto iter = this->m_mapLogFileInfo.find(pLogInfo->szSuffix);
 	if (iter == this->m_mapLogFileInfo.end())
 	{
-		base::STime sTime = base::getLocalTimeTM();
 		pLogFileInfo = new SLogFileInfo();
-		pLogFileInfo->nFileIndex = 0;
+		pLogFileInfo->nNextFileIndex = 0;
 		pLogFileInfo->nFileSize = 0;
-		char szFullFileName[MAX_PATH] = { 0 };
+		pLogFileInfo->nLastLogDay = pLogInfo->nDay;
 		pLogFileInfo->pFile = nullptr;
-		if (szFileName[0] == 0)
-			base::crt::snprintf(szFullFileName, _countof(szFullFileName), "%s/%s.%d.%4d_%02d_%02d_%02d_%02d_%02d", this->m_szPath, base::getInstanceName(), base::getCurrentProcessID(), sTime.nYear, sTime.nMon, sTime.nDay, sTime.nHour, sTime.nMin, sTime.nSec);
-		else
-			base::crt::snprintf(szFullFileName, _countof(szFullFileName), "%s/%s_%s.%d.%4d_%02d_%02d_%02d_%02d_%02d", this->m_szPath, base::getInstanceName(), szFileName, base::getCurrentProcessID(), sTime.nYear, sTime.nMon, sTime.nDay, sTime.nHour, sTime.nMin, sTime.nSec);
-		pLogFileInfo->szFileName = szFullFileName;
-		base::crt::snprintf(szFullFileName, _countof(szFullFileName), "%s_%d.log", pLogFileInfo->szFileName.c_str(), pLogFileInfo->nFileIndex);
-#ifdef _WIN32
-		pLogFileInfo->pFile = _fsopen(szFullFileName, "w", _SH_DENYNO);
-#else
-		pLogFileInfo->pFile = fopen(szFullFileName, "w");
-#endif
-		if (pLogFileInfo->pFile == nullptr)
-		{
-			delete pLogFileInfo;
-			return;
-		}
-		this->m_mapLogFileInfo[szFileName] = pLogFileInfo;
+		this->m_mapLogFileInfo[pLogInfo->szSuffix] = pLogFileInfo;
 	}
 	else
 	{
 		pLogFileInfo = iter->second;
 	}
 
-	size_t nSize = fwrite(szBuf, 1, nBufSize, pLogFileInfo->pFile);
-
-	pLogFileInfo->nFileSize += nSize;
-
-	if (pLogFileInfo->nFileSize >= _LOG_FILE_SIZE)
+	if (pLogFileInfo->pFile == nullptr || pLogFileInfo->nFileSize >= _LOG_FILE_SIZE || pLogFileInfo->nLastLogDay != pLogInfo->nDay)
 	{
-		++pLogFileInfo->nFileIndex;
-		pLogFileInfo->nFileSize = 0;
+		std::string szFileName = formatLogName(this->m_szPath, pLogInfo->szSuffix);
 		char szFullFileName[MAX_PATH] = { 0 };
-		base::crt::snprintf(szFullFileName, _countof(szFullFileName), "%s_%d.log", pLogFileInfo->szFileName.c_str(), pLogFileInfo->nFileIndex);
-		FILE* pFile = nullptr;
+		base::crt::snprintf(szFullFileName, _countof(szFullFileName), "%s_%d.log", szFileName.c_str(), pLogFileInfo->nNextFileIndex);
 #ifdef _WIN32
-		pFile = _fsopen(szFullFileName, "w", _SH_DENYNO);
+		FILE* pFile = _fsopen(szFullFileName, "w", _SH_DENYNO);
 #else
-		pFile = fopen(szFullFileName, "w");
+		FILE* pFile = fopen(szFullFileName, "w");
 #endif
 		if (pFile == nullptr)
 		{
+			fprintf(stderr, "open log error\n");
+			exit(0);
+			return;
+		}
+
+		if (pLogFileInfo->pFile != nullptr)
+		{
 			fflush(pLogFileInfo->pFile);
 			fclose(pLogFileInfo->pFile);
-			pLogFileInfo->pFile = pFile;
 		}
+		pLogFileInfo->pFile = pFile;
+		pLogFileInfo->nLastLogDay = pLogInfo->nDay;
+		pLogFileInfo->nFileSize = 0;
+
+		++pLogFileInfo->nNextFileIndex;
 	}
+
+	size_t nSize = fwrite(pLogInfo->szBuf, 1, pLogInfo->nBufSize, pLogFileInfo->pFile);
+
+	pLogFileInfo->nFileSize += nSize;
 }
 
 CLogger*	g_pLogger;
@@ -294,19 +358,17 @@ FILE*		g_pError;
 
 namespace base
 {
-	bool initLog(bool bAsync)
+	bool initLog(bool bAsync, const char* szPath)
 	{
 		g_pLogger = new CLogger();
-		if (!g_pLogger->init(bAsync))
+		if (!g_pLogger->init(bAsync, szPath))
 			return false;
 
-		char szName[MAX_PATH] = { 0 };
-		base::STime sTime = base::getLocalTimeTM();
-		base::crt::snprintf(szName, _countof(szName), "%s/log/%s.%d.ERROR_%4d_%02d_%02d_%02d_%02d_%02d.log", base::getCurrentWorkPath(), base::getInstanceName(), base::getCurrentProcessID(), sTime.nYear, sTime.nMon, sTime.nDay, sTime.nHour, sTime.nMin, sTime.nSec);
+		std::string szFileName = formatLogName(g_pLogger->getPath(), "ERROR.log");
 #ifdef _WIN32
-		g_pError = _fsopen(szName, "w", _SH_DENYNO);
+		g_pError = _fsopen(szFileName.c_str(), "w", _SH_DENYNO);
 #else
-		g_pError = fopen(szName, "w");
+		g_pError = fopen(szFileName.c_str(), "w");
 #endif
 		if (g_pError == nullptr)
 			return false;
@@ -326,23 +388,25 @@ namespace base
 		}
 	}
 
-	void saveLog(const char* szSection, bool bConsole, const char* szFormat, ...)
+	void saveLog(const char* szPrefix, bool bConsole, const char* szFormat, ...)
 	{
-		if (szFormat == nullptr || szSection == nullptr)
+		if (szFormat == nullptr || szPrefix == nullptr)
 			return;
 
+		uint8_t nDay = 0;
 		char szBuf[4096] = { 0 };
 		va_list arg;
 		va_start(arg, szFormat);
-		uint32_t nSize = formatLog(szBuf, _countof(szBuf), szSection, szFormat, arg);
+		uint32_t nSize = formatLog(szBuf, _countof(szBuf), szPrefix, szFormat, arg, &nDay);
 		va_end(arg);
 		if (nSize == 0)
 			return;
 
 		SLogInfo* pLogInfo = reinterpret_cast<SLogInfo*>(new char[sizeof(SLogInfo) + nSize + 1]);
 		pLogInfo->nBufSize = nSize;
-		pLogInfo->szFileName[0] = 0;
+		pLogInfo->szSuffix[0] = 0;
 		pLogInfo->bConsole = bConsole;
+		pLogInfo->nDay = nDay;
 		base::crt::strcpy(pLogInfo->szBuf, nSize + 1, szBuf);
 
 		g_pLogger->pushLog(pLogInfo);
@@ -353,18 +417,20 @@ namespace base
 		if (szFormat == nullptr || szFileName == nullptr)
 			return;
 
+		uint8_t nDay = 0;
 		char szBuf[4096] = { 0 };
 		va_list arg;
 		va_start(arg, szFormat);
-		uint32_t nSize = formatLog(szBuf, _countof(szBuf), "", szFormat, arg);
+		uint32_t nSize = formatLog(szBuf, _countof(szBuf), "", szFormat, arg, &nDay);
 		va_end(arg);
 		if (nSize == 0)
 			return;
 
 		SLogInfo* pLogInfo = reinterpret_cast<SLogInfo*>(new char[sizeof(SLogInfo) + nSize + 1]);
 		pLogInfo->nBufSize = nSize;
-		base::crt::strcpy(pLogInfo->szFileName, _LOG_FILE_NAME_SIZE, szFileName);
+		base::crt::strcpy(pLogInfo->szSuffix, _LOG_FILE_NAME_SIZE, szFileName);
 		pLogInfo->bConsole = bConsole;
+		pLogInfo->nDay = nDay;
 		base::crt::strcpy(pLogInfo->szBuf, nSize + 1, szBuf);
 
 		g_pLogger->pushLog(pLogInfo);
@@ -380,7 +446,7 @@ namespace base
 
 		va_list arg;
 		va_start(arg, szFormat);
-		nSize += formatLog(szBuf + nSize, _countof(szBuf) - nSize, "", szFormat, arg);
+		nSize += formatLog(szBuf + nSize, _countof(szBuf) - nSize, "", szFormat, arg, nullptr);
 		va_end(arg);
 
 		fwrite(szBuf, 1, nSize, g_pError);
@@ -397,5 +463,21 @@ namespace base
 		SLogInfo* pLogInfo = new SLogInfo();
 		pLogInfo->nBufSize = 0;
 		g_pLogger->pushLog(pLogInfo);
+	}
+
+	void enableDebugLog(bool bEnable)
+	{
+		if (g_pLogger == nullptr)
+			return;
+
+		g_pLogger->enableDebugLog(bEnable);
+	}
+
+	bool isEnableDebugLog()
+	{
+		if (g_pLogger == nullptr)
+			return false;
+
+		return g_pLogger->isEnableDebugLog();
 	}
 }

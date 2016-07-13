@@ -8,6 +8,7 @@
 #include "libBaseCommon/defer.h"
 #include "libCoreCommon/coroutine.h"
 
+
 namespace core
 {
 	CMessageDispatcher::CMessageDispatcher()
@@ -25,21 +26,22 @@ namespace core
 		return true;
 	}
 
-	void CMessageDispatcher::dispatch(const std::string& szFromServiceName, uint8_t nMessageType, const void* pData, uint16_t nSize)
+	bool CMessageDispatcher::dispatch(const std::string& szFromServiceName, uint8_t nMessageType, const void* pData, uint16_t nSize)
 	{
-		DebugAst(pData != nullptr);
+		DebugAstEx(pData != nullptr, true);
 
 		// 先前置过滤器过一遍，如果有一个返回false就直接跳过这个消息
 		const std::vector<ServiceGlobalFilter>& vecServiceGlobalBeforeFilter = CCoreServiceKitImpl::Inst()->getGlobalBeforeFilter();
 		for (size_t i = 0; i < vecServiceGlobalBeforeFilter.size(); ++i)
 		{
 			if (vecServiceGlobalBeforeFilter[i] != nullptr && !vecServiceGlobalBeforeFilter[i](szFromServiceName, nMessageType, pData, nSize))
-				return;
+				return true;
 		}
 
+		bool bRet = true;
 		if ((nMessageType&eMT_TYPE_MASK) == eMT_REQUEST)
 		{
-			DebugAst(nSize > sizeof(request_cookice));
+			DebugAstEx(nSize > sizeof(request_cookice), true);
 
 			const request_cookice* pCookice = reinterpret_cast<const request_cookice*>(pData);
 
@@ -55,8 +57,9 @@ namespace core
 			ServiceCallback& callback = CCoreServiceKitImpl::Inst()->getCoreServiceInvoker()->getCallback(pHeader->nMessageID);
 			if (callback != nullptr)
 			{
-				uint64_t nCoroutineID = coroutine::start([&](uint64_t){ callback(szFromServiceName, nMessageType, pHeader); });
+				uint64_t nCoroutineID = coroutine::start([&](uint64_t){ callback(szFromServiceName, nMessageType, message_header_ptr(pHeader)); });
 				coroutine::resume(nCoroutineID, 0);
+				bRet = (coroutine::getState(nCoroutineID) == eCS_DEAD);
 			}
 			sServiceSessionInfo.szServiceName.clear();
 			sServiceSessionInfo.nSessionID = 0;
@@ -75,14 +78,16 @@ namespace core
 			if (nullptr == pResponseWaitInfo)
 			{
 				CCoreServiceKitImpl::Inst()->getInvokerTrace()->addTraceExtraInfo("invalid session id by message dispatcher"UINT64FMT, pCookice->nSessionID);
-				return;
+				return true;
 			}
 
 			Defer(delete pResponseWaitInfo);
 
 			if (pResponseWaitInfo->callback != nullptr)
 			{
-				pResponseWaitInfo->callback(nMessageType, pHeader, (EResponseResultType)pCookice->nResult);
+				uint64_t nCoroutineID = coroutine::start([&](uint64_t){ pResponseWaitInfo->callback(nMessageType, message_header_ptr(pHeader), (EResponseResultType)pCookice->nResult); });
+				coroutine::resume(nCoroutineID, 0);
+				bRet = (coroutine::getState(nCoroutineID) == eCS_DEAD);
 			}
 			else
 			{
@@ -91,6 +96,7 @@ namespace core
 					coroutine::sendMessage(pResponseWaitInfo->nCoroutineID, reinterpret_cast<void*>(pCookice->nResult));
 					coroutine::sendMessage(pResponseWaitInfo->nCoroutineID, const_cast<message_header*>(pHeader));
 					coroutine::resume(pResponseWaitInfo->nCoroutineID, 0);
+					bRet = (coroutine::getState(pResponseWaitInfo->nCoroutineID) == eCS_DEAD);
 				}
 			}
 			CCoreServiceKitImpl::Inst()->getInvokerTrace()->endRecv();
@@ -108,8 +114,9 @@ namespace core
 			GateForwardCallback& callback = CCoreServiceKitImpl::Inst()->getCoreServiceInvoker()->getGateClientCallback(pHeader->nMessageID);
 			if (callback != nullptr)
 			{
-				uint64_t nCoroutineID = coroutine::start([&](uint64_t){ callback(session, nMessageType, pHeader); });
+				uint64_t nCoroutineID = coroutine::start([&](uint64_t){ callback(session, nMessageType, message_header_ptr(pHeader)); });
 				coroutine::resume(nCoroutineID, 0);
+				bRet = (coroutine::getState(nCoroutineID) == eCS_DEAD);
 			}
 			CCoreServiceKitImpl::Inst()->getInvokerTrace()->endRecv();
 		}
@@ -120,5 +127,7 @@ namespace core
 			if (vecServiceGlobalAfterFilter[i] != nullptr)
 				vecServiceGlobalAfterFilter[i](szFromServiceName, nMessageType, pData, nSize);
 		}
+
+		return bRet;
 	}
 }

@@ -1,4 +1,5 @@
 #include "stdafx.h"
+
 #include "gate_app.h"
 #include "connection_from_client.h"
 #include "gate_message_dispatcher.h"
@@ -84,7 +85,12 @@ bool CGateApp::onInit()
 	// 启动客户端连接
 	tinyxml2::XMLElement* pListenClientAddrXML = pRootXML->FirstChildElement("client");
 	DebugAstEx(pListenClientAddrXML != nullptr, false);
-	this->getBaseConnectionMgr()->listen(pListenClientAddrXML->Attribute("host") != nullptr ? pListenClientAddrXML->Attribute("host") : "0.0.0.0", (uint16_t)pListenClientAddrXML->IntAttribute("port"), eBCT_ConnectionFromClient, "", pListenClientAddrXML->IntAttribute("send_buf_size"), pListenClientAddrXML->IntAttribute("recv_buf_size"));
+	this->getBaseConnectionMgr()->listen(
+		pListenClientAddrXML->Attribute("host") != nullptr ? pListenClientAddrXML->Attribute("host") : "0.0.0.0", 
+		(uint16_t)pListenClientAddrXML->IntAttribute("port"), eBCT_ConnectionFromClient, "", 
+		pListenClientAddrXML->IntAttribute("send_buf_size"), 
+		pListenClientAddrXML->IntAttribute("recv_buf_size"), 
+		default_client_message_parser);
 
 	SAFE_DELETE(pConfigXML);
 

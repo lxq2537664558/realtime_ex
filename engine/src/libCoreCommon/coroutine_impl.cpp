@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "coroutine_impl.h"
 #include "coroutine_mgr.h"
-#include "core_app.h"
+#include "base_app_impl.h"
 
 #include "libBaseCommon/debug_helper.h"
 
@@ -20,9 +20,9 @@ namespace core
 	void CCoroutineImpl::saveStack()
 	{
 #ifndef _WIN32
-		char* pStackTop = CCoreApp::Inst()->getCoroutineMgr()->getMainStack() + CCoreApp::Inst()->getCoroutineMgr()->getMainStackSize();
+		char* pStackTop = CBaseAppImpl::Inst()->getCoroutineMgr()->getMainStack() + CBaseAppImpl::Inst()->getCoroutineMgr()->getMainStackSize();
 		char nDummy = 0;
-		DebugAst(pStackTop - &nDummy <= CCoreApp::Inst()->getCoroutineMgr()->getMainStackSize());
+		DebugAst(pStackTop - &nDummy <= CBaseAppImpl::Inst()->getCoroutineMgr()->getMainStackSize());
 
 		if (this->m_nStackCap < pStackTop - &nDummy)
 		{
@@ -102,8 +102,8 @@ namespace core
 		if (-1 == getcontext(&this->m_ctx))
 			return false;
 
-		this->m_ctx.uc_stack.ss_sp = CCoreApp::Inst()->getCoroutineMgr()->getMainStack();
-		this->m_ctx.uc_stack.ss_size = CCoreApp::Inst()->getCoroutineMgr()->getMainStackSize();
+		this->m_ctx.uc_stack.ss_sp = CBaseAppImpl::Inst()->getCoroutineMgr()->getMainStack();
+		this->m_ctx.uc_stack.ss_size = CBaseAppImpl::Inst()->getCoroutineMgr()->getMainStackSize();
 		this->m_ctx.uc_link = nullptr;
 
 		makecontext(&this->m_ctx, (void(*)(void))&CCoroutineImpl::onCallback, 1, this);
@@ -129,15 +129,13 @@ namespace core
 			return 0;
 		}
 
-		CCoreApp::Inst()->getCoroutineMgr()->setCurrentCoroutine(this->m_pParentCoroutine);
+		CBaseAppImpl::Inst()->getCoroutineMgr()->setCurrentCoroutine(this->m_pParentCoroutine);
 
 		this->m_pParentCoroutine->m_eState = eCS_RUNNING;
 		if (eType == eCYT_Dead)
 			this->setState(eCS_DEAD);
 		else if (eType == eCYT_Normal)
 			this->setState(eCS_SUSPEND);
-		else
-			this->setState(eCS_SLEEP);
 
 		this->m_pParentCoroutine = nullptr;
 
@@ -150,9 +148,9 @@ namespace core
 				this->m_hHandle = nullptr;
 			}
 #endif
-			CCoreApp::Inst()->getCoroutineMgr()->recycleCoroutine(this);
+			CBaseAppImpl::Inst()->getCoroutineMgr()->recycleCoroutine(this);
 		}
-		CCoroutineImpl* pCurrentCoroutine = CCoreApp::Inst()->getCoroutineMgr()->getCurrentCoroutine();
+		CCoroutineImpl* pCurrentCoroutine = CBaseAppImpl::Inst()->getCoroutineMgr()->getCurrentCoroutine();
 
 #ifdef _WIN32
 		SwitchToFiber(pCurrentCoroutine->m_hHandle);
@@ -163,24 +161,18 @@ namespace core
 
 		return this->m_nContext;
 	}
-
+	
 	void CCoroutineImpl::resume(uint64_t nContext)
 	{
-		if (this->getState() == eCS_SLEEP)
-		{
-			PrintWarning("coroutine is sleep can't resume coroutine_id: "UINT64FMT, this->getCoroutineID());
-			return;
-		}
-
 		DebugAst(this->getState() == eCS_READY || this->getState() == eCS_SUSPEND);
 
-		CCoroutineImpl* pCurrentCoroutine = CCoreApp::Inst()->getCoroutineMgr()->getCurrentCoroutine();
+		CCoroutineImpl* pCurrentCoroutine = CBaseAppImpl::Inst()->getCoroutineMgr()->getCurrentCoroutine();
 		DebugAst(pCurrentCoroutine != nullptr);
 
 		bool bRestoreStack = (this->getState() == eCS_SUSPEND);
 		this->setState(eCS_RUNNING);
 		pCurrentCoroutine->setState(eCS_SUSPEND);
-		CCoreApp::Inst()->getCoroutineMgr()->setCurrentCoroutine(this);
+		CBaseAppImpl::Inst()->getCoroutineMgr()->setCurrentCoroutine(this);
 		this->m_pParentCoroutine = pCurrentCoroutine;
 		this->m_nContext = nContext;
 
@@ -188,7 +180,7 @@ namespace core
 		SwitchToFiber(this->m_hHandle);
 #else
 		if (bRestoreStack)
-			memcpy(CCoreApp::Inst()->getCoroutineMgr()->getMainStack() + CCoreApp::Inst()->getCoroutineMgr()->getMainStackSize() - this->m_nStackSize, this->m_pStack, this->m_nStackSize);
+			memcpy(CBaseAppImpl::Inst()->getCoroutineMgr()->getMainStack() + CBaseAppImpl::Inst()->getCoroutineMgr()->getMainStackSize() - this->m_nStackSize, this->m_pStack, this->m_nStackSize);
 		
 		swapcontext(&this->m_pParentCoroutine->m_ctx, &this->m_ctx);
 #endif

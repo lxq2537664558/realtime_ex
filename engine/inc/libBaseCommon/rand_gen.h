@@ -11,18 +11,18 @@ namespace base
 
 		void			setSeed(uint32_t nSeed);
 
-		///< [nMin, nMax)
+		// [nMin, nMax)
 		uint32_t		getRand(uint32_t nMin, uint32_t nMax);
-		///< [0, nMax);
+		// [0, nMax);
 		uint32_t		getRand(uint32_t nMax);
-		///< [0.0, 1.0)
+		// [0.0, 1.0)
 		double			getRandDouble();
 
-		///< [nMin, nMax)
+		// [nMin, nMax)
 		static uint32_t	getGlobalRand(uint32_t nMin, uint32_t nMax);
-		///< [0, nMax);
+		// [0, nMax);
 		static uint32_t	getGlobalRand(uint32_t nMax);
-		///< [0.0, 1.0)
+		// [0.0, 1.0)
 		static double	getGlobalRandDouble();
 
 	private:

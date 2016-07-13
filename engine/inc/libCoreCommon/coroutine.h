@@ -11,7 +11,6 @@ namespace core
 		eCS_READY,	// 等待执行（重来都没有被执行过）
 		eCS_RUNNING,// 执行状态
 		eCS_SUSPEND,// 挂起状态
-		eCS_SLEEP,	// 睡眠状态
 	};
 
 	namespace coroutine
@@ -28,10 +27,6 @@ namespace core
 		@brief: 挂起当前执行的协程，在协程下次会执行时会返回resume函数传给他的参数
 		*/
 		uint64_t	yield();
-		/**
-		@brief: 挂起当前执行的协程指定秒数
-		*/
-		void		sleep(int64_t ms);
 		/**
 		@brief: 获取协程状态
 		*/

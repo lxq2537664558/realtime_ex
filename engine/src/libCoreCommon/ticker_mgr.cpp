@@ -18,16 +18,6 @@ namespace core
 
 	}
 
-	uint32_t CTickerMgr::getNearestTime() const
-	{
-		int64_t nCurTime = base::getGmtTime();
-		int64_t nDeltaTime = this->m_nLogicTime + __TIME_WHEEL_PRECISION - nCurTime;
-		if (nDeltaTime < 0)
-			nDeltaTime = 0;
-
-		return (uint32_t)nDeltaTime;
-	}
-
 	void CTickerMgr::registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
 	{
 		DebugAst(pTicker != nullptr);
@@ -90,6 +80,8 @@ namespace core
 			{
 				// 在联级链表中
 				uint32_t nPos = (uint32_t)((pTickerNode->Value.pTicker->m_nNextTickTime >> (__TIME_NEAR_BITS + nLevel * __TIME_CASCADE_BITS))&__TIME_CASCADE_MASK);
+				DebugAst(nPos != 0);
+
 				this->m_listCascadeTicker[nLevel][nPos].pushTail(pTickerNode);
 			}
 			else
@@ -147,7 +139,7 @@ namespace core
 				}
 				this->insertTicker(this->m_vecTempTickerNode[i]);
 			}
-		
+
 			this->cascadeTicker();
 		}
 	}
@@ -164,7 +156,7 @@ namespace core
 				break;
 
 			uint32_t nPos = nCascadeTime & __TIME_CASCADE_MASK;
-			// 0这个坑位不能用
+			// 如果是0，肯定是要再计算上一个联级的
 			if (nPos != 0)
 			{
 				auto& listTicker = this->m_listCascadeTicker[nLevel][nPos];

@@ -119,7 +119,7 @@ namespace base
 		// D = P - C
 		double dx = (double)(point.x - center.x);
 		double dy = (double)(point.y - center.y);
-		// 		///< 这里的距离计算比较特殊，采用r跟dx与dy比较
+		// 		// 这里的距离计算比较特殊，采用r跟dx与dy比较
 		// 		if( dx > r && dy > r )
 		// 			return false;
 		// |D| = (dx^2 + dy^2)^0.5

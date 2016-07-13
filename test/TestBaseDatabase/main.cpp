@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <string>
+#include "../../3rd/mysql/include/mysql/mysql.h"
 using namespace std;
 
 int main()
@@ -13,14 +14,18 @@ int main()
 	base::initLog(true);
 	base::startupDatabase();
 	base::IDbConnection* pDbConnection = base::createDbFacade()->createConnection();
-	pDbConnection->connect( "192.243.45.183", 3306, "CM_yf3", "8GRbg5eo@4QWae", "CM_EN2", "utf8" );
-	base::IDbRecordset* pDbRecordset = pDbConnection->execute( "select name, player_id from player_base where player_id in(293091504, 298609469, 297373912, 273202212, 270517648, 301703830)" );
-	for (uint32_t i = 0; i < pDbRecordset->getRowCount(); ++i)
+	pDbConnection->connect( "10.0.18.160", 3306, "root", "123456", "test", "gbk" );
+	char szSQL[256] = { 0 };
+	char szName[256] = { 0xd5, '\'', ' ', 'o', 'r', ' ', '1', '=', '1', ';', '-', '-', ' ' };
+	char szEscapeName[256] = { 0 };
+	mysql_real_escape_string((MYSQL*)pDbConnection->getMysql(), szEscapeName, szName, strlen(szName));
+	base::crt::snprintf(szSQL, _countof(szSQL), "select id from tbl_player where name = '%s';", szEscapeName);
+	base::IDbRecordset* pDbRecordset = pDbConnection->execute(szSQL);
+	for (uint64_t i = 0; i < pDbRecordset->getRowCount(); ++i)
 	{
 		pDbRecordset->fatchNextRow();
-		std::string szName = pDbRecordset->getData(0);
-		uint64_t nPlayerID = pDbRecordset->getData(1);
-		PrintInfo("name %s", szName.c_str());
+		uint32_t nID = pDbRecordset->getData(0);
+		cout << "ID: " << nID << endl;
 	}
 	base::sleep(~0);
 

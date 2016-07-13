@@ -65,7 +65,7 @@ namespace base
 		struct timespec ts;
 		if (clock_gettime(CLOCK_MONOTONIC, &ts) == 0)
 			nTime = ((int64_t)ts.tv_sec) * 1000000 + ts.tv_nsec / 1000;
-		///< 上面不做强转的话如果编译成32位程序就会出现49天问题
+		// 上面不做强转的话如果编译成32位程序就会出现49天问题
 		return nTime;
 #endif
 	}

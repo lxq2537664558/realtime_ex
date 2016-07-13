@@ -20,7 +20,7 @@ namespace core
 		CCoreConnection();
 		virtual ~CCoreConnection();
 
-		bool				init(CBaseConnection* pBaseConnection, uint64_t nID);
+		bool				init(uint32_t nType, uint64_t nID, const std::string& szContext, const MessageParser& messageParser);
 		void				send(uint8_t nMessageType, const void* pData, uint16_t nSize);
 		void				send(uint8_t nMessageType, const void* pData, uint16_t nSize, const void* pExtraBuf, uint16_t nExtraSize);
 		
@@ -28,9 +28,9 @@ namespace core
 
 		uint64_t			getID() const;
 
-		void				shutdown(bool bForce, const std::string& szMsg);
+		uint32_t			getType() const;
 
-		CBaseConnection*	getBaseConnection() const;
+		void				shutdown(bool bForce, const std::string& szMsg);
 
 		uint32_t			getSendDataSize() const;
 		uint32_t			getRecvDataSize() const;
@@ -38,7 +38,8 @@ namespace core
 		const SNetAddr&		getLocalAddr() const;
 		const SNetAddr&		getRemoteAddr() const;
 
-		void				onHeartbeat(uint64_t nContext);
+		void				onHeartbeat();
+		void				enableHeartbeat(bool bEnable);
 
 	private:
 		virtual uint32_t	onRecv(const char* pData, uint32_t nDataSize);
@@ -46,16 +47,15 @@ namespace core
 		virtual void		onDisconnect();
 
 		void				onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize);
-		void				sendHeartbeat();
 
 	private:
 		bool					m_bHeartbeat;
-		CTicker*				m_pHeartbeat;
 		uint32_t				m_nSendHeartbeatCount;
 
-		MessageParser			m_messageParser;
 		uint64_t				m_nID;
-		CBaseConnection*		m_pBaseConnection;
+		uint32_t				m_nType;
+		std::string				m_szContext;
+		MessageParser			m_messageParser;
 		CCoreConnectionMonitor	m_monitor;
 	};
 }

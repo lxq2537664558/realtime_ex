@@ -46,12 +46,12 @@ void CConnectionFromService::onDisconnect()
 	CMasterApp::Inst()->getServiceMgr()->unregisterService(this->m_szServiceName);
 }
 
-void CConnectionFromService::onDispatch(uint8_t nMsgType, const void* pData, uint16_t nSize)
+bool CConnectionFromService::onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize)
 {
-	DebugAst(nMsgType == eMT_SYSTEM);
+	DebugAstEx(nMessageType == eMT_SYSTEM, true);
 
 	const core::message_header* pHeader = reinterpret_cast<const core::message_header*>(pData);
-	DebugAst(nSize > sizeof(core::message_header));
+	DebugAstEx(nSize > sizeof(core::message_header), true);
 
 	if (pHeader->nMessageID == eSMT_register_service_base_info)
 	{
@@ -64,7 +64,7 @@ void CConnectionFromService::onDispatch(uint8_t nMsgType, const void* pData, uin
 			PrintWarning("dup service service_name: %s", this->m_szServiceName.c_str());
 			this->m_szServiceName.clear();
 			this->shutdown(true, "dup service connection");
-			return;
+			return true;
 		}
 	}
 	else if (pHeader->nMessageID == eSMT_unregister_service_base_info)
@@ -74,4 +74,6 @@ void CConnectionFromService::onDispatch(uint8_t nMsgType, const void* pData, uin
 
 		CMasterApp::Inst()->getServiceMgr()->unregisterService(netMsg.szName);
 	}
+
+	return true;
 }

@@ -19,12 +19,15 @@
 #include "libBaseCommon/thread_base.h"
 #include "libBaseCommon/logger.h"
 
-#include "core_app.h"
+#include "base_app_impl.h"
 #include "base_app.h"
 #include "base_object.h"
 #include "ticker_mgr.h"
 #include "monitor.h"
-#include "core_connection_mgr.h"
+#include "base_connection_mgr.h"
+#include "base_connection.h"
+#include "message_command.h"
+#include "net_runnable.h"
 
 #include "tinyxml2/tinyxml2.h"
 
@@ -34,7 +37,7 @@
 #define _DEFAULT_SAMPLING_TIME		1000
 
 #ifndef _WIN32
-///< 环境变量
+// 环境变量
 extern char **environ;
 // 修改进程信息，方便运维管理
 static bool initProcessInfo(size_t argc, char** argv, const char* title)
@@ -88,9 +91,10 @@ static bool initProcessInfo(size_t argc, char** argv, const char* title)
 
 namespace core
 {
-	CCoreApp::CCoreApp()
+	CBaseAppImpl::CBaseAppImpl()
 		: m_pTickerMgr(nullptr)
-		, m_pCoreConnectionMgr(nullptr)
+		, m_pMessageQueue(nullptr)
+		, m_pBaseConnectionMgr(nullptr)
 		, m_pCoroutineMgr(nullptr)
 		, m_nRunState(eARS_Start)
 		, m_bMarkQuit(false)
@@ -102,12 +106,12 @@ namespace core
 	{
 	}
 
-	CCoreApp::~CCoreApp()
+	CBaseAppImpl::~CBaseAppImpl()
 	{
 
 	}
 
-	bool CCoreApp::run(int32_t argc, char** argv, const char* szConfig)
+	bool CBaseAppImpl::run(int32_t argc, char** argv, const char* szConfig)
 	{
 		if (nullptr == szConfig)
 		{
@@ -138,43 +142,43 @@ namespace core
 		return true;
 	}
 
-	void CCoreApp::registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
+	void CBaseAppImpl::registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
 	{
 		this->m_pTickerMgr->registerTicker(pTicker, nStartTime, nIntervalTime, nContext);
 	}
 
-	void CCoreApp::unregisterTicker(CTicker* pTicker)
+	void CBaseAppImpl::unregisterTicker(CTicker* pTicker)
 	{
 		this->m_pTickerMgr->unregisterTicker(pTicker);
 	}
 
-	int64_t CCoreApp::getLogicTime() const
+	int64_t CBaseAppImpl::getLogicTime() const
 	{
 		return this->m_pTickerMgr->getLogicTime();
 	}
 
-	CCoreConnectionMgr* CCoreApp::getCoreConnectionMgr() const
+	CBaseConnectionMgr* CBaseAppImpl::getBaseConnectionMgr() const
 	{
-		return this->m_pCoreConnectionMgr;
+		return this->m_pBaseConnectionMgr;
 	}
 
-	CCoroutineMgr* CCoreApp::getCoroutineMgr() const
+	CCoroutineMgr* CBaseAppImpl::getCoroutineMgr() const
 	{
 		return this->m_pCoroutineMgr;
 	}
 
-	const std::string& CCoreApp::getConfigFileName() const
+	const std::string& CBaseAppImpl::getConfigFileName() const
 	{
 		return this->m_szConfig;
 	}
 
-	base::CWriteBuf& CCoreApp::getWriteBuf() const
+	base::CWriteBuf& CBaseAppImpl::getWriteBuf() const
 	{
 		const_cast<base::CWriteBuf&>(this->m_writeBuf).clear();
 		return const_cast<base::CWriteBuf&>(this->m_writeBuf);
 	}
 
-	bool CCoreApp::onInit()
+	bool CBaseAppImpl::onInit()
 	{
 		// 首先获取可执行文件目录
 		char szBinPath[MAX_PATH] = { 0 };
@@ -273,11 +277,11 @@ namespace core
 		memset(&sig_action, 0, sizeof(sig_action));
 		sig_action.sa_sigaction = [](int32_t signo, siginfo_t*, void* ptr)->void
 		{
-			if (CCoreApp::Inst()->m_nRunState != eARS_Normal)
+			if (CBaseAppImpl::Inst()->m_nRunState != eARS_Normal)
 				return;
 
 			PrintInfo("server start quit");
-			CCoreApp::Inst()->m_nRunState = eARS_Quitting;
+			CBaseAppImpl::Inst()->m_nRunState = eARS_Quitting;
 		};
 		sig_action.sa_flags = SA_SIGINFO;
 		sigaction(SIGUSR1, &sig_action, 0);
@@ -299,11 +303,20 @@ namespace core
 		this->m_szPID = szPID;
 #endif
 
-		if (!base::initLog(true))
+		tinyxml2::XMLElement* pLogXML = pBaseInfoXML->FirstChildElement("log");
+		if (pLogXML == nullptr)
+		{
+			fprintf(stderr, "pLogXML == nullptr\n");
+			return false;
+		}
+
+		if (!base::initLog(pLogXML->IntAttribute("sync") != 0, pLogXML->Attribute("path")))
 		{
 			fprintf(stderr, "init log error\n");
 			return false;
 		}
+
+		base::enableDebugLog(pLogXML->IntAttribute("debug") != 0);
 
 		bool bProfiling = false;
 		tinyxml2::XMLElement* pProfilingXML = pBaseInfoXML->FirstChildElement("profiling");
@@ -335,6 +348,13 @@ namespace core
 			return false;
 		}
 
+		this->m_pMessageQueue = new CMessageQueue();
+		if (!this->m_pMessageQueue->init(true))
+		{
+			PrintWarning("this->m_pMessageQueue->init error");
+			return false;
+		}
+
 		this->m_pCoroutineMgr = new CCoroutineMgr();
 		if (!this->m_pCoroutineMgr->init(_MAIN_CO_STACK_SIZE))
 		{
@@ -345,10 +365,16 @@ namespace core
 
 		this->m_pTickerMgr = new core::CTickerMgr();
 		uint32_t nMaxConnectionCount = (uint32_t)pBaseInfoXML->IntAttribute("connections");
-		this->m_pCoreConnectionMgr = new CCoreConnectionMgr();
-		if (!this->m_pCoreConnectionMgr->init(nMaxConnectionCount))
+		this->m_pBaseConnectionMgr = new CBaseConnectionMgr();
+		if (!this->m_pBaseConnectionMgr->init())
 		{
 			PrintWarning("this->m_pCoreConnectionMgr->init(nMaxConnectionCount)");
+			return false;
+		}
+
+		if (!CNetRunnable::Inst()->init(nMaxConnectionCount))
+		{
+			PrintWarning("CNetRunnable::Inst()->init(nMaxConnectionCount)");
 			return false;
 		}
 		
@@ -365,6 +391,9 @@ namespace core
 			this->m_nHeartbeatTime = _DEFAULT_HEARTBEAT_TIME;
 		}
 
+		this->m_tickerQPS.setCallback(std::bind(&CBaseAppImpl::onQPS, this, std::placeholders::_1));
+		this->registerTicker(&this->m_tickerQPS, 1000, 1000, 0);
+
 		SAFE_DELETE(pConfigXML);
 
 		this->m_nRunState = eARS_Normal;
@@ -374,13 +403,17 @@ namespace core
 		return CBaseApp::Inst()->onInit();
 	}
 
-	void CCoreApp::onDestroy()
+	void CBaseAppImpl::onDestroy()
 	{
 		CBaseApp::Inst()->onDestroy();
 
+		CNetRunnable::Inst()->join();
+		CNetRunnable::Inst()->release();
+
 		PrintInfo("CCoreApp::onDestroy");
 
-		SAFE_DELETE(this->m_pCoreConnectionMgr);
+		SAFE_DELETE(this->m_pBaseConnectionMgr);
+		SAFE_DELETE(this->m_pMessageQueue);
 		SAFE_DELETE(this->m_pTickerMgr);
 		SAFE_DELETE(this->m_pCoroutineMgr);
 
@@ -396,29 +429,105 @@ namespace core
 #endif
 	}
 
-	bool CCoreApp::onProcess()
+	bool CBaseAppImpl::onProcess()
 	{
 		int64_t nBeginTime = base::getProcessPassTime();
 
-		PROFILING_BEGIN(CBaseApp::Inst()->onBeforeFrame)
-		CBaseApp::Inst()->onBeforeFrame();
-		PROFILING_END(CBaseApp::Inst()->onBeforeFrame)
+		static std::vector<SMessagePacket> vecMessagePacket;
+		this->m_pMessageQueue->popMessagePacket(vecMessagePacket);
 
-		PROFILING_BEGIN(this->m_pCoreConnectionMgr->update)
-		this->m_pCoreConnectionMgr->update(this->m_pTickerMgr->getNearestTime());
-		PROFILING_END(this->m_pCoreConnectionMgr->update)
+		for (auto iter = vecMessagePacket.begin(); iter != vecMessagePacket.end(); ++iter)
+		{
+			const SMessagePacket& sMessagePacket = *iter;
 
-		PROFILING_BEGIN(this->m_pTickerMgr->update)
-		this->m_pTickerMgr->update();
-		PROFILING_END(this->m_pTickerMgr->update)
+			switch (sMessagePacket.nType)
+			{
+				case eMCT_NOTIFY_SOCKET_CONNECT:
+				{
+					SMCT_NOTIFY_SOCKET_CONNECT* pContext = reinterpret_cast<SMCT_NOTIFY_SOCKET_CONNECT*>(sMessagePacket.pData);
+					if (pContext == nullptr)
+					{
+					 PrintWarning("context == nullptr type: eMCT_NOTIFY_SOCKET_CONNECT");
+					 continue;
+					}
+					this->m_pBaseConnectionMgr->onConnect(pContext->nSocketID, pContext->szContext, pContext->nType, pContext->sLocalAddr, pContext->sRemoteAddr);
+					SAFE_DELETE(pContext);
+				}
+				break;
 
-		PROFILING_BEGIN(CBaseApp::Inst()->onProcess)
-		CBaseApp::Inst()->onProcess();
-		PROFILING_END(CBaseApp::Inst()->onProcess)
+			case eMCT_NOTIFY_SOCKET_DISCONNECT:
+				{
+					SMCT_NOTIFY_SOCKET_DISCONNECT* pContext = reinterpret_cast<SMCT_NOTIFY_SOCKET_DISCONNECT*>(sMessagePacket.pData);
+					if (pContext == nullptr)
+					{
+						PrintWarning("context == nullptr type: eMPT_NOTIFY_SOCKET_DISCONNECT");
+						continue;
+					}
+					this->m_pBaseConnectionMgr->onDisconnect(pContext->nSocketID);
+					SAFE_DELETE(pContext);
+				}
+				break;
 
-		PROFILING_BEGIN(CBaseApp::Inst()->onProcess)
-		CBaseApp::Inst()->onAfterFrame();
-		PROFILING_END(CBaseApp::Inst()->onProcess)
+			case eMCT_NOTIFY_SOCKET_CONNECT_REFUSE:
+				{
+					SMCT_NOTIFY_SOCKET_CONNECT_REFUSE* pContext = reinterpret_cast<SMCT_NOTIFY_SOCKET_CONNECT_REFUSE*>(sMessagePacket.pData);
+					if (pContext == nullptr)
+					{
+						PrintWarning("context == nullptr type: eMCT_NOTIFY_SOCKET_CONNECT_REFUSE");
+						continue;
+					}
+					this->m_pBaseConnectionMgr->onConnectRefuse(pContext->szContext);
+					SAFE_DELETE(pContext);
+				}
+				break;
+
+			case eMCT_RECV_SOCKET_DATA:
+				{
+					SMCT_RECV_SOCKET_DATA* pContext = reinterpret_cast<SMCT_RECV_SOCKET_DATA*>(sMessagePacket.pData);
+					if (pContext == nullptr)
+					{
+						PrintWarning("context == nullptr type: eMCT_RECV_SOCKET_DATA");
+						continue;
+					}
+					CBaseConnection* pBaseConnection = this->m_pBaseConnectionMgr->getBaseConnectionByID(pContext->nSocketID);
+					if (pBaseConnection == nullptr)
+					{
+						PrintWarning("pContext->pBaseConnection == nullptr type: eMCT_RECV_SOCKET_DATA socket_id: %d", pContext->nSocketID);
+						continue;
+					}
+					if (pBaseConnection->onDispatch(pContext->nMessageType, pContext->pData, pContext->nDataSize))
+					{
+						char* pData = reinterpret_cast<char*>(pContext->pData);
+						SAFE_DELETE_ARRAY(pData);
+					}
+					SAFE_DELETE(pContext);
+				}
+				break;
+
+			case eMCT_TIMER:
+				{
+					PROFILING_BEGIN(CBaseApp::Inst()->onBeforeFrame())
+					CBaseApp::Inst()->onBeforeFrame();
+					PROFILING_END(CBaseApp::Inst()->onBeforeFrame())
+
+					PROFILING_BEGIN(this->m_pTickerMgr->update)
+					this->m_pTickerMgr->update();
+					PROFILING_END(this->m_pTickerMgr->update)
+
+					PROFILING_BEGIN(CBaseApp::Inst()->onAfterFrame)
+					CBaseApp::Inst()->onAfterFrame();
+					PROFILING_END(CBaseApp::Inst()->onAfterFrame)
+
+					++this->m_nCycleCount;
+				}
+				break;
+
+			default:
+				{
+					PrintWarning("invalid type: %d", sMessagePacket.nType);
+				}
+			}
+		}
 
 		if (this->m_nRunState == eARS_Quitting && !this->m_bMarkQuit)
 		{
@@ -434,7 +543,6 @@ namespace core
 
 		int64_t nEndTime = base::getProcessPassTime();
 		this->m_nTotalTime = this->m_nTotalTime + (uint32_t)(nEndTime - nBeginTime);
-		++this->m_nCycleCount;
 
 		if (this->m_nTotalTime / 1000 >= this->m_nSamplingTime)
 		{
@@ -447,11 +555,16 @@ namespace core
 		return true;
 	}
 
-	void CCoreApp::onAnalyze()
+	CMessageQueue* CBaseAppImpl::getMessageQueue() const
+	{
+		return this->m_pMessageQueue;
+	}
+
+	void CBaseAppImpl::onAnalyze()
 	{
 	}
 
-	void CCoreApp::doQuit()
+	void CBaseAppImpl::doQuit()
 	{
 		PrintInfo("CCoreApp::doQuit");
 		DebugAst(this->m_nRunState == eARS_Quitting);
@@ -459,22 +572,23 @@ namespace core
 		this->m_nRunState = eARS_Quit;
 	}
 
-	uint32_t CCoreApp::getHeartbeatLimit() const
+	uint32_t CBaseAppImpl::getHeartbeatLimit() const
 	{
 		return this->m_nHeartbeatLimit;
 	}
 
-	uint32_t CCoreApp::getHeartbeatTime() const
+	uint32_t CBaseAppImpl::getHeartbeatTime() const
 	{
 		return this->m_nHeartbeatTime;
 	}
 
-	void CCoreApp::onQPS(uint64_t nContext)
+	void CBaseAppImpl::onQPS(uint64_t nContext)
 	{
+		PrintInfo("QPS: %u", this->m_nQPS);
 		this->m_nQPS = 0;
 	}
 
-	void CCoreApp::incQPS()
+	void CBaseAppImpl::incQPS()
 	{
 		++this->m_nQPS;
 	}

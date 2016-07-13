@@ -98,7 +98,7 @@ void CGateMessageDispatcher::dispatch(uint64_t nSocketID, uint8_t nMessageType, 
 		core::ClientCallback& callback = iter->second.callback;
 		DebugAst(callback != nullptr);
 		
-		callback(nSocketID, pHeader);
+		callback(nSocketID, core::message_header_ptr(pHeader));
 	}
 	else if ((nMessageType&eMT_TYPE_MASK) == eMT_TO_GATE)
 	{

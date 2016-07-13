@@ -11,7 +11,7 @@
 namespace base
 {
 	CDbConnection::CDbConnection()
-		: m_pMySql(nullptr)
+		: m_pMysql(nullptr)
 		, m_pDbFacade(nullptr)
 	{
 	}
@@ -20,8 +20,8 @@ namespace base
 	{
 		DebugAstEx(!this->isConnect(), false);
 
-		this->m_pMySql = mysql_init(nullptr);
-		if (nullptr == this->m_pMySql)
+		this->m_pMysql = mysql_init(nullptr);
+		if (nullptr == this->m_pMysql)
 		{
 			PrintWarning("mysql_init error");
 			return false;
@@ -29,20 +29,20 @@ namespace base
 
 		/*
 		CLIENT_FOUND_ROWS 为了使mysql_affected_rows返回的数量完全有where语句控制，而不是因为数据没有变动就返回0
-		CLIENT_MULTI_STATEMENTS 为了可以在一次执行mysql_real_query中可以执行多条sql（用;隔开），但是这样会导致出现SQL注入的情况，所以这里禁用了
+		CLIENT_MULTI_STATEMENTS 为了可以在一次执行mysql_real_query中可以执行多条sql（用;隔开），但是这样会导致SQL注入非常容易（通过union操作可以用一个语句做到SQL注入），所以这里禁用了
 		*/
-		if (this->m_pMySql != mysql_real_connect(this->m_pMySql, szHost, szUser, szPassword, szDbname, nPort, nullptr, CLIENT_FOUND_ROWS))
+		if (this->m_pMysql != mysql_real_connect(this->m_pMysql, szHost, szUser, szPassword, szDbname, nPort, nullptr, CLIENT_FOUND_ROWS))
 		{
-			PrintWarning("mysql_real_connect error: %s", mysql_error(this->m_pMySql));
-			mysql_close(this->m_pMySql);
-			this->m_pMySql = nullptr;
+			PrintWarning("mysql_real_connect error: %s", mysql_error(this->m_pMysql));
+			mysql_close(this->m_pMysql);
+			this->m_pMysql = nullptr;
 			return false;
 		}
-		if (0 != mysql_set_character_set(this->m_pMySql, szCharacterSet))
+		if (0 != mysql_set_character_set(this->m_pMysql, szCharacterSet))
 		{
-			PrintWarning("mysql_set_character_set error: %s", mysql_error(this->m_pMySql));
-			mysql_close(this->m_pMySql);
-			this->m_pMySql = nullptr;
+			PrintWarning("mysql_set_character_set error: %s", mysql_error(this->m_pMysql));
+			mysql_close(this->m_pMysql);
+			this->m_pMysql = nullptr;
 			return false;
 		}
 		return true;
@@ -50,7 +50,7 @@ namespace base
 
 	bool CDbConnection::isConnect() const
 	{
-		return this->m_pMySql != nullptr;
+		return this->m_pMysql != nullptr;
 	}
 
 	CDbConnection::~CDbConnection()
@@ -78,8 +78,8 @@ namespace base
 			SAFE_RELEASE(pDbRecordset);
 		}
 
-		mysql_close(this->m_pMySql);
-		this->m_pMySql = nullptr;
+		mysql_close(this->m_pMysql);
+		this->m_pMysql = nullptr;
 	}
 
 	void CDbConnection::release()
@@ -102,7 +102,7 @@ namespace base
 		DebugAstEx(szSql != nullptr, nullptr);
 		DebugAstEx(this->isConnect(), nullptr);
 
-		MYSQL_STMT* pStmt = mysql_stmt_init(this->m_pMySql);
+		MYSQL_STMT* pStmt = mysql_stmt_init(this->m_pMysql);
 		size_t nLen = strlen(szSql);
 		if (0 != mysql_stmt_prepare(pStmt, szSql, (unsigned long)nLen))
 		{
@@ -128,17 +128,17 @@ namespace base
 		DebugAstEx(this->isConnect(), nullptr);
 
 		size_t nLen = strlen(szSql);
-		int32_t nError = mysql_real_query(this->m_pMySql, szSql, (unsigned long)nLen);
+		int32_t nError = mysql_real_query(this->m_pMysql, szSql, (unsigned long)nLen);
 		if (0 != nError)
 		{
-			PrintWarning("mysql_real_query error: %d, error: %s sql: %s", nError, mysql_error(this->m_pMySql), szSql);
+			PrintWarning("mysql_real_query error: %d, error: %s sql: %s", nError, mysql_error(this->m_pMysql), szSql);
 			return nullptr;
 		}
-		MYSQL_RES* pRes = mysql_store_result(this->m_pMySql);
+		MYSQL_RES* pRes = mysql_store_result(this->m_pMysql);
 		if (nullptr == pRes)
 		{
-			if (0 != mysql_errno(this->m_pMySql))
-				PrintWarning("mysql_store_result error: %s sql: %s", mysql_error(this->m_pMySql), szSql);
+			if (0 != mysql_errno(this->m_pMysql))
+				PrintWarning("mysql_store_result error: %s sql: %s", mysql_error(this->m_pMysql), szSql);
 			return nullptr;
 		}
 
@@ -155,14 +155,26 @@ namespace base
 	{
 		DebugAstEx(this->isConnect(), false);
 
-		return 0 == mysql_ping(this->m_pMySql);
+		return 0 == mysql_ping(this->m_pMysql);
 	}
 
 	uint64_t CDbConnection::getAffectedRow() const
 	{
 		DebugAstEx(this->isConnect(), 0);
 
-		return (uint64_t)mysql_affected_rows(this->m_pMySql);
+		return (uint64_t)mysql_affected_rows(this->m_pMysql);
+	}
+
+	void* CDbConnection::getMysql() const
+	{
+		return this->m_pMysql;
+	}
+
+	void CDbConnection::escape(char* szDst, const char* szSrc, size_t nLength)
+	{
+		DebugAst(szSrc != nullptr && szDst != nullptr && this->m_pMysql != nullptr);
+
+		mysql_real_escape_string(this->m_pMysql, szDst, szSrc, (unsigned long)nLength);
 	}
 
 	void CDbConnection::delRecordsetCount(CDbRecordset* pDbRecordset)

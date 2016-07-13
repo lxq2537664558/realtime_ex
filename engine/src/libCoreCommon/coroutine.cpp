@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "coroutine.h"
 #include "coroutine_impl.h"
-#include "core_app.h"
+#include "base_app_impl.h"
 #include "coroutine_mgr.h"
 
 #include "libBaseCommon/debug_helper.h"
@@ -13,7 +13,7 @@ namespace core
 	{
 		void resume(uint64_t nID, uint64_t nContext)
 		{
-			CCoroutineImpl* pCoroutineImpl = CCoreApp::Inst()->getCoroutineMgr()->getCoroutine(nID);
+			CCoroutineImpl* pCoroutineImpl = CBaseAppImpl::Inst()->getCoroutineMgr()->getCoroutine(nID);
 			if (nullptr == pCoroutineImpl)
 			{
 				PrintWarning("invalid coroutine id");
@@ -23,19 +23,14 @@ namespace core
 			pCoroutineImpl->resume(nContext);
 		}
 
-		void sleep(int64_t ms)
-		{
-			CCoreApp::Inst()->getCoroutineMgr()->sleep(ms);
-		}
-
 		uint64_t yield()
 		{
-			return CCoreApp::Inst()->getCoroutineMgr()->getCurrentCoroutine()->yield(eCYT_Normal);
+			return CBaseAppImpl::Inst()->getCoroutineMgr()->getCurrentCoroutine()->yield(eCYT_Normal);
 		}
 
 		uint32_t getState(uint64_t nID)
 		{
-			CCoroutineImpl* pCoroutineImpl = CCoreApp::Inst()->getCoroutineMgr()->getCoroutine(nID);
+			CCoroutineImpl* pCoroutineImpl = CBaseAppImpl::Inst()->getCoroutineMgr()->getCoroutine(nID);
 			if (nullptr == pCoroutineImpl)
 				return eCS_DEAD;
 
@@ -44,12 +39,12 @@ namespace core
 
 		uint64_t getCurrentID()
 		{
-			return CCoreApp::Inst()->getCoroutineMgr()->getCurrentCoroutine()->getCoroutineID();
+			return CBaseAppImpl::Inst()->getCoroutineMgr()->getCurrentCoroutine()->getCoroutineID();
 		}
 
 		uint64_t start(std::function<void(uint64_t)> fn)
 		{
-			CCoroutineImpl* pCoroutineImpl = CCoreApp::Inst()->getCoroutineMgr()->startCoroutine(fn);
+			CCoroutineImpl* pCoroutineImpl = CBaseAppImpl::Inst()->getCoroutineMgr()->startCoroutine(fn);
 			if (nullptr == pCoroutineImpl)
 				return 0;
 
@@ -58,7 +53,7 @@ namespace core
 
 		void sendMessage(uint64_t nID, void* pData)
 		{
-			CCoroutineImpl* pCoroutineImpl = CCoreApp::Inst()->getCoroutineMgr()->getCoroutine(nID);
+			CCoroutineImpl* pCoroutineImpl = CBaseAppImpl::Inst()->getCoroutineMgr()->getCoroutine(nID);
 			if (nullptr == pCoroutineImpl)
 				return;
 
@@ -67,7 +62,7 @@ namespace core
 
 		void* recvMessage(uint64_t nID)
 		{
-			CCoroutineImpl* pCoroutineImpl = CCoreApp::Inst()->getCoroutineMgr()->getCoroutine(nID);
+			CCoroutineImpl* pCoroutineImpl = CBaseAppImpl::Inst()->getCoroutineMgr()->getCoroutine(nID);
 			if (nullptr == pCoroutineImpl)
 				return nullptr;
 

@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <memory>
 
 #define _SERVICE_WEIGHT_PERCENT_MULT	10000	// 服务权重倍数
 #define _MAX_SERVICE_TYPE_LEN			64
@@ -50,10 +51,12 @@ namespace core
 		eRRT_ERROR,
 	};
 
-	typedef std::function<void(uint8_t, const message_header*, EResponseResultType)>		InvokeCallback;			// RPC消息响应回调函数类型
-	typedef std::function<void(const std::string&, uint8_t, const message_header*)>			ServiceCallback;		// 服务消息处理函数类型
-	typedef std::function<void(const SClientSessionInfo&, uint8_t, const message_header*)>	GateForwardCallback;	// 经网关服务转发的客户端消息处理函数类型
-	typedef std::function<void(uint64_t, const message_header*)>							ClientCallback;			// 客户端消息处理函数类型
+	typedef std::shared_ptr<const message_header>	message_header_ptr;
+
+	typedef std::function<void(uint8_t, message_header_ptr, EResponseResultType)>			InvokeCallback;			// RPC消息响应回调函数类型
+	typedef std::function<void(const std::string, uint8_t, message_header_ptr)>				ServiceCallback;		// 服务消息处理函数类型(这里服务名字必须是值，不能是引用，因为有协程)
+	typedef std::function<void(const SClientSessionInfo&, uint8_t, message_header_ptr)>		GateForwardCallback;	// 经网关服务转发的客户端消息处理函数类型
+	typedef std::function<void(uint64_t, message_header_ptr)>								ClientCallback;			// 客户端消息处理函数类型
 	typedef std::function<bool(const std::string&, uint8_t, const void*, uint16_t)>			ServiceGlobalFilter;	// 全局的消息过滤器类型
 
 #pragma pack(push,1)

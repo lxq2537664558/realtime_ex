@@ -307,26 +307,26 @@ namespace base
 		{
 			lua_getglobal(pL, _WEAK_OBJECT_TBL_NAME);
 			int32_t tbl = lua_gettop(pL);
-			///< 获取弱表中的包裹对象
+			// 获取弱表中的包裹对象
 			lua_pushlightuserdata(pL, (void*)val);
 			lua_rawget(pL, -2);
 			if (lua_isnil(pL, -1))
 			{
 				lua_pop(pL, 1);
 
-				///< 创建对象的包裹内存块
+				// 创建对象的包裹内存块
 				SObjectWraper* pObjectWraper = reinterpret_cast<SObjectWraper*>(lua_newuserdata(pL, sizeof(SObjectWraper)));
 
 				pObjectWraper->pObject = (void*)val;
 				pObjectWraper->bGc = false;
 				pObjectWraper->nRefCount = 0;
 				luaL_getmetatable(pL, SClassName<T>::getName());
-				///< 设置对象的metatable
+				// 设置对象的metatable
 				lua_setmetatable(pL, -2);
 
 				lua_pushlightuserdata(pL, (void*)val);
 				lua_pushvalue(pL, -2);
-				///< 将对象设置进弱表中 weak_object_table[pObject] = pObjectWraper
+				// 将对象设置进弱表中 weak_object_table[pObject] = pObjectWraper
 				lua_rawset(pL, tbl);
 			}
 			else
@@ -356,9 +356,9 @@ namespace base
 	inline void push2Lua(lua_State* pL, T val)
 	{
 #ifdef _WIN32
-		///< 下面代码故意语法错误的，不要去改
+		// 下面代码故意语法错误的，不要去改
 		if
-			///< 上面代码故意语法错误的，不要去改
+			// 上面代码故意语法错误的，不要去改
 #endif
 	}
 
@@ -794,7 +794,7 @@ namespace base
 
 		lua_pushlightuserdata(this->m_pMainLuaState, pNormalFunctionWrapper);
 		lua_pushcclosure(this->m_pMainLuaState, &__normal_invoke_proxy<RT, Args...>, 1);
-		lua_setglobal(this->m_pMainLuaState, szName);	///< { key:szName, value:CallByLua }
+		lua_setglobal(this->m_pMainLuaState, szName);	// { key:szName, value:CallByLua }
 	}
 	
 	template<class T>
@@ -945,13 +945,13 @@ namespace base
 					pObjectWraper->pObject = pObject;
 					pObjectWraper->bGc = true;
 					pObjectWraper->nRefCount = 0;
-					///< 设置对象的metatable
+					// 设置对象的metatable
 					luaL_getmetatable(pL, SClassName<T>::getName());
 					lua_setmetatable(pL, -2);
 
 					lua_pushlightuserdata(pL, pObject);
 					lua_pushvalue(pL, -2);
-					///< 将对象设置进弱表中 weak_object_table[pObject] = pObjectWraper
+					// 将对象设置进弱表中 weak_object_table[pObject] = pObjectWraper
 					lua_rawset(pL, tbl);
 					lua_replace(pL, tbl);
 					lua_settop(pL, tbl);

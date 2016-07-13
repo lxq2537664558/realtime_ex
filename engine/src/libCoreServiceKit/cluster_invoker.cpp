@@ -8,7 +8,6 @@
 #include "libBaseCommon/debug_helper.h"
 #include "libCoreCommon/coroutine.h"
 
-
 namespace core
 {
 	CClusterInvoker::CClusterInvoker()
@@ -37,7 +36,7 @@ namespace core
 		return CCoreServiceKitImpl::Inst()->getTransporter()->call(szServiceName, sRequestMessageInfo);
 	}
 
-	uint32_t CClusterInvoker::invok(const std::string& szServiceName, const message_header* pData, message_header*& pResultData)
+	uint32_t CClusterInvoker::invok(const std::string& szServiceName, const message_header* pData, message_header_ptr& pResultData)
 	{
 		DebugAstEx(pData != nullptr, false);
 
@@ -51,9 +50,10 @@ namespace core
 			return eRRT_ERROR;
 		
 		coroutine::yield();
-		uint32_t nRet = (uint32_t)reinterpret_cast<uint64_t>(coroutine::recvMessage(coroutine::getCurrentID()));
-		pResultData = reinterpret_cast<message_header*>(coroutine::recvMessage(coroutine::getCurrentID()));
 
+		uint32_t nRet = (uint32_t)reinterpret_cast<uint64_t>(coroutine::recvMessage(coroutine::getCurrentID()));
+		message_header* pHeader = reinterpret_cast<message_header*>(coroutine::recvMessage(coroutine::getCurrentID()));
+		pResultData = message_header_ptr(pHeader);
 		return nRet;
 	}
 

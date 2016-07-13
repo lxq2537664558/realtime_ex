@@ -25,11 +25,11 @@ bool CGateMessageHandler::init()
 	return true;
 }
 
-void CGateMessageHandler::onLogin(uint64_t nSocketID, const core::message_header* pHeader)
+void CGateMessageHandler::onLogin(uint64_t nSocketID, core::message_header_ptr pHeader)
 {
 	DebugAst(pHeader != nullptr);
 
-	google::protobuf::Message* pMessage = core::unserialize_protobuf_message_from_buf("gate.login_msg", pHeader + 1, pHeader->nMessageSize - sizeof(core::message_header));
+	google::protobuf::Message* pMessage = core::unserialize_protobuf_message_from_buf("gate.login_msg", pHeader.get() + 1, pHeader->nMessageSize - sizeof(core::message_header));
 	DebugAst(pMessage != nullptr);
 
 	const gate::login_msg* pLoginMsg = dynamic_cast<const gate::login_msg*>(pMessage);

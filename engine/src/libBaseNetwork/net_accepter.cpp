@@ -71,7 +71,7 @@ namespace base
 				}
 				pNetConnecter->setHandler(pHandler);
 
-				///< 模拟底层发一个可写事件
+				// 模拟底层发一个可写事件
 				pNetConnecter->onEvent(eNET_Send);
 			}
 		}

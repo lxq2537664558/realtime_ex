@@ -114,7 +114,7 @@ namespace base
 	class INetAccepterHandler
 	{
 	protected:
-		INetAccepter* m_pNetAccepter;	///< 监听对象
+		INetAccepter* m_pNetAccepter;	// 监听对象
 
 	public:
 		INetAccepterHandler() : m_pNetAccepter(nullptr) {}

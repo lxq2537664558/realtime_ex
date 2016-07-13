@@ -95,8 +95,8 @@ namespace base
 		}
 		this->m_listCloseSocket.clear();
 
-		///< 对写事件的处理主要采用先主动的写socket，如果写到写缓存都写满了，此时逻辑缓存还有数据，那么打开底层的写监听
-		///< 接下来的写事件就让底层来触发好了，这个写事件导致逻辑缓存的数据都发送完了，那么就移除该事件
+		// 对写事件的处理主要采用先主动的写socket，如果写到写缓存都写满了，此时逻辑缓存还有数据，那么打开底层的写监听
+		// 接下来的写事件就让底层来触发好了，这个写事件导致逻辑缓存的数据都发送完了，那么就移除该事件
 		for (int32_t i = 0; i < this->m_nSendConnecterCount; ++i)
 		{
 			CNetConnecter* pNetConnecter = this->m_vecSendConnecter[i];
@@ -106,18 +106,25 @@ namespace base
 			pNetConnecter->setSendConnecterIndex(_Invalid_SendConnecterIndex);
 		}
 		this->m_nSendConnecterCount = 0;
-		///< 如果在经过上面的循环后Socket中还存在数据没有发送出去，那么在下面的代码中，就会触发写事件继续发送
-		///< 下面的代码还是发送不完，下一帧中要不在上面的循环里面发送（应用层又发送了数据），要么在下面代码中发送
+		// 如果在经过上面的循环后Socket中还存在数据没有发送出去，那么在下面的代码中，就会触发写事件继续发送
+		// 下面的代码还是发送不完，下一帧中要不在上面的循环里面发送（应用层又发送了数据），要么在下面代码中发送
 
 #ifdef _WIN32
+		if (this->m_nSocketCount == 0)
+		{
+			// 为了让windows洗没有任何socket时不死跑，这里sleep下
+			base::sleep((uint32_t)nTime);
+			return;
+		}
+
 		fd_set readfds;
 		fd_set writefds;
 		fd_set exceptfds;
 		FD_ZERO(&readfds);
 		FD_ZERO(&writefds);
 		FD_ZERO(&exceptfds);
-		///< 每次都监听写事件可能会导致busy loop，windows下随他吧，只保证正确性，不保证性能
-		
+
+		// 每次都监听写事件可能会导致busy loop，windows下随他吧，只保证正确性，不保证性能
 		for (int32_t i = 0; i < this->m_nSocketCount; ++i)
 		{
 			CNetSocket* pNetSocket = this->m_vecSocket[i];
@@ -144,7 +151,7 @@ namespace base
 		if (0 == nRet)
 			return;
 
-		///< 绝对不会在下面这个循环中去删除Socket的
+		// 绝对不会在下面这个循环中去删除Socket的
 		for (int32_t i = 0; i < this->m_nSocketCount; ++i)
 		{
 			CNetSocket* pNetSocket = this->m_vecSocket[i];
@@ -165,7 +172,7 @@ namespace base
 		do
 		{
 			int32_t nActiveCount = epoll_wait(this->m_nEpoll, &this->m_vecEpollEvent[0], this->m_vecEpollEvent.size(), nTime);
-			if (nActiveCount > 0)
+			if (nActiveCount >= 0)
 			{
 				for (int32_t i = 0; i < nActiveCount; ++i)
 				{

@@ -27,22 +27,10 @@ namespace core
 
 		void			setCurrentCoroutine(CCoroutineImpl* pCoroutineImpl);
 		CCoroutineImpl*	getCurrentCoroutine() const;
-
-		void			sleep(uint64_t ms);
 		
 	private:
-		void			onWaitTicker(uint64_t nContext);
-
-	private:
-		struct SWaitCoroutineInfo
-		{
-			CTicker*		pTicker;
-			CCoroutineImpl*	pCoroutineImpl;
-		};
-
 		uint64_t								m_nNextCoroutineID;
 		std::map<uint64_t, CCoroutineImpl*>		m_mapCoroutineImpl;
-		std::map<uint64_t, SWaitCoroutineInfo>	m_mapWaitCoroutineInfo;
 		std::list<CCoroutineImpl*>				m_listRecycleCoroutineImpl;
 		CCoroutineImpl*							m_pCurrentCoroutine;
 		CCoroutineImpl*							m_pRootCoroutine;

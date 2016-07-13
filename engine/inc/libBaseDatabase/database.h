@@ -28,20 +28,21 @@ namespace base
 {
 	enum EDBErrorType
 	{
-		eDBET_Success = 0,
-		eDBET_LostConnection = 1,	// 连接丢失
-		eDBET_NoPrivileges = 1044, // 数据库用户权限不足
-		eDBET_NoDiskSpace = 1021, // 硬盘剩余空间不足
-		eDBET_KeyDupForUpdate = 1022, // 关键字重复，更改记录失败
-		eDBET_NoRecord = 1032, // 记录不存在
-		eDBET_NoMemory = 1037, // 系统内存不足
-		eDBET_OutofConnection = 1040, // 已到达数据库的最大连接数，请加大数据库可用连接数
-		eDBET_SQLSyntax = 1149, // SQL语句语法错误
-		eDBET_KeyDupForInsert = 1062,	// 关键字重复，插入记录失败
-		eDBET_CommitTrans = 1180, // 提交事务失败
-		eDBET_RollbackTrans = 1181, // 回滚事务失败
-		eDBET_Deadloop = 1205, // 加锁超时
-		eDBET_StatementReprepared = 1615,	// Statement需要重新准备
+		eDBET_Success				= 0,
+		eDBET_LostConnection		= 1,	// 连接丢失
+		eDBET_NoPrivileges			= 1044, // 数据库用户权限不足
+		eDBET_NoDiskSpace			= 1021, // 硬盘剩余空间不足
+		eDBET_KeyDupForUpdate		= 1022, // 关键字重复，更改记录失败
+		eDBET_NoRecord				= 1032, // 记录不存在
+		eDBET_NoMemory				= 1037, // 系统内存不足
+		eDBET_OutofConnection		= 1040, // 已到达数据库的最大连接数，请加大数据库可用连接数
+		eDBET_SQLSyntax				= 1149, // SQL语句语法错误
+		eDBET_KeyDupForInsert		= 1062,	// 关键字重复，插入记录失败
+		eDBET_CommitTrans			= 1180, // 提交事务失败
+		eDBET_RollbackTrans			= 1181, // 回滚事务失败
+		eDBET_Deadloop				= 1205, // 加锁超时
+		eDBET_StatementReprepared	= 1615,	// Statement需要重新准备
+
 		eDBET_Unknwon = INVALID_32BIT
 	};
 
@@ -68,10 +69,12 @@ namespace base
 		virtual void			release() = 0;
 		virtual uint32_t		getStatementCount() const = 0;
 		virtual uint32_t		getRecordsetCount() const = 0;
-		virtual IDbStatement*	createStatement(const char* szSql) = 0;
+		virtual IDbStatement*	createStatement(const char* szSQL) = 0;
 		virtual IDbRecordset*	execute(const char* szSql) = 0;
 		virtual bool			ping() = 0;
 		virtual uint64_t		getAffectedRow() const = 0;
+		virtual void*			getMysql() const = 0;
+		virtual void			escape(char* szDst, const char* szSrc, size_t nLength) = 0;
 
 	protected:
 		virtual ~IDbConnection() { };

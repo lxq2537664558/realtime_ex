@@ -59,12 +59,12 @@ namespace core
 
 	}
 
-	void CCoreConnectionToMaster::onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize)
+	bool CCoreConnectionToMaster::onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize)
 	{
-		DebugAst(nMessageType == eMT_SYSTEM);
+		DebugAstEx(nMessageType == eMT_SYSTEM, true);
 
 		const core::message_header* pHeader = reinterpret_cast<const core::message_header*>(pData);
-		DebugAst(nSize > sizeof(core::message_header));
+		DebugAstEx(nSize > sizeof(core::message_header), true);
 
 		if (pHeader->nMessageID == eSMT_sync_service_base_info)
 		{
@@ -80,5 +80,7 @@ namespace core
 
 			CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->delService(netMsg.szName);
 		}
+
+		return true;
 	}
 }

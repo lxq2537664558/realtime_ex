@@ -71,29 +71,29 @@ namespace core
 			CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->delServiceConnection(this->m_szServiceName);
 	}
 
-	void CCoreServiceConnection::onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize)
+	bool CCoreServiceConnection::onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize)
 	{
 		if (nMessageType == eMT_SYSTEM)
 		{
 			const core::message_header* pHeader = reinterpret_cast<const core::message_header*>(pData);
-			DebugAst(nSize > sizeof(core::message_header));
+			DebugAstEx(nSize > sizeof(core::message_header), true);
 
 			if (pHeader->nMessageID == eSMT_notify_service_base_info)
 			{
-				DebugAst(this->m_szServiceName.empty());
+				DebugAstEx(this->m_szServiceName.empty(), true);
 
 				smt_notify_service_base_info netMsg;
 				netMsg.unpack(pData, nSize);
 				if (netMsg.szToServiceName.empty())
 				{
 					this->shutdown(true, "empty service name");
-					return;
+					return true;
 				}
 
 				if (netMsg.szToServiceName != CCoreServiceKitImpl::Inst()->getServiceBaseInfo().szName)
 				{
 					this->shutdown(true, "error service name");
-					return;
+					return true;
 				}
 
 				// 已经有握手成功的连接了，断开前来握手的连接
@@ -101,7 +101,7 @@ namespace core
 				{
 					PrintWarning("dup service service_name: %s", netMsg.szFromServiceName.c_str());
 					this->shutdown(true, "dup service connection");
-					return;
+					return true;
 				}
 
 				std::vector<CBaseConnection*> vecBaseConnection = CBaseApp::Inst()->getBaseConnectionMgr()->getBaseConnection(eBCT_ConnectionService);
@@ -120,7 +120,7 @@ namespace core
 						{
 							PrintWarning("conflict service connection service_name: %s", netMsg.szFromServiceName.c_str());
 							this->shutdown(true, "conflict service connection");
-							return;
+							return true;
 						}
 						else
 						{
@@ -137,7 +137,7 @@ namespace core
 					PrintWarning("add service connection error service_name: %s", this->m_szServiceName.c_str());
 					this->m_szServiceName.clear();
 					this->shutdown(true, "dup service connection");
-					return;
+					return true;
 				}
 
 				smt_notify_ack_service_base_info netMsg2;
@@ -156,13 +156,13 @@ namespace core
 				if (netMsg.szServiceName.empty())
 				{
 					this->shutdown(true, "empty service name");
-					return;
+					return true;
 				}
 
 				if (netMsg.szServiceName != CCoreServiceKitImpl::Inst()->getServiceBaseInfo().szName)
 				{
 					this->shutdown(true, "error service name");
-					return;
+					return true;
 				}
 
 				if (!CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->addServiceConnection(this))
@@ -170,7 +170,7 @@ namespace core
 					PrintWarning("add service connection error service_name: %s", this->m_szServiceName.c_str());
 					this->m_szServiceName.clear();
 					this->shutdown(true, "dup service connection");
-					return;
+					return true;
 				}
 
 				PrintInfo("service shake hands full service_name: %s", this->m_szServiceName.c_str());
@@ -182,10 +182,12 @@ namespace core
 			if (this->m_szServiceName.empty())
 			{
 				this->shutdown(true, "invalid connection");
-				return;
+				return true;
 			}
-			CMessageDispatcher::Inst()->dispatch(this->getServiceName(), nMessageType, pData, nSize);
+			return CMessageDispatcher::Inst()->dispatch(this->getServiceName(), nMessageType, pData, nSize);
 		}
+
+		return true;
 	}
 
 	const std::string& CCoreServiceConnection::getServiceName() const

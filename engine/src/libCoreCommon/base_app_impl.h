@@ -6,18 +6,19 @@
 #include "ticker_mgr.h"
 #include "coroutine_mgr.h"
 #include "core_connection_mgr.h"
+#include "message_queue.h"
 
 namespace core
 {
 	/**
 	@brief: 核心框架类，单例，主要管理游戏中各个管理器
 	*/
-	class CCoreApp :
-		public base::CSingleton<CCoreApp>
+	class CBaseAppImpl :
+		public base::CSingleton<CBaseAppImpl>
 	{
 	public:
-		CCoreApp();
-		~CCoreApp();
+		CBaseAppImpl();
+		~CBaseAppImpl();
 
 		/**
 		@brief: 启动框架
@@ -40,7 +41,7 @@ namespace core
 		/*
 		@brief: 获取连接管理器
 		*/
-		CCoreConnectionMgr*	getCoreConnectionMgr() const;
+		CBaseConnectionMgr*	getBaseConnectionMgr() const;
 		/*
 		@brief: 获取携程管理器
 		*/
@@ -66,6 +67,10 @@ namespace core
 		*/
 		uint32_t			getHeartbeatTime() const;
 		/*
+		@brief: 获取消息队列
+		*/
+		CMessageQueue*		getMessageQueue() const;
+		/*
 		@brief: 获取QPS
 		*/
 		uint32_t			getQPS() const;
@@ -85,8 +90,9 @@ namespace core
 		std::string				m_szConfig;
 		std::string				m_szPID;
 		CTickerMgr*				m_pTickerMgr;
-		CCoreConnectionMgr*		m_pCoreConnectionMgr;
+		CBaseConnectionMgr*		m_pBaseConnectionMgr;
 		CCoroutineMgr*			m_pCoroutineMgr;
+		CMessageQueue*			m_pMessageQueue;
 		base::CWriteBuf			m_writeBuf;
 		uint32_t				m_nCycleCount;
 		uint32_t				m_nTotalTime;
@@ -96,6 +102,6 @@ namespace core
 		uint32_t				m_nHeartbeatTime;
 		bool					m_bMarkQuit;	// 这个参数作用是只触发一次onQuit
 		uint32_t				m_nQPS;
-		CTicker					m_tickQPS;
+		CTicker					m_tickerQPS;
 	};
 }

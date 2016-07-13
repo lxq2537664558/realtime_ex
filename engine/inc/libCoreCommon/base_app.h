@@ -20,13 +20,13 @@ namespace core
 
 	class CBaseConnectionMgr;
 	class CCoreConnectionMgr;
-	class CCoreApp;
+	class CBaseAppImpl;
 	/**
 	@brief: »ù´¡¿ò¼ÜÀà
 	*/
 	class CBaseApp
 	{
-		friend class CCoreApp;
+		friend class CBaseAppImpl;
 		friend class CCoreConnectionMgr;
 
 	public:

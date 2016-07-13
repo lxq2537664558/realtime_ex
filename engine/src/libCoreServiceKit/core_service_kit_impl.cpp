@@ -134,8 +134,7 @@ namespace core
 		if (this->m_sServiceBaseInfo.nPort != 0)
 		{
 			// 在所有网卡上监听
-			if (!CBaseApp::Inst()->getBaseConnectionMgr()->listen("0.0.0.0", this->m_sServiceBaseInfo.nPort, eBCT_ConnectionService, "", this->m_sServiceBaseInfo.nSendBufSize, this->m_sServiceBaseInfo.nRecvBufSize))
-				return false;
+			CBaseApp::Inst()->getBaseConnectionMgr()->listen("0.0.0.0", this->m_sServiceBaseInfo.nPort, eBCT_ConnectionService, "", this->m_sServiceBaseInfo.nSendBufSize, this->m_sServiceBaseInfo.nRecvBufSize, nullptr);
 		}
 
 		this->m_szMasterHost = szMasterHost;
@@ -143,9 +142,8 @@ namespace core
 		
 		if (!this->m_szMasterHost.empty() && this->m_nMasterPort != 0)
 		{
-			if (!CBaseApp::Inst()->getBaseConnectionMgr()->connect(this->m_szMasterHost, this->m_nMasterPort, eBCT_ConnectionToMaster, "master", 1024, 1024))
-				return false;
-
+			CBaseApp::Inst()->getBaseConnectionMgr()->connect(this->m_szMasterHost, this->m_nMasterPort, eBCT_ConnectionToMaster, "master", 1024, 1024, nullptr);
+			
 			CBaseApp::Inst()->registerTicker(&this->m_tickCheckConnectMaster, 5 * 1000, 5 * 1000, 0);
 		}
 
@@ -174,10 +172,7 @@ namespace core
 	{
 		if ( !this->m_szMasterHost.empty() && this->m_nMasterPort != 0 && this->getConnectionToMaster() == nullptr)
 		{
-			if (!CBaseApp::Inst()->getBaseConnectionMgr()->connect(this->m_szMasterHost, this->m_nMasterPort, eBCT_ConnectionToMaster, "master", 1024, 1024))
-			{
-				PrintWarning("connect master error");
-			}
+			CBaseApp::Inst()->getBaseConnectionMgr()->connect(this->m_szMasterHost, this->m_nMasterPort, eBCT_ConnectionToMaster, "master", 1024, 1024, nullptr);
 		}
 	}
 
