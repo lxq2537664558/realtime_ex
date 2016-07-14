@@ -38,7 +38,6 @@ const std::string& CConnectionFromService::getServiceName() const
 
 void CConnectionFromService::onConnect()
 {
-	
 }
 
 void CConnectionFromService::onDisconnect()

@@ -47,6 +47,7 @@ bool CServiceMgr::registerService(CConnectionFromService* pConnectionFromService
 
 	this->m_mapServiceInfo[sServiceBaseInfo.szName] = sServiceInfo;
 
+	std::vector<uint64_t> vecSocketID;
 	// 将其他服务的信息同步给新的服务
 	std::vector<core::CBaseConnection*> vecBaseConnection = CMasterApp::Inst()->getBaseConnectionMgr()->getBaseConnection(eBCT_ConnectionFromService);
 	for (size_t i = 0; i < vecBaseConnection.size(); ++i)
@@ -71,8 +72,9 @@ bool CServiceMgr::registerService(CConnectionFromService* pConnectionFromService
 		netMsg1.sServiceBaseInfo = sOtherServiceInfo.sServiceBaseInfo;
 
 		netMsg1.pack(writeBuf);
-
 		pConnectionFromService->send(eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
+
+		vecSocketID.push_back(pOtherConnectionFromService->getID());
 	}
 
 	// 把这个新加入的服务广播给其他服务
@@ -85,11 +87,9 @@ bool CServiceMgr::registerService(CConnectionFromService* pConnectionFromService
 
 	netMsg.pack(writeBuf);
 
-	std::vector<uint64_t> vecExcludeID;
-	vecExcludeID.push_back(pConnectionFromService->getID());
-	CMasterApp::Inst()->getBaseConnectionMgr()->broadcast(eBCT_ConnectionFromService, eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize(), &vecExcludeID);
+	CMasterApp::Inst()->getBaseConnectionMgr()->broadcast(vecSocketID, eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
 
-	PrintInfo("register service service_name: %s", sServiceBaseInfo.szName.c_str());
+	PrintInfo("register service service_name: %s local addr: %s %d remote addr: %s %d", sServiceBaseInfo.szName.c_str(), pConnectionFromService->getLocalAddr().szHost, pConnectionFromService->getLocalAddr().nPort, pConnectionFromService->getRemoteAddr().szHost, pConnectionFromService->getRemoteAddr().nPort);
 
 	return true;
 }
