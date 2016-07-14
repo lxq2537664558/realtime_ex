@@ -88,7 +88,6 @@ namespace core
 		, m_nMaxSendDataPerSecond(0)
 		, m_nMaxRecvDataPerSecond(0)
 	{
-		this->m_tickMonitor.setCallback(std::bind(&CCoreConnectionMonitor::onMonitor, this, std::placeholders::_1));
 	}
 
 	CCoreConnectionMonitor::~CCoreConnectionMonitor()
@@ -125,13 +124,11 @@ namespace core
 
 	void CCoreConnectionMonitor::onConnect()
 	{
-		if (!this->m_tickMonitor.isRegister())
-			CBaseAppImpl::Inst()->registerTicker(&this->m_tickMonitor, 1000, 1000, 0);
+		
 	}
 
 	void CCoreConnectionMonitor::onDisconnect()
 	{
-		if (this->m_tickMonitor.isRegister())
-			CBaseAppImpl::Inst()->unregisterTicker(&this->m_tickMonitor);
+		
 	}
 }

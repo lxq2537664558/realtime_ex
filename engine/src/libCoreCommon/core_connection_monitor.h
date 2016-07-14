@@ -23,7 +23,6 @@ namespace core
 		uint32_t			m_nRecvDataPerSecond;
 		uint32_t			m_nMaxSendDataPerSecond;
 		uint32_t			m_nMaxRecvDataPerSecond;
-		CTicker				m_tickMonitor;
 		CCoreConnection*	m_pCoreConnection;
 	};
 
