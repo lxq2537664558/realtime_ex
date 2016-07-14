@@ -1,6 +1,0 @@
-package test;
-message service_response_msg
-{
-	optional string name = 1;
-	optional uint32 id = 2;
-}

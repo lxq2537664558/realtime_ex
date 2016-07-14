@@ -7,31 +7,26 @@
 #include "libCoreCommon/base_app.h"
 #include "libCoreServiceKit/message_registry.h"
 #include "libCoreServiceKit/cluster_invoker.h"
-
-#include "../proto_src/service_request_msg.pb.h"
-#include "../proto_src/client_request_msg.pb.h"
-#include "../proto_src/service_response_msg.pb.h"
-#include "../proto_src/client_response_msg.pb.h"
 #include "libCoreServiceKit/core_service_kit.h"
 
-void client_request_msg_callback(const core::SClientSessionInfo& sClientSessionInfo, uint32_t nMessageType, const google::protobuf::Message* pMessage)
+#include "../common/test_message_define.h"
+
+void client_request_msg_callback(const core::SClientSessionInfo sClientSessionInfo, uint32_t nMessageType, core::message_header_ptr pMessage)
 {
-	const test::client_request_msg* pClientMsg = dynamic_cast<const test::client_request_msg*>(pMessage);
-	DebugAst(pClientMsg != nullptr);
+	SServiceRequestMsg service_msg;
+	service_msg.nID = std::static_pointer_cast<const SClientRequestMsg>(pMessage)->nID;
 
-	test::service_request_msg msg;
-	msg.set_name(pClientMsg->name());
-	msg.set_id(pClientMsg->id());
-
-	core::CClusterInvoker::Inst()->invok_r("test1-1", &msg, [sClientSessionInfo](uint32_t nMessageType, const google::protobuf::Message* pMessage, core::EResponseResultType eType)->void
+	core::message_header_ptr pResultData = nullptr;
+	uint32_t nRet = core::CClusterInvoker::Inst()->invok("test2-1", &service_msg, pResultData);
+	if (nRet != eRRT_OK)
 	{
-		const test::service_response_msg* pResponseMsg = dynamic_cast<const test::service_response_msg*>(pMessage);
-		DebugAst(pResponseMsg != nullptr);
-		test::client_response_msg msg;
-		msg.set_name(pResponseMsg->name());
-		msg.set_id(pResponseMsg->id());
-		core::CClusterInvoker::Inst()->send(sClientSessionInfo, &msg);
-	});
+		PrintDebug("AAAAAAAA");
+		return;
+	}
+
+	SClientResponseMsg client_msg;
+	client_msg.nID = std::static_pointer_cast<const SClientRequestMsg>(pResultData)->nID;
+	core::CClusterInvoker::Inst()->send(sClientSessionInfo, &client_msg);
 }
 
 CTestServiceApp1::CTestServiceApp1()
@@ -50,7 +45,7 @@ CTestServiceApp1* CTestServiceApp1::Inst()
 bool CTestServiceApp1::onInit()
 {
 	core::CCoreServiceKit::Inst()->init();
-	core::CMessageRegistry::Inst()->registerGateForwardCallback("test.client_request_msg", &client_request_msg_callback);
+	core::CMessageRegistry::Inst()->registerGateForwardCallback(eClientRequestMsg, &client_request_msg_callback);
 	return true;
 }
 

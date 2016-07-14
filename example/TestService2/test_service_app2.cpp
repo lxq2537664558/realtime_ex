@@ -9,21 +9,14 @@
 #include "libCoreServiceKit/cluster_invoker.h"
 #include "libCoreServiceKit/core_service_kit.h"
 
-#include "../proto_src/service_request_msg.pb.h"
-#include "../proto_src/client_request_msg.pb.h"
-#include "../proto_src/service_response_msg.pb.h"
-#include "../proto_src/client_response_msg.pb.h"
+#include "../common/test_message_define.h"
 
-void service_request_msg_callback(const std::string& szFromService, uint32_t nMessageType, const google::protobuf::Message* pMessage)
+void service_request_msg_callback(const std::string szFromService, uint32_t nMessageType, core::message_header_ptr pMessage)
 {
-	const test::service_request_msg* pRequestMsg = dynamic_cast<const test::service_request_msg*>(pMessage);
-	DebugAst(pRequestMsg != nullptr);
+	SServiceResponseMsg service_msg;
+	service_msg.nID = std::static_pointer_cast<const SServiceRequestMsg>(pMessage)->nID;
 
-	test::service_response_msg msg;
-	msg.set_name(pRequestMsg->name());
-	msg.set_id(pRequestMsg->id());
-
-	core::CClusterInvoker::Inst()->response(&msg);
+	core::CClusterInvoker::Inst()->response(&service_msg);
 }
 
 CTestServiceApp2::CTestServiceApp2()
@@ -42,7 +35,7 @@ CTestServiceApp2* CTestServiceApp2::Inst()
 bool CTestServiceApp2::onInit()
 {
 	core::CCoreServiceKit::Inst()->init();
-	core::CMessageRegistry::Inst()->registerServiceCallback("test.service_request_msg", &service_request_msg_callback);
+	core::CMessageRegistry::Inst()->registerServiceCallback(eServiceRequestMsg, &service_request_msg_callback);
 
 	return true;
 }

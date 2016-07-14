@@ -8,10 +8,8 @@
 #include "libCoreCommon/base_connection.h"
 #include "libBaseCommon/base_time.h"
 
-#include "../proto_src/client_request_msg.pb.h"
-#include "../proto_src/client_response_msg.pb.h"
-#include "../proto_src/login_msg.pb.h"
 #include "libCoreCommon/base_connection_factory.h"
+#include "../common/test_message_define.h"
 
 #pragma pack(push,1)
 // 消息头
@@ -24,73 +22,6 @@ struct message_header
 	message_header() {}
 };
 #pragma pack(pop)
-
-google::protobuf::Message* create_protobuf_message(const std::string& szMessageName)
-{
-	const google::protobuf::Descriptor* pDescriptor = google::protobuf::DescriptorPool::generated_pool()->FindMessageTypeByName(szMessageName);
-	if (pDescriptor == nullptr)
-		return nullptr;
-
-	const google::protobuf::Message* pProtoType = google::protobuf::MessageFactory::generated_factory()->GetPrototype(pDescriptor);
-	if (pProtoType == nullptr)
-		return nullptr;
-
-	return pProtoType->New();
-}
-
-google::protobuf::Message* unserialize_protobuf_message_from_buf(const std::string& szMessageName, const void* pData, uint16_t nSize)
-{
-	DebugAstEx(pData != nullptr, nullptr);
-
-	google::protobuf::Message* pMessage = create_protobuf_message(szMessageName);
-	if (nullptr == pMessage)
-		return nullptr;
-
-	if (!pMessage->ParseFromArray(pData, nSize))
-	{
-		SAFE_DELETE(pMessage);
-		return nullptr;
-	}
-
-	return pMessage;
-}
-
-int32_t serialize_protobuf_message_to_buf(const google::protobuf::Message* pMessage, message_header* pHeader, uint32_t nSize)
-{
-	DebugAstEx(pMessage != nullptr, false);
-
-	std::string szMessageData;
-	if (!pMessage->SerializeToString(&szMessageData))
-		return -1;
-
-	if (szMessageData.size() > nSize)
-		return -1;
-
-	pHeader->nMessageID = base::hash(pMessage->GetTypeName().c_str());
-	pHeader->nMessageSize = (uint16_t)(sizeof(message_header) + szMessageData.size());
-
-	memcpy(pHeader + 1, szMessageData.c_str(), szMessageData.size());
-
-	return (int32_t)(szMessageData.size() + sizeof(message_header));
-}
-
-static int32_t client_message_parser(const char* pData, uint32_t nSize, uint8_t& nMessageType)
-{
-	if (nSize < sizeof(core::client_message_header))
-		return 0;
-
-	const core::client_message_header* pHeader = reinterpret_cast<const core::client_message_header*>(pData);
-	if (pHeader->nMessageSize < sizeof(core::client_message_header))
-		return -1;
-
-	// 不是完整的消息
-	if (nSize < pHeader->nMessageSize)
-		return 0;
-
-	nMessageType = eMT_CLIENT;
-
-	return pHeader->nMessageSize;
-}
 
 class CConnectToService :
 	public core::CBaseConnection
@@ -107,7 +38,6 @@ public:
 
 	virtual bool		init(const std::string& szContext)
 	{
-		this->setMessageParser(std::bind(&client_message_parser, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 		return true;
 	}
 	
@@ -118,9 +48,7 @@ public:
 	{
 		PrintDebug("onConnect");
 
-		this->login(nID);
-
-		this->requestMsg("aa");
+		this->requestMsg(1);
 	}
 	
 	virtual void onDisconnect()
@@ -128,42 +56,21 @@ public:
 		PrintDebug("onDisconnect");
 	}
 
-	virtual void onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize)
+	virtual bool onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize)
 	{
-		google::protobuf::Message* pMessage = unserialize_protobuf_message_from_buf("test.client_response_msg", reinterpret_cast<const core::client_message_header*>(pData)+1, nSize - sizeof(core::client_message_header));
-		test::client_response_msg* pMsg = dynamic_cast<test::client_response_msg*>(pMessage);
-		PrintDebug("onDispatch %s", pMsg->name().c_str());
+		const SClientResponseMsg* pMsg = static_cast<const SClientResponseMsg*>(pData);
+		PrintInfo("onDispatch %d", pMsg->nID);
+
+		return true;
 	}
 
 private:
-	void login(uint64_t nID)
+	void requestMsg(uint32_t nID)
 	{
-		PrintDebug("Login "UINT64FMT, nID);
-		gate::login_msg msg;
-		msg.set_id(nID);
-		std::string szMessageData;
-		msg.SerializeToString(&szMessageData);
+		SClientRequestMsg msg;
+		msg.nID = nID;
 
-		message_header header;
-		header.nMessageSize = (uint16_t)(sizeof(header) + szMessageData.size());
-		header.nMessageID = base::hash(msg.GetTypeName().c_str());
-
-		this->send(eMT_CLIENT, &header, sizeof(header), szMessageData.c_str(), (uint16_t)szMessageData.size());
-	}
-
-	void requestMsg(const std::string& szName)
-	{
-		test::client_request_msg msg;
-		msg.set_name(szName);
-		msg.set_id(nNextPacketID);
-		std::string szMessageData;
-		msg.SerializeToString(&szMessageData);
-
-		message_header header;
-		header.nMessageSize = (uint16_t)(sizeof(header) + szMessageData.size());
-		header.nMessageID = base::hash(msg.GetTypeName().c_str());
-
-		this->send(eMT_CLIENT, &header, sizeof(header), szMessageData.c_str(), (uint16_t)szMessageData.size());
+		this->send(eMT_CLIENT, &msg, sizeof(msg));
 
 		nSendTime = base::getGmtTime();
 		++nNextPacketID;
@@ -212,7 +119,7 @@ bool CTestServiceClientApp::onInit()
 {
 	CServiceConnectionFactory* pServiceConnectionFactory = new CServiceConnectionFactory();
 	this->getBaseConnectionMgr()->setBaseConnectionFactory(_BASE_CONNECTION_TYPE_BEGIN, pServiceConnectionFactory);
-	this->getBaseConnectionMgr()->connect("10.0.18.51", 8000, _BASE_CONNECTION_TYPE_BEGIN, "", 0, 0);
+	this->getBaseConnectionMgr()->connect("127.0.0.1", 8000, _BASE_CONNECTION_TYPE_BEGIN, "", 0, 0, default_client_message_parser);
 	return true;
 }
 
