@@ -63,7 +63,7 @@ namespace core
 		if (nullptr == this->m_pTickerNode)
 			return 0;
 
-		int64_t nRemainTime = this->m_nNextTickTime - base::getLocalTime();
+		int64_t nRemainTime = this->m_nNextTickTime - base::getGmtTime();
 		return nRemainTime < 0 ? 0 : nRemainTime;
 	}
 
