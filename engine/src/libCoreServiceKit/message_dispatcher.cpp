@@ -60,10 +60,8 @@ namespace core
 				message_header_ptr pMessage = message_header_ptr(pHeader, [pData](const void*){ delete[] reinterpret_cast<const char*>(pData); });
 				uint64_t nCoroutineID = coroutine::start([&](uint64_t){ callback(szFromServiceName, nMessageType, pMessage); });
 				coroutine::resume(nCoroutineID, 0);
-				if (coroutine::getState(nCoroutineID) == eCS_DEAD)
-					pMessage.reset();
-				else
-					bRet = false;
+
+				bRet = false;
 			}
 			sServiceSessionInfo.szServiceName.clear();
 			sServiceSessionInfo.nSessionID = 0;
@@ -92,10 +90,8 @@ namespace core
 				message_header_ptr pMessage = message_header_ptr(pHeader, [pData](const void*){ delete[] reinterpret_cast<const char*>(pData); });
 				uint64_t nCoroutineID = coroutine::start([&](uint64_t){ pResponseWaitInfo->callback(nMessageType, pMessage, (EResponseResultType)pCookice->nResult); });
 				coroutine::resume(nCoroutineID, 0);
-				if (coroutine::getState(nCoroutineID) == eCS_DEAD)
-					pMessage.reset();
-				else
-					bRet = false;
+
+				bRet = false;
 			}
 			else
 			{
@@ -105,7 +101,8 @@ namespace core
 					coroutine::sendMessage(pResponseWaitInfo->nCoroutineID, const_cast<message_header*>(pHeader));
 					coroutine::sendMessage(pResponseWaitInfo->nCoroutineID, const_cast<void*>(pData));
 					coroutine::resume(pResponseWaitInfo->nCoroutineID, 0);
-					bRet = (coroutine::getState(pResponseWaitInfo->nCoroutineID) == eCS_DEAD);
+
+					bRet = false;
 				}
 			}
 			CCoreServiceKitImpl::Inst()->getInvokerTrace()->endRecv();
@@ -126,7 +123,8 @@ namespace core
 				message_header_ptr pMessage = message_header_ptr(pHeader, [pData](const void*){ delete[] reinterpret_cast<const char*>(pData); });
 				uint64_t nCoroutineID = coroutine::start([&](uint64_t){ callback(session, nMessageType, pMessage); });
 				coroutine::resume(nCoroutineID, 0);
-				bRet = (coroutine::getState(nCoroutineID) == eCS_DEAD);
+				
+				bRet = false;
 			}
 			CCoreServiceKitImpl::Inst()->getInvokerTrace()->endRecv();
 		}
