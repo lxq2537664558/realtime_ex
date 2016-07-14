@@ -62,6 +62,7 @@ namespace core
 		: public SMessageCacheHead
 	{
 		std::vector<char>	vecBuf;
+		uint64_t			nCoroutineID;
 		InvokeCallback		callback;
 	};
 

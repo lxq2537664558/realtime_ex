@@ -10,8 +10,9 @@
 
 #include "libCoreCommon/base_app.h"
 #include "libCoreCommon/base_connection_mgr.h"
+#include "libCoreCommon/coroutine.h"
 
-#define _MAX_CACHE_MESSAGE_SIZE			1024 * 1024 * 100
+#define _MAX_CACHE_MESSAGE_SIZE	1024 * 1024 * 100
 
 namespace core
 {
@@ -67,10 +68,6 @@ namespace core
 				CBaseApp::Inst()->getBaseConnectionMgr()->connect(pServiceBaseInfo->szHost, pServiceBaseInfo->nPort, eBCT_ConnectionService, pServiceBaseInfo->szName, pServiceBaseInfo->nSendBufSize, pServiceBaseInfo->nRecvBufSize, nullptr);
 				sMessageCacheInfo.bRefuse = false;
 			}
-			
-			CCoreServiceConnection* pCoreConnectionToService = CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getServiceConnection(pServiceBaseInfo->szName);
-			if (pCoreConnectionToService != nullptr)
-				this->sendCacheMessage(pServiceBaseInfo->szName);
 		}
 	}
 
@@ -81,6 +78,16 @@ namespace core
 			return;
 
 		iter->second.bRefuse = true;
+	}
+
+	void CTransporter::onServiceConnect(const std::string& szServiceName)
+	{
+		this->sendCacheMessage(szServiceName);
+	}
+
+	void CTransporter::onServiceDisconnect(const std::string& szServiceName)
+	{
+		this->delCacheMessage(0, szServiceName);
 	}
 
 	SMessageCacheInfo* CTransporter::getMessageCacheInfo(const std::string& szServiceName)
@@ -95,10 +102,10 @@ namespace core
 		if (this->m_mapMessageCacheInfo.find(szServiceName) == this->m_mapMessageCacheInfo.end())
 		{
 			// 填充cache信息，发起连接靠定时连接重试机制
-			SMessageCacheInfo sProtoBufRequestMessageGroupInfo;
-			sProtoBufRequestMessageGroupInfo.nTotalSize = 0;
-			sProtoBufRequestMessageGroupInfo.bRefuse = true;
-			this->m_mapMessageCacheInfo[szServiceName] = sProtoBufRequestMessageGroupInfo;
+			SMessageCacheInfo sMessageCacheInfo;
+			sMessageCacheInfo.nTotalSize = 0;
+			sMessageCacheInfo.bRefuse = true;
+			this->m_mapMessageCacheInfo[szServiceName] = sMessageCacheInfo;
 		}
 
 		SMessageCacheInfo& sMessageCacheInfo = this->m_mapMessageCacheInfo[szServiceName];
@@ -145,6 +152,8 @@ namespace core
 		}
 
 		SMessageCacheInfo* pMessageCacheInfo = this->getMessageCacheInfo(szServiceName);
+		if (nullptr == pMessageCacheInfo)
+			return false;
 
 		uint64_t nCacheID = this->genCacheID();
 		SRequestMessageCacheInfo* pRequestMessageCacheInfo = new SRequestMessageCacheInfo();
@@ -153,6 +162,7 @@ namespace core
 		pRequestMessageCacheInfo->vecBuf.resize(sRequestMessageInfo.pData->nMessageSize);
 		memcpy(&pRequestMessageCacheInfo->vecBuf[0], sRequestMessageInfo.pData, sRequestMessageInfo.pData->nMessageSize);
 		pRequestMessageCacheInfo->callback = sRequestMessageInfo.callback;
+		pRequestMessageCacheInfo->nCoroutineID = sRequestMessageInfo.nCoroutineID;
 		pRequestMessageCacheInfo->tickTimeout.setCallback(std::bind(&CTransporter::onCacheMessageTimeout, this, std::placeholders::_1));
 		CBaseApp::Inst()->registerTicker(&pRequestMessageCacheInfo->tickTimeout, CCoreServiceKitImpl::Inst()->getInvokeTimeout(), 0, nCacheID);
 
@@ -321,8 +331,21 @@ namespace core
 
 		CCoreServiceKitImpl::Inst()->getInvokerTrace()->addTraceExtraInfo("wait response time out session_id: "UINT64FMT" service_name: %s", pResponseWaitInfo->nSessionID, pResponseWaitInfo->szServiceName.c_str());
 
-		if (pResponseWaitInfo->callback)
-			pResponseWaitInfo->callback(0, nullptr, eRRT_TIME_OUT);
+		if (pResponseWaitInfo->callback != nullptr)
+		{
+			uint64_t nCoroutineID = coroutine::start([&](uint64_t){ pResponseWaitInfo->callback(eMT_RESPONSE, nullptr, eRRT_TIME_OUT); });
+			coroutine::resume(nCoroutineID, 0);
+		}
+		else
+		{
+			if (pResponseWaitInfo->nCoroutineID != 0)
+			{
+				coroutine::sendMessage(pResponseWaitInfo->nCoroutineID, reinterpret_cast<void*>(eRRT_TIME_OUT));
+				coroutine::sendMessage(pResponseWaitInfo->nCoroutineID, nullptr);
+				coroutine::sendMessage(pResponseWaitInfo->nCoroutineID, nullptr);
+				coroutine::resume(pResponseWaitInfo->nCoroutineID, 0);
+			}
+		}
 
 		this->m_mapResponseWaitInfo.erase(iter);
 		SAFE_DELETE(pResponseWaitInfo);
@@ -330,29 +353,7 @@ namespace core
 
 	void CTransporter::onCacheMessageTimeout(uint64_t nContext)
 	{
-		for (auto iter = this->m_mapMessageCacheInfo.begin(); iter != this->m_mapMessageCacheInfo.end(); ++iter)
-		{
-			SMessageCacheInfo& sMessageCacheInfo = iter->second;
-			auto iterCache = sMessageCacheInfo.mapMessageCacheInfo.find(nContext);
-			if (iterCache == sMessageCacheInfo.mapMessageCacheInfo.end())
-				continue;
-
-			SMessageCacheHead* pMessageCacheHead = iterCache->second;
-			if (pMessageCacheHead == nullptr)
-			{
-				PrintWarning("pMessageCacheHead == nullptr context: "UINT64FMT, nContext);
-				sMessageCacheInfo.mapMessageCacheInfo.erase(iterCache);
-				return;
-			}
-
-			CCoreServiceKitImpl::Inst()->getInvokerTrace()->addTraceExtraInfo(pMessageCacheHead->nTraceID, "cache message timeout");
-			
-			SAFE_DELETE(pMessageCacheHead);
-			sMessageCacheInfo.mapMessageCacheInfo.erase(iterCache);
-			return;
-		}
-
-		DebugAst(false);
+		this->delCacheMessage(nContext, "");
 	}
 
 	void CTransporter::sendCacheMessage(const std::string& szServiceName)
@@ -383,7 +384,7 @@ namespace core
 							continue;
 						}
 						uint64_t nSessionID = 0;
-						if (pRequestMessageCacheInfo->callback != nullptr)
+						if (pRequestMessageCacheInfo->callback != nullptr || pRequestMessageCacheInfo->nCoroutineID != 0)
 						{
 							nSessionID = this->genSessionID();
 							SResponseWaitInfo* pResponseWaitInfo = new SResponseWaitInfo();
@@ -391,6 +392,7 @@ namespace core
 							pResponseWaitInfo->nSessionID = nSessionID;
 							pResponseWaitInfo->nTraceID = pRequestMessageCacheInfo->nTraceID;
 							pResponseWaitInfo->szServiceName = szServiceName;
+							pResponseWaitInfo->nCoroutineID = pRequestMessageCacheInfo->nCoroutineID;
 							pResponseWaitInfo->tickTimeout.setCallback(std::bind(&CTransporter::onRequestMessageTimeout, this, std::placeholders::_1));
 							CBaseApp::Inst()->registerTicker(&pResponseWaitInfo->tickTimeout, pMessageCacheHead->tickTimeout.getRemainTime(), 0, nSessionID);
 
@@ -466,9 +468,68 @@ namespace core
 		}
 	}
 
-	void CTransporter::delCacheMessage(const std::string& szServiceName)
+	void CTransporter::delCacheMessage(uint64_t nCacheID, const std::string& szServiceName)
 	{
-		this->m_mapMessageCacheInfo.erase(szServiceName);
+		std::vector<SMessageCacheHead*> vecMessageCacheInfo;
+		for (auto iter = this->m_mapMessageCacheInfo.begin(); iter != this->m_mapMessageCacheInfo.end(); ++iter)
+		{
+			SMessageCacheInfo& sMessageCacheInfo = iter->second;
+			if (nCacheID != 0)
+			{
+				auto iterCache = sMessageCacheInfo.mapMessageCacheInfo.find(nCacheID);
+				if (iterCache == sMessageCacheInfo.mapMessageCacheInfo.end())
+					continue;
+				
+				vecMessageCacheInfo.push_back(iterCache->second);
+				sMessageCacheInfo.mapMessageCacheInfo.erase(iterCache);
+			}
+			else
+			{
+				if (iter->first != szServiceName)
+					continue;
+
+				for (auto iterCache = sMessageCacheInfo.mapMessageCacheInfo.begin(); iterCache != sMessageCacheInfo.mapMessageCacheInfo.end(); ++iterCache)
+				{
+					vecMessageCacheInfo.push_back(iterCache->second);
+				}
+				this->m_mapMessageCacheInfo.erase(iter);
+				break;
+			}
+		}
+
+		for (size_t i = 0; i < vecMessageCacheInfo.size(); ++i)
+		{
+			SMessageCacheHead* pMessageCacheHead = vecMessageCacheInfo[i];
+			if (pMessageCacheHead == nullptr)
+			{
+				PrintWarning("pMessageCacheHead == nullptr");
+				return;
+			}
+
+			CCoreServiceKitImpl::Inst()->getInvokerTrace()->addTraceExtraInfo(pMessageCacheHead->nTraceID, "cache message timeout");
+
+			if (pMessageCacheHead->nType == eMCIT_Request)
+			{
+				SRequestMessageCacheInfo* pRequestMessageCacheInfo = static_cast<SRequestMessageCacheInfo*>(pMessageCacheHead);
+				if (pRequestMessageCacheInfo->callback != nullptr)
+				{
+					uint64_t nCoroutineID = coroutine::start([&](uint64_t){ pRequestMessageCacheInfo->callback(eMT_RESPONSE, nullptr, eRRT_TIME_OUT); });
+					coroutine::resume(nCoroutineID, 0);
+				}
+				else
+				{
+					if (pRequestMessageCacheInfo->nCoroutineID != 0)
+					{
+						coroutine::sendMessage(pRequestMessageCacheInfo->nCoroutineID, reinterpret_cast<void*>(eRRT_TIME_OUT));
+						coroutine::sendMessage(pRequestMessageCacheInfo->nCoroutineID, nullptr);
+						coroutine::sendMessage(pRequestMessageCacheInfo->nCoroutineID, nullptr);
+						coroutine::resume(pRequestMessageCacheInfo->nCoroutineID, 0);
+					}
+				}
+			}
+
+			SAFE_DELETE(pMessageCacheHead);
+		}
 	}
 
 	SServiceSessionInfo& CTransporter::getServiceSessionInfo()

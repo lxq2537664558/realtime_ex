@@ -13,6 +13,7 @@ namespace core
 		CInvokerTrace();
 		~CInvokerTrace();
 		
+		bool		init();
 		void		startNewTrace();
 		uint64_t	getCurTraceID() const;
 		void		addTraceExtraInfo(uint64_t nTraceID, const char* szFormat, va_list arg);

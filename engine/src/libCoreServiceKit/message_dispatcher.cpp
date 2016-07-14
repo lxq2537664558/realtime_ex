@@ -57,9 +57,13 @@ namespace core
 			ServiceCallback& callback = CCoreServiceKitImpl::Inst()->getCoreServiceInvoker()->getCallback(pHeader->nMessageID);
 			if (callback != nullptr)
 			{
-				uint64_t nCoroutineID = coroutine::start([&](uint64_t){ callback(szFromServiceName, nMessageType, message_header_ptr(pHeader)); });
+				message_header_ptr pMessage = message_header_ptr(pHeader, [pData](const void*){ delete[] reinterpret_cast<const char*>(pData); });
+				uint64_t nCoroutineID = coroutine::start([&](uint64_t){ callback(szFromServiceName, nMessageType, pMessage); });
 				coroutine::resume(nCoroutineID, 0);
-				bRet = (coroutine::getState(nCoroutineID) == eCS_DEAD);
+				if (coroutine::getState(nCoroutineID) == eCS_DEAD)
+					pMessage.reset();
+				else
+					bRet = false;
 			}
 			sServiceSessionInfo.szServiceName.clear();
 			sServiceSessionInfo.nSessionID = 0;
@@ -85,9 +89,13 @@ namespace core
 
 			if (pResponseWaitInfo->callback != nullptr)
 			{
-				uint64_t nCoroutineID = coroutine::start([&](uint64_t){ pResponseWaitInfo->callback(nMessageType, message_header_ptr(pHeader), (EResponseResultType)pCookice->nResult); });
+				message_header_ptr pMessage = message_header_ptr(pHeader, [pData](const void*){ delete[] reinterpret_cast<const char*>(pData); });
+				uint64_t nCoroutineID = coroutine::start([&](uint64_t){ pResponseWaitInfo->callback(nMessageType, pMessage, (EResponseResultType)pCookice->nResult); });
 				coroutine::resume(nCoroutineID, 0);
-				bRet = (coroutine::getState(nCoroutineID) == eCS_DEAD);
+				if (coroutine::getState(nCoroutineID) == eCS_DEAD)
+					pMessage.reset();
+				else
+					bRet = false;
 			}
 			else
 			{
@@ -95,6 +103,7 @@ namespace core
 				{
 					coroutine::sendMessage(pResponseWaitInfo->nCoroutineID, reinterpret_cast<void*>(pCookice->nResult));
 					coroutine::sendMessage(pResponseWaitInfo->nCoroutineID, const_cast<message_header*>(pHeader));
+					coroutine::sendMessage(pResponseWaitInfo->nCoroutineID, const_cast<void*>(pData));
 					coroutine::resume(pResponseWaitInfo->nCoroutineID, 0);
 					bRet = (coroutine::getState(pResponseWaitInfo->nCoroutineID) == eCS_DEAD);
 				}
@@ -114,7 +123,8 @@ namespace core
 			GateForwardCallback& callback = CCoreServiceKitImpl::Inst()->getCoreServiceInvoker()->getGateClientCallback(pHeader->nMessageID);
 			if (callback != nullptr)
 			{
-				uint64_t nCoroutineID = coroutine::start([&](uint64_t){ callback(session, nMessageType, message_header_ptr(pHeader)); });
+				message_header_ptr pMessage = message_header_ptr(pHeader, [pData](const void*){ delete[] reinterpret_cast<const char*>(pData); });
+				uint64_t nCoroutineID = coroutine::start([&](uint64_t){ callback(session, nMessageType, pMessage); });
 				coroutine::resume(nCoroutineID, 0);
 				bRet = (coroutine::getState(nCoroutineID) == eCS_DEAD);
 			}

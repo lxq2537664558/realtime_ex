@@ -18,6 +18,11 @@ namespace core
 
 	}
 
+	bool CInvokerTrace::init()
+	{
+		return true;
+	}
+
 	void CInvokerTrace::addTraceExtraInfo(uint64_t nTraceID, const char* szFormat, va_list arg)
 	{
 		if (base::crt::vsnprintf(this->m_szExtraInfo, sizeof(this->m_szExtraInfo), szFormat, arg) < 0)

@@ -55,14 +55,17 @@ namespace core
 			return;
 		}
 
-		// 同步服务信息
-		smt_notify_service_base_info netMsg;
-		netMsg.szFromServiceName = CCoreServiceKitImpl::Inst()->getServiceBaseInfo().szName;
-		netMsg.szToServiceName = this->m_szServiceName;
-		base::CWriteBuf& writeBuf = CBaseApp::Inst()->getWriteBuf();
-		netMsg.pack(writeBuf);
+		const SServiceBaseInfo* pServiceBaseInfo = CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getServiceBaseInfo(this->m_szServiceName);
+		if (pServiceBaseInfo != nullptr)
+		{
+			// 同步服务信息
+			smt_notify_service_base_info netMsg;
+			netMsg.szFromServiceName = CCoreServiceKitImpl::Inst()->getServiceBaseInfo().szName;
+			base::CWriteBuf& writeBuf = CBaseApp::Inst()->getWriteBuf();
+			netMsg.pack(writeBuf);
 
-		this->send(eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
+			this->send(eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
+		}
 	}
 
 	void CCoreServiceConnection::onDisconnect()
@@ -84,17 +87,6 @@ namespace core
 
 				smt_notify_service_base_info netMsg;
 				netMsg.unpack(pData, nSize);
-				if (netMsg.szToServiceName.empty())
-				{
-					this->shutdown(true, "empty service name");
-					return true;
-				}
-
-				if (netMsg.szToServiceName != CCoreServiceKitImpl::Inst()->getServiceBaseInfo().szName)
-				{
-					this->shutdown(true, "error service name");
-					return true;
-				}
 
 				// 已经有握手成功的连接了，断开前来握手的连接
 				if (CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getServiceConnection(netMsg.szFromServiceName) != nullptr)
@@ -156,12 +148,6 @@ namespace core
 				if (netMsg.szServiceName.empty())
 				{
 					this->shutdown(true, "empty service name");
-					return true;
-				}
-
-				if (netMsg.szServiceName != CCoreServiceKitImpl::Inst()->getServiceBaseInfo().szName)
-				{
-					this->shutdown(true, "error service name");
 					return true;
 				}
 

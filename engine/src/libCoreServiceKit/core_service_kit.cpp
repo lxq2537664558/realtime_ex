@@ -46,4 +46,14 @@ namespace core
 	{
 		return CCoreServiceKitImpl::Inst()->getLuaFacade();
 	}
+
+	void CCoreServiceKit::setServiceConnectCallback(std::function<void(const std::string)> funConnect)
+	{
+		CCoreServiceKitImpl::Inst()->setServiceConnectCallback(funConnect);
+	}
+
+	void CCoreServiceKit::setServiceDisconnectCallback(std::function<void(const std::string)> funDisconnect)
+	{
+		CCoreServiceKitImpl::Inst()->setServiceDisconnectCallback(funDisconnect);
+	}
 }

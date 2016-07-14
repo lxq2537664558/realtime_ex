@@ -46,14 +46,15 @@ namespace core
 		sRequestMessageInfo.nCoroutineID = coroutine::getCurrentID();
 
 		bool bRet = CCoreServiceKitImpl::Inst()->getTransporter()->call(szServiceName, sRequestMessageInfo);
-		if (bRet)
+		if (!bRet)
 			return eRRT_ERROR;
 		
 		coroutine::yield();
 
 		uint32_t nRet = (uint32_t)reinterpret_cast<uint64_t>(coroutine::recvMessage(coroutine::getCurrentID()));
 		message_header* pHeader = reinterpret_cast<message_header*>(coroutine::recvMessage(coroutine::getCurrentID()));
-		pResultData = message_header_ptr(pHeader);
+		char* pBuf = reinterpret_cast<char*>(coroutine::recvMessage(coroutine::getCurrentID()));
+		pResultData = message_header_ptr(pHeader, [pBuf](const void*){ delete[] pBuf; });
 		return nRet;
 	}
 

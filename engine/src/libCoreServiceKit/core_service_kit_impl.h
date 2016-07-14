@@ -50,26 +50,35 @@ namespace core
 
 		uint32_t					getInvokeTimeout() const;
 
+		void						setServiceConnectCallback(std::function<void(const std::string)> funConnect);
+		void						setServiceDisconnectCallback(std::function<void(const std::string)> funDisconnect);
+		std::function<void(const std::string)>&
+									getServiceConnectCallback();
+		std::function<void(const std::string)>&
+									getServiceDisconnectCallback();
+
 	private:
 		void						onConnectRefuse(const std::string& szContext);
 		void						onCheckConnectMaster(uint64_t nContext);
 
 	private:
-		CTicker								m_tickCheckConnectMaster;
-		CTransporter*						m_pTransporter;
-		CCoreServiceInvoker*				m_pCoreServiceInvoker;
-		CCoreServiceProxy*					m_pCoreServiceProxy;
-		CInvokerTrace*						m_pInvokerTrace;
-		CServiceConnectionFactory*			m_pServiceConnectionFactory;
-		SServiceBaseInfo					m_sServiceBaseInfo;
-		std::string							m_szMasterHost;
-		uint16_t							m_nMasterPort;
-		uint32_t							m_nInvokTimeout;
+		CTicker									m_tickCheckConnectMaster;
+		CTransporter*							m_pTransporter;
+		CCoreServiceInvoker*					m_pCoreServiceInvoker;
+		CCoreServiceProxy*						m_pCoreServiceProxy;
+		CInvokerTrace*							m_pInvokerTrace;
+		CServiceConnectionFactory*				m_pServiceConnectionFactory;
+		SServiceBaseInfo						m_sServiceBaseInfo;
+		std::string								m_szMasterHost;
+		uint16_t								m_nMasterPort;
+		uint32_t								m_nInvokTimeout;
 
-		base::CLuaFacade*					m_pLuaFacade;
+		base::CLuaFacade*						m_pLuaFacade;
 
-		std::vector<ServiceGlobalFilter>	m_vecServiceGlobalBeforeFilter;
-		std::vector<ServiceGlobalFilter>	m_vecServiceGlobalAfterFilter;
+		std::vector<ServiceGlobalFilter>		m_vecServiceGlobalBeforeFilter;
+		std::vector<ServiceGlobalFilter>		m_vecServiceGlobalAfterFilter;
+		std::function<void(const std::string)>	m_serviceConnectCallback;
+		std::function<void(const std::string)>	m_serviceDisconnectCallback;
 	};
 
 }

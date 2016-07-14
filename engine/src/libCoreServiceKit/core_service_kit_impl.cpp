@@ -97,6 +97,13 @@ namespace core
 			nMasterPort = (uint16_t)pMasterAddrXML->IntAttribute("port");
 		}
 
+		this->m_pInvokerTrace = new CInvokerTrace();
+		if (!this->m_pInvokerTrace->init())
+		{
+			PrintWarning("this->m_pInvokerTrace->init()");
+			return false;
+		}
+
 		this->m_pTransporter = new CTransporter();
 		if (!this->m_pTransporter->init())
 		{
@@ -161,6 +168,7 @@ namespace core
 		SAFE_DELETE(this->m_pCoreServiceInvoker);
 		SAFE_DELETE(this->m_pCoreServiceProxy);
 		SAFE_DELETE(this->m_pServiceConnectionFactory);
+		SAFE_DELETE(this->m_pInvokerTrace);
 		SAFE_DELETE(this->m_pLuaFacade);
 
 		CMessageDispatcher::Inst()->release();
@@ -245,4 +253,23 @@ namespace core
 		return this->m_nInvokTimeout;
 	}
 
+	void CCoreServiceKitImpl::setServiceConnectCallback(std::function<void(const std::string)> funConnect)
+	{
+		this->m_serviceConnectCallback = funConnect;
+	}
+
+	void CCoreServiceKitImpl::setServiceDisconnectCallback(std::function<void(const std::string)> funDisconnect)
+	{
+		this->m_serviceDisconnectCallback = funDisconnect;
+	}
+
+	std::function<void(const std::string)>& CCoreServiceKitImpl::getServiceConnectCallback()
+	{
+		return this->m_serviceConnectCallback;
+	}
+
+	std::function<void(const std::string)>& CCoreServiceKitImpl::getServiceDisconnectCallback()
+	{
+		return this->m_serviceDisconnectCallback;
+	}
 }

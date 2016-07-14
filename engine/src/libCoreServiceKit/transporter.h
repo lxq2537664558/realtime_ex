@@ -28,9 +28,10 @@ namespace core
 		bool					broadcast(const std::string& szServiceName, const SGateBroadcastMessageInfo& sGateBroadcastMessageInfo);
 
 		void					onConnectRefuse(const std::string& szContext);
+		void					onServiceConnect(const std::string& szServiceName);
+		void					onServiceDisconnect(const std::string& szServiceName);
 
 		void					sendCacheMessage(const std::string& szServiceName);
-		void					delCacheMessage(const std::string& szServiceName);
 
 		SServiceSessionInfo&	getServiceSessionInfo();
 		SResponseWaitInfo*		getResponseWaitInfo(uint64_t nSessionID, bool bErase);
@@ -40,6 +41,7 @@ namespace core
 		void					onCheckConnect(uint64_t nContext);
 		void					onRequestMessageTimeout(uint64_t nContext);
 		void					onCacheMessageTimeout(uint64_t nContext);
+		void					delCacheMessage(uint64_t nCacheID, const std::string& szServiceName);
 		uint64_t				genSessionID();
 		uint64_t				genCacheID();
 		
