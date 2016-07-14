@@ -232,6 +232,12 @@ size_t CGenWinDump::getStackInfo(void** pStack, uint32_t nDepth, char* szBuf, si
 		nLen += _snprintf(szBuf + nLen, nBufSize - nLen, "%s[0x%I64x]()\r\n", szSymbolName.c_str(), nAddress);
 	}
 
+	if (nLen > 2)
+	{
+		szBuf[nLen - 1] = 0;
+		szBuf[nLen - 2] = 0;
+		nLen -= 2;
+	}
 	return nLen;
 }
 
