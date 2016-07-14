@@ -58,6 +58,9 @@ namespace core
 		}
 
 		pBaseConnection->m_nID = nSocketID;
+		pBaseConnection->m_sLocalAddr = sLocalAddr;
+		pBaseConnection->m_sRemoteAddr = sRemoteAddr;
+
 		this->m_mapBaseConnectionByID[nSocketID] = pBaseConnection;
 		this->m_mapBaseConnectionByType[nType][nSocketID] = pBaseConnection;
 
@@ -65,6 +68,17 @@ namespace core
 
 		if (this->m_funConnect != nullptr)
 			this->m_funConnect(pBaseConnection);
+
+		SMCT_NOTIFY_SOCKET_CONNECT_ACK* pContext = new SMCT_NOTIFY_SOCKET_CONNECT_ACK();
+
+		pContext->nSocketID = nSocketID;
+
+		SMessagePacket sMessagePacket;
+		sMessagePacket.nType = eMCT_NOTIFY_SOCKET_CONNECT_ACK;
+		sMessagePacket.pData = pContext;
+		sMessagePacket.nDataSize = sizeof(SMCT_NOTIFY_SOCKET_CONNECT_ACK);
+
+		CNetRunnable::Inst()->getMessageQueue()->pushMessagePacket(sMessagePacket);
 	}
 
 	void CBaseConnectionMgr::onDisconnect(uint64_t nSocketID)
@@ -180,13 +194,19 @@ namespace core
 		SMCT_BROADCAST_SOCKET_DATA2* pContext = reinterpret_cast<SMCT_BROADCAST_SOCKET_DATA2*>(new char[sizeof(SMCT_BROADCAST_SOCKET_DATA2)+nSize]);
 		pContext->nType = nType;
 		pContext->nMessageType = nMessageType;
+		pContext->vecExcludeID = nullptr;
 		memcpy(pContext + 1, pData, nSize);
+		if (vecExcludeID != nullptr)
+		{
+			pContext->vecExcludeID = new std::vector<uint64_t>();
+			*pContext->vecExcludeID = *vecExcludeID;
+		}
 
 		SMessagePacket sMessagePacket;
 		sMessagePacket.nType = eMCT_BROADCAST_SOCKET_DATA2;
 		sMessagePacket.pData = pContext;
 		sMessagePacket.nDataSize = sizeof(SMCT_BROADCAST_SOCKET_DATA2)+nSize;
-
+		
 		CNetRunnable::Inst()->getMessageQueue()->pushMessagePacket(sMessagePacket);
 	}
 
@@ -195,16 +215,16 @@ namespace core
 		if (vecSocketID.empty())
 			return;
 
-		SMCT_BROADCAST_SOCKET_DATA1* pContext = reinterpret_cast<SMCT_BROADCAST_SOCKET_DATA1*>(new char[sizeof(SMCT_BROADCAST_SOCKET_DATA1)+nSize + vecSocketID.size() * sizeof(int32_t)]);
+		SMCT_BROADCAST_SOCKET_DATA1* pContext = reinterpret_cast<SMCT_BROADCAST_SOCKET_DATA1*>(new char[sizeof(SMCT_BROADCAST_SOCKET_DATA1) + nSize]);
 		pContext->nMessageType = nMessageType;
-		pContext->nCount = (uint32_t)vecSocketID.size();
-		memcpy(pContext + 1, &vecSocketID[0], vecSocketID.size() * sizeof(int32_t));
-		memcpy(reinterpret_cast<char*>(pContext + 1) + vecSocketID.size() * sizeof(int32_t), pData, nSize);
+		pContext->vecSocketID = new std::vector<uint64_t>();
+		*pContext->vecSocketID = vecSocketID;
+		memcpy(pContext + 1, pData, nSize);
 
 		SMessagePacket sMessagePacket;
 		sMessagePacket.nType = eMCT_BROADCAST_SOCKET_DATA1;
 		sMessagePacket.pData = pContext;
-		sMessagePacket.nDataSize = sizeof(SMCT_BROADCAST_SOCKET_DATA1)+nSize + (uint32_t)vecSocketID.size() * sizeof(int32_t);
+		sMessagePacket.nDataSize = sizeof(SMCT_BROADCAST_SOCKET_DATA1) + nSize;
 
 		CNetRunnable::Inst()->getMessageQueue()->pushMessagePacket(sMessagePacket);
 	}

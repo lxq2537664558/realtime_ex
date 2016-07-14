@@ -36,6 +36,7 @@ namespace core
 		, m_nSendHeartbeatCount(0)
 		, m_nID(0)
 		, m_nType(0)
+		, m_nState(eCCS_None)
 	{
 	}
 	
@@ -103,7 +104,7 @@ namespace core
 
 					nMessageSize = pHeader->nMessageSize;
 
-					this->onDispatch(pHeader->nMessageType, pHeader + 1, pHeader->nMessageSize - sizeof(message_header));
+					this->onDispatch(pHeader->nMessageType, pHeader + 1, pHeader->nMessageSize - sizeof(core_message_header));
 				}
 
 				nRecvSize += nMessageSize;
@@ -137,6 +138,8 @@ namespace core
 		sMessagePacket.nDataSize = sizeof(SMCT_NOTIFY_SOCKET_CONNECT);
 
 		CBaseAppImpl::Inst()->getMessageQueue()->pushMessagePacket(sMessagePacket);
+
+		this->m_nState = eCCS_Connectting;
 	}
 
 	uint64_t CCoreConnection::getID() const
@@ -160,6 +163,9 @@ namespace core
 		sMessagePacket.nDataSize = sizeof(SMCT_NOTIFY_SOCKET_DISCONNECT);
 
 		CBaseAppImpl::Inst()->getMessageQueue()->pushMessagePacket(sMessagePacket);
+
+		this->m_nState = eCCS_Disconnectting;
+		this->m_pNetConnecter = nullptr;
 	}
 
 	void CCoreConnection::onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize)
@@ -204,6 +210,9 @@ namespace core
 
 	void CCoreConnection::send(uint8_t nMessageType, const void* pData, uint16_t nSize)
 	{
+		if (this->m_nState == eCCS_Disconnectting)
+			return;
+
 		DebugAst(this->m_pNetConnecter != nullptr);
 		DebugAst(pData != nullptr && nSize > 0);
 
@@ -234,6 +243,9 @@ namespace core
 
 	void CCoreConnection::send(uint8_t nMessageType, const void* pData, uint16_t nSize, const void* pExtraBuf, uint16_t nExtraSize)
 	{
+		if (this->m_nState == eCCS_Disconnectting)
+			return;
+
 		DebugAst(this->m_pNetConnecter != nullptr);
 		DebugAst(pData != nullptr && nSize > 0 && pExtraBuf != nullptr && nExtraSize > 0);
 
@@ -268,6 +280,9 @@ namespace core
 
 	void CCoreConnection::shutdown(bool bForce, const std::string& szMsg)
 	{
+		if (this->m_pNetConnecter)
+			return;
+
 		if (this->m_pNetConnecter != nullptr)
 			this->m_pNetConnecter->shutdown(bForce, szMsg.c_str());
 	}
@@ -317,6 +332,16 @@ namespace core
 	void CCoreConnection::enableHeartbeat(bool bEnable)
 	{
 		this->m_bHeartbeat = bEnable;
+	}
+
+	void CCoreConnection::setState(uint32_t nState)
+	{
+		this->m_nState = nState;
+	}
+
+	uint32_t CCoreConnection::getState() const
+	{
+		return this->m_nState;
 	}
 
 }

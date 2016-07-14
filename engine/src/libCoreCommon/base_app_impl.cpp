@@ -584,7 +584,7 @@ namespace core
 
 	void CBaseAppImpl::onQPS(uint64_t nContext)
 	{
-		PrintInfo("QPS: %u", this->m_nQPS);
+		//PrintInfo("QPS: %u", this->m_nQPS);
 		this->m_nQPS = 0;
 	}
 

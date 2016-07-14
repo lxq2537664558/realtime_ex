@@ -6,7 +6,6 @@
 
 namespace core
 {
-
 	class CCoreConnectionMgr;
 	class CBaseConnection;
 	class CBaseConnectionMgr;
@@ -15,6 +14,15 @@ namespace core
 	{
 		friend class CCoreConnectionMgr;
 		friend class CBaseConnectionMgr;
+
+	public:
+		enum
+		{
+			eCCS_None,
+			eCCS_Connectting,
+			eCCS_Connected,
+			eCCS_Disconnectting,
+		};
 
 	public:
 		CCoreConnection();
@@ -41,6 +49,9 @@ namespace core
 		void				onHeartbeat();
 		void				enableHeartbeat(bool bEnable);
 
+		void				setState(uint32_t nState);
+		uint32_t			getState() const;
+
 	private:
 		virtual uint32_t	onRecv(const char* pData, uint32_t nDataSize);
 		virtual void		onConnect();
@@ -53,6 +64,7 @@ namespace core
 		uint32_t				m_nSendHeartbeatCount;
 
 		uint64_t				m_nID;
+		uint32_t				m_nState;
 		uint32_t				m_nType;
 		std::string				m_szContext;
 		MessageParser			m_messageParser;

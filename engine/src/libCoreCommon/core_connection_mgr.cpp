@@ -170,12 +170,15 @@ namespace core
 		auto iter = this->m_mapCoreConnectionByTypeID.find(nType);
 		if (iter == this->m_mapCoreConnectionByTypeID.end())
 			return;
-		
+
 		std::list<CCoreConnection*>& listCoreConnection = iter->second;
 		for (auto iter = listCoreConnection.begin(); iter != listCoreConnection.end(); ++iter)
 		{
 			CCoreConnection* pCoreConnection = *iter;
 			if (nullptr == pCoreConnection)
+				continue;
+
+			if (pCoreConnection->getState() == CCoreConnection::eCCS_Connectting)
 				continue;
 
 			if (vecExcludeID != nullptr)
@@ -192,7 +195,7 @@ namespace core
 				if (bMatch)
 					continue;
 			}
-
+			
 			pCoreConnection->send(nMessageType, pData, nSize);
 		}
 	}

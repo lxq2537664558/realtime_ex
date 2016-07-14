@@ -12,8 +12,9 @@ namespace core
 		eMCT_REQUEST_SOCKET_CONNECT,
 		eMCT_REQUEST_SOCKET_SHUTDOWN,
 		eMCT_NOTIFY_SOCKET_CONNECT,
+		eMCT_NOTIFY_SOCKET_CONNECT_ACK,
 		eMCT_NOTIFY_SOCKET_DISCONNECT,
-		eMCT_NOTIFY_CONNECTION_DESTROY,
+		eMCT_NOTIFY_SOCKET_DISCONNECT_ACK,
 		eMCT_NOTIFY_SOCKET_CONNECT_REFUSE,
 		eMCT_SEND_SOCKET_DATA,
 		eMCT_RECV_SOCKET_DATA,
@@ -62,13 +63,18 @@ namespace core
 		uint64_t	nSocketID;
 	};
 
+	struct SMCT_NOTIFY_SOCKET_CONNECT_ACK
+	{
+		uint64_t nSocketID;
+	};
+
 	class CBaseConnection;
 	struct SMCT_NOTIFY_SOCKET_DISCONNECT
 	{
 		uint64_t nSocketID;
 	};
 
-	struct SMCT_NOTIFY_CONNECTION_DESTROY
+	struct SMCT_NOTIFY_SOCKET_DISCONNECT_ACK
 	{
 		uint64_t nSocketID;
 	};
@@ -94,14 +100,15 @@ namespace core
 
 	struct SMCT_BROADCAST_SOCKET_DATA1
 	{
-		uint8_t		nMessageType;
-		uint32_t	nCount;
+		uint8_t					nMessageType;
+		std::vector<uint64_t>*	vecSocketID;
 	};
 
 	struct SMCT_BROADCAST_SOCKET_DATA2
 	{
-		uint32_t	nType;
-		uint8_t		nMessageType;
+		uint32_t				nType;
+		uint8_t					nMessageType;
+		std::vector<uint64_t>*	vecExcludeID;
 	};
 
 	struct SMCT_ENABLE_HEARTBEAT
