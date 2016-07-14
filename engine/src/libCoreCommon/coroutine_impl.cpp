@@ -74,6 +74,11 @@ namespace core
 
 #ifdef _WIN32
 
+		if (this->m_hHandle != nullptr)
+		{
+			DeleteFiber(this->m_hHandle);
+			this->m_hHandle = nullptr;
+		}
 #define _WIN_CO_STACK_SIZE 64*1024
 		if (nID != 1)
 		{
@@ -140,16 +145,8 @@ namespace core
 		this->m_pParentCoroutine = nullptr;
 
 		if (this->m_eState == eCS_DEAD)
-		{
-#ifdef _WIN32
-			if (this->m_hHandle != nullptr)
-			{
-				DeleteFiber(this->m_hHandle);
-				this->m_hHandle = nullptr;
-			}
-#endif
 			CBaseAppImpl::Inst()->getCoroutineMgr()->recycleCoroutine(this);
-		}
+		
 		CCoroutineImpl* pCurrentCoroutine = CBaseAppImpl::Inst()->getCoroutineMgr()->getCurrentCoroutine();
 
 #ifdef _WIN32
