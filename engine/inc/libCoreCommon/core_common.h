@@ -26,7 +26,7 @@ namespace core
 class MessageName : public core::message_header\
 {\
 public:\
-	MessageName() : core::message_header(nMessageID) { }\
+	MessageName() : core::message_header(nMessageID) { nMessageSize = sizeof(MessageName); }\
 	static  uint16_t	getMessageID() { return nMessageID; }\
 	static  const char*	getMessageName() { return #MessageName; }
 
