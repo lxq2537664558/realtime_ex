@@ -15,5 +15,4 @@ public:
 	bool init();
 
 private:
-	void onLogin(uint64_t nSocketID, core::message_header_ptr pHeader);
 };

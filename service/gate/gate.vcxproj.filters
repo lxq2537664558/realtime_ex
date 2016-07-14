@@ -13,9 +13,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="proto_src">
-      <UniqueIdentifier>{7f903078-647e-44ff-a1f6-cccc596933a5}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -42,9 +39,6 @@
     <ClInclude Include="gate_message_dispatcher.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="proto_src\login_msg.pb.h">
-      <Filter>proto_src</Filter>
-    </ClInclude>
     <ClInclude Include="gate_message_handler.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -70,9 +64,6 @@
     </ClCompile>
     <ClCompile Include="gate_message_dispatcher.cpp">
       <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="proto_src\login_msg.pb.cc">
-      <Filter>proto_src</Filter>
     </ClCompile>
     <ClCompile Include="gate_message_handler.cpp">
       <Filter>源文件</Filter>

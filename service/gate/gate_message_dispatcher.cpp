@@ -133,5 +133,5 @@ void CGateMessageDispatcher::forward(uint64_t nSessionID, const core::message_he
 {
 	DebugAst(pHeader != nullptr);
 
-	core::CClusterInvoker::Inst()->forward("", nSessionID, pHeader);
+	core::CClusterInvoker::Inst()->forward("test1-1", nSessionID, pHeader);
 }

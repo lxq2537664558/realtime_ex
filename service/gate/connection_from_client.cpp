@@ -32,7 +32,7 @@ void CConnectionFromClient::release()
 
 void CConnectionFromClient::onConnect()
 {
-
+	CGateApp::Inst()->getGateSessionMgr()->createSession(this->getID(), this->getID());
 }
 
 void CConnectionFromClient::onDisconnect()

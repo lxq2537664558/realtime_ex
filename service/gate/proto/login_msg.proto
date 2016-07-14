@@ -1,5 +1,0 @@
-package gate;
-message login_msg
-{
-	optional uint64 id = 1;
-}
