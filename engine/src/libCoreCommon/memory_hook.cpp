@@ -23,7 +23,8 @@ namespace core
 #pragma pack(push,1)
 	struct SMemoryHookInfo
 	{
-		size_t		nSize;		// 分配的内存大小
+		uint32_t	nSize;		// 分配的内存大小
+		uint8_t		nContextCount;
 		char*		pContext;	// 内存分配函数地址
 		uint64_t	nAllocTime;	// 分配时间
 		bool		bDetail;	// 是否是详细信息
@@ -74,16 +75,17 @@ namespace core
 	{
 		void* pData = malloc(nSize + sizeof(SMemoryHookInfoNode));
 		SMemoryHookInfoNode* pMemoryHookInfoNode = reinterpret_cast<SMemoryHookInfoNode*>(pData);
-		pMemoryHookInfoNode->Value.nSize = nSize;
+		pMemoryHookInfoNode->Value.nSize = (uint32_t)nSize;
 		pMemoryHookInfoNode->Value.bDetail = this->m_bDetail;
 		if (this->m_bDetail)
 		{
-			pMemoryHookInfoNode->Value.pContext = reinterpret_cast<char*>(malloc(_MEMORY_DETAIL_STACK_COUNT * sizeof(void*)));
-			base::getStack(1, 10, reinterpret_cast<void**>(pMemoryHookInfoNode->Value.pContext), _MEMORY_DETAIL_STACK_COUNT);
+			pMemoryHookInfoNode->Value.pContext = reinterpret_cast<char*>(malloc(_MEMORY_DETAIL_STACK_COUNT * sizeof(char*)));
+			pMemoryHookInfoNode->Value.nContextCount = (uint8_t)base::getStack(3, 12, reinterpret_cast<void**>(pMemoryHookInfoNode->Value.pContext), _MEMORY_DETAIL_STACK_COUNT);
 		}
 		else
 		{
 			pMemoryHookInfoNode->Value.pContext = reinterpret_cast<char*>(pCallAddr);
+			pMemoryHookInfoNode->Value.nContextCount = 1;
 		}
 		pMemoryHookInfoNode->pNext = nullptr;
 		pMemoryHookInfoNode->pPre = nullptr;
@@ -142,40 +144,6 @@ namespace core
 		if (pFile == nullptr)
 			return;
 
-		auto saveInfo = [](void* pAddr, size_t nSize, uint64_t nAllocTime, FILE* pFile)->void
-		{
-#if defined(WIN32)
-			char szSymbolBuf[sizeof(PIMAGEHLP_SYMBOL) + 1024];
-			PIMAGEHLP_SYMBOL pSymbol = (PIMAGEHLP_SYMBOL)szSymbolBuf;
-			pSymbol->SizeOfStruct = sizeof(szSymbolBuf);
-			pSymbol->MaxNameLength = 1024;
-			DWORD64 dwSymDisplacement = 0;
-
-			if (SymGetSymFromAddr64(GetCurrentProcess(), (DWORD64)pAddr, 0, pSymbol))
-			{
-				char szTime[64] = { 0 };
-				base::formatGmtTime(szTime, nAllocTime);
-				char szInfo[1024] = { 0 };
-				size_t nCount = base::crt::snprintf(szInfo, _countof(szInfo), "%s %s [0x%x] size: %d\r\n", szTime, pSymbol->Name, pSymbol->Address, nSize);
-				fwrite(szInfo, 1, nCount, pFile);
-			}
-#else
-			char** pSymbol = NULL;
-			pSymbol = (char**)backtrace_symbols(&pAddr, 1);
-			if (pSymbol != NULL && pSymbol[0] != NULL)
-			{
-				char szTime[64] = { 0 };
-				base::formatGmtTime(szTime, nAllocTime);
-				char szInfo[1024] = { 0 };
-				size_t nCount = base::crt::snprintf(szInfo, _countof(szInfo), "%s %s [0x%x] size: %d\r\n", szTime, pSymbol[0], pAddr, nSize);
-				fwrite(szInfo, 1, nCount, pFile);
-			}
-
-			if (pSymbol != NULL)
-				free(pSymbol);
-#endif
-		};
-
 		this->m_lock.lock();
 		while (!this->m_listMemoryHookInfo.empty())
 		{
@@ -184,15 +152,35 @@ namespace core
 
 			if (pNode->Value.bDetail)
 			{
-				for (size_t i = 0; i < _MEMORY_DETAIL_STACK_COUNT; ++i)
+				void** pStack = reinterpret_cast<void**>(pNode->Value.pContext);
+				for (uint8_t i = 0; i < pNode->Value.nContextCount; ++i)
 				{
-					void* pAddr = reinterpret_cast<void*>(pNode->Value.pContext[i]);
-					saveInfo(pAddr, pNode->Value.nSize, pNode->Value.nAllocTime, pFile);
+					void* pAddr = pStack[i];
+					char szBuf[1024] = { 0 };
+					if (base::getFunctionInfo(pAddr, szBuf, _countof(szBuf)) <= 0)
+						continue;
+
+					char szInfo[1024] = { 0 };
+					size_t nCount = base::crt::snprintf(szInfo, _countof(szInfo), "%s\r\n", szBuf);
+					fwrite(szInfo, 1, nCount, pFile);
 				}
+				char szTime[64] = { 0 };
+				base::formatGmtTime(szTime, pNode->Value.nAllocTime);
+				char szInfo[1024] = { 0 };
+				size_t nCount = base::crt::snprintf(szInfo, _countof(szInfo), "%s size: %d\r\n", szTime, pNode->Value.nSize);
+				fwrite(szInfo, 1, nCount, pFile);
 			}
 			else
 			{
-				saveInfo(pNode->Value.pContext, pNode->Value.nSize, pNode->Value.nAllocTime, pFile);
+				char szBuf[1024] = { 0 };
+				if (base::getFunctionInfo(pNode->Value.pContext, szBuf, _countof(szBuf)) <= 0)
+					continue;
+
+				char szTime[64] = { 0 };
+				base::formatGmtTime(szTime, pNode->Value.nAllocTime);
+				char szInfo[1024] = { 0 };
+				size_t nCount = base::crt::snprintf(szInfo, _countof(szInfo), "%s %s size: %d\r\n", szTime, szBuf, pNode->Value.nSize);
+				fwrite(szInfo, 1, nCount, pFile);
 			}
 		}
 		this->m_lock.unlock();
