@@ -10,12 +10,13 @@
 #include "libCoreServiceKit/core_service_kit.h"
 
 #include "../common/test_message_define.h"
+#include "../src/libCoreCommon/memory_hook.h"
 
 void client_request_msg_callback(const core::SClientSessionInfo sClientSessionInfo, uint32_t nMessageType, core::message_header_ptr pMessage)
 {
 	SServiceRequestMsg service_msg;
 	service_msg.nID = std::static_pointer_cast<const SClientRequestMsg>(pMessage)->nID;
-
+	service_msg.nClientTime = std::static_pointer_cast<const SClientRequestMsg>(pMessage)->nClientTime;
 	core::message_header_ptr pResultData = nullptr;
 	uint32_t nRet = core::CClusterInvoker::Inst()->invok("test2-1", &service_msg, pResultData);
 	if (nRet != eRRT_OK)
@@ -26,6 +27,7 @@ void client_request_msg_callback(const core::SClientSessionInfo sClientSessionIn
 
 	SClientResponseMsg client_msg;
 	client_msg.nID = std::static_pointer_cast<const SClientRequestMsg>(pResultData)->nID;
+	client_msg.nClientTime = std::static_pointer_cast<const SClientRequestMsg>(pResultData)->nClientTime;
 	core::CClusterInvoker::Inst()->send(sClientSessionInfo, &client_msg);
 }
 
@@ -42,10 +44,29 @@ CTestServiceApp1* CTestServiceApp1::Inst()
 	return static_cast<CTestServiceApp1*>(core::CBaseApp::Inst());
 }
 
+void tick_fun1(uint64_t nContext)
+{
+	PrintInfo("AAAAAA");
+	core::beginMemoryLeakChecker(true);
+}
+
+void tick_fun2(uint64_t nContext)
+{
+	PrintInfo("BBBBBB");
+	core::endMemoryLeakChecker("memory.txt");
+}
+
 bool CTestServiceApp1::onInit()
 {
 	core::CCoreServiceKit::Inst()->init();
 	core::CMessageRegistry::Inst()->registerGateForwardCallback(eClientRequestMsg, &client_request_msg_callback);
+	core::CTicker* pTicker = new core::CTicker();
+	pTicker->setCallback(std::bind(&tick_fun1, std::placeholders::_1));
+	this->registerTicker(pTicker, 10000, 0, 0);
+	pTicker = new core::CTicker();
+	pTicker->setCallback(std::bind(&tick_fun2, std::placeholders::_1));
+	this->registerTicker(pTicker, 20000, 0, 0);
+
 	return true;
 }
 

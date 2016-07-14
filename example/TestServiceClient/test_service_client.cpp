@@ -59,8 +59,8 @@ public:
 	virtual bool onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize)
 	{
 		const SClientResponseMsg* pMsg = static_cast<const SClientResponseMsg*>(pData);
-		PrintInfo("onDispatch %d", pMsg->nID);
-
+		PrintInfo("onDispatch id: %d cost: %d", pMsg->nID, (uint32_t)(base::getGmtTime() - pMsg->nClientTime));
+		this->requestMsg(pMsg->nID + 1);
 		return true;
 	}
 
@@ -69,7 +69,7 @@ private:
 	{
 		SClientRequestMsg msg;
 		msg.nID = nID;
-
+		msg.nClientTime = base::getGmtTime();
 		this->send(eMT_CLIENT, &msg, sizeof(msg));
 
 		nSendTime = base::getGmtTime();
@@ -119,7 +119,10 @@ bool CTestServiceClientApp::onInit()
 {
 	CServiceConnectionFactory* pServiceConnectionFactory = new CServiceConnectionFactory();
 	this->getBaseConnectionMgr()->setBaseConnectionFactory(_BASE_CONNECTION_TYPE_BEGIN, pServiceConnectionFactory);
-	this->getBaseConnectionMgr()->connect("127.0.0.1", 8000, _BASE_CONNECTION_TYPE_BEGIN, "", 0, 0, default_client_message_parser);
+	for (size_t i = 0; i < 1; ++i)
+	{
+		this->getBaseConnectionMgr()->connect("127.0.0.1", 8000, _BASE_CONNECTION_TYPE_BEGIN, "", 0, 0, default_client_message_parser);
+	}
 	return true;
 }
 

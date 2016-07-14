@@ -15,6 +15,7 @@ void service_request_msg_callback(const std::string szFromService, uint32_t nMes
 {
 	SServiceResponseMsg service_msg;
 	service_msg.nID = std::static_pointer_cast<const SServiceRequestMsg>(pMessage)->nID;
+	service_msg.nClientTime = std::static_pointer_cast<const SServiceRequestMsg>(pMessage)->nClientTime;
 
 	core::CClusterInvoker::Inst()->response(&service_msg);
 }
