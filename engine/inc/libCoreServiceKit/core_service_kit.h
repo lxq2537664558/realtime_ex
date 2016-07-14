@@ -20,6 +20,14 @@ namespace core
 		*/
 		const SServiceBaseInfo&			getServiceBaseInfo() const;
 		/**
+		@brief: 设置全局的服务连接成功回调
+		*/
+		void							setServiceConnectCallback(std::function<void(const std::string)> funConnect);
+		/**
+		@brief: 设置全局的服务连接断开回调
+		*/
+		void							setServiceDisconnectCallback(std::function<void(const std::string)> funDisconnect);
+		/**
 		@brief: 开始一个新的trace
 		*/
 		void							startNewTrace();

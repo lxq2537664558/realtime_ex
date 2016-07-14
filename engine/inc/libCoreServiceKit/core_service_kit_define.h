@@ -13,6 +13,13 @@
 
 #define _GET_MESSAGE_ID(szMessageName) (base::hash(szMessageName.c_str()))
 
+enum EResponseResultType
+{
+	eRRT_OK,
+	eRRT_TIME_OUT,
+	eRRT_ERROR,
+};
+
 namespace core
 {
 
@@ -44,18 +51,11 @@ namespace core
 
 	};
 
-	enum EResponseResultType
-	{
-		eRRT_OK,
-		eRRT_TIME_OUT,
-		eRRT_ERROR,
-	};
-
 	typedef std::shared_ptr<const message_header>	message_header_ptr;
 
 	typedef std::function<void(uint8_t, message_header_ptr, EResponseResultType)>			InvokeCallback;			// RPC消息响应回调函数类型
 	typedef std::function<void(const std::string, uint8_t, message_header_ptr)>				ServiceCallback;		// 服务消息处理函数类型(这里服务名字必须是值，不能是引用，因为有协程)
-	typedef std::function<void(const SClientSessionInfo&, uint8_t, message_header_ptr)>		GateForwardCallback;	// 经网关服务转发的客户端消息处理函数类型
+	typedef std::function<void(const SClientSessionInfo, uint8_t, message_header_ptr)>		GateForwardCallback;	// 经网关服务转发的客户端消息处理函数类型
 	typedef std::function<void(uint64_t, message_header_ptr)>								ClientCallback;			// 客户端消息处理函数类型
 	typedef std::function<bool(const std::string&, uint8_t, const void*, uint16_t)>			ServiceGlobalFilter;	// 全局的消息过滤器类型
 

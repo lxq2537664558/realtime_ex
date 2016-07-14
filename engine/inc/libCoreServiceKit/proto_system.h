@@ -134,15 +134,13 @@ message_end
 
 message_begin(smt_notify_service_base_info, eSMT_notify_service_base_info)
 	std::string	szFromServiceName;
-	std::string	szToServiceName;
 	
 	void pack(base::CWriteBuf& writeBuf)
 	{
 		pack_begin(writeBuf);
 
 		writeBuf.write(szFromServiceName);
-		writeBuf.write(szToServiceName);
-
+		
 		pack_end(writeBuf);
 	}
 
@@ -151,8 +149,7 @@ message_begin(smt_notify_service_base_info, eSMT_notify_service_base_info)
 		unpack_begin(pBuf, nSize);
 
 		readBuf.read(szFromServiceName);
-		readBuf.read(szToServiceName);
-
+		
 		unpack_end();
 	}
 message_end
