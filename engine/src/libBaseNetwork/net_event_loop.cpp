@@ -142,7 +142,9 @@ namespace base
 		struct timeval timeout;
 		timeout.tv_sec = (int32_t)((nTime * 1000) / 1000000);
 		timeout.tv_usec = (int32_t)((nTime * 1000) % 1000000);
+		PROFILING_BEGIN(select)
 		int32_t nRet = select(0, &readfds, &writefds, &exceptfds, &timeout);
+		PROFILING_END(select)
 		if (SOCKET_ERROR == nRet)
 		{
 			PrintWarning("select error %d ", getLastError());
@@ -171,7 +173,9 @@ namespace base
 #else
 		do
 		{
+			PROFILING_BEGIN(epoll_wait)
 			int32_t nActiveCount = epoll_wait(this->m_nEpoll, &this->m_vecEpollEvent[0], this->m_vecEpollEvent.size(), nTime);
+			PROFILING_END(epoll_wait)
 			if (nActiveCount >= 0)
 			{
 				for (int32_t i = 0; i < nActiveCount; ++i)
