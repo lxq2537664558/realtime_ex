@@ -35,5 +35,6 @@ namespace core
 		base::CThreadBase*	m_pThreadBase;
 		CMessageQueue*		m_pMessageQueue;
 		int64_t				m_nLastCheckTime;
+		int64_t				m_nTotalSamplingTime;
 	};
 }

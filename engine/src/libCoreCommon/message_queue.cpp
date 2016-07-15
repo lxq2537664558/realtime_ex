@@ -2,6 +2,7 @@
 #include "message_queue.h"
 
 #include "libBaseCommon/debug_helper.h"
+#include "libBaseCommon/profiling.h"
 
 #define _DEFAULT_MESSAGE_QUEUE 10240
 
@@ -33,6 +34,7 @@ namespace core
 	{
 		std::unique_lock<std::mutex> guard(this->m_lock);
 
+		PROFILING_BEGIN(CMessageQueue::pushMessagePacket)
 		this->m_pMessageQueue[this->m_nQueueEnd] = sMessagePacket;
 		if (++this->m_nQueueEnd >= this->m_nQueueCapacity)
 			this->m_nQueueEnd = 0;
@@ -51,6 +53,7 @@ namespace core
 
 		if (this->m_bWait && (this->m_nQueueEnd - this->m_nQueueBegin == 1 || this->m_nQueueBegin - this->m_nQueueEnd == this->m_nQueueCapacity - 1))
 			this->m_cond.notify_one();
+		PROFILING_END(CMessageQueue::pushMessagePacket)
 
 		return true;
 	}

@@ -67,6 +67,10 @@ namespace core
 		*/
 		uint32_t			getHeartbeatTime() const;
 		/*
+		@brief: 获取采样时间
+		*/
+		uint32_t			getSamplingTime() const;
+		/*
 		@brief: 获取消息队列
 		*/
 		CMessageQueue*		getMessageQueue() const;
@@ -83,7 +87,6 @@ namespace core
 		bool				onInit();
 		bool				onProcess();
 		void				onDestroy();
-		void				onAnalyze();
 		void				onQPS(uint64_t nContext);
 
 	protected:
@@ -95,7 +98,7 @@ namespace core
 		CMessageQueue*			m_pMessageQueue;
 		base::CWriteBuf			m_writeBuf;
 		uint32_t				m_nCycleCount;
-		uint32_t				m_nTotalTime;
+		int64_t					m_nTotalSamplingTime;
 		uint32_t				m_nSamplingTime;
 		volatile uint32_t		m_nRunState;
 		uint32_t				m_nHeartbeatLimit;

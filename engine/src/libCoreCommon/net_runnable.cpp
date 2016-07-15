@@ -8,6 +8,7 @@
 
 #include "libBaseCommon/debug_helper.h"
 #include "libBaseCommon/base_time.h"
+#include "libBaseCommon/profiling.h"
 
 #include <algorithm>
 
@@ -23,6 +24,7 @@ namespace core
 		, m_pThreadBase(nullptr)
 		, m_pMessageQueue(nullptr)
 		, m_nLastCheckTime(0)
+		, m_nTotalSamplingTime(0)
 	{
 	}
 
@@ -90,10 +92,12 @@ namespace core
 
 	bool CNetRunnable::onProcess()
 	{
-		int64_t nBeginLoopTime = base::getGmtTime();
+		int64_t nBeginLoopTime = base::getProcessPassTime();
 		
 		static std::vector<SMessagePacket> vecMessagePacket;
+		PROFILING_BEGIN(this->m_pMessageQueue->popMessagePacket_NetRunnable)
 		this->m_pMessageQueue->popMessagePacket(vecMessagePacket);
+		PROFILING_END(this->m_pMessageQueue->popMessagePacket_NetRunnable)
 
 		for (auto iter = vecMessagePacket.begin(); iter != vecMessagePacket.end(); ++iter)
 		{
@@ -109,6 +113,7 @@ namespace core
 
 			case eMCT_REQUEST_SOCKET_LISTEN:
 				{
+					PROFILING_GUARD(eMCT_REQUEST_SOCKET_LISTEN)
 					SMCT_REQUEST_SOCKET_LISTEN* pContext = reinterpret_cast<SMCT_REQUEST_SOCKET_LISTEN*>(sMessagePacket.pData);
 					if (pContext == nullptr)
 					{
@@ -122,6 +127,7 @@ namespace core
 
 			case eMCT_REQUEST_SOCKET_CONNECT:
 				{
+					PROFILING_GUARD(eMCT_REQUEST_SOCKET_CONNECT)
 					SMCT_REQUEST_SOCKET_CONNECT* pContext = reinterpret_cast<SMCT_REQUEST_SOCKET_CONNECT*>(sMessagePacket.pData);
 					if (pContext == nullptr)
 					{
@@ -135,6 +141,7 @@ namespace core
 
 			case eMCT_REQUEST_SOCKET_SHUTDOWN:
 				{
+					PROFILING_GUARD(eMCT_REQUEST_SOCKET_SHUTDOWN)
 					SMCT_REQUEST_SOCKET_SHUTDOWN* pContext = reinterpret_cast<SMCT_REQUEST_SOCKET_SHUTDOWN*>(sMessagePacket.pData);
 					if (pContext == nullptr)
 					{
@@ -151,6 +158,7 @@ namespace core
 
 			case eMCT_NOTIFY_SOCKET_DISCONNECT_ACK:
 				{
+					PROFILING_GUARD(eMCT_NOTIFY_SOCKET_DISCONNECT_ACK)
 					SMCT_NOTIFY_SOCKET_DISCONNECT_ACK* pContext = reinterpret_cast<SMCT_NOTIFY_SOCKET_DISCONNECT_ACK*>(sMessagePacket.pData);
 					if (pContext == nullptr)
 					{
@@ -165,6 +173,7 @@ namespace core
 
 			case eMCT_NOTIFY_SOCKET_CONNECT_ACK:
 				{
+					PROFILING_GUARD(eMCT_NOTIFY_SOCKET_CONNECT_ACK)
 					SMCT_NOTIFY_SOCKET_CONNECT_ACK* pContext = reinterpret_cast<SMCT_NOTIFY_SOCKET_CONNECT_ACK*>(sMessagePacket.pData);
 					if (pContext == nullptr)
 					{
@@ -182,6 +191,7 @@ namespace core
 
 			case eMCT_SEND_SOCKET_DATA:
 				{
+					PROFILING_GUARD(eMCT_SEND_SOCKET_DATA)
 					SMCT_SEND_SOCKET_DATA* pContext = reinterpret_cast<SMCT_SEND_SOCKET_DATA*>(sMessagePacket.pData);
 					if (pContext == nullptr)
 					{
@@ -199,6 +209,7 @@ namespace core
 
 			case eMCT_BROADCAST_SOCKET_DATA1:
 				{
+					PROFILING_GUARD(eMCT_BROADCAST_SOCKET_DATA1)
 					SMCT_BROADCAST_SOCKET_DATA1* pContext = reinterpret_cast<SMCT_BROADCAST_SOCKET_DATA1*>(sMessagePacket.pData);
 					if (pContext == nullptr)
 					{
@@ -222,6 +233,7 @@ namespace core
 
 			case eMCT_BROADCAST_SOCKET_DATA2:
 				{
+					PROFILING_GUARD(eMCT_BROADCAST_SOCKET_DATA2)
 					SMCT_BROADCAST_SOCKET_DATA2* pContext = reinterpret_cast<SMCT_BROADCAST_SOCKET_DATA2*>(sMessagePacket.pData);
 					if (pContext == nullptr)
 					{
@@ -236,6 +248,7 @@ namespace core
 
 			case eMCT_ENABLE_HEARTBEAT:
 				{
+					PROFILING_GUARD(eMCT_ENABLE_HEARTBEAT)
 					SMCT_ENABLE_HEARTBEAT* pContext = reinterpret_cast<SMCT_ENABLE_HEARTBEAT*>(sMessagePacket.pData);
 					if (pContext == nullptr)
 					{
@@ -253,6 +266,7 @@ namespace core
 
 			case eMCT_SEND_HEARTBEAT:
 				{
+					PROFILING_GUARD(eMCT_SEND_HEARTBEAT)
 					SMCT_SEND_HEARTBEAT* pContext = reinterpret_cast<SMCT_SEND_HEARTBEAT*>(sMessagePacket.pData);
 					if (pContext == nullptr)
 					{
@@ -273,10 +287,10 @@ namespace core
 			}
 		}
 		
-		int64_t nEndLoopTime = base::getGmtTime();
-		int64_t nNetWaitTime = std::max<int64_t>(0, _CYCLE_TIME - (nEndLoopTime - nBeginLoopTime));
+		int64_t nEndLoopTime = base::getProcessPassTime();
+		int64_t nNetWaitTime = std::max<int64_t>(0, _CYCLE_TIME - (nEndLoopTime - nBeginLoopTime) / 1000);
 		this->m_pCoreConnectionMgr->update(nNetWaitTime);
-
+		
 		int64_t nCurTime = base::getGmtTime();
 		if (nCurTime - this->m_nLastCheckTime >= _CYCLE_TIME)
 		{
@@ -288,6 +302,15 @@ namespace core
 			CBaseAppImpl::Inst()->getMessageQueue()->pushMessagePacket(sMessagePacket);
 			
 			this->m_pCoreConnectionMgr->onTimer(nCurTime);
+		}
+
+
+		this->m_nTotalSamplingTime = this->m_nTotalSamplingTime + (uint32_t)(base::getProcessPassTime() - nBeginLoopTime);
+
+		if (this->m_nTotalSamplingTime / 1000 >= CBaseAppImpl::Inst()->getSamplingTime())
+		{
+			base::profiling(this->m_nTotalSamplingTime);
+			this->m_nTotalSamplingTime = 0;
 		}
 
 		return true;

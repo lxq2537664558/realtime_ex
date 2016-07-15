@@ -11,6 +11,7 @@
 #include "libBaseCommon/base_time.h"
 #include "message_queue.h"
 #include "message_command.h"
+#include "libBaseCommon/profiling.h"
 
 namespace core
 {
@@ -123,6 +124,8 @@ namespace core
 
 	void CCoreConnection::onConnect()
 	{
+		PROFILING_GUARD(CCoreConnection::onConnect)
+
 		DebugAst(this->m_pNetConnecter != nullptr);
 		
 		SMCT_NOTIFY_SOCKET_CONNECT* pContext = new SMCT_NOTIFY_SOCKET_CONNECT();
@@ -154,6 +157,8 @@ namespace core
 
 	void CCoreConnection::onDisconnect()
 	{
+		PROFILING_GUARD(CCoreConnection::onDisconnect)
+
 		SMCT_NOTIFY_SOCKET_DISCONNECT* pContext = new SMCT_NOTIFY_SOCKET_DISCONNECT();
 		pContext->nSocketID = this->getID();
 
@@ -170,6 +175,7 @@ namespace core
 
 	void CCoreConnection::onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize)
 	{
+		PROFILING_GUARD(CCoreConnection::onDispatch)
 		if (nMessageType == eMT_HEARTBEAT)
 			return;
 
@@ -210,6 +216,7 @@ namespace core
 
 	void CCoreConnection::send(uint8_t nMessageType, const void* pData, uint16_t nSize)
 	{
+		PROFILING_GUARD(CCoreConnection::send)
 		if (this->m_nState == eCCS_Disconnectting)
 			return;
 
@@ -243,6 +250,7 @@ namespace core
 
 	void CCoreConnection::send(uint8_t nMessageType, const void* pData, uint16_t nSize, const void* pExtraBuf, uint16_t nExtraSize)
 	{
+		PROFILING_GUARD(CCoreConnection::send)
 		if (this->m_nState == eCCS_Disconnectting)
 			return;
 

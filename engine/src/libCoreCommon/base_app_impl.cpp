@@ -98,7 +98,7 @@ namespace core
 		, m_pCoroutineMgr(nullptr)
 		, m_nRunState(eARS_Start)
 		, m_bMarkQuit(false)
-		, m_nTotalTime(0)
+		, m_nTotalSamplingTime(0)
 		, m_nCycleCount(0)
 		, m_nHeartbeatLimit(0)
 		, m_nHeartbeatTime(0)
@@ -434,7 +434,9 @@ namespace core
 		int64_t nBeginTime = base::getProcessPassTime();
 
 		static std::vector<SMessagePacket> vecMessagePacket;
+		PROFILING_BEGIN(this->m_pMessageQueue->popMessagePacket_BaseAppImpl)
 		this->m_pMessageQueue->popMessagePacket(vecMessagePacket);
+		PROFILING_END(this->m_pMessageQueue->popMessagePacket_BaseAppImpl)
 
 		for (auto iter = vecMessagePacket.begin(); iter != vecMessagePacket.end(); ++iter)
 		{
@@ -542,15 +544,12 @@ namespace core
 			return false;
 
 		int64_t nEndTime = base::getProcessPassTime();
-		this->m_nTotalTime = this->m_nTotalTime + (uint32_t)(nEndTime - nBeginTime);
+		this->m_nTotalSamplingTime = this->m_nTotalSamplingTime + (uint32_t)(nEndTime - nBeginTime);
 
-		if (this->m_nTotalTime / 1000 >= this->m_nSamplingTime)
+		if (this->m_nTotalSamplingTime / 1000 >= this->m_nSamplingTime)
 		{
-			this->onAnalyze();
-#ifdef __PROFILING_OPEN
-			base::profiling(this->m_nTotalTime);
-#endif
-			this->m_nTotalTime = 0;
+			base::profiling(this->m_nTotalSamplingTime);
+			this->m_nTotalSamplingTime = 0;
 		}
 		return true;
 	}
@@ -558,10 +557,6 @@ namespace core
 	CMessageQueue* CBaseAppImpl::getMessageQueue() const
 	{
 		return this->m_pMessageQueue;
-	}
-
-	void CBaseAppImpl::onAnalyze()
-	{
 	}
 
 	void CBaseAppImpl::doQuit()
@@ -580,6 +575,11 @@ namespace core
 	uint32_t CBaseAppImpl::getHeartbeatTime() const
 	{
 		return this->m_nHeartbeatTime;
+	}
+
+	uint32_t CBaseAppImpl::getSamplingTime() const
+	{
+		return this->m_nSamplingTime;
 	}
 
 	void CBaseAppImpl::onQPS(uint64_t nContext)

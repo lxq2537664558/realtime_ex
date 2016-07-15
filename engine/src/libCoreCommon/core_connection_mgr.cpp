@@ -11,6 +11,7 @@
 
 #include "libBaseCommon/base_time.h"
 #include "libBaseCommon/logger.h"
+#include "libBaseCommon/profiling.h"
 
 #include <algorithm>
 
@@ -240,6 +241,7 @@ namespace core
 
 	void CCoreConnectionMgr::onTimer(int64_t nTime)
 	{
+		PROFILING_GUARD(CCoreConnectionMgr::onTimer)
 
 	}
 

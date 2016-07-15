@@ -145,11 +145,12 @@ namespace core
 			return;
 
 		this->m_lock.lock();
+		uint32_t nTotalSize = 0;
 		while (!this->m_listMemoryHookInfo.empty())
 		{
 			SMemoryHookInfoNode* pNode = this->m_listMemoryHookInfo.getHead();
 			pNode->remove();
-
+			nTotalSize += pNode->Value.nSize;
 			if (pNode->Value.bDetail)
 			{
 				void** pStack = reinterpret_cast<void**>(pNode->Value.pContext);
@@ -183,6 +184,10 @@ namespace core
 				fwrite(szInfo, 1, nCount, pFile);
 			}
 		}
+		char szInfo[1024] = { 0 };
+		size_t nCount = base::crt::snprintf(szInfo, _countof(szInfo), "total leak size: %d", nTotalSize);
+		fwrite(szInfo, 1, nCount, pFile);
+
 		this->m_lock.unlock();
 		fclose(pFile);
 
