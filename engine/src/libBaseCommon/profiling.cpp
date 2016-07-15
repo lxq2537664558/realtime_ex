@@ -4,8 +4,11 @@
 #include "noncopyable.h"
 #include "base_time.h"
 #include "exception_handler.h"
+#include "thread_base.h"
 
 #include <unordered_map>
+
+static bool g_bProfiling = true;
 
 class CProfilingMgr :
 	public base::noncopyable
@@ -13,9 +16,6 @@ class CProfilingMgr :
 public:
 	CProfilingMgr();
 	~CProfilingMgr();
-
-	bool init(bool bProfiling);
-	void enableProfiling(bool bProfiling);
 
 	void profilingBeginByLabel(const char* szLabel, uint32_t nContext);
 	void endProfilingByLabel(const char* szLabel, uint32_t nContext);
@@ -36,12 +36,10 @@ private:
 	std::unordered_map<const char*, std::unordered_map<uint32_t, SProfilerInfo>>	m_mapProfilingInfoByLabel;
 	std::unordered_map<const void*, SProfilerInfo>									m_mapProfilingInfoByAddr;
 	int64_t																			m_nProfilingMgrSpend;
-	bool																			m_bProfiling;
 };
 
 CProfilingMgr::CProfilingMgr()
 	: m_nProfilingMgrSpend(0)
-	, m_bProfiling(true)
 {
 }
 
@@ -52,7 +50,7 @@ CProfilingMgr::~CProfilingMgr()
 
 void CProfilingMgr::profilingBeginByLabel(const char* szLabel, uint32_t nContext)
 {
-	if (nullptr == szLabel || !this->m_bProfiling)
+	if (nullptr == szLabel || !g_bProfiling)
 		return;
 
 	int64_t nBeginTime = base::getProcessPassTime();
@@ -68,7 +66,7 @@ void CProfilingMgr::profilingBeginByLabel(const char* szLabel, uint32_t nContext
 			sProfilerInfo.nCount = 0;
 			sProfilerInfo.nTotalTime = 0;
 			sProfilerInfo.nMaxTime = 0;
-			sProfilerInfo.nMinTime = INVALID_32BIT;
+			sProfilerInfo.nMinTime = INT32_MAX;
 		}
 		else
 		{
@@ -84,7 +82,7 @@ void CProfilingMgr::profilingBeginByLabel(const char* szLabel, uint32_t nContext
 		sProfilerInfo.nCount = 0;
 		sProfilerInfo.nTotalTime = 0;
 		sProfilerInfo.nMaxTime = 0;
-		sProfilerInfo.nMinTime = INVALID_32BIT;
+		sProfilerInfo.nMinTime = INT32_MAX;
 	}
 	int64_t nEndTime = base::getProcessPassTime();
 
@@ -93,7 +91,7 @@ void CProfilingMgr::profilingBeginByLabel(const char* szLabel, uint32_t nContext
 
 void CProfilingMgr::endProfilingByLabel(const char* szLabel, uint32_t nContext)
 {
-	if (nullptr == szLabel || !this->m_bProfiling)
+	if (nullptr == szLabel || !g_bProfiling)
 		return;
 
 	int64_t nBeginTime = base::getProcessPassTime();
@@ -135,7 +133,7 @@ void CProfilingMgr::endProfilingByLabel(const char* szLabel, uint32_t nContext)
 
 void CProfilingMgr::profilingBeginByAddr(const void* pAddr)
 {
-	if (nullptr == pAddr || !this->m_bProfiling)
+	if (nullptr == pAddr || !g_bProfiling)
 		return;
 
 	int64_t nBeginTime = base::getProcessPassTime();
@@ -152,7 +150,7 @@ void CProfilingMgr::profilingBeginByAddr(const void* pAddr)
 		sProfilerInfo.nCount = 0;
 		sProfilerInfo.nTotalTime = 0;
 		sProfilerInfo.nMaxTime = 0;
-		sProfilerInfo.nMinTime = INVALID_32BIT;
+		sProfilerInfo.nMinTime = INT32_MAX;
 	}
 	int64_t nEndTime = base::getProcessPassTime();
 
@@ -161,7 +159,7 @@ void CProfilingMgr::profilingBeginByAddr(const void* pAddr)
 
 void CProfilingMgr::endProfilingByAddr(const void* pAddr)
 {
-	if (nullptr == pAddr || !this->m_bProfiling)
+	if (nullptr == pAddr || !g_bProfiling)
 		return;
 
 	int64_t nBeginTime = base::getProcessPassTime();
@@ -192,9 +190,10 @@ void CProfilingMgr::endProfilingByAddr(const void* pAddr)
 
 void CProfilingMgr::profiling(int64_t nTotalTime)
 {
-	if (nTotalTime <= 0 || !this->m_bProfiling)
+	if (nTotalTime <= 0 || !g_bProfiling)
 		return;
 
+	base::saveLogEx("Profiling", false, "thread_id: %d", base::CThreadBase::getCurrentID());
 	for (auto iter = this->m_mapProfilingInfoByLabel.begin(); iter != this->m_mapProfilingInfoByLabel.end(); ++iter)
 	{
 		auto& mapProfilingInfo = iter->second;
@@ -211,7 +210,7 @@ void CProfilingMgr::profiling(int64_t nTotalTime)
 			sProfilerInfo.nCount = 0;
 			sProfilerInfo.nTotalTime = 0;
 			sProfilerInfo.nMaxTime = 0;
-			sProfilerInfo.nMinTime = INVALID_32BIT;
+			sProfilerInfo.nMinTime = INT32_MAX;
 		}
 	}
 
@@ -231,7 +230,7 @@ void CProfilingMgr::profiling(int64_t nTotalTime)
 		sProfilerInfo.nCount = 0;
 		sProfilerInfo.nTotalTime = 0;
 		sProfilerInfo.nMaxTime = 0;
-		sProfilerInfo.nMinTime = INVALID_32BIT;
+		sProfilerInfo.nMinTime = INT32_MAX;
 	}
 	this->m_mapProfilingInfoByLabel.clear();
 	this->m_mapProfilingInfoByAddr.clear();
@@ -239,78 +238,61 @@ void CProfilingMgr::profiling(int64_t nTotalTime)
 	this->m_nProfilingMgrSpend = 0;
 }
 
-bool CProfilingMgr::init(bool bProfiling)
+// VS2013 不支持thread_local关键字
+#if defined(_MSC_VER) && _MSC_VER < 1900
+# define thread_local	__declspec(thread)
+#endif
+
+static thread_local CProfilingMgr* g_pProfilingMgr = nullptr;
+
+static CProfilingMgr* getProfilingMgr()
 {
-	this->m_bProfiling = bProfiling;
+	if (g_pProfilingMgr == nullptr)
+		g_pProfilingMgr = new CProfilingMgr();
 
-	return true;
+	return g_pProfilingMgr;
 }
-
-void CProfilingMgr::enableProfiling(bool bProfiling)
-{
-	this->m_bProfiling = bProfiling;
-
-	base::saveLogEx("Profiling", false, "enable profiling: %s", bProfiling ? "true" : "false");
-
-	if (!this->m_bProfiling)
-	{
-		this->m_mapProfilingInfoByLabel.clear();
-		this->m_mapProfilingInfoByAddr.clear();
-	}
-}
-
-static CProfilingMgr* g_pProfilingMgr = nullptr;
 
 namespace base
 {
 	bool initProfiling(bool bProfiling)
 	{
-		if (g_pProfilingMgr != nullptr)
-			return false;
-
-		g_pProfilingMgr = new CProfilingMgr();
-		if (g_pProfilingMgr->init(bProfiling))
-			return true;
-
-		SAFE_DELETE(g_pProfilingMgr);
-		return false;
+		g_bProfiling = bProfiling;
+		return true;
 	}
 
 	void enableProfiling(bool bProfiling)
 	{
-		if (nullptr == g_pProfilingMgr)
-			return;
-
-		g_pProfilingMgr->enableProfiling(bProfiling);
+		g_bProfiling = bProfiling;
 	}
 
 	void uninitProfiling()
 	{
-		SAFE_DELETE(g_pProfilingMgr);
+		
 	}
 
 	void profilingBeginByLabel(const char* szLabel, uint32_t nContext)
 	{
-		g_pProfilingMgr->profilingBeginByLabel(szLabel, nContext);
+		getProfilingMgr()->profilingBeginByLabel(szLabel, nContext);
 	}
 
 	void profilingEndByLabel(const char* szLabel, uint32_t nContext)
 	{
-		g_pProfilingMgr->endProfilingByLabel(szLabel, nContext);
+		getProfilingMgr()->endProfilingByLabel(szLabel, nContext);
 	}
 
 	void profilingBeginByAddr(const void* pAddr)
 	{
-		g_pProfilingMgr->profilingBeginByAddr(pAddr);
+		getProfilingMgr()->profilingBeginByAddr(pAddr);
 	}
 
 	void profilingEndByAddr(const void* pAddr)
 	{
-		g_pProfilingMgr->endProfilingByAddr(pAddr);
+		getProfilingMgr()->endProfilingByAddr(pAddr);
 	}
 
 	void profiling(int64_t nTotalTime)
 	{
-		g_pProfilingMgr->profiling(nTotalTime);
+		getProfilingMgr()->profiling(nTotalTime);
 	}
 }
