@@ -28,7 +28,7 @@ namespace base
 
 #else
 
-#define PrintDebug(szFormat, ...)	\
+#define PrintDebug(szFormat, args...)	\
 	do\
 	{\
 		if (base::isEnableDebugLog())\
