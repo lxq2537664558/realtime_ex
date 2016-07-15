@@ -27,24 +27,18 @@ static uint32_t formatLog(char* szBuf, uint32_t nBufSize, const char* szPrefix, 
 
 	int64_t nCurTime = base::getLocalTime();
 	base::STime sTime = base::getLocalTimeTM(nCurTime);
-	char szTime[20] = { 0 };
-	base::crt::snprintf(szTime, _countof(szTime), "%04d-%02d-%02d %02d:%02d:%02d",
-		sTime.nYear, sTime.nMon, sTime.nDay, sTime.nHour, sTime.nMin, sTime.nSec);
+	char szTime[30] = { 0 };
+	base::crt::snprintf(szTime, _countof(szTime), "[%04d-%02d-%02d %02d:%02d:%02d.%03d]",
+		sTime.nYear, sTime.nMon, sTime.nDay, sTime.nHour, sTime.nMin, sTime.nSec, nCurTime % 1000);
 
 	if (nDay != nullptr)
 		*nDay = (uint8_t)sTime.nDay;
 
-	if (base::crt::snprintf(szBuf, nBufSize, "%s.%03d ", szTime, (uint32_t)(nCurTime % 1000)) < 0)
-		return 0;
+	size_t nLen = base::crt::snprintf(szBuf, nBufSize, "%s ", szTime);
+	if (szPrefix[0] != 0)
+		nLen += base::crt::snprintf(szBuf + nLen, nBufSize, "[%s] ", szPrefix);
+	nLen += base::crt::vsnprintf(szBuf + nLen, nBufSize - nLen, szFormat, arg);
 
-	if (szPrefix[0] != 0 && base::crt::snprintf(szBuf, nBufSize, "[%s] ", szTime, szPrefix) < 0)
-		return 0;
-	
-	size_t nLen = base::crt::strnlen(szBuf, nBufSize);
-	if (base::crt::vsnprintf(szBuf + nLen, nBufSize - nLen, szFormat, arg) < 0)
-		return 0;
-
-	nLen = base::crt::strnlen(szBuf, nBufSize);
 	if (nLen >= _LOG_BUF_SIZE - 1)
 	{
 		// ½Ø¶Ï
@@ -187,6 +181,9 @@ bool CLogger::init(bool bAsync, const char* szPath)
 	{
 		std::string szSubPath = szTempPath.substr(0, pos);
 		pos += 1;
+		if (szSubPath.empty())
+			continue;
+
 		if (!base::createDir(szSubPath.c_str()))
 			return false;
 	}
@@ -284,7 +281,7 @@ bool CLogger::onProcess()
 		this->m_nLastFlushTime = nCurTime;
 	}
 
-	base::sleep(1);
+	base::sleep(100);
 	return true;
 }
 
