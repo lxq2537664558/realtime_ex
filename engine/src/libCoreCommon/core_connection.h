@@ -26,7 +26,7 @@ namespace core
 
 	public:
 		CCoreConnection();
-		virtual ~CCoreConnection();
+		~CCoreConnection();
 
 		bool				init(uint32_t nType, uint64_t nID, const std::string& szContext, const MessageParser& messageParser);
 		void				send(uint8_t nMessageType, const void* pData, uint16_t nSize);
@@ -53,9 +53,9 @@ namespace core
 		uint32_t			getState() const;
 
 	private:
-		virtual uint32_t	onRecv(const char* pData, uint32_t nDataSize);
-		virtual void		onConnect();
-		virtual void		onDisconnect();
+		uint32_t			onRecv(const char* pData, uint32_t nDataSize);
+		void				onConnect();
+		void				onDisconnect();
 
 		void				onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize);
 

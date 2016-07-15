@@ -29,6 +29,7 @@ namespace core
 	void CBaseConnection::send(uint8_t nMessageType, const void* pData, uint16_t nSize)
 	{
 		DebugAst(pData != nullptr);
+
 		SMCT_SEND_SOCKET_DATA* pContext = reinterpret_cast<SMCT_SEND_SOCKET_DATA*>(new char[sizeof(SMCT_SEND_SOCKET_DATA)+nSize]);
 		pContext->nMessageType = nMessageType;
 		pContext->nSocketID = this->getID();
