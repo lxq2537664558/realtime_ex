@@ -13,7 +13,7 @@ set(LINK_LIBS ${BIN_OUTPUT_PATH}/libBaseCommon.so ${BIN_OUTPUT_PATH}/libBaseNetw
 # 设置链接选项
 set(CMAKE_EXE_LINKER_FLAGS "-Wl,-rpath=./ ")
 # 生成gate
-add_executable(TestCoreCommon ${LIST_SRCS})
+add_executable(TestCoroutine ${LIST_SRCS})
 
 # 链接库
-target_link_libraries(TestCoreCommon ${LINK_LIBS})
+target_link_libraries(TestCoroutine ${LINK_LIBS})

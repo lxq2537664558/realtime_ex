@@ -28,4 +28,5 @@ set(BIN_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin/linux)
 #添加子目录
 add_subdirectory(engine/src)
 add_subdirectory(service)
+add_subdirectory(example)
 add_subdirectory(test)

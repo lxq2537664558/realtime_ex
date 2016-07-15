@@ -19,7 +19,7 @@ void fun1(uint64_t nContext)
 {
 	while (true)
 	{
-		core::coroutine::sleep(10000);
+		core::coroutine::yield();
 		PrintDebug("111111111 %d", (uint32_t)nContext);
 	}
 }
@@ -84,12 +84,14 @@ public:
 		delete this;
 	}
 	
-	virtual void	onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize)
+	virtual bool	onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize)
 	{
 		const STestMsg* pTestMsg = reinterpret_cast<const STestMsg*>(pData);
 		const_cast<STestMsg*>(pTestMsg)->nServerTime = base::getGmtTime();
 		//PrintDebug("delta time: %d", (uint32_t)(pTestMsg->nServerTime - pTestMsg->nClientTime));
 		this->send(eMT_CLIENT, pData, nSize);
+
+		return true;
 	}
 };
 

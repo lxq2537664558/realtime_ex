@@ -115,14 +115,24 @@ CTestServiceClientApp* CTestServiceClientApp::Inst()
 	return static_cast<CTestServiceClientApp*>(core::CBaseApp::Inst());
 }
 
+void fun(uint64_t nContext)
+{
+	exit(0);
+}
+
 bool CTestServiceClientApp::onInit()
 {
 	CServiceConnectionFactory* pServiceConnectionFactory = new CServiceConnectionFactory();
 	this->getBaseConnectionMgr()->setBaseConnectionFactory(_BASE_CONNECTION_TYPE_BEGIN, pServiceConnectionFactory);
-	for (size_t i = 0; i < 1; ++i)
+	for (size_t i = 0; i < 10; ++i)
 	{
 		this->getBaseConnectionMgr()->connect("127.0.0.1", 8000, _BASE_CONNECTION_TYPE_BEGIN, "", 0, 0, default_client_message_parser);
 	}
+
+// 	core::CTicker* pTick = new core::CTicker();
+// 	pTick->setCallback(std::bind(&fun, std::placeholders::_1));
+// 	this->registerTicker(pTick, 60000, 0, 0);
+
 	return true;
 }
 
