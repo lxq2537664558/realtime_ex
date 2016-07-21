@@ -9,22 +9,7 @@
 
 namespace base
 {
-	typedef std::function<bool(const CVector2I& point, void* pContext)>	funCheckLine;
-
-	__BASE_COMMON_API__ bool			bresenhamLine(int32_t width, CVector2I begin, CVector2I end, funCheckLine pfCheckLine, void* pContext);
-	__BASE_COMMON_API__ bool			isPointInCircularSector(CVector2I center, CVector2I point, float ux, float uy, uint32_t r, uint32_t theta);
-
 	__BASE_COMMON_API__ uint32_t		getLastError();
-
-	__BASE_COMMON_API__ bool			utf82Ucs2(const char* szUtf8, wchar_t* szBuf, size_t nBufSize);
-	__BASE_COMMON_API__ bool			ucs22Utf8(const wchar_t* szUcs2, char* szBuf, size_t nBufSize);
-
-#ifdef WIN32
-	__BASE_COMMON_API__ bool			uft82Ansi(const char* szUft8, char* szBuf, size_t nBufSize);
-	__BASE_COMMON_API__ bool			ucs22Ansi(const wchar_t* szUcs2, char* szBuf, size_t nBufSize);
-	__BASE_COMMON_API__ bool			ansi2Utf8(const char* szAnsi, char* szBuf, size_t nBufSize);
-	__BASE_COMMON_API__ bool			ansi2Ucs2(const char* szAnsi, wchar_t* szBuf, size_t nBufSize);
-#endif
 
 	__BASE_COMMON_API__ void			sleep(uint32_t milliseconds);
 

@@ -51,12 +51,14 @@ namespace core
 		
 		this->send(eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
 
+		CCoreServiceKitImpl::Inst()->setCoreConnectionToMaster(this);
+
 		CCoreServiceKitImpl::Inst()->getCoreServiceInvoker()->onConnectToMaster();
 	}
 
 	void CCoreConnectionToMaster::onDisconnect()
 	{
-
+		CCoreServiceKitImpl::Inst()->setCoreConnectionToMaster(nullptr);
 	}
 
 	bool CCoreConnectionToMaster::onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize)
@@ -71,14 +73,14 @@ namespace core
 			smt_sync_service_base_info netMsg;
 			netMsg.unpack(pData, nSize);
 			
-			CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->addService(netMsg.sServiceBaseInfo);
+			CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->addServiceBaseInfo(netMsg.sServiceBaseInfo);
 		}
 		else if (pHeader->nMessageID == eSMT_remove_service_base_info)
 		{
 			smt_remove_service_base_info netMsg;
 			netMsg.unpack(pData, nSize);
 
-			CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->delService(netMsg.szName);
+			CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->delServiceBaseInfo(netMsg.szName);
 		}
 
 		return true;

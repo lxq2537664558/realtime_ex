@@ -36,7 +36,7 @@ namespace core
 
 	struct SClientSessionInfo
 	{
-		const std::string&	szServiceName;
+		const std::string	szServiceName;
 		uint64_t			nSessionID;
 
 		SClientSessionInfo(const std::string&	szServiceName, uint64_t nSessionID)
@@ -48,7 +48,6 @@ namespace core
 	{
 		std::string	szServiceName;
 		uint64_t	nSessionID;
-
 	};
 
 	typedef std::shared_ptr<const message_header>	message_header_ptr;

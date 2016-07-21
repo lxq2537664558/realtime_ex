@@ -111,7 +111,7 @@ struct SNetAccepterHandler :
 
 int main()
 {
-	base::initLog(true);
+	base::initLog(true, "./log");
 	base::startupNetwork();
 	
 	SNetAccepterHandler* pNetAccepterHandler = new SNetAccepterHandler();
@@ -125,9 +125,9 @@ int main()
 	pNetEventLoop->listen(netAddr, 10 * 1024, 10 * 1024, pNetAccepterHandler);
 #else
 	SNetAddr netAddr;
-	netAddr.nPort = 8000;
+	netAddr.nPort = 12000;
 	base::crt::strcpy(netAddr.szHost, _countof(netAddr.szHost), "192.168.222.131");
-	for (size_t i = 0; i < 1000; ++i)
+	for (size_t i = 0; i < 300; ++i)
 	{
 		pNetEventLoop->connect(netAddr, 1024, 1024, new SNetConnecterHandler());
 		base::sleep(100);
@@ -136,7 +136,7 @@ int main()
 
 	while( true )
 	{
-		pNetEventLoop->update(100);
+		pNetEventLoop->update(10 );
 	}
 
 	return 0;

@@ -118,6 +118,7 @@
     <ClInclude Include="..\..\inc\libBaseCommon\thread_base.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\link.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\token_parser.h" />
+    <ClInclude Include="..\..\inc\libBaseCommon\utf8_string.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\variant.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\vector2.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\vector_map.h" />
@@ -140,6 +141,7 @@
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="table_file.cpp" />
     <ClCompile Include="thread_base.cpp" />
+    <ClCompile Include="utf8_string.cpp" />
     <ClCompile Include="variant.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -2,8 +2,8 @@
 #include "service_connection_factory.h"
 #include "service_base.h"
 #include "core_connection_to_master.h"
-#include "core_service_connection.h"
-
+#include "core_connection_to_service.h"
+#include "core_connection_from_service.h"
 
 namespace core
 {
@@ -23,9 +23,22 @@ namespace core
 				return pCoreConnectionToMaster;
 			}
 			break;
-		case eBCT_ConnectionService:
+		case eBCT_ConnectionFromService:
 			{
-				CCoreServiceConnection* pCoreConnectionToService = new CCoreServiceConnection();
+				CCoreConnectionFromService* pCoreConnectionFromService = new CCoreConnectionFromService();
+				if (!pCoreConnectionFromService->init(szContext))
+				{
+					SAFE_RELEASE(pCoreConnectionFromService);
+					return nullptr;
+				}
+
+				return pCoreConnectionFromService;
+			}
+			break;
+
+		case eBCT_ConnectionToService:
+			{
+				CCoreConnectionToService* pCoreConnectionToService = new CCoreConnectionToService();
 				if (!pCoreConnectionToService->init(szContext))
 				{
 					SAFE_RELEASE(pCoreConnectionToService);

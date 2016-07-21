@@ -35,6 +35,7 @@ namespace core
 		CInvokerTrace*				getInvokerTrace() const;
 
 		CCoreConnectionToMaster*	getConnectionToMaster() const;
+		void						setCoreConnectionToMaster(CCoreConnectionToMaster* pCoreConnectionToMaster);
 
 		const SServiceBaseInfo&		getServiceBaseInfo() const;
 
@@ -68,6 +69,7 @@ namespace core
 		CCoreServiceProxy*						m_pCoreServiceProxy;
 		CInvokerTrace*							m_pInvokerTrace;
 		CServiceConnectionFactory*				m_pServiceConnectionFactory;
+		CCoreConnectionToMaster*				m_pCoreConnectionToMaster;
 		SServiceBaseInfo						m_sServiceBaseInfo;
 		std::string								m_szMasterHost;
 		uint16_t								m_nMasterPort;

@@ -2,6 +2,11 @@
 #include "core_service_proxy.h"
 #include "core_service_kit_impl.h"
 
+#include "libCoreCommon\base_app.h"
+#include "libCoreCommon\base_connection_mgr.h"
+
+#define _CHECK_CONNECT_TIME 5000
+
 namespace core
 {
 
@@ -20,85 +25,125 @@ namespace core
 		return true;
 	}
 
-	void CCoreServiceProxy::addService(const SServiceBaseInfo& sServiceBaseInfo)
+	void CCoreServiceProxy::addServiceBaseInfo(const SServiceBaseInfo& sServiceBaseInfo)
 	{
 		DebugAst(!sServiceBaseInfo.szName.empty());
-		DebugAst(this->m_mapServiceBaseInfo.find(sServiceBaseInfo.szName) == this->m_mapServiceBaseInfo.end());
+		DebugAst(this->m_mapServiceInfo.find(sServiceBaseInfo.szName) == this->m_mapServiceInfo.end());
 
-		this->m_mapServiceBaseInfo[sServiceBaseInfo.szName] = sServiceBaseInfo;
+		SServiceInfo& sServiceInfo = this->m_mapServiceInfo[sServiceBaseInfo.szName];
+		sServiceInfo.pCoreConnectionFromService = nullptr;
+		sServiceInfo.pCoreConnectionToService = nullptr;
+		sServiceInfo.sServiceBaseInfo = sServiceBaseInfo;
+		sServiceInfo.pTicker = new CTicker();
+		sServiceInfo.pTicker->setCallback(std::bind(&SServiceInfo::onTicker, &sServiceInfo, std::placeholders::_1));
+		CBaseApp::Inst()->registerTicker(sServiceInfo.pTicker, 0, _CHECK_CONNECT_TIME, 0);
 
 		PrintInfo("add proxy service service_name: %s", sServiceBaseInfo.szName.c_str());
-
-		auto& funConnect = CCoreServiceKitImpl::Inst()->getServiceConnectCallback();
-		if (funConnect != nullptr)
-			funConnect(sServiceBaseInfo.szName);
 	}
 	
-	void CCoreServiceProxy::delService(const std::string& szServiceName)
+	void CCoreServiceProxy::delServiceBaseInfo(const std::string& szServiceName)
 	{
-		auto iter = this->m_mapServiceBaseInfo.find(szServiceName);
-		if (iter == this->m_mapServiceBaseInfo.end())
+		auto iter = this->m_mapServiceInfo.find(szServiceName);
+		if (iter == this->m_mapServiceInfo.end())
 			return;
 
-		this->m_mapServiceBaseInfo.erase(iter);
+		SAFE_DELETE(iter->second.pTicker);
+
+		this->m_mapServiceInfo.erase(iter);
 
 		PrintInfo("del other service service_name: %s", szServiceName.c_str());
-
-		auto& funDisconnect = CCoreServiceKitImpl::Inst()->getServiceDisconnectCallback();
-		if (funDisconnect != nullptr)
-			funDisconnect(szServiceName);
 	}
 
 	const SServiceBaseInfo* CCoreServiceProxy::getServiceBaseInfo(const std::string& szServiceName) const
 	{
-		auto iter = this->m_mapServiceBaseInfo.find(szServiceName);
-		if (iter == this->m_mapServiceBaseInfo.end())
+		auto iter = this->m_mapServiceInfo.find(szServiceName);
+		if (iter == this->m_mapServiceInfo.end())
 			return nullptr;
 		
-		return &iter->second;
+		return &iter->second.sServiceBaseInfo;
 	}
 
-	bool CCoreServiceProxy::addServiceConnection(CCoreServiceConnection* pCoreConnectionToService)
+	bool CCoreServiceProxy::addCoreConnectionToService(CCoreConnectionToService* pCoreConnectionToService)
 	{
 		DebugAstEx(pCoreConnectionToService != nullptr, false);
 
-		if (this->getServiceBaseInfo(pCoreConnectionToService->getServiceName()) == nullptr)
+		auto iter = this->m_mapServiceInfo.find(pCoreConnectionToService->getServiceName());
+		if (iter == this->m_mapServiceInfo.end())
 		{
 			PrintWarning("unknwon service service_name: %s remote_addr: %s %d", pCoreConnectionToService->getServiceName().c_str(), pCoreConnectionToService->getRemoteAddr().szHost, pCoreConnectionToService->getRemoteAddr().nPort);
 			return false;
 		}
 
-		if (this->m_mapCoreServiceConnection.find(pCoreConnectionToService->getServiceName()) != this->m_mapCoreServiceConnection.end())
-		{
-			PrintWarning("dup service service_name: %s remote_addr: %s %d", pCoreConnectionToService->getServiceName().c_str(), pCoreConnectionToService->getRemoteAddr().szHost, pCoreConnectionToService->getRemoteAddr().nPort);
-			return false;
-		}
+		DebugAstEx(iter->second.pCoreConnectionToService == nullptr, false);
 
-		this->m_mapCoreServiceConnection[pCoreConnectionToService->getServiceName()] = pCoreConnectionToService;
-
-		CCoreServiceKitImpl::Inst()->getTransporter()->onServiceConnect(pCoreConnectionToService->getServiceName());
+		iter->second.pCoreConnectionToService = pCoreConnectionToService;
 
 		return true;
 	}
 
-	CCoreServiceConnection* CCoreServiceProxy::getServiceConnection(const std::string& szName) const
+	CCoreConnectionToService* CCoreServiceProxy::getCoreConnectionToService(const std::string& szServiceName) const
 	{
-		auto iter = this->m_mapCoreServiceConnection.find(szName);
-		if (iter == this->m_mapCoreServiceConnection.end())
+		auto iter = this->m_mapServiceInfo.find(szServiceName);
+		if (iter == this->m_mapServiceInfo.end())
 			return nullptr;
 
-		return iter->second;
+		return iter->second.pCoreConnectionToService;
 	}
 
-	void CCoreServiceProxy::delServiceConnection(const std::string& szName)
+	void CCoreServiceProxy::delCoreConnectionToService(const std::string& szServiceName)
 	{
-		auto iter = this->m_mapCoreServiceConnection.find(szName);
-		if (iter == this->m_mapCoreServiceConnection.end())
+		auto iter = this->m_mapServiceInfo.find(szServiceName);
+		if (iter == this->m_mapServiceInfo.end())
 			return;
 
-		CCoreServiceKitImpl::Inst()->getTransporter()->onServiceDisconnect(szName);
+		iter->second.pCoreConnectionToService = nullptr;
+	}
 
-		this->m_mapCoreServiceConnection.erase(iter);
+	bool CCoreServiceProxy::addCoreConnectionFromService(const std::string& szServiceName, CCoreConnectionFromService* pCoreConnectionFromService)
+	{
+		DebugAstEx(pCoreConnectionFromService != nullptr, false);
+
+		auto iter = this->m_mapServiceInfo.find(szServiceName);
+		if (iter == this->m_mapServiceInfo.end())
+		{
+			PrintWarning("unknwon service service_name: %s remote_addr: %s %d", szServiceName.c_str(), pCoreConnectionFromService->getRemoteAddr().szHost, pCoreConnectionFromService->getRemoteAddr().nPort);
+			return false;
+		}
+
+		DebugAstEx(iter->second.pCoreConnectionFromService == nullptr, false);
+
+		iter->second.pCoreConnectionFromService = pCoreConnectionFromService;
+
+		return true;
+	}
+
+	CCoreConnectionFromService* CCoreServiceProxy::getCoreConnectionFromService(const std::string& szServiceName) const
+	{
+		auto iter = this->m_mapServiceInfo.find(szServiceName);
+		if (iter == this->m_mapServiceInfo.end())
+			return nullptr;
+
+		return iter->second.pCoreConnectionFromService;
+	}
+
+	void CCoreServiceProxy::delCoreConnectionFromService(const std::string& szServiceName)
+	{
+		auto iter = this->m_mapServiceInfo.find(szServiceName);
+		if (iter == this->m_mapServiceInfo.end())
+			return;
+
+		iter->second.pCoreConnectionFromService = nullptr;
+	}
+
+	void CCoreServiceProxy::SServiceInfo::onTicker(uint64_t nContext)
+	{
+		if (this->pCoreConnectionToService != nullptr)
+			return;
+
+		if (this->sServiceBaseInfo.nPort == 0 || this->sServiceBaseInfo.szHost.empty())
+			return;
+
+		CBaseApp::Inst()->getBaseConnectionMgr()->connect(this->sServiceBaseInfo.szHost, this->sServiceBaseInfo.nPort, eBCT_ConnectionToService, this->sServiceBaseInfo.szName, this->sServiceBaseInfo.nSendBufSize, this->sServiceBaseInfo.nRecvBufSize, nullptr);
 	}
 
 }

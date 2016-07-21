@@ -129,9 +129,9 @@ bool CTestServiceClientApp::onInit()
 		this->getBaseConnectionMgr()->connect("127.0.0.1", 8000, _BASE_CONNECTION_TYPE_BEGIN, "", 0, 0, default_client_message_parser);
 	}
 
-// 	core::CTicker* pTick = new core::CTicker();
-// 	pTick->setCallback(std::bind(&fun, std::placeholders::_1));
-// 	this->registerTicker(pTick, 60000, 0, 0);
+	core::CTicker* pTick = new core::CTicker();
+	pTick->setCallback(std::bind(&fun, std::placeholders::_1));
+	this->registerTicker(pTick, 600000, 0, 0);
 
 	return true;
 }

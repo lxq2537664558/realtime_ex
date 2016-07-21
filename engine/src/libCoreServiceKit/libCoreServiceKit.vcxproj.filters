@@ -68,7 +68,10 @@
     <ClInclude Include="invoker_trace.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="core_service_connection.h">
+    <ClInclude Include="core_connection_to_service.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="core_connection_from_service.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
@@ -112,7 +115,10 @@
     <ClCompile Include="invoker_trace.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="core_service_connection.cpp">
+    <ClCompile Include="core_connection_to_service.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="core_connection_from_service.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

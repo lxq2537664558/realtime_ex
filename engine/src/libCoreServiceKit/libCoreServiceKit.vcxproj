@@ -144,10 +144,11 @@
     <ClInclude Include="..\..\inc\libCoreServiceKit\proto_system.h" />
     <ClInclude Include="..\..\inc\libCoreServiceKit\core_service_kit_define.h" />
     <ClInclude Include="..\..\inc\libCoreServiceKit\invoker_future.h" />
+    <ClInclude Include="core_connection_from_service.h" />
+    <ClInclude Include="core_connection_to_service.h" />
     <ClInclude Include="invoker_trace.h" />
     <ClInclude Include="service_base.h" />
     <ClInclude Include="core_connection_to_master.h" />
-    <ClInclude Include="core_service_connection.h" />
     <ClInclude Include="core_service_invoker.h" />
     <ClInclude Include="core_service_kit_impl.h" />
     <ClInclude Include="core_service_proxy.h" />
@@ -158,8 +159,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cluster_invoker.cpp" />
+    <ClCompile Include="core_connection_from_service.cpp" />
     <ClCompile Include="core_connection_to_master.cpp" />
-    <ClCompile Include="core_service_connection.cpp" />
+    <ClCompile Include="core_connection_to_service.cpp" />
     <ClCompile Include="core_service_kit.cpp" />
     <ClCompile Include="invoker_trace.cpp" />
     <ClCompile Include="core_service_invoker.cpp" />

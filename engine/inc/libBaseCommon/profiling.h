@@ -15,7 +15,7 @@ namespace base
 	__BASE_COMMON_API__ void profiling(int64_t nTotalTime);
 }
 
-#define __PROFILING_OPEN
+//#define __PROFILING_OPEN
 
 #ifndef __PROFILING_OPEN
 #	define PROFILING_BEGIN(Label)

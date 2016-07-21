@@ -47,13 +47,13 @@ CTestServiceApp1* CTestServiceApp1::Inst()
 void tick_fun1(uint64_t nContext)
 {
 	PrintInfo("AAAAAA");
-	//core::beginMemoryLeakChecker(false);
+	core::beginMemoryLeakChecker(false);
 }
 
 void tick_fun2(uint64_t nContext)
 {
 	PrintInfo("BBBBBB");
-	//core::endMemoryLeakChecker("memory.txt");
+	core::endMemoryLeakChecker("memory.txt");
 }
 
 bool CTestServiceApp1::onInit()
@@ -65,7 +65,7 @@ bool CTestServiceApp1::onInit()
 	this->registerTicker(pTicker, 10000, 0, 0);
 	pTicker = new core::CTicker();
 	pTicker->setCallback(std::bind(&tick_fun2, std::placeholders::_1));
-	this->registerTicker(pTicker, 80000, 0, 0);
+	this->registerTicker(pTicker, 700000, 0, 0);
 
 	return true;
 }

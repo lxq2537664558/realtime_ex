@@ -4,7 +4,7 @@
 #include "libBaseCommon/debug_helper.h"
 #include "libBaseCommon/profiling.h"
 
-#define _DEFAULT_MESSAGE_QUEUE 10240
+#define _DEFAULT_MESSAGE_QUEUE 1024
 
 namespace core
 {
