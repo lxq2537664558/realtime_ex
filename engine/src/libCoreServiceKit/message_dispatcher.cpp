@@ -8,7 +8,6 @@
 #include "libBaseCommon/defer.h"
 #include "libCoreCommon/coroutine.h"
 
-
 namespace core
 {
 	CMessageDispatcher::CMessageDispatcher()
@@ -85,10 +84,18 @@ namespace core
 
 			Defer(delete pResponseWaitInfo);
 
-			if (pResponseWaitInfo->callback != nullptr)
+			if (pResponseWaitInfo->callback != nullptr && pCookice->nResult == eRRT_OK)
 			{
 				message_header_ptr pMessage = message_header_ptr(pHeader, [pData](const void*){ delete[] reinterpret_cast<const char*>(pData); });
-				uint64_t nCoroutineID = coroutine::start([&](uint64_t){ pResponseWaitInfo->callback(nMessageType, pMessage, (EResponseResultType)pCookice->nResult); });
+				uint64_t nCoroutineID = coroutine::start([&](uint64_t){ pResponseWaitInfo->callback(pResponseWaitInfo, nMessageType, pMessage); });
+				coroutine::resume(nCoroutineID, 0);
+
+				bRet = false;
+			}
+			else if (pResponseWaitInfo->err != nullptr && pCookice->nResult != eRRT_OK)
+			{
+				message_header_ptr pMessage = message_header_ptr(pHeader, [pData](const void*){ delete[] reinterpret_cast<const char*>(pData); });
+				uint64_t nCoroutineID = coroutine::start([&](uint64_t){ pResponseWaitInfo->err((EResponseResultType)pCookice->nResult); });
 				coroutine::resume(nCoroutineID, 0);
 
 				bRet = false;

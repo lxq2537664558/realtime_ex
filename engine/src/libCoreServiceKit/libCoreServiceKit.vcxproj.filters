@@ -59,9 +59,6 @@
     <ClInclude Include="core_service_invoker.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreServiceKit\invoker_future.h">
-      <Filter>inc</Filter>
-    </ClInclude>
     <ClInclude Include="service_connection_factory.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -73,6 +70,9 @@
     </ClInclude>
     <ClInclude Include="core_connection_from_service.h">
       <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreServiceKit\response_promise.h">
+      <Filter>inc</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -119,6 +119,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="core_connection_from_service.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="response_promise.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

@@ -30,7 +30,7 @@ namespace core
 
 		SRequestMessageInfo sRequestMessageInfo;
 		sRequestMessageInfo.pData = const_cast<message_header*>(pData);
-		sRequestMessageInfo.callback = nullptr;
+		sRequestMessageInfo.nSessionID = 0;
 		sRequestMessageInfo.nCoroutineID = 0;
 
 		return CCoreServiceKitImpl::Inst()->getTransporter()->call(szServiceName, sRequestMessageInfo);
@@ -42,7 +42,7 @@ namespace core
 
 		SRequestMessageInfo sRequestMessageInfo;
 		sRequestMessageInfo.pData = const_cast<message_header*>(pData);
-		sRequestMessageInfo.callback = nullptr;
+		sRequestMessageInfo.nSessionID = CCoreServiceKitImpl::Inst()->getTransporter()->genSessionID();
 		sRequestMessageInfo.nCoroutineID = coroutine::getCurrentID();
 
 		bool bRet = CCoreServiceKitImpl::Inst()->getTransporter()->call(szServiceName, sRequestMessageInfo);
@@ -58,16 +58,44 @@ namespace core
 		return nRet;
 	}
 
-	bool CClusterInvoker::invok_r(const std::string& szServiceName, const message_header* pData, InvokeCallback callback, uint64_t nContext /* = 0 */)
+	bool CClusterInvoker::invok_r(const std::string& szServiceName, const message_header* pData, CResponsePromise& sResponsePromise)
+	{
+		DebugAstEx(pData != nullptr, false);
+
+		SRequestMessageInfo sRequestMessageInfo;
+		sRequestMessageInfo.pData = const_cast<message_header*>(pData);
+		sRequestMessageInfo.nSessionID = CCoreServiceKitImpl::Inst()->getTransporter()->genSessionID();
+		sRequestMessageInfo.nCoroutineID = 0;
+		
+		if (!CCoreServiceKitImpl::Inst()->getTransporter()->call(szServiceName, sRequestMessageInfo))
+			return false;
+
+		sResponsePromise.m_nSessionID = sRequestMessageInfo.nSessionID;
+		return true;
+	}
+
+	bool CClusterInvoker::invok_r(const std::string& szServiceName, const message_header* pData, InvokeCallback& callback)
 	{
 		DebugAstEx(pData != nullptr && callback != nullptr, false);
 
 		SRequestMessageInfo sRequestMessageInfo;
 		sRequestMessageInfo.pData = const_cast<message_header*>(pData);
-		sRequestMessageInfo.callback = callback;
+		sRequestMessageInfo.nSessionID = CCoreServiceKitImpl::Inst()->getTransporter()->genSessionID();
 		sRequestMessageInfo.nCoroutineID = 0;
-		
-		return CCoreServiceKitImpl::Inst()->getTransporter()->call(szServiceName, sRequestMessageInfo);
+
+		if (!CCoreServiceKitImpl::Inst()->getTransporter()->call(szServiceName, sRequestMessageInfo))
+			return false;
+
+		SResponseWaitInfo* pResponseWaitInfo = CCoreServiceKitImpl::Inst()->getTransporter()->getResponseWaitInfo(sRequestMessageInfo.nSessionID, false);
+		if (nullptr == pResponseWaitInfo)
+			return false;
+
+		pResponseWaitInfo->callback = [callback](SResponseWaitInfo*, uint8_t nMessageType, message_header_ptr pMessage)->void
+		{
+			callback(nMessageType, pMessage);
+		};
+
+		return true;
 	}
 
 	void CClusterInvoker::response(const message_header* pData)

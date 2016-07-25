@@ -168,9 +168,13 @@ namespace base
 		virtual ~INetConnecter() { }
 
 		/**
-		@brief: 发送数据
+		@brief: 发送数据, 数据是拷贝到发送缓冲区的
 		*/
 		virtual void				send(const void* pData, uint32_t nSize) = 0;
+		/**
+		@brief: 发送数据, 数据只整块内存挂载到发送缓冲区的，由网络层负责释放内存
+		*/
+		virtual void				sendp(const void* pData, uint32_t nDataSize) = 0;
 		/**
 		@brief: 关闭连接，如果连接当前没有建立最好设置下setHandler( nullptr ) 不然还是会调用INetConnecterHandler的onDisconnect
 		*/

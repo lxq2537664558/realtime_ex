@@ -52,7 +52,10 @@ namespace core
 
 	typedef std::shared_ptr<const message_header>	message_header_ptr;
 
-	typedef std::function<void(uint8_t, message_header_ptr, EResponseResultType)>			InvokeCallback;			// RPC消息响应回调函数类型
+	class CResponsePromise;
+	typedef std::function<void(uint8_t, message_header_ptr)>								InvokeCallback;			// RPC消息响应回调函数类型
+	typedef std::function<CResponsePromise(uint8_t, message_header_ptr)>					InvokeCallbackEx;		// RPC消息响应回调函数类型
+	typedef std::function<void(uint32_t)>													InvokeErrCallback;		// RPC错误响应回调函数类型
 	typedef std::function<void(const std::string, uint8_t, message_header_ptr)>				ServiceCallback;		// 服务消息处理函数类型(这里服务名字必须是值，不能是引用，因为有协程)
 	typedef std::function<void(const SClientSessionInfo, uint8_t, message_header_ptr)>		GateForwardCallback;	// 经网关服务转发的客户端消息处理函数类型
 	typedef std::function<void(uint64_t, message_header_ptr)>								ClientCallback;			// 客户端消息处理函数类型

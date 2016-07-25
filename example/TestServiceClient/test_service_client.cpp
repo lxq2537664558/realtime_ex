@@ -10,6 +10,9 @@
 
 #include "libCoreCommon/base_connection_factory.h"
 #include "../common/test_message_define.h"
+#include "libBaseCommon/rand_gen.h"
+#include <functional>
+#include <xfunctional>
 
 #pragma pack(push,1)
 // ÏûÏ¢Í·
@@ -59,7 +62,7 @@ public:
 	virtual bool onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize)
 	{
 		const SClientResponseMsg* pMsg = static_cast<const SClientResponseMsg*>(pData);
-		PrintInfo("onDispatch id: %d cost: %d", pMsg->nID, (uint32_t)(base::getGmtTime() - pMsg->nClientTime));
+		PrintInfo("onDispatch sync: %s id: %d cost: %d", pMsg->nSync ? "true" : "false", pMsg->nID, (uint32_t)(base::getGmtTime() - pMsg->nClientTime));
 		this->requestMsg(pMsg->nID + 1);
 		return true;
 	}
@@ -68,6 +71,7 @@ private:
 	void requestMsg(uint32_t nID)
 	{
 		SClientRequestMsg msg;
+		msg.nSync = 0;
 		msg.nID = nID;
 		msg.nClientTime = base::getGmtTime();
 		this->send(eMT_CLIENT, &msg, sizeof(msg));
@@ -124,7 +128,7 @@ bool CTestServiceClientApp::onInit()
 {
 	CServiceConnectionFactory* pServiceConnectionFactory = new CServiceConnectionFactory();
 	this->getBaseConnectionMgr()->setBaseConnectionFactory(_BASE_CONNECTION_TYPE_BEGIN, pServiceConnectionFactory);
-	for (size_t i = 0; i < 10; ++i)
+	for (size_t i = 0; i < 1; ++i)
 	{
 		this->getBaseConnectionMgr()->connect("127.0.0.1", 8000, _BASE_CONNECTION_TYPE_BEGIN, "", 0, 0, default_client_message_parser);
 	}

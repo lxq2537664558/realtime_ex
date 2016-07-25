@@ -3,6 +3,7 @@
 #include "libCoreCommon/core_common.h"
 
 #include "core_service_kit_define.h"
+#include "response_promise.h"
 
 namespace core
 {
@@ -23,13 +24,17 @@ namespace core
 		*/
 		bool				invok(const std::string& szServiceName, const message_header* pData);
 		/**
-		@brief: 调用指定远程服务的消息，逻辑上阻塞
+		@brief: 调用指定远程服务的消息，需要提供远程服务消息返回的响应函数回调,以promise的形式提供
 		*/
-		uint32_t			invok(const std::string& szServiceName, const message_header* pData, message_header_ptr& pResultData);
+		bool				invok_r(const std::string& szServiceName, const message_header* pData, CResponsePromise& sResponsePromise);
 		/**
 		@brief: 调用指定远程服务的消息，需要提供远程服务消息返回的响应函数回调
 		*/
-		bool				invok_r(const std::string& szServiceName, const message_header* pData, InvokeCallback callback, uint64_t nContext = 0);
+		bool				invok_r(const std::string& szServiceName, const message_header* pData, InvokeCallback& callback);
+		/**
+		@brief: 调用指定远程服务的消息，逻辑上阻塞
+		*/
+		uint32_t			invok(const std::string& szServiceName, const message_header* pData, message_header_ptr& pResultData);
 		/**
 		@brief: 响应远程服务的调用，发送响应消息
 		*/

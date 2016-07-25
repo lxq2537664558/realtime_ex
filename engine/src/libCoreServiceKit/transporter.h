@@ -27,13 +27,13 @@ namespace core
 
 		bool					broadcast(const std::string& szServiceName, const SGateBroadcastMessageInfo& sGateBroadcastMessageInfo);
 
-
 		SServiceSessionInfo&	getServiceSessionInfo();
 		SResponseWaitInfo*		getResponseWaitInfo(uint64_t nSessionID, bool bErase);
 
+		uint64_t				genSessionID();
+
 	private:
 		void					onRequestMessageTimeout(uint64_t nContext);
-		uint64_t				genSessionID();
 		
 	private:
 		uint64_t									m_nNextSessionID;

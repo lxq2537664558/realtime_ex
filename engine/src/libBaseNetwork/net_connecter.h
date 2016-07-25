@@ -27,6 +27,7 @@ namespace base
 		virtual bool				init(uint32_t nSendBufferSize, uint32_t nRecvBufferSize, CNetEventLoop* pNetEventLoop);
 
 		virtual void				send(const void* pData, uint32_t nDataSize) override;
+		virtual void				sendp(const void* pData, uint32_t nDataSize) override;
 		virtual void				setHandler(INetConnecterHandler* pHandler) override;
 		virtual void				shutdown(bool bForce, const char* szMsg) override;
 		virtual const SNetAddr&		getLocalAddr() const override;

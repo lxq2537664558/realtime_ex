@@ -50,26 +50,24 @@ namespace core
 			return false;
 		}
 
-		uint64_t nSessionID = 0;
 		SResponseWaitInfo* pResponseWaitInfo = nullptr;
-		if (sRequestMessageInfo.callback != nullptr || sRequestMessageInfo.nCoroutineID != 0)
+		if (sRequestMessageInfo.nSessionID != 0)
 		{
-			nSessionID = this->genSessionID();
 			pResponseWaitInfo = new SResponseWaitInfo();
-			pResponseWaitInfo->callback = sRequestMessageInfo.callback;
-			pResponseWaitInfo->nSessionID = nSessionID;
+			pResponseWaitInfo->callback = nullptr;
+			pResponseWaitInfo->nSessionID = sRequestMessageInfo.nSessionID;
 			pResponseWaitInfo->nTraceID = nTraceID;
 			pResponseWaitInfo->nCoroutineID = sRequestMessageInfo.nCoroutineID;
 			pResponseWaitInfo->szServiceName = szServiceName;
 			pResponseWaitInfo->tickTimeout.setCallback(std::bind(&CTransporter::onRequestMessageTimeout, this, std::placeholders::_1));
-			CBaseApp::Inst()->registerTicker(&pResponseWaitInfo->tickTimeout, CCoreServiceKitImpl::Inst()->getInvokeTimeout(), 0, nSessionID);
+			CBaseApp::Inst()->registerTicker(&pResponseWaitInfo->tickTimeout, CCoreServiceKitImpl::Inst()->getInvokeTimeout(), 0, sRequestMessageInfo.nSessionID);
 
 			this->m_mapResponseWaitInfo[pResponseWaitInfo->nSessionID] = pResponseWaitInfo;
 		}
 
 		// Ìî³äcookice
 		request_cookice cookice;
-		cookice.nSessionID = nSessionID;
+		cookice.nSessionID = sRequestMessageInfo.nSessionID;
 		cookice.nTraceID = nTraceID;
 
 		pCoreConnectionToService->send(eMT_REQUEST, &cookice, sizeof(cookice), sRequestMessageInfo.pData, sRequestMessageInfo.pData->nMessageSize);
@@ -185,9 +183,9 @@ namespace core
 
 		CCoreServiceKitImpl::Inst()->getInvokerTrace()->addTraceExtraInfo("wait response time out session_id: "UINT64FMT" service_name: %s", pResponseWaitInfo->nSessionID, pResponseWaitInfo->szServiceName.c_str());
 
-		if (pResponseWaitInfo->callback != nullptr)
+		if (pResponseWaitInfo->err != nullptr)
 		{
-			uint64_t nCoroutineID = coroutine::start([&](uint64_t){ pResponseWaitInfo->callback(eMT_RESPONSE, nullptr, eRRT_TIME_OUT); });
+			uint64_t nCoroutineID = coroutine::start([&](uint64_t){ pResponseWaitInfo->err(eRRT_TIME_OUT); });
 			coroutine::resume(nCoroutineID, 0);
 		}
 		else

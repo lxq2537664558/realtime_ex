@@ -11,11 +11,29 @@
 
 #include "../common/test_message_define.h"
 
-void service_request_msg_callback(const std::string szFromService, uint32_t nMessageType, core::message_header_ptr pMessage)
+void service_request_msg_callback1(const std::string szFromService, uint32_t nMessageType, core::message_header_ptr pMessage)
 {
-	SServiceResponseMsg service_msg;
-	service_msg.nID = std::static_pointer_cast<const SServiceRequestMsg>(pMessage)->nID;
-	service_msg.nClientTime = std::static_pointer_cast<const SServiceRequestMsg>(pMessage)->nClientTime;
+	SServiceResponseMsg1 service_msg;
+	service_msg.nID = std::static_pointer_cast<const SServiceRequestMsg1>(pMessage)->nID;
+	service_msg.nClientTime = std::static_pointer_cast<const SServiceRequestMsg1>(pMessage)->nClientTime;
+
+	core::CClusterInvoker::Inst()->response(&service_msg);
+}
+
+void service_request_msg_callback2(const std::string szFromService, uint32_t nMessageType, core::message_header_ptr pMessage)
+{
+	SServiceResponseMsg2 service_msg;
+	service_msg.nID = std::static_pointer_cast<const SServiceRequestMsg2>(pMessage)->nID;
+	service_msg.nClientTime = std::static_pointer_cast<const SServiceRequestMsg2>(pMessage)->nClientTime;
+
+	core::CClusterInvoker::Inst()->response(&service_msg);
+}
+
+void service_request_msg_callback3(const std::string szFromService, uint32_t nMessageType, core::message_header_ptr pMessage)
+{
+	SServiceResponseMsg3 service_msg;
+	service_msg.nID = std::static_pointer_cast<const SServiceRequestMsg3>(pMessage)->nID;
+	service_msg.nClientTime = std::static_pointer_cast<const SServiceRequestMsg3>(pMessage)->nClientTime;
 
 	core::CClusterInvoker::Inst()->response(&service_msg);
 }
@@ -36,7 +54,9 @@ CTestServiceApp2* CTestServiceApp2::Inst()
 bool CTestServiceApp2::onInit()
 {
 	core::CCoreServiceKit::Inst()->init();
-	core::CMessageRegistry::Inst()->registerServiceCallback(eServiceRequestMsg, &service_request_msg_callback);
+	core::CMessageRegistry::Inst()->registerServiceCallback(eServiceRequestMsg1, &service_request_msg_callback1);
+	core::CMessageRegistry::Inst()->registerServiceCallback(eServiceRequestMsg2, &service_request_msg_callback2);
+	core::CMessageRegistry::Inst()->registerServiceCallback(eServiceRequestMsg3, &service_request_msg_callback3);
 
 	return true;
 }

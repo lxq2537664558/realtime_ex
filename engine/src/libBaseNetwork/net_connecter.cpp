@@ -348,6 +348,11 @@ namespace base
 			this->m_pNetEventLoop->addSendConnecter(this);
 	}
 
+	void CNetConnecter::sendp(const void* pData, uint32_t nDataSize)
+	{
+
+	}
+
 	/*	关于连接关闭:
 	进程退出时, 对端返回RST（如果RST发送的足够快，同机器下），不然就先收到FIN，触发Recv事件，大小为0
 	在主机崩溃时，发送数据会一直不可达，直到超时，在这段时间内，主机重启了，由于此时整个连接的信息都没了，对方在发送数据后会收到RST指令
