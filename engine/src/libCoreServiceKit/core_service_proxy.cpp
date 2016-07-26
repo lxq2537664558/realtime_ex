@@ -2,8 +2,8 @@
 #include "core_service_proxy.h"
 #include "core_service_kit_impl.h"
 
-#include "libCoreCommon\base_app.h"
-#include "libCoreCommon\base_connection_mgr.h"
+#include "libCoreCommon/base_app.h"
+#include "libCoreCommon/base_connection_mgr.h"
 
 #define _CHECK_CONNECT_TIME 5000
 

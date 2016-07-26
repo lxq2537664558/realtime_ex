@@ -71,7 +71,7 @@ private:
 	void requestMsg(uint32_t nID)
 	{
 		SClientRequestMsg msg;
-		msg.nSync = 0;
+		msg.nSync = 1;
 		msg.nID = nID;
 		msg.nClientTime = base::getGmtTime();
 		this->send(eMT_CLIENT, &msg, sizeof(msg));
@@ -130,7 +130,7 @@ bool CTestServiceClientApp::onInit()
 	this->getBaseConnectionMgr()->setBaseConnectionFactory(_BASE_CONNECTION_TYPE_BEGIN, pServiceConnectionFactory);
 	for (size_t i = 0; i < 1; ++i)
 	{
-		this->getBaseConnectionMgr()->connect("127.0.0.1", 8000, _BASE_CONNECTION_TYPE_BEGIN, "", 0, 0, default_client_message_parser);
+		this->getBaseConnectionMgr()->connect("192.168.222.131", 8000, _BASE_CONNECTION_TYPE_BEGIN, "", 0, 0, default_client_message_parser);
 	}
 
 	core::CTicker* pTick = new core::CTicker();

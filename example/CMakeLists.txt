@@ -1,0 +1,2 @@
+add_subdirectory(TestService1)
+add_subdirectory(TestService2)

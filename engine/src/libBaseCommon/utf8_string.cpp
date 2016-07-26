@@ -3,7 +3,10 @@
 #include "base_function.h"
 #include "debug_helper.h"
 
+#ifdef _WIN32
 #include <codecvt>
+#endif
+
 #include <iostream>
 
 static bool check_utf8(const std::string& utf8)
@@ -73,32 +76,37 @@ namespace base
 
 	bool utf8_string::init(const std::wstring& ucs2)
 	{
-		std::wstring_convert<std::codecvt_utf8<wchar_t>> cv2;
+
+#ifdef _WIN32
 		try
 		{
+			std::wstring_convert<std::codecvt_utf8<wchar_t>> cv2;
 			*this->m_szData = cv2.to_bytes(ucs2);
 		}
 		catch (...)
 		{
 			return false;
 		}
+#endif
 
 		return true;
 	}
 
 	std::wstring utf8_string::cvt_ucs2() const
 	{
-		std::wstring_convert<std::codecvt_utf8<wchar_t>> cv2;
 		std::wstring result;
 
+#ifdef _WIN32
 		try
 		{
+			std::wstring_convert<std::codecvt_utf8<wchar_t>> cv2;
 			result = cv2.from_bytes(*this->m_szData);
 		}
 		catch (...)
 		{
 			return L"";
 		}
+#endif
 
 		return result;
 	}
@@ -173,37 +181,40 @@ namespace base
 		return this->at(pos);
 	}
 
-
 	std::wstring utf8_string::cvt_ucs2(const std::string& utf8)
 	{
-		std::wstring_convert<std::codecvt_utf8<wchar_t>> cv2;
-
 		std::wstring ucs2;
+
+#ifdef _WIN32
 		try
 		{
+			std::wstring_convert<std::codecvt_utf8<wchar_t>> cv2;
 			ucs2 = cv2.from_bytes(utf8);
 		}
 		catch (...)
 		{
 			return L"";
 		}
+#endif
 
 		return ucs2;
 	}
 
 	std::string utf8_string::cvt_utf8(const std::wstring& ucs2)
 	{
-		std::wstring_convert<std::codecvt_utf8<wchar_t>> cv2;
-
 		std::string utf8;
+
+#ifdef _WIN32
 		try
 		{
+			std::wstring_convert<std::codecvt_utf8<wchar_t>> cv2;
 			utf8 = cv2.to_bytes(ucs2);
 		}
 		catch (...)
 		{
 			return "";
 		}
+#endif
 
 		return utf8;
 	}
