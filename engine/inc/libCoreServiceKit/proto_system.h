@@ -25,6 +25,7 @@ message_begin(smt_register_service_base_info, eSMT_register_service_base_info)
 	{
 		pack_begin(writeBuf);
 
+		writeBuf.write(sServiceBaseInfo.nID);
 		writeBuf.write(sServiceBaseInfo.szType);
 		writeBuf.write(sServiceBaseInfo.szName);
 		writeBuf.write(sServiceBaseInfo.szGroup);
@@ -40,6 +41,7 @@ message_begin(smt_register_service_base_info, eSMT_register_service_base_info)
 	{
 		unpack_begin(pBuf, nSize);
 
+		readBuf.read(sServiceBaseInfo.nID);
 		readBuf.read(sServiceBaseInfo.szType);
 		readBuf.read(sServiceBaseInfo.szName);
 		readBuf.read(sServiceBaseInfo.szGroup);
@@ -82,6 +84,7 @@ message_begin(smt_sync_service_base_info, eSMT_sync_service_base_info)
 	{
 		pack_begin(writeBuf);
 
+		writeBuf.write(sServiceBaseInfo.nID);
 		writeBuf.write(sServiceBaseInfo.szType);
 		writeBuf.write(sServiceBaseInfo.szName);
 		writeBuf.write(sServiceBaseInfo.szGroup);
@@ -97,6 +100,7 @@ message_begin(smt_sync_service_base_info, eSMT_sync_service_base_info)
 	{
 		unpack_begin(pBuf, nSize);
 
+		readBuf.read(sServiceBaseInfo.nID);
 		readBuf.read(sServiceBaseInfo.szType);
 		readBuf.read(sServiceBaseInfo.szName);
 		readBuf.read(sServiceBaseInfo.szGroup);
@@ -111,13 +115,13 @@ message_begin(smt_sync_service_base_info, eSMT_sync_service_base_info)
 message_end
 
 message_begin(smt_remove_service_base_info, eSMT_remove_service_base_info)
-	std::string	szName;
+	uint16_t nServiceID;
 
 	void pack(base::CWriteBuf& writeBuf)
 	{
 		pack_begin(writeBuf);
 
-		writeBuf.write(szName);
+		writeBuf.write(nServiceID);
 
 		pack_end(writeBuf);
 	}
@@ -126,20 +130,20 @@ message_begin(smt_remove_service_base_info, eSMT_remove_service_base_info)
 	{
 		unpack_begin(pBuf, nSize);
 
-		readBuf.read(szName);
+		readBuf.read(nServiceID);
 
 		unpack_end();
 	}
 message_end
 
 message_begin(smt_notify_service_base_info, eSMT_notify_service_base_info)
-	std::string	szFromServiceName;
+	uint16_t nFromServiceID;
 	
 	void pack(base::CWriteBuf& writeBuf)
 	{
 		pack_begin(writeBuf);
 
-		writeBuf.write(szFromServiceName);
+		writeBuf.write(nFromServiceID);
 		
 		pack_end(writeBuf);
 	}
@@ -148,7 +152,7 @@ message_begin(smt_notify_service_base_info, eSMT_notify_service_base_info)
 	{
 		unpack_begin(pBuf, nSize);
 
-		readBuf.read(szFromServiceName);
+		readBuf.read(nFromServiceID);
 		
 		unpack_end();
 	}

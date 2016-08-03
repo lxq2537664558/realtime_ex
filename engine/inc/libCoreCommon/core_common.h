@@ -76,6 +76,14 @@ enum EMessageType
 namespace core
 {
 	typedef std::function<int32_t(const char*, uint32_t, uint8_t&)>	MessageParser;	// 原生消息
+
+	struct	SMessagePacket
+	{
+		uint8_t		nType;
+		uint32_t	nDataSize;
+		uint64_t	nID;
+		void*		pData;
+	};
 }
 
 inline int32_t default_client_message_parser(const char* pData, uint32_t nSize, uint8_t& nMessageType)

@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "cluster_invoker.h"
-#include "core_service_kit.h"
-#include "core_service_kit_impl.h"
+#include "core_service_app.h"
+#include "core_service_app_impl.h"
 #include "core_service_kit_define.h"
 #include "service_base.h"
 
@@ -24,7 +24,7 @@ namespace core
 		return true;
 	}
 
-	bool CClusterInvoker::invok(const std::string& szServiceName, const message_header* pData)
+	bool CClusterInvoker::invoke(uint16_t nServiceID, const message_header* pData)
 	{
 		DebugAstEx(pData != nullptr, false);
 
@@ -32,65 +32,52 @@ namespace core
 		sRequestMessageInfo.pData = const_cast<message_header*>(pData);
 		sRequestMessageInfo.nSessionID = 0;
 		sRequestMessageInfo.nCoroutineID = 0;
+		sRequestMessageInfo.nFromActorID = 0;
+		sRequestMessageInfo.nToActorID = 0;
 
-		return CCoreServiceKitImpl::Inst()->getTransporter()->call(szServiceName, sRequestMessageInfo);
+		return CCoreServiceAppImpl::Inst()->getTransporter()->invoke(nServiceID, sRequestMessageInfo);
 	}
 
-	uint32_t CClusterInvoker::invok(const std::string& szServiceName, const message_header* pData, message_header_ptr& pResultData)
+	bool CClusterInvoker::invoke_r(uint16_t nServiceID, const message_header* pData, CResponseFuture& sResponseFuture)
 	{
 		DebugAstEx(pData != nullptr, false);
 
 		SRequestMessageInfo sRequestMessageInfo;
 		sRequestMessageInfo.pData = const_cast<message_header*>(pData);
-		sRequestMessageInfo.nSessionID = CCoreServiceKitImpl::Inst()->getTransporter()->genSessionID();
-		sRequestMessageInfo.nCoroutineID = coroutine::getCurrentID();
-
-		bool bRet = CCoreServiceKitImpl::Inst()->getTransporter()->call(szServiceName, sRequestMessageInfo);
-		if (!bRet)
-			return eRRT_ERROR;
-		
-		coroutine::yield();
-
-		uint32_t nRet = (uint32_t)reinterpret_cast<uint64_t>(coroutine::recvMessage(coroutine::getCurrentID()));
-		message_header* pHeader = reinterpret_cast<message_header*>(coroutine::recvMessage(coroutine::getCurrentID()));
-		char* pBuf = reinterpret_cast<char*>(coroutine::recvMessage(coroutine::getCurrentID()));
-		pResultData = message_header_ptr(pHeader, [pBuf](const void*){ delete[] pBuf; });
-		return nRet;
-	}
-
-	bool CClusterInvoker::invok_r(const std::string& szServiceName, const message_header* pData, CResponsePromise& sResponsePromise)
-	{
-		DebugAstEx(pData != nullptr, false);
-
-		SRequestMessageInfo sRequestMessageInfo;
-		sRequestMessageInfo.pData = const_cast<message_header*>(pData);
-		sRequestMessageInfo.nSessionID = CCoreServiceKitImpl::Inst()->getTransporter()->genSessionID();
+		sRequestMessageInfo.nSessionID = CCoreServiceAppImpl::Inst()->getTransporter()->genSessionID();
 		sRequestMessageInfo.nCoroutineID = 0;
-		
-		if (!CCoreServiceKitImpl::Inst()->getTransporter()->call(szServiceName, sRequestMessageInfo))
+		sRequestMessageInfo.nFromActorID = 0;
+		sRequestMessageInfo.nToActorID = 0;
+
+		if (!CCoreServiceAppImpl::Inst()->getTransporter()->invoke(nServiceID, sRequestMessageInfo))
 			return false;
 
-		sResponsePromise.m_nSessionID = sRequestMessageInfo.nSessionID;
+		CCoreServiceAppImpl::Inst()->getTransporter()->addResponseWaitInfo(sRequestMessageInfo.nSessionID, 0);
+
+		sResponseFuture.m_nSessionID = sRequestMessageInfo.nSessionID;
 		return true;
 	}
 
-	bool CClusterInvoker::invok_r(const std::string& szServiceName, const message_header* pData, InvokeCallback& callback)
+	bool CClusterInvoker::invoke_r(uint16_t nServiceID, const message_header* pData, InvokeCallback& callback)
 	{
 		DebugAstEx(pData != nullptr && callback != nullptr, false);
 
 		SRequestMessageInfo sRequestMessageInfo;
 		sRequestMessageInfo.pData = const_cast<message_header*>(pData);
-		sRequestMessageInfo.nSessionID = CCoreServiceKitImpl::Inst()->getTransporter()->genSessionID();
+		sRequestMessageInfo.nSessionID = CCoreServiceAppImpl::Inst()->getTransporter()->genSessionID();
 		sRequestMessageInfo.nCoroutineID = 0;
+		sRequestMessageInfo.nFromActorID = 0;
+		sRequestMessageInfo.nToActorID = 0;
 
-		if (!CCoreServiceKitImpl::Inst()->getTransporter()->call(szServiceName, sRequestMessageInfo))
+		if (!CCoreServiceAppImpl::Inst()->getTransporter()->invoke(nServiceID, sRequestMessageInfo))
 			return false;
 
-		SResponseWaitInfo* pResponseWaitInfo = CCoreServiceKitImpl::Inst()->getTransporter()->getResponseWaitInfo(sRequestMessageInfo.nSessionID, false);
-		if (nullptr == pResponseWaitInfo)
-			return false;
+		CCoreServiceAppImpl::Inst()->getTransporter()->addResponseWaitInfo(sRequestMessageInfo.nSessionID, 0);
 
-		pResponseWaitInfo->callback = [callback](SResponseWaitInfo*, uint8_t nMessageType, message_header_ptr pMessage)->void
+		SResponseWaitInfo* pResponseWaitInfo = CCoreServiceAppImpl::Inst()->getTransporter()->getResponseWaitInfo(sRequestMessageInfo.nSessionID, false);
+		DebugAstEx(nullptr != pResponseWaitInfo, false);
+		
+		pResponseWaitInfo->callback = [callback](SResponseWaitInfo*, uint8_t nMessageType, CMessage pMessage)->void
 		{
 			callback(nMessageType, pMessage);
 		};
@@ -98,75 +85,120 @@ namespace core
 		return true;
 	}
 
+	bool CClusterInvoker::invoke(const std::string& szServiceName, const message_header* pData)
+	{
+		uint16_t nServiceID = CCoreServiceAppImpl::Inst()->getCoreServiceProxy()->getServiceID(szServiceName);
+		if (nServiceID == 0)
+			return false;
+
+		return this->invoke(nServiceID, pData);
+	}
+
+	bool CClusterInvoker::invoke_r(const std::string& szServiceName, const message_header* pData, CResponseFuture& sResponseFuture)
+	{
+		uint16_t nServiceID = CCoreServiceAppImpl::Inst()->getCoreServiceProxy()->getServiceID(szServiceName);
+		if (nServiceID == 0)
+			return false;
+
+		return this->invoke_r(nServiceID, pData, sResponseFuture);
+	}
+
+	bool CClusterInvoker::invoke_r(const std::string& szServiceName, const message_header* pData, InvokeCallback& callback)
+	{
+		uint16_t nServiceID = CCoreServiceAppImpl::Inst()->getCoreServiceProxy()->getServiceID(szServiceName);
+		if (nServiceID == 0)
+			return false;
+
+		return this->invoke_r(nServiceID, pData, callback);
+	}
+
 	void CClusterInvoker::response(const message_header* pData)
 	{
 		DebugAst(pData != nullptr);
 
-		CCoreServiceKitImpl::Inst()->getInvokerTrace()->send(pData->nMessageID);
-
-		SResponseMessageInfo sResponseMessageInfo;
-		sResponseMessageInfo.nSessionID = CCoreServiceKitImpl::Inst()->getTransporter()->getServiceSessionInfo().nSessionID;
-		sResponseMessageInfo.pData = const_cast<message_header*>(pData);
-		sResponseMessageInfo.nResult = eRRT_OK;
-
-		bool bRet = CCoreServiceKitImpl::Inst()->getTransporter()->response(CCoreServiceKitImpl::Inst()->getTransporter()->getServiceSessionInfo().szServiceName, sResponseMessageInfo);
-		DebugAst(bRet);
+		this->response(CCoreServiceAppImpl::Inst()->getTransporter()->getServiceSessionInfo(), pData);
 	}
 
 	void CClusterInvoker::response(const SServiceSessionInfo& sServiceSessionInfo, const message_header* pData)
 	{
 		DebugAst(pData != nullptr);
 
-		CCoreServiceKitImpl::Inst()->getInvokerTrace()->send(pData->nMessageID);
+		CCoreServiceAppImpl::Inst()->getInvokerTrace()->send(pData->nMessageID);
 
 		SResponseMessageInfo sResponseMessageInfo;
 		sResponseMessageInfo.nSessionID = sServiceSessionInfo.nSessionID;
 		sResponseMessageInfo.pData = const_cast<message_header*>(pData);
 		sResponseMessageInfo.nResult = eRRT_OK;
+		sResponseMessageInfo.nFromActorID = 0;
+		sResponseMessageInfo.nToActorID = 0;
 
-		bool bRet = CCoreServiceKitImpl::Inst()->getTransporter()->response(sServiceSessionInfo.szServiceName, sResponseMessageInfo);
+		bool bRet = CCoreServiceAppImpl::Inst()->getTransporter()->response(sServiceSessionInfo.nServiceID, sResponseMessageInfo);
 		DebugAst(bRet);
 	}
 
 	SServiceSessionInfo CClusterInvoker::getServiceSessionInfo() const
 	{
-		return CCoreServiceKitImpl::Inst()->getTransporter()->getServiceSessionInfo();
+		return CCoreServiceAppImpl::Inst()->getTransporter()->getServiceSessionInfo();
 	}
 
 	bool CClusterInvoker::send(const SClientSessionInfo& sClientSessionInfo, const message_header* pData)
 	{
 		DebugAstEx(pData != nullptr, false);
 
-		CCoreServiceKitImpl::Inst()->getInvokerTrace()->send(pData->nMessageID);
+		CCoreServiceAppImpl::Inst()->getInvokerTrace()->send(pData->nMessageID);
 
 		SGateMessageInfo sGateMessageInfo;
 		sGateMessageInfo.nSessionID = sClientSessionInfo.nSessionID;
 		sGateMessageInfo.pData = const_cast<message_header*>(pData);
 
-		return CCoreServiceKitImpl::Inst()->getTransporter()->send(sClientSessionInfo.szServiceName, sGateMessageInfo);
+		return CCoreServiceAppImpl::Inst()->getTransporter()->send(sClientSessionInfo.nServiceID, sGateMessageInfo);
+	}
+
+	bool CClusterInvoker::forward(uint16_t nServiceID, uint64_t nSessionID, const message_header* pData)
+	{
+		return this->forward(nServiceID, 0, nSessionID, pData);
+	}
+
+	bool CClusterInvoker::forward(uint16_t nServiceID, uint64_t nActorID, uint64_t nSessionID, const message_header* pData)
+	{
+		DebugAstEx(pData != nullptr, false);
+		
+		CCoreServiceAppImpl::Inst()->getInvokerTrace()->send(pData->nMessageID);
+
+		SGateForwardMessageInfo sGateMessageInfo;
+		sGateMessageInfo.nActorID = nActorID;
+		sGateMessageInfo.nSessionID = nSessionID;
+		sGateMessageInfo.pData = const_cast<message_header*>(pData);
+
+		return CCoreServiceAppImpl::Inst()->getTransporter()->forward(nServiceID, sGateMessageInfo);
 	}
 
 	bool CClusterInvoker::forward(const std::string& szServiceName, uint64_t nSessionID, const message_header* pData)
 	{
-		DebugAstEx(pData != nullptr, false);
-		
-		CCoreServiceKitImpl::Inst()->getInvokerTrace()->send(pData->nMessageID);
+		uint16_t nServiceID = CCoreServiceAppImpl::Inst()->getCoreServiceProxy()->getServiceID(szServiceName);
+		if (nServiceID == 0)
+			return false;
 
-		SGateForwardMessageInfo sGateMessageInfo;
-		sGateMessageInfo.nSessionID = nSessionID;
-		sGateMessageInfo.pData = const_cast<message_header*>(pData);
+		return this->forward(nServiceID, 0, nSessionID, pData);
+	}
 
-		return CCoreServiceKitImpl::Inst()->getTransporter()->forward(szServiceName, sGateMessageInfo);
+	bool CClusterInvoker::forward(const std::string& szServiceName, uint64_t nActorID, uint64_t nSessionID, const message_header* pData)
+	{
+		uint16_t nServiceID = CCoreServiceAppImpl::Inst()->getCoreServiceProxy()->getServiceID(szServiceName);
+		if (nServiceID == 0)
+			return false;
+
+		return this->forward(nServiceID, nActorID, nSessionID, pData);
 	}
 
 	bool CClusterInvoker::broadcast(const std::vector<SClientSessionInfo>& vecClientSessionInfo, const message_header* pData)
 	{
 		DebugAstEx(pData != nullptr, false);
 
-		std::map<std::string, std::vector<uint64_t>> mapClientSessionInfo;
+		std::map<uint16_t, std::vector<uint64_t>> mapClientSessionInfo;
 		for (size_t i = 0; i < vecClientSessionInfo.size(); ++i)
 		{
-			mapClientSessionInfo[vecClientSessionInfo[i].szServiceName].push_back(vecClientSessionInfo[i].nSessionID);
+			mapClientSessionInfo[vecClientSessionInfo[i].nServiceID].push_back(vecClientSessionInfo[i].nSessionID);
 		}
 
 		bool bRet = true;
@@ -175,7 +207,7 @@ namespace core
 			SGateBroadcastMessageInfo sGateBroadcastMessageInfo;
 			sGateBroadcastMessageInfo.vecSessionID = iter->second;
 			sGateBroadcastMessageInfo.pData = const_cast<message_header*>(pData);
-			if (!CCoreServiceKitImpl::Inst()->getTransporter()->broadcast(iter->first, sGateBroadcastMessageInfo))
+			if (!CCoreServiceAppImpl::Inst()->getTransporter()->broadcast(iter->first, sGateBroadcastMessageInfo))
 				bRet = false;
 		}
 

@@ -23,29 +23,18 @@ bool CServiceMgr::init()
 	return true;
 }
 
-CConnectionFromService* CServiceMgr::getServiceConnection(const std::string& szName) const
-{
-	auto iter = this->m_mapServiceInfo.find(szName);
-	if (iter == this->m_mapServiceInfo.end())
-		return nullptr;
-
-	return iter->second.pConnectionFromService;
-}
 
 bool CServiceMgr::registerService(CConnectionFromService* pConnectionFromService, const core::SServiceBaseInfo& sServiceBaseInfo)
 {
-	DebugAstEx(pConnectionFromService != nullptr, false);
-
-	auto iter = this->m_mapServiceInfo.find(sServiceBaseInfo.szName);
+	auto iter = this->m_mapServiceInfo.find(sServiceBaseInfo.nID);
 	if (iter != this->m_mapServiceInfo.end())
 		return false;
 
-	// 初始化服务信息
-	SServiceInfo sServiceInfo;
-	sServiceInfo.pConnectionFromService = pConnectionFromService;
-	sServiceInfo.sServiceBaseInfo = sServiceBaseInfo;
+	if (this->m_setServiceName.find(sServiceBaseInfo.szName) != this->m_setServiceName.end())
+		return false;
 
-	this->m_mapServiceInfo[sServiceBaseInfo.szName] = sServiceInfo;
+	this->m_mapServiceInfo[sServiceBaseInfo.nID] = sServiceBaseInfo;
+	this->m_setServiceName.insert(sServiceBaseInfo.szName);
 
 	std::vector<uint64_t> vecSocketID;
 	// 将其他服务的信息同步给新的服务
@@ -60,16 +49,16 @@ bool CServiceMgr::registerService(CConnectionFromService* pConnectionFromService
 		if (nullptr == pOtherConnectionFromService || pOtherConnectionFromService == pConnectionFromService)
 			continue;
 
-		auto iter = this->m_mapServiceInfo.find(pOtherConnectionFromService->getServiceName());
+		auto iter = this->m_mapServiceInfo.find(pOtherConnectionFromService->getServiceID());
 		if (iter == this->m_mapServiceInfo.end())
 			continue;
 
-		SServiceInfo& sOtherServiceInfo = iter->second;
+		core::SServiceBaseInfo& sOtherServiceBaseInfo = iter->second;
 		base::CWriteBuf& writeBuf = CMasterApp::Inst()->getWriteBuf();
 
 		// 同步基本服务信息
 		core::smt_sync_service_base_info netMsg1;
-		netMsg1.sServiceBaseInfo = sOtherServiceInfo.sServiceBaseInfo;
+		netMsg1.sServiceBaseInfo = sOtherServiceBaseInfo;
 
 		netMsg1.pack(writeBuf);
 		pConnectionFromService->send(eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
@@ -89,33 +78,31 @@ bool CServiceMgr::registerService(CConnectionFromService* pConnectionFromService
 
 	CMasterApp::Inst()->getBaseConnectionMgr()->broadcast(vecSocketID, eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
 
-	PrintInfo("register service service_name: %s local addr: %s %d remote addr: %s %d", sServiceBaseInfo.szName.c_str(), pConnectionFromService->getLocalAddr().szHost, pConnectionFromService->getLocalAddr().nPort, pConnectionFromService->getRemoteAddr().szHost, pConnectionFromService->getRemoteAddr().nPort);
+	PrintInfo("register service service_id: %d service_name: %s local addr: %s %d remote addr: %s %d", sServiceBaseInfo.nID, sServiceBaseInfo.szName.c_str(), pConnectionFromService->getLocalAddr().szHost, pConnectionFromService->getLocalAddr().nPort, pConnectionFromService->getRemoteAddr().szHost, pConnectionFromService->getRemoteAddr().nPort);
 
 	return true;
 }
 
-void CServiceMgr::unregisterService(const std::string& szServiceName)
+void CServiceMgr::unregisterService(uint16_t nServiceID)
 {
-	auto iter = this->m_mapServiceInfo.find(szServiceName);
+	auto iter = this->m_mapServiceInfo.find(nServiceID);
 	if (iter == this->m_mapServiceInfo.end())
 		return;
 
 	// 清理该服务的消息
-	SServiceInfo& sServiceInfo = iter->second;
+	core::SServiceBaseInfo& sServiceBaseInfo = iter->second;
 
 	base::CWriteBuf& writeBuf = CMasterApp::Inst()->getWriteBuf();
 
 	core::smt_remove_service_base_info netMsg;
-	netMsg.szName = szServiceName;
+	netMsg.nServiceID = nServiceID;
 
 	netMsg.pack(writeBuf);
 
-	std::vector<uint64_t> vecExcludeID;
-	if (sServiceInfo.pConnectionFromService != nullptr)
-		vecExcludeID.push_back(sServiceInfo.pConnectionFromService->getID());
-	CMasterApp::Inst()->getBaseConnectionMgr()->broadcast(eBCT_ConnectionFromService, eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize(), &vecExcludeID);
+	CMasterApp::Inst()->getBaseConnectionMgr()->broadcast(eBCT_ConnectionFromService, eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize(), nullptr);
 
+	this->m_setServiceName.erase(sServiceBaseInfo.szName);
 	this->m_mapServiceInfo.erase(iter);
 
-	PrintInfo("unregister service service_name: %s", szServiceName.c_str());
+	PrintInfo("unregister service service_id: %d", nServiceID);
 }

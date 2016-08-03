@@ -90,6 +90,12 @@
     <ClInclude Include="..\..\inc\libBaseCommon\utf8_string.h">
       <Filter>inc</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\inc\libBaseCommon\circle_queue.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libBaseCommon\memory_hook.h">
+      <Filter>inc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="base_exception.cpp">
@@ -137,9 +143,18 @@
     <ClCompile Include="utf8_string.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="memory_hook.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="memory_new.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\inc\libBaseCommon\link.inl">
+      <Filter>inc</Filter>
+    </None>
+    <None Include="..\..\inc\libBaseCommon\circle_queue.inl">
       <Filter>inc</Filter>
     </None>
   </ItemGroup>

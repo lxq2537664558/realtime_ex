@@ -6,7 +6,7 @@
 #include "ticker_mgr.h"
 #include "coroutine_mgr.h"
 #include "core_connection_mgr.h"
-#include "message_queue.h"
+#include "logic_message_queue.h"
 
 namespace core
 {
@@ -73,7 +73,7 @@ namespace core
 		/*
 		@brief: 获取消息队列
 		*/
-		CMessageQueue*		getMessageQueue() const;
+		CLogicMessageQueue*	getMessageQueue() const;
 		/*
 		@brief: 获取QPS
 		*/
@@ -95,7 +95,7 @@ namespace core
 		CTickerMgr*				m_pTickerMgr;
 		CBaseConnectionMgr*		m_pBaseConnectionMgr;
 		CCoroutineMgr*			m_pCoroutineMgr;
-		CMessageQueue*			m_pMessageQueue;
+		CLogicMessageQueue*		m_pMessageQueue;
 		base::CWriteBuf			m_writeBuf;
 		uint32_t				m_nCycleCount;
 		int64_t					m_nTotalSamplingTime;

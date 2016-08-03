@@ -20,6 +20,11 @@ namespace core
 		/**
 		@brief: 消息派发函数，由各个消息源调用来派发消息
 		*/
-		bool dispatch(const std::string& szFromServiceName, uint8_t nMessageType, const void* pData, uint16_t nSize);
+		bool dispatch(uint16_t nFromServiceID, uint8_t nMessageType, const void* pData, uint16_t nSize);
+
+		void setForwardCallback(std::function<bool(uint16_t, uint8_t, const void*, uint16_t)> callback);
+
+	private:
+		std::function<bool(uint16_t, uint8_t, const void*, uint16_t)>	m_forwardCallback;
 	};
 }

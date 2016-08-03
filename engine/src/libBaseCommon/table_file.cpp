@@ -31,6 +31,7 @@ namespace base
 	bool CTableFile::init(const char* szFileName)
 	{
 		DebugAstEx(szFileName != nullptr, false);
+		DebugAstEx(this->m_pBuf == nullptr, false);
 
 		std::ifstream file(szFileName, std::ios::binary | std::ios::in);
 

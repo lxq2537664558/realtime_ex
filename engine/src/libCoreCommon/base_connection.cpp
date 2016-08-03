@@ -5,7 +5,7 @@
 #include "base_app.h"
 #include "core_common.h"
 #include "message_command.h"
-#include "message_queue.h"
+#include "net_message_queue.h"
 #include "net_runnable.h"
 
 #include "libBaseCommon/debug_helper.h"
@@ -40,7 +40,7 @@ namespace core
 		sMessagePacket.pData = pContext;
 		sMessagePacket.nDataSize = sizeof(SMCT_SEND_SOCKET_DATA)+nSize;
 
-		CNetRunnable::Inst()->getMessageQueue()->pushMessagePacket(sMessagePacket);
+		CNetRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
 	}
 
 	void CBaseConnection::send(uint8_t nMessageType, const void* pData, uint16_t nSize, const void* pExtraBuf, uint16_t nExtraSize)
@@ -50,7 +50,7 @@ namespace core
 		if (pExtraBuf == nullptr || nExtraSize == 0)
 			return this->send(nMessageType, pData, nSize);
 
-		SMCT_SEND_SOCKET_DATA* pContext = reinterpret_cast<SMCT_SEND_SOCKET_DATA*>(new char[sizeof(SMCT_SEND_SOCKET_DATA)+nSize + nExtraSize]);
+		SMCT_SEND_SOCKET_DATA* pContext = reinterpret_cast<SMCT_SEND_SOCKET_DATA*>(new char[sizeof(SMCT_SEND_SOCKET_DATA) + nSize + nExtraSize]);
 		pContext->nMessageType = nMessageType;
 		pContext->nSocketID = this->getID();
 		memcpy(pContext + 1, pData, nSize);
@@ -61,7 +61,7 @@ namespace core
 		sMessagePacket.pData = pContext;
 		sMessagePacket.nDataSize = sizeof(SMCT_SEND_SOCKET_DATA)+nSize + nExtraSize;
 
-		CNetRunnable::Inst()->getMessageQueue()->pushMessagePacket(sMessagePacket);
+		CNetRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
 	}
 
 	void CBaseConnection::shutdown(bool bForce, const std::string& szMsg)
@@ -76,7 +76,7 @@ namespace core
 		sMessagePacket.pData = pContext;
 		sMessagePacket.nDataSize = sizeof(SMCT_REQUEST_SOCKET_SHUTDOWN);
 
-		CNetRunnable::Inst()->getMessageQueue()->pushMessagePacket(sMessagePacket);
+		CNetRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
 	}
 
 	void CBaseConnection::enableHeartbeat(bool bEnable)
@@ -98,7 +98,7 @@ namespace core
 		sMessagePacket.pData = pContext;
 		sMessagePacket.nDataSize = sizeof(SMCT_ENABLE_HEARTBEAT);
 
-		CNetRunnable::Inst()->getMessageQueue()->pushMessagePacket(sMessagePacket);
+		CNetRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
 	}
 
 	uint64_t CBaseConnection::getID() const
@@ -129,6 +129,6 @@ namespace core
 		sMessagePacket.pData = pContext;
 		sMessagePacket.nDataSize = sizeof(SMCT_SEND_HEARTBEAT);
 
-		CNetRunnable::Inst()->getMessageQueue()->pushMessagePacket(sMessagePacket);
+		CNetRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
 	}
 }

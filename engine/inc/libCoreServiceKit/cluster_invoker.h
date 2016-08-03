@@ -3,7 +3,7 @@
 #include "libCoreCommon/core_common.h"
 
 #include "core_service_kit_define.h"
-#include "response_promise.h"
+#include "response_future.h"
 
 namespace core
 {
@@ -22,19 +22,28 @@ namespace core
 		/**
 		@brief: 调用指定远程服务的消息，远程服务不用返回消息
 		*/
-		bool				invok(const std::string& szServiceName, const message_header* pData);
+		bool				invoke(uint16_t nServiceID, const message_header* pData);
 		/**
 		@brief: 调用指定远程服务的消息，需要提供远程服务消息返回的响应函数回调,以promise的形式提供
 		*/
-		bool				invok_r(const std::string& szServiceName, const message_header* pData, CResponsePromise& sResponsePromise);
+		bool				invoke_r(uint16_t nServiceID, const message_header* pData, CResponseFuture& sResponseFuture);
 		/**
 		@brief: 调用指定远程服务的消息，需要提供远程服务消息返回的响应函数回调
 		*/
-		bool				invok_r(const std::string& szServiceName, const message_header* pData, InvokeCallback& callback);
+		bool				invoke_r(uint16_t nServiceID, const message_header* pData, InvokeCallback& callback);
 		/**
-		@brief: 调用指定远程服务的消息，逻辑上阻塞
+		@brief: 调用指定远程服务的消息，远程服务不用返回消息
 		*/
-		uint32_t			invok(const std::string& szServiceName, const message_header* pData, message_header_ptr& pResultData);
+		bool				invoke(const std::string& szServiceName, const message_header* pData);
+		/**
+		@brief: 调用指定远程服务的消息，需要提供远程服务消息返回的响应函数回调,以promise的形式提供
+		*/
+		bool				invoke_r(const std::string& szServiceName, const message_header* pData, CResponseFuture& sResponseFuture);
+		/**
+		@brief: 调用指定远程服务的消息，需要提供远程服务消息返回的响应函数回调
+		*/
+		bool				invoke_r(const std::string& szServiceName, const message_header* pData, InvokeCallback& callback);
+		
 		/**
 		@brief: 响应远程服务的调用，发送响应消息
 		*/
@@ -61,6 +70,18 @@ namespace core
 		/**
 		@brief: 网关服务转发客户端消息
 		*/
+		bool				forward(uint16_t nServiceID, uint64_t nSessionID, const message_header* pData);
+		/**
+		@brief: 网关服务转发客户端消息
+		*/
+		bool				forward(uint16_t nServiceID, uint64_t nActorID, uint64_t nSessionID, const message_header* pData);
+		/**
+		@brief: 网关服务转发客户端消息
+		*/
 		bool				forward(const std::string& szServiceName, uint64_t nSessionID, const message_header* pData);
+		/**
+		@brief: 网关服务转发客户端消息
+		*/
+		bool				forward(const std::string& szServiceName, uint64_t nActorID, uint64_t nSessionID, const message_header* pData);
 	};
 }

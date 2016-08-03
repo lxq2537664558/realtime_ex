@@ -2,11 +2,12 @@
 #include "core_connection_from_service.h"
 #include "proto_system.h"
 #include "message_dispatcher.h"
-#include "core_service_kit_impl.h"
+#include "core_service_app_impl.h"
 
 namespace core
 {
 	CCoreConnectionFromService::CCoreConnectionFromService()
+		: m_nServiceID(0)
 	{
 
 	}
@@ -38,8 +39,8 @@ namespace core
 
 	void CCoreConnectionFromService::onDisconnect()
 	{
-		if (!this->m_szServiceName.empty())
-			CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->delCoreConnectionFromService(this->m_szServiceName);
+		if (!this->getServiceID() != 0)
+			CCoreServiceAppImpl::Inst()->getCoreServiceProxy()->delCoreConnectionFromService(this->getServiceID());
 	}
 
 	bool CCoreConnectionFromService::onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize)
@@ -51,24 +52,24 @@ namespace core
 
 			if (pHeader->nMessageID == eSMT_notify_service_base_info)
 			{
-				DebugAstEx(this->m_szServiceName.empty(), true);
+				DebugAstEx(this->getServiceID() == 0, true);
 
 				smt_notify_service_base_info netMsg;
 				netMsg.unpack(pData, nSize);
-				if (netMsg.szFromServiceName.empty())
+				if (netMsg.nFromServiceID == 0)
 				{
 					this->shutdown(true, "empty service name");
 					return true;
 				}
 
-				if (!CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->addCoreConnectionFromService(netMsg.szFromServiceName, this))
+				if (!CCoreServiceAppImpl::Inst()->getCoreServiceProxy()->addCoreConnectionFromService(netMsg.nFromServiceID, this))
 				{
-					PrintWarning("dup service service_name: %s", netMsg.szFromServiceName.c_str());
+					PrintWarning("dup service service_id %d", netMsg.nFromServiceID);
 					this->shutdown(true, "dup service connection");
 					return true;
 				}
 
-				this->m_szServiceName = netMsg.szFromServiceName;
+				this->m_nServiceID = netMsg.nFromServiceID;
 			}
 
 			return true;
@@ -76,18 +77,18 @@ namespace core
 		else
 		{
 			// 如果连服务名字都没有上报就发送其他包过来了，肯定非法，直接踢掉
-			if (this->m_szServiceName.empty())
+			if (this->getServiceID() == 0)
 			{
 				this->shutdown(true, "invalid connection");
 				return true;
 			}
-			return CMessageDispatcher::Inst()->dispatch(this->getServiceName(), nMessageType, pData, nSize);
+			return CMessageDispatcher::Inst()->dispatch(this->getServiceID(), nMessageType, pData, nSize);
 		}
 	}
 
-	const std::string& CCoreConnectionFromService::getServiceName() const
+	uint16_t CCoreConnectionFromService::getServiceID() const
 	{
-		return this->m_szServiceName;
+		return this->m_nServiceID;
 	}
 
 }

@@ -9,7 +9,7 @@
 
 #include "libBaseCommon/debug_helper.h"
 #include "libBaseCommon/base_time.h"
-#include "message_queue.h"
+#include "logic_message_queue.h"
 #include "message_command.h"
 #include "libBaseCommon/profiling.h"
 
@@ -140,7 +140,7 @@ namespace core
 		sMessagePacket.pData = pContext;
 		sMessagePacket.nDataSize = sizeof(SMCT_NOTIFY_SOCKET_CONNECT);
 
-		CBaseAppImpl::Inst()->getMessageQueue()->pushMessagePacket(sMessagePacket);
+		CBaseAppImpl::Inst()->getMessageQueue()->send(sMessagePacket);
 
 		this->m_nState = eCCS_Connectting;
 	}
@@ -167,7 +167,7 @@ namespace core
 		sMessagePacket.pData = pContext;
 		sMessagePacket.nDataSize = sizeof(SMCT_NOTIFY_SOCKET_DISCONNECT);
 
-		CBaseAppImpl::Inst()->getMessageQueue()->pushMessagePacket(sMessagePacket);
+		CBaseAppImpl::Inst()->getMessageQueue()->send(sMessagePacket);
 
 		this->m_nState = eCCS_Disconnectting;
 		this->m_pNetConnecter = nullptr;
@@ -195,7 +195,7 @@ namespace core
 		sMessagePacket.pData = pContext;
 		sMessagePacket.nDataSize = sizeof(SMCT_RECV_SOCKET_DATA);
 
-		CBaseAppImpl::Inst()->getMessageQueue()->pushMessagePacket(sMessagePacket);
+		CBaseAppImpl::Inst()->getMessageQueue()->send(sMessagePacket);
 	}
 
 	void CCoreConnection::onHeartbeat()

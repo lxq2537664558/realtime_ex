@@ -487,20 +487,17 @@ namespace base
 
 		bool atoi(const char* szBuf, int32_t& nVal)
 		{
+			errno = 0;
 			nVal = ::strtol(szBuf, NULL, 10);
 
-			return true;
+			return errno == 0;
 		}
 
 		bool atoui(const char* szBuf, uint32_t& nVal)
 		{
-#ifdef _WIN32
 			errno = 0;
 			nVal = ::strtoul(szBuf, NULL, 10);
 			return errno == 0;
-#else
-			return true;
-#endif
 		}
 
 		bool atoi64(const char* szBuf, int64_t& nVal)

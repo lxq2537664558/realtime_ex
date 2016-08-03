@@ -27,6 +27,12 @@
     <ClCompile Include="net_event_loop.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="memory_new.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="net_wakeup.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -51,6 +57,9 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="net_event_loop.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="net_wakeup.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>

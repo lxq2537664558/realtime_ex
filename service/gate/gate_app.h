@@ -1,11 +1,11 @@
 #pragma once
-#include "libCoreCommon/base_app.h"
+#include "libCoreServiceKit/core_service_app.h"
 
 #include "gate_session_mgr.h"
 
 class CServiceConnectionFactory;
 class CGateApp
-	: public core::CBaseApp
+	: public core::CCoreServiceApp
 {
 public:
 	CGateApp();

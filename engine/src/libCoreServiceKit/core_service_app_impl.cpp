@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "core_service_kit_impl.h"
+#include "core_service_app_impl.h"
 #include "core_connection_to_master.h"
 #include "message_dispatcher.h"
 #include "cluster_invoker.h"
@@ -14,14 +14,17 @@
 #include "tinyxml2/tinyxml2.h"
 
 #define _DEFAULT_INVOKE_TIMEOUT 10000
+#define _DEFAULT_THROUGHPUT		10
 
 namespace core
 {
 
-	CCoreServiceKitImpl::CCoreServiceKitImpl()
+	CCoreServiceAppImpl::CCoreServiceAppImpl()
 		: m_nMasterPort(0)
 		, m_nInvokTimeout(_DEFAULT_INVOKE_TIMEOUT)
+		, m_nThroughput(_DEFAULT_THROUGHPUT)
 		, m_pTransporter(nullptr)
+		, m_pScheduler(nullptr)
 		, m_pCoreServiceInvoker(nullptr)
 		, m_pCoreServiceProxy(nullptr)
 		, m_pServiceConnectionFactory(nullptr)
@@ -29,19 +32,19 @@ namespace core
 		, m_pInvokerTrace(nullptr)
 		, m_pLuaFacade(nullptr)
 	{
-		this->m_tickCheckConnectMaster.setCallback(std::bind(&CCoreServiceKitImpl::onCheckConnectMaster, this, std::placeholders::_1));
+		this->m_tickCheckConnectMaster.setCallback(std::bind(&CCoreServiceAppImpl::onCheckConnectMaster, this, std::placeholders::_1));
 	
 		this->m_sServiceBaseInfo.nPort = 0;
 		this->m_sServiceBaseInfo.nRecvBufSize = 0;
 		this->m_sServiceBaseInfo.nSendBufSize = 0;
 	}
 
-	CCoreServiceKitImpl::~CCoreServiceKitImpl()
+	CCoreServiceAppImpl::~CCoreServiceAppImpl()
 	{
 		
 	}
 
-	bool CCoreServiceKitImpl::init()
+	bool CCoreServiceAppImpl::init()
 	{
 		tinyxml2::XMLDocument* pConfigXML = new tinyxml2::XMLDocument();
 		if (pConfigXML->LoadFile(CBaseApp::Inst()->getConfigFileName().c_str()) != tinyxml2::XML_SUCCESS)
@@ -59,11 +62,18 @@ namespace core
 		tinyxml2::XMLElement* pServiceInfoXML = pRootXML->FirstChildElement("service_info");
 		if (pServiceInfoXML == nullptr)
 		{
-			PrintWarning("pServiceInfoXML == nullptr\n");
+			PrintWarning("pServiceInfoXML == nullptr");
 			return false;
 		}
 
+		uint32_t nID = pServiceInfoXML->UnsignedAttribute("service_id");
+		if (nID > UINT16_MAX)
+		{
+			PrintWarning("too big service id: %d", nID);
+			return false;
+		}
 		// 加载服务基本信息
+		this->m_sServiceBaseInfo.nID = (uint16_t)nID;
 		this->m_sServiceBaseInfo.szType = pServiceInfoXML->Attribute("service_type");
 		this->m_sServiceBaseInfo.szName = pServiceInfoXML->Attribute("service_name");
 		this->m_sServiceBaseInfo.szGroup = pServiceInfoXML->Attribute("service_group");
@@ -86,6 +96,13 @@ namespace core
 		if (!this->m_pCoreServiceProxy->init())
 		{
 			PrintWarning("this->m_pTransporter->init()");
+			return false;
+		}
+
+		this->m_pScheduler = new CScheduler();
+		if (!this->m_pScheduler->init())
+		{
+			PrintWarning("this->m_pScheduler->init()");
 			return false;
 		}
 
@@ -137,7 +154,7 @@ namespace core
 			return false;
 		}
 
-		CBaseApp::Inst()->getBaseConnectionMgr()->setConnectRefuseCallback(std::bind(&CCoreServiceKitImpl::onConnectRefuse, this, std::placeholders::_1));
+		CBaseApp::Inst()->getBaseConnectionMgr()->setConnectRefuseCallback(std::bind(&CCoreServiceAppImpl::onConnectRefuse, this, std::placeholders::_1));
 
 		if (this->m_sServiceBaseInfo.nPort != 0)
 		{
@@ -160,7 +177,7 @@ namespace core
 		return true;
 	}
 
-	void CCoreServiceKitImpl::release()
+	void CCoreServiceAppImpl::release()
 	{
 		CBaseApp::Inst()->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionFromService, nullptr);
 		CBaseApp::Inst()->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionToMaster, nullptr);
@@ -170,6 +187,7 @@ namespace core
 		SAFE_DELETE(this->m_pCoreServiceProxy);
 		SAFE_DELETE(this->m_pServiceConnectionFactory);
 		SAFE_DELETE(this->m_pInvokerTrace);
+		SAFE_DELETE(this->m_pScheduler);
 		SAFE_DELETE(this->m_pLuaFacade);
 
 		CMessageDispatcher::Inst()->release();
@@ -177,7 +195,12 @@ namespace core
 		CClusterInvoker::Inst()->release();
 	}
 
-	void CCoreServiceKitImpl::onCheckConnectMaster(uint64_t nContext)
+	void CCoreServiceAppImpl::run()
+	{
+		this->m_pScheduler->run();
+	}
+
+	void CCoreServiceAppImpl::onCheckConnectMaster(uint64_t nContext)
 	{
 		if ( !this->m_szMasterHost.empty() && this->m_nMasterPort != 0 && this->getConnectionToMaster() == nullptr)
 		{
@@ -185,93 +208,104 @@ namespace core
 		}
 	}
 
-	void CCoreServiceKitImpl::onConnectRefuse(const std::string& szContext)
+	void CCoreServiceAppImpl::onConnectRefuse(const std::string& szContext)
 	{
 		
 	}
 
-	CCoreConnectionToMaster* CCoreServiceKitImpl::getConnectionToMaster() const
+	CCoreConnectionToMaster* CCoreServiceAppImpl::getConnectionToMaster() const
 	{
 		return this->m_pCoreConnectionToMaster;
 	}
 
-	void CCoreServiceKitImpl::setCoreConnectionToMaster(CCoreConnectionToMaster* pCoreConnectionToMaster)
+	void CCoreServiceAppImpl::setCoreConnectionToMaster(CCoreConnectionToMaster* pCoreConnectionToMaster)
 	{
 		this->m_pCoreConnectionToMaster = pCoreConnectionToMaster;
 	}
 
-	const SServiceBaseInfo& CCoreServiceKitImpl::getServiceBaseInfo() const
+	const SServiceBaseInfo& CCoreServiceAppImpl::getServiceBaseInfo() const
 	{
 		return this->m_sServiceBaseInfo;
 	}
 
-	void CCoreServiceKitImpl::addGlobalBeforeFilter(const ServiceGlobalFilter& callback)
+	void CCoreServiceAppImpl::addGlobalBeforeFilter(const ServiceGlobalFilter& callback)
 	{
-		this->m_vecServiceGlobalBeforeFilter.push_back(callback);
+		this->m_vecGlobalBeforeFilter.push_back(callback);
 	}
 
-	void CCoreServiceKitImpl::addGlobalAfterFilter(const ServiceGlobalFilter& callback)
+	void CCoreServiceAppImpl::addGlobalAfterFilter(const ServiceGlobalFilter& callback)
 	{
-		this->m_vecServiceGlobalAfterFilter.push_back(callback);
+		this->m_vecGlobalAfterFilter.push_back(callback);
 	}
 
-	const std::vector<ServiceGlobalFilter>& CCoreServiceKitImpl::getGlobalBeforeFilter()
+	const std::vector<ServiceGlobalFilter>& CCoreServiceAppImpl::getGlobalBeforeFilter()
 	{
-		return this->m_vecServiceGlobalBeforeFilter;
+		return this->m_vecGlobalBeforeFilter;
 	}
 
-	const std::vector<ServiceGlobalFilter>& CCoreServiceKitImpl::getGlobalAfterFilter()
+	const std::vector<ServiceGlobalFilter>& CCoreServiceAppImpl::getGlobalAfterFilter()
 	{
-		return this->m_vecServiceGlobalAfterFilter;
+		return this->m_vecGlobalAfterFilter;
 	}
 
-	CTransporter* CCoreServiceKitImpl::getTransporter() const
+	CTransporter* CCoreServiceAppImpl::getTransporter() const
 	{
 		return this->m_pTransporter;
 	}
 
-	CCoreServiceProxy* CCoreServiceKitImpl::getCoreServiceProxy() const
+	CCoreServiceProxy* CCoreServiceAppImpl::getCoreServiceProxy() const
 	{
 		return this->m_pCoreServiceProxy;
 	}
 
-	CCoreServiceInvoker* CCoreServiceKitImpl::getCoreServiceInvoker() const
+	CCoreServiceInvoker* CCoreServiceAppImpl::getCoreServiceInvoker() const
 	{
 		return this->m_pCoreServiceInvoker;
 	}
 
-	CInvokerTrace* CCoreServiceKitImpl::getInvokerTrace() const
+	CInvokerTrace* CCoreServiceAppImpl::getInvokerTrace() const
 	{
 		return this->m_pInvokerTrace;
 	}
 
-	base::CLuaFacade* CCoreServiceKitImpl::getLuaFacade() const
+	CScheduler* CCoreServiceAppImpl::getScheduler() const
+	{
+		return this->m_pScheduler;
+	}
+
+	base::CLuaFacade* CCoreServiceAppImpl::getLuaFacade() const
 	{
 		return this->m_pLuaFacade;
 	}
 
-	uint32_t CCoreServiceKitImpl::getInvokeTimeout() const
+	uint32_t CCoreServiceAppImpl::getInvokeTimeout() const
 	{
 		return this->m_nInvokTimeout;
 	}
 
-	void CCoreServiceKitImpl::setServiceConnectCallback(std::function<void(const std::string)> funConnect)
+	uint32_t CCoreServiceAppImpl::getThroughput() const
+	{
+		return this->m_nThroughput;
+	}
+
+	void CCoreServiceAppImpl::setServiceConnectCallback(std::function<void(uint16_t)> funConnect)
 	{
 		this->m_serviceConnectCallback = funConnect;
 	}
 
-	void CCoreServiceKitImpl::setServiceDisconnectCallback(std::function<void(const std::string)> funDisconnect)
+	void CCoreServiceAppImpl::setServiceDisconnectCallback(std::function<void(uint16_t)> funDisconnect)
 	{
 		this->m_serviceDisconnectCallback = funDisconnect;
 	}
 
-	std::function<void(const std::string)>& CCoreServiceKitImpl::getServiceConnectCallback()
+	std::function<void(uint16_t)>& CCoreServiceAppImpl::getServiceConnectCallback()
 	{
 		return this->m_serviceConnectCallback;
 	}
 
-	std::function<void(const std::string)>& CCoreServiceKitImpl::getServiceDisconnectCallback()
+	std::function<void(uint16_t)>& CCoreServiceAppImpl::getServiceDisconnectCallback()
 	{
 		return this->m_serviceDisconnectCallback;
 	}
+
 }

@@ -8,7 +8,7 @@
 #include "libCoreCommon/base_connection_mgr.h"
 #include "libCoreCommon/base_app.h"
 #include "libCoreServiceKit/cluster_invoker.h"
-#include "libCoreServiceKit/core_service_kit.h"
+#include "libCoreServiceKit/core_service_app.h"
 
 CGateMessageDispatcher::CGateMessageDispatcher()
 {
@@ -98,13 +98,14 @@ void CGateMessageDispatcher::dispatch(uint64_t nSocketID, uint8_t nMessageType, 
 		core::ClientCallback& callback = iter->second.callback;
 		DebugAst(callback != nullptr);
 		
-		callback(nSocketID, core::message_header_ptr(pHeader));
+		core::CMessage pMessage(const_cast<core::message_header*>(pHeader));
+		callback(nSocketID, pMessage);
 	}
 	else if ((nMessageType&eMT_TYPE_MASK) == eMT_TO_GATE)
 	{
-		DebugAst(nSize > sizeof(core::gate_cookice));
+		DebugAst(nSize > sizeof(core::gate_send_cookice));
 
-		const core::gate_cookice* pCookice = reinterpret_cast<const core::gate_cookice*>(pData);
+		const core::gate_send_cookice* pCookice = reinterpret_cast<const core::gate_send_cookice*>(pData);
 		CGateSession* pGateSession = CGateApp::Inst()->getGateSessionMgr()->getSessionBySessionID(pCookice->nSessionID);
 		if (nullptr == pGateSession)
 		{
@@ -114,12 +115,12 @@ void CGateMessageDispatcher::dispatch(uint64_t nSocketID, uint8_t nMessageType, 
 
 		const core::message_header* pHeader = reinterpret_cast<const core::message_header*>(pCookice + 1);
 		
-		core::CCoreServiceKit::Inst()->addTraceExtraInfo("trace_id: "UINT64FMT"send client", pCookice->nTraceID);
+		core::CCoreServiceApp::Inst()->addTraceExtraInfo("trace_id: "UINT64FMT"send client", pCookice->nTraceID);
 
 		core::CBaseConnection*  pBaseConnection = CGateApp::Inst()->getBaseConnectionMgr()->getBaseConnectionByID(pGateSession->getSocketID());
 		if (nullptr == pBaseConnection)
 		{
-			core::CCoreServiceKit::Inst()->addTraceExtraInfo("invalid connection client_id: "UINT64FMT" message_id: %d", pCookice->nSessionID, pHeader->nMessageID);
+			core::CCoreServiceApp::Inst()->addTraceExtraInfo("invalid connection client_id: "UINT64FMT" message_id: %d", pCookice->nSessionID, pHeader->nMessageID);
 			return;
 		}
 		CConnectionFromClient* pConnectionFromClient = dynamic_cast<CConnectionFromClient*>(pBaseConnection);

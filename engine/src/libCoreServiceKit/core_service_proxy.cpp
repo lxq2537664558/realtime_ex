@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "core_service_proxy.h"
-#include "core_service_kit_impl.h"
+#include "core_service_app_impl.h"
 
 #include "libCoreCommon/base_app.h"
 #include "libCoreCommon/base_connection_mgr.h"
@@ -27,10 +27,10 @@ namespace core
 
 	void CCoreServiceProxy::addServiceBaseInfo(const SServiceBaseInfo& sServiceBaseInfo)
 	{
-		DebugAst(!sServiceBaseInfo.szName.empty());
-		DebugAst(this->m_mapServiceInfo.find(sServiceBaseInfo.szName) == this->m_mapServiceInfo.end());
+		DebugAst(this->m_mapServiceInfo.find(sServiceBaseInfo.nID) == this->m_mapServiceInfo.end());
+		DebugAst(this->m_mapServiceName.find(sServiceBaseInfo.szName) == this->m_mapServiceName.end());
 
-		SServiceInfo& sServiceInfo = this->m_mapServiceInfo[sServiceBaseInfo.szName];
+		SServiceInfo& sServiceInfo = this->m_mapServiceInfo[sServiceBaseInfo.nID];
 		sServiceInfo.pCoreConnectionFromService = nullptr;
 		sServiceInfo.pCoreConnectionToService = nullptr;
 		sServiceInfo.sServiceBaseInfo = sServiceBaseInfo;
@@ -38,25 +38,39 @@ namespace core
 		sServiceInfo.pTicker->setCallback(std::bind(&SServiceInfo::onTicker, &sServiceInfo, std::placeholders::_1));
 		CBaseApp::Inst()->registerTicker(sServiceInfo.pTicker, 0, _CHECK_CONNECT_TIME, 0);
 
-		PrintInfo("add proxy service service_name: %s", sServiceBaseInfo.szName.c_str());
+		this->m_mapServiceName[sServiceBaseInfo.szName] = sServiceBaseInfo.nID;
+
+		PrintInfo("add proxy service service_id: %d service_name: %s", sServiceBaseInfo.nID, sServiceBaseInfo.szName.c_str());
 	}
 	
-	void CCoreServiceProxy::delServiceBaseInfo(const std::string& szServiceName)
+	void CCoreServiceProxy::delServiceBaseInfo(uint16_t nServiceID)
 	{
-		auto iter = this->m_mapServiceInfo.find(szServiceName);
+		auto iter = this->m_mapServiceInfo.find(nServiceID);
 		if (iter == this->m_mapServiceInfo.end())
 			return;
 
 		SAFE_DELETE(iter->second.pTicker);
 
+		std::string szServiceName = iter->second.sServiceBaseInfo.szName;
+		this->m_mapServiceName.erase(iter->second.sServiceBaseInfo.szName);
+
 		this->m_mapServiceInfo.erase(iter);
 
-		PrintInfo("del other service service_name: %s", szServiceName.c_str());
+		PrintInfo("del other service service_id: %d service_name: %s", nServiceID, szServiceName.c_str());
 	}
 
-	const SServiceBaseInfo* CCoreServiceProxy::getServiceBaseInfo(const std::string& szServiceName) const
+	uint16_t CCoreServiceProxy::getServiceID(const std::string& szServiceName) const
 	{
-		auto iter = this->m_mapServiceInfo.find(szServiceName);
+		auto iter = this->m_mapServiceName.find(szServiceName);
+		if (iter == this->m_mapServiceName.end())
+			return 0;
+
+		return iter->second;
+	}
+
+	const SServiceBaseInfo* CCoreServiceProxy::getServiceBaseInfo(uint16_t nServiceID) const
+	{
+		auto iter = this->m_mapServiceInfo.find(nServiceID);
 		if (iter == this->m_mapServiceInfo.end())
 			return nullptr;
 		
@@ -67,10 +81,10 @@ namespace core
 	{
 		DebugAstEx(pCoreConnectionToService != nullptr, false);
 
-		auto iter = this->m_mapServiceInfo.find(pCoreConnectionToService->getServiceName());
+		auto iter = this->m_mapServiceInfo.find(pCoreConnectionToService->getServiceID());
 		if (iter == this->m_mapServiceInfo.end())
 		{
-			PrintWarning("unknwon service service_name: %s remote_addr: %s %d", pCoreConnectionToService->getServiceName().c_str(), pCoreConnectionToService->getRemoteAddr().szHost, pCoreConnectionToService->getRemoteAddr().nPort);
+			PrintWarning("unknwon service service_id: %d remote_addr: %s %d", pCoreConnectionToService->getServiceID(), pCoreConnectionToService->getRemoteAddr().szHost, pCoreConnectionToService->getRemoteAddr().nPort);
 			return false;
 		}
 
@@ -81,32 +95,32 @@ namespace core
 		return true;
 	}
 
-	CCoreConnectionToService* CCoreServiceProxy::getCoreConnectionToService(const std::string& szServiceName) const
+	CCoreConnectionToService* CCoreServiceProxy::getCoreConnectionToService(uint16_t nServiceID) const
 	{
-		auto iter = this->m_mapServiceInfo.find(szServiceName);
+		auto iter = this->m_mapServiceInfo.find(nServiceID);
 		if (iter == this->m_mapServiceInfo.end())
 			return nullptr;
 
 		return iter->second.pCoreConnectionToService;
 	}
 
-	void CCoreServiceProxy::delCoreConnectionToService(const std::string& szServiceName)
+	void CCoreServiceProxy::delCoreConnectionToService(uint16_t nServiceID)
 	{
-		auto iter = this->m_mapServiceInfo.find(szServiceName);
+		auto iter = this->m_mapServiceInfo.find(nServiceID);
 		if (iter == this->m_mapServiceInfo.end())
 			return;
 
 		iter->second.pCoreConnectionToService = nullptr;
 	}
 
-	bool CCoreServiceProxy::addCoreConnectionFromService(const std::string& szServiceName, CCoreConnectionFromService* pCoreConnectionFromService)
+	bool CCoreServiceProxy::addCoreConnectionFromService(uint16_t nServiceID, CCoreConnectionFromService* pCoreConnectionFromService)
 	{
 		DebugAstEx(pCoreConnectionFromService != nullptr, false);
 
-		auto iter = this->m_mapServiceInfo.find(szServiceName);
+		auto iter = this->m_mapServiceInfo.find(nServiceID);
 		if (iter == this->m_mapServiceInfo.end())
 		{
-			PrintWarning("unknwon service service_name: %s remote_addr: %s %d", szServiceName.c_str(), pCoreConnectionFromService->getRemoteAddr().szHost, pCoreConnectionFromService->getRemoteAddr().nPort);
+			PrintWarning("unknwon service service_id: %d remote_addr: %s %d", nServiceID, pCoreConnectionFromService->getRemoteAddr().szHost, pCoreConnectionFromService->getRemoteAddr().nPort);
 			return false;
 		}
 
@@ -117,18 +131,18 @@ namespace core
 		return true;
 	}
 
-	CCoreConnectionFromService* CCoreServiceProxy::getCoreConnectionFromService(const std::string& szServiceName) const
+	CCoreConnectionFromService* CCoreServiceProxy::getCoreConnectionFromService(uint16_t nServiceID) const
 	{
-		auto iter = this->m_mapServiceInfo.find(szServiceName);
+		auto iter = this->m_mapServiceInfo.find(nServiceID);
 		if (iter == this->m_mapServiceInfo.end())
 			return nullptr;
 
 		return iter->second.pCoreConnectionFromService;
 	}
 
-	void CCoreServiceProxy::delCoreConnectionFromService(const std::string& szServiceName)
+	void CCoreServiceProxy::delCoreConnectionFromService(uint16_t nServiceID)
 	{
-		auto iter = this->m_mapServiceInfo.find(szServiceName);
+		auto iter = this->m_mapServiceInfo.find(nServiceID);
 		if (iter == this->m_mapServiceInfo.end())
 			return;
 
@@ -143,7 +157,9 @@ namespace core
 		if (this->sServiceBaseInfo.nPort == 0 || this->sServiceBaseInfo.szHost.empty())
 			return;
 
-		CBaseApp::Inst()->getBaseConnectionMgr()->connect(this->sServiceBaseInfo.szHost, this->sServiceBaseInfo.nPort, eBCT_ConnectionToService, this->sServiceBaseInfo.szName, this->sServiceBaseInfo.nSendBufSize, this->sServiceBaseInfo.nRecvBufSize, nullptr);
+		char szBuf[64] = { 0 };
+		base::crt::snprintf(szBuf, _countof(szBuf), "%d", this->sServiceBaseInfo.nID);
+		CBaseApp::Inst()->getBaseConnectionMgr()->connect(this->sServiceBaseInfo.szHost, this->sServiceBaseInfo.nPort, eBCT_ConnectionToService, szBuf, this->sServiceBaseInfo.nSendBufSize, this->sServiceBaseInfo.nRecvBufSize, nullptr);
 	}
 
 }

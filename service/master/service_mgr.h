@@ -6,6 +6,7 @@
 
 #include <vector>
 #include <map>
+#include <set>
 
 class CConnectionFromService;
 class CServiceMgr
@@ -14,18 +15,11 @@ public:
 	CServiceMgr();
 	~CServiceMgr();
 
-	bool					init();
-	CConnectionFromService*	getServiceConnection(const std::string& szName) const;
-	bool					registerService(CConnectionFromService* pConnectionFromService, const core::SServiceBaseInfo& sServiceBaseInfo);
-	void					unregisterService(const std::string& szServiceName);
+	bool	init();
+	bool	registerService(CConnectionFromService* pConnectionFromService, const core::SServiceBaseInfo& sServiceBaseInfo);
+	void	unregisterService(uint16_t nServiceID);
 	
 private:
-	struct SServiceInfo
-	{
-		core::SServiceBaseInfo	sServiceBaseInfo;
-		CConnectionFromService*	pConnectionFromService;
-	};
-
-	std::map<uint32_t, std::string>		m_mapMessageName;
-	std::map<std::string, SServiceInfo>	m_mapServiceInfo;
+	std::map<uint16_t, core::SServiceBaseInfo>	m_mapServiceInfo;
+	std::set<std::string>						m_setServiceName;
 };

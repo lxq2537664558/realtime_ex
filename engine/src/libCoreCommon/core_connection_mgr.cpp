@@ -6,7 +6,7 @@
 #include "base_connection_factory.h"
 #include "base_app.h"
 #include "message_command.h"
-#include "message_queue.h"
+#include "logic_message_queue.h"
 #include "base_app_impl.h"
 
 #include "libBaseCommon/base_time.h"
@@ -37,7 +37,7 @@ namespace core
 		sMessagePacket.pData = pContext;
 		sMessagePacket.nDataSize = sizeof(SMCT_NOTIFY_SOCKET_CONNECT_REFUSE);
 
-		CBaseAppImpl::Inst()->getMessageQueue()->pushMessagePacket(sMessagePacket);
+		CBaseAppImpl::Inst()->getMessageQueue()->send(sMessagePacket);
 
 		pCoreConnectionMgr->delActiveWaitConnecterHandler(this);
 	}
@@ -243,6 +243,11 @@ namespace core
 	{
 		PROFILING_GUARD(CCoreConnectionMgr::onTimer)
 
+	}
+
+	void CCoreConnectionMgr::wakeup()
+	{
+		this->m_pNetEventLoop->wakeup();
 	}
 
 }

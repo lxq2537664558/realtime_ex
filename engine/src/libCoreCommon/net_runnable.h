@@ -1,7 +1,7 @@
 #pragma once
 
 #include "libBaseCommon/thread_base.h"
-#include "message_queue.h"
+#include "net_message_queue.h"
 
 namespace core
 {
@@ -20,7 +20,7 @@ namespace core
 
 		bool				init(uint32_t nMaxSocketCount);
 		CCoreConnectionMgr*	getCoreConnectionMgr() const;
-		CMessageQueue*		getMessageQueue() const;
+		CNetMessageQueue*	getMessageQueue() const;
 
 		void				join();
 		void				release();
@@ -33,7 +33,7 @@ namespace core
 	private:
 		CCoreConnectionMgr*	m_pCoreConnectionMgr;
 		base::CThreadBase*	m_pThreadBase;
-		CMessageQueue*		m_pMessageQueue;
+		CNetMessageQueue*	m_pMessageQueue;
 		int64_t				m_nLastCheckTime;
 		int64_t				m_nTotalSamplingTime;
 	};

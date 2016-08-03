@@ -18,17 +18,18 @@
     <ClInclude Include="..\..\inc\libCoreCommon\base_object.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\core_common.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\coroutine.h" />
+    <ClInclude Include="..\..\inc\libCoreCommon\message.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\ticker.h" />
     <ClInclude Include="base_app_impl.h" />
     <ClInclude Include="core_connection.h" />
     <ClInclude Include="core_connection_mgr.h" />
     <ClInclude Include="core_connection_monitor.h" />
+    <ClInclude Include="logic_message_queue.h" />
     <ClInclude Include="message_command.h" />
     <ClInclude Include="coroutine_impl.h" />
     <ClInclude Include="coroutine_mgr.h" />
     <ClInclude Include="fix_memory_pool.h" />
-    <ClInclude Include="memory_hook.h" />
-    <ClInclude Include="message_queue.h" />
+    <ClInclude Include="net_message_queue.h" />
     <ClInclude Include="monitor.h" />
     <ClInclude Include="net_runnable.h" />
     <ClInclude Include="stdafx.h" />
@@ -47,8 +48,10 @@
     <ClCompile Include="coroutine_impl.cpp" />
     <ClCompile Include="coroutine_mgr.cpp" />
     <ClCompile Include="fix_memory_pool.cpp" />
-    <ClCompile Include="memory_hook.cpp" />
-    <ClCompile Include="message_queue.cpp" />
+    <ClCompile Include="logic_message_queue.cpp" />
+    <ClCompile Include="memory_new.cpp" />
+    <ClCompile Include="message.cpp" />
+    <ClCompile Include="net_message_queue.cpp" />
     <ClCompile Include="monitor.cpp" />
     <ClCompile Include="net_runnable.cpp" />
     <ClCompile Include="stdafx.cpp" />
@@ -151,10 +154,12 @@
       </AdditionalLibraryDirectories>
     </Lib>
     <PreBuildEvent>
-      <Command>del /a $(OutDir)tinyxml2.dll</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>copy /y ..\..\..\3rd\tinyxml2\lib\win32\$(Configuration)\tinyxml2.dll $(OutDir)</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

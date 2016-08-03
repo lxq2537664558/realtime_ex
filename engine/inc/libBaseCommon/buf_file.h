@@ -62,10 +62,8 @@ namespace base
 		public noncopyable
 	{
 	public:
-		CWriteBuf();
+		CWriteBuf(uint32_t nBufSize);
 		~CWriteBuf();
-
-		bool		init(uint32_t nBufSize);
 
 		void		clear();
 		const char*	getBuf() const;

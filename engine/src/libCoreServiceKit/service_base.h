@@ -3,7 +3,7 @@
 #include "libCoreCommon/core_common.h"
 
 #include "core_service_kit_define.h"
-#include "response_promise.h"
+#include "response_future.h"
 
 #include <functional>
 #include <vector>
@@ -12,20 +12,25 @@ namespace core
 {
 	struct SRequestMessageInfo
 	{
-		message_header*	pData;
+		uint64_t		nFromActorID;
+		uint64_t		nToActorID;
 		uint64_t		nSessionID;
 		uint64_t		nCoroutineID;
+		message_header*	pData;
 	};
 
 	struct SResponseMessageInfo
 	{
+		uint64_t		nFromActorID;
+		uint64_t		nToActorID;
 		uint64_t		nSessionID;
-		message_header*	pData;
 		uint8_t			nResult;
+		message_header*	pData;
 	};
 
 	struct SGateForwardMessageInfo
 	{
+		uint64_t		nActorID;
 		uint64_t		nSessionID;
 		message_header*	pData;
 	};
@@ -48,25 +53,13 @@ namespace core
 		uint64_t	nSessionID;
 		uint64_t	nTraceID;
 		uint64_t	nCoroutineID;
-		std::string	szServiceName;
-		std::function<void(SResponseWaitInfo*, uint8_t, message_header_ptr)>
+		CMessage	pResponseMessage;
+		std::function<void(SResponseWaitInfo*, uint8_t, CMessage)>
 					callback;
 		std::function<void(uint32_t)>
 					err;
-		std::list<std::pair<std::function<void(SResponseWaitInfo*, uint8_t, message_header_ptr)>, std::function<void(uint32_t)>>>
+		std::list<std::pair<std::function<void(SResponseWaitInfo*, uint8_t, CMessage)>, std::function<void(uint32_t)>>>
 					listPromise;
-	};
-
-	struct SServiceCallbackInfo
-	{
-		std::string		szMessageName;
-		ServiceCallback	serviceCallback;
-	};
-
-	struct SGateClientCallbackInfo
-	{
-		std::string			szMessageName;
-		GateForwardCallback	gateClientCallback;
 	};
 
 	enum EBaseConnectionType

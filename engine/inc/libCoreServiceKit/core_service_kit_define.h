@@ -1,5 +1,6 @@
 #pragma once
 #include "libCoreCommon/core_common.h"
+#include "libCoreCommon/message.h"
 
 #include <string>
 #include <vector>
@@ -20,11 +21,14 @@ enum EResponseResultType
 	eRRT_ERROR,
 };
 
+#define _REMOTE_ACTOR_BIT 48
+
 namespace core
 {
 
 	struct SServiceBaseInfo
 	{
+		uint16_t	nID;
 		std::string	szType;			// 服务类型
 		std::string	szName;			// 服务名字
 		std::string	szGroup;		// 服务所属的组
@@ -36,33 +40,45 @@ namespace core
 
 	struct SClientSessionInfo
 	{
-		const std::string	szServiceName;
-		uint64_t			nSessionID;
+		uint16_t	nServiceID;
+		uint64_t	nSessionID;
 
-		SClientSessionInfo(const std::string&	szServiceName, uint64_t nSessionID)
-			: szServiceName(szServiceName), nSessionID(nSessionID)
+		SClientSessionInfo(uint16_t	nServiceID, uint64_t nSessionID)
+			: nServiceID(nServiceID), nSessionID(nSessionID)
 		{}
 	};
 
 	struct SServiceSessionInfo
 	{
-		std::string	szServiceName;
+		uint16_t	nServiceID;
 		uint64_t	nSessionID;
 	};
 
-	typedef std::shared_ptr<const message_header>	message_header_ptr;
+	struct SActorSessionInfo
+	{
+		uint64_t	nActorID;
+		uint64_t	nSessionID;
+	};
 
-	class CResponsePromise;
-	typedef std::function<void(uint8_t, message_header_ptr)>								InvokeCallback;			// RPC消息响应回调函数类型
-	typedef std::function<CResponsePromise(uint8_t, message_header_ptr)>					InvokeCallbackEx;		// RPC消息响应回调函数类型
-	typedef std::function<void(uint32_t)>													InvokeErrCallback;		// RPC错误响应回调函数类型
-	typedef std::function<void(const std::string, uint8_t, message_header_ptr)>				ServiceCallback;		// 服务消息处理函数类型(这里服务名字必须是值，不能是引用，因为有协程)
-	typedef std::function<void(const SClientSessionInfo, uint8_t, message_header_ptr)>		GateForwardCallback;	// 经网关服务转发的客户端消息处理函数类型
-	typedef std::function<void(uint64_t, message_header_ptr)>								ClientCallback;			// 客户端消息处理函数类型
-	typedef std::function<bool(const std::string&, uint8_t, const void*, uint16_t)>			ServiceGlobalFilter;	// 全局的消息过滤器类型
+	class CResponseFuture;
+	
+	typedef std::function<void(uint8_t, CMessage)>								InvokeCallback;			// RPC消息响应回调函数类型
+	typedef std::function<CResponseFuture(uint8_t, CMessage)>					InvokeCallbackEx;		// RPC消息响应回调函数类型
+	typedef std::function<void(uint32_t)>										InvokeErrCallback;		// RPC错误响应回调函数类型
+	typedef std::function<void(uint16_t, uint8_t, CMessage)>					ServiceCallback;		// 服务消息处理函数类型(这里服务名字必须是值，不能是引用，因为有协程)
+	typedef std::function<void(SClientSessionInfo, uint8_t, CMessage)>			GateForwardCallback;	// 经网关服务转发的客户端消息处理函数类型
+	typedef std::function<void(uint64_t, CMessage)>								ClientCallback;			// 客户端消息处理函数类型
+	typedef std::function<void(uint16_t, uint8_t, const void*, uint16_t)>		ServiceGlobalFilter;	// 全局的消息过滤器类型
 
 #pragma pack(push,1)
-	struct gate_cookice
+	struct gate_forward_cookice
+	{
+		uint64_t nActorID;
+		uint64_t nSessionID;
+		uint64_t nTraceID;
+	};
+
+	struct gate_send_cookice
 	{
 		uint64_t nSessionID;
 		uint64_t nTraceID;
@@ -77,11 +93,14 @@ namespace core
 	struct request_cookice
 	{
 		uint64_t nSessionID;
+		uint64_t nFromActorID;
+		uint64_t nToActorID;
 		uint64_t nTraceID;
 	};
 
 	struct response_cookice
 	{
+		uint64_t	nActorID;
 		uint64_t	nSessionID;
 		uint64_t	nTraceID;
 		uint8_t		nResult;

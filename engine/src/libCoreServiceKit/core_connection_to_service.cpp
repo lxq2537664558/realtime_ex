@@ -2,7 +2,7 @@
 #include "core_connection_to_service.h"
 #include "proto_system.h"
 #include "message_dispatcher.h"
-#include "core_service_kit_impl.h"
+#include "core_service_app_impl.h"
 #include "core_service_proxy.h"
 
 #include "libCoreCommon/base_connection_mgr.h"
@@ -11,6 +11,7 @@
 namespace core
 {
 	CCoreConnectionToService::CCoreConnectionToService()
+		: m_nServiceID(0)
 	{
 
 	}
@@ -22,8 +23,11 @@ namespace core
 
 	bool CCoreConnectionToService::init(const std::string& szContext)
 	{
-		this->m_szServiceName = szContext;
+		uint32_t nServiceID = 0;
+		if (!base::crt::atoui(szContext.c_str(), nServiceID))
+			return false;
 
+		this->m_nServiceID = (uint16_t)nServiceID;
 		return true;
 	}
 
@@ -39,40 +43,40 @@ namespace core
 
 	void CCoreConnectionToService::onConnect()
 	{
-		if (CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getServiceBaseInfo(this->m_szServiceName) == nullptr)
+		if (CCoreServiceAppImpl::Inst()->getCoreServiceProxy()->getServiceBaseInfo(this->getServiceID()) == nullptr)
 		{
-			PrintWarning("dup service service_name: %s", this->m_szServiceName.c_str());
-			this->shutdown(true, "dup service connection");
+			PrintWarning("unknown service service_id: %d", this->getServiceID());
+			this->shutdown(true, "unknown service");
 			return;
 		}
 
 		// 同步服务名字
 		smt_notify_service_base_info netMsg;
-		netMsg.szFromServiceName = CCoreServiceKitImpl::Inst()->getServiceBaseInfo().szName;
+		netMsg.nFromServiceID = CCoreServiceAppImpl::Inst()->getServiceBaseInfo().nID;
 		base::CWriteBuf& writeBuf = CBaseApp::Inst()->getWriteBuf();
 		netMsg.pack(writeBuf);
 
 		this->send(eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
 
-		if (!CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->addCoreConnectionToService(this))
+		if (!CCoreServiceAppImpl::Inst()->getCoreServiceProxy()->addCoreConnectionToService(this))
 		{
 			this->shutdown(true, "dup service connection");
 			return;
 		}
 
-		auto& funConnect = CCoreServiceKitImpl::Inst()->getServiceConnectCallback();
+		auto& funConnect = CCoreServiceAppImpl::Inst()->getServiceConnectCallback();
 		if (funConnect != nullptr)
-			funConnect(this->m_szServiceName);
+			funConnect(this->getServiceID());
 	}
 
 	void CCoreConnectionToService::onDisconnect()
 	{
-		if (!this->m_szServiceName.empty())
+		if (!this->getServiceID() != 0)
 		{
-			CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->delCoreConnectionToService(this->m_szServiceName);
-			auto& funDisconnect = CCoreServiceKitImpl::Inst()->getServiceDisconnectCallback();
+			CCoreServiceAppImpl::Inst()->getCoreServiceProxy()->delCoreConnectionToService(this->getServiceID());
+			auto& funDisconnect = CCoreServiceAppImpl::Inst()->getServiceDisconnectCallback();
 			if (funDisconnect != nullptr)
-				funDisconnect(this->m_szServiceName);
+				funDisconnect(this->getServiceID());
 		}
 	}
 
@@ -80,15 +84,14 @@ namespace core
 	{
 		if (nMessageType != eMT_SYSTEM)
 		{
-			return CMessageDispatcher::Inst()->dispatch(this->getServiceName(), nMessageType, pData, nSize);
+			return CMessageDispatcher::Inst()->dispatch(this->getServiceID(), nMessageType, pData, nSize);
 		}
 
 		return true;
 	}
 
-	const std::string& CCoreConnectionToService::getServiceName() const
+	uint16_t CCoreConnectionToService::getServiceID() const
 	{
-		return this->m_szServiceName;
+		return this->m_nServiceID;
 	}
-
 }

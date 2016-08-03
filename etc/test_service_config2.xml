@@ -2,14 +2,14 @@
 <root>
 	<!--服务基本信息-->
 	<base_info work_path = "./conf/" connections = "2000">
-		<log sync = "0" path = "./log/" debug = "1"/>
+		<log async = "1" path = "./log/" debug = "1"/>
 		<profiling sampling_time = "1000"/>
 		<heartbeat heartbeat_limit = "100000" heartbeat_time = "10000"/>
 		<time year = "2013" month = "4" day = "27" hour = "23" minute = "57" second = "0" enable = "0"/>
 	</base_info>
 	
 	<!--服务信息-->
-	<service_info service_type = "test2" service_name = "test2-1" service_group = "test" invoke_timeout = "100000">
+	<service_info service_id = "3" service_type = "test2" service_name = "test2-1" service_group = "test" invoke_timeout = "100000">
 		<host_info host = "127.0.0.1" port = "6100" send_buf_size = "1024" recv_buf_size = "1024"/>
 	</service_info>
 	

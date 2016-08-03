@@ -47,12 +47,6 @@
     <ClInclude Include="core_service_proxy.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreServiceKit\core_service_kit.h">
-      <Filter>inc</Filter>
-    </ClInclude>
-    <ClInclude Include="core_service_kit_impl.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\inc\libCoreServiceKit\core_service_kit_define.h">
       <Filter>inc</Filter>
     </ClInclude>
@@ -71,7 +65,22 @@
     <ClInclude Include="core_connection_from_service.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreServiceKit\response_promise.h">
+    <ClInclude Include="..\..\inc\libCoreServiceKit\actor.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="actor_base.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="scheduler.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreServiceKit\core_service_app.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="core_service_app_impl.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreServiceKit\response_future.h">
       <Filter>inc</Filter>
     </ClInclude>
   </ItemGroup>
@@ -97,13 +106,7 @@
     <ClCompile Include="transporter.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="core_service_kit_impl.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="core_service_proxy.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="core_service_kit.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="core_service_invoker.cpp">
@@ -121,7 +124,22 @@
     <ClCompile Include="core_connection_from_service.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="response_promise.cpp">
+    <ClCompile Include="actor_base.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="actor.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="scheduler.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="core_service_app.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="core_service_app_impl.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="response_future.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

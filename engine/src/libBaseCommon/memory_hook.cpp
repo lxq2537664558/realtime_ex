@@ -1,23 +1,20 @@
 #include "stdafx.h"
-#include "core_common.h"
 
-#include "libBaseCommon/base_time.h"
-#include "libBaseCommon/spin_mutex.h"
+#include "memory_hook.h"
+#include "link.h"
+#include "base_time.h"
+#include "spin_mutex.h"
 
 #include <stdio.h>
 
+
 #ifdef _WIN32
 #include <share.h>
-#include <dbghelp.h>
-#pragma comment( lib, "dbghelp.lib" )
-#else
-#include <execinfo.h>
 #endif
 
-#define __MEMORY_HOOK__
 #define _MEMORY_DETAIL_STACK_COUNT 10
 
-namespace core
+namespace base
 {
 
 #pragma pack(push,1)
@@ -30,7 +27,7 @@ namespace core
 		bool		bDetail;	// 是否是详细信息
 	};
 
-	typedef base::TLinkNode<SMemoryHookInfo> SMemoryHookInfoNode;
+	typedef TLinkNode<SMemoryHookInfo> SMemoryHookInfoNode;
 #pragma pack(pop)
 
 	class CMemoryHookMgr
@@ -45,17 +42,20 @@ namespace core
 		void	deallocate(void* pData);
 		void	beginLeakChecker(bool bDetail);
 		void	endLeakChecker(const char* szName);
+		int64_t	getMemorySize() const;
 
 	private:
-		base::TLink<SMemoryHookInfoNode>	m_listMemoryHookInfo;
-		bool								m_bCheck;
-		bool								m_bDetail;
-		base::spin_mutex					m_lock;
+		TLink<SMemoryHookInfoNode>	m_listMemoryHookInfo;
+		bool						m_bCheck;
+		bool						m_bDetail;
+		spin_mutex					m_lock;
+		int64_t						m_nMemorySize;
 	};
 
 	CMemoryHookMgr::CMemoryHookMgr()
 		: m_bCheck(false)
 		, m_bDetail(false)
+		, m_nMemorySize(0)
 	{
 	}
 
@@ -71,8 +71,14 @@ namespace core
 		return &s_Inst;
 	}
 
+	int64_t CMemoryHookMgr::getMemorySize() const
+	{
+		return this->m_nMemorySize;
+	}
+
 	void* CMemoryHookMgr::allocate(size_t nSize, void* pCallAddr)
 	{
+		this->m_nMemorySize += nSize + sizeof(SMemoryHookInfoNode);
 		void* pData = malloc(nSize + sizeof(SMemoryHookInfoNode));
 		SMemoryHookInfoNode* pMemoryHookInfoNode = reinterpret_cast<SMemoryHookInfoNode*>(pData);
 		pMemoryHookInfoNode->Value.nSize = (uint32_t)nSize;
@@ -121,6 +127,7 @@ namespace core
 			pMemoryHookInfoNode->remove();
 			this->m_lock.unlock();
 		}
+		this->m_nMemorySize -= (pMemoryHookInfoNode->Value.nSize + sizeof(SMemoryHookInfoNode));
 
 		free(pMemoryHookInfoNode);
 	}
@@ -158,34 +165,34 @@ namespace core
 				{
 					void* pAddr = pStack[i];
 					char szBuf[1024] = { 0 };
-					if (base::getFunctionInfo(pAddr, szBuf, _countof(szBuf)) <= 0)
+					if (getFunctionInfo(pAddr, szBuf, _countof(szBuf)) <= 0)
 						continue;
 
 					char szInfo[1024] = { 0 };
-					size_t nCount = base::crt::snprintf(szInfo, _countof(szInfo), "%s\r\n", szBuf);
+					size_t nCount = crt::snprintf(szInfo, _countof(szInfo), "%s\r\n", szBuf);
 					fwrite(szInfo, 1, nCount, pFile);
 				}
 				char szTime[64] = { 0 };
-				base::formatGmtTime(szTime, pNode->Value.nAllocTime);
+				formatGmtTime(szTime, pNode->Value.nAllocTime);
 				char szInfo[1024] = { 0 };
-				size_t nCount = base::crt::snprintf(szInfo, _countof(szInfo), "%s size: %d\r\n", szTime, pNode->Value.nSize);
+				size_t nCount = crt::snprintf(szInfo, _countof(szInfo), "%s size: %d\r\n", szTime, pNode->Value.nSize);
 				fwrite(szInfo, 1, nCount, pFile);
 			}
 			else
 			{
 				char szBuf[1024] = { 0 };
-				if (base::getFunctionInfo(pNode->Value.pContext, szBuf, _countof(szBuf)) <= 0)
+				if (getFunctionInfo(pNode->Value.pContext, szBuf, _countof(szBuf)) <= 0)
 					continue;
 
 				char szTime[64] = { 0 };
 				base::formatGmtTime(szTime, pNode->Value.nAllocTime);
 				char szInfo[1024] = { 0 };
-				size_t nCount = base::crt::snprintf(szInfo, _countof(szInfo), "%s %s size: %d\r\n", szTime, szBuf, pNode->Value.nSize);
+				size_t nCount = crt::snprintf(szInfo, _countof(szInfo), "%s %s size: %d\r\n", szTime, szBuf, pNode->Value.nSize);
 				fwrite(szInfo, 1, nCount, pFile);
 			}
 		}
 		char szInfo[1024] = { 0 };
-		size_t nCount = base::crt::snprintf(szInfo, _countof(szInfo), "total leak size: %d", nTotalSize);
+		size_t nCount = crt::snprintf(szInfo, _countof(szInfo), "total leak size: %d", nTotalSize);
 		fwrite(szInfo, 1, nCount, pFile);
 
 		this->m_lock.unlock();
@@ -198,38 +205,29 @@ namespace core
 	void beginMemoryLeakChecker(bool bDetail)
 	{
 #ifdef __MEMORY_HOOK__
-		core::CMemoryHookMgr::Inst()->beginLeakChecker(bDetail);
+		CMemoryHookMgr::Inst()->beginLeakChecker(bDetail);
 #endif
 	}
 
 	void endMemoryLeakChecker(const char* szName)
 	{
 #ifdef __MEMORY_HOOK__
-		core::CMemoryHookMgr::Inst()->endLeakChecker(szName);
+		CMemoryHookMgr::Inst()->endLeakChecker(szName);
 #endif
 	}
+
+	int64_t getMemorySize()
+	{
+		return CMemoryHookMgr::Inst()->getMemorySize();
+	}
+
+	void* alloc_hook(size_t nSize, void* pCallAddr)
+	{
+		return CMemoryHookMgr::Inst()->allocate(nSize, pCallAddr);
+	}
+
+	void dealloc_hook(void* pData)
+	{
+		CMemoryHookMgr::Inst()->deallocate(pData);
+	}
 }
-
-#ifdef __MEMORY_HOOK__
-
-void* operator new (size_t size)
-{
-	return core::CMemoryHookMgr::Inst()->allocate(size, ((void**)&size)[-1]);
-}
-
-void* operator new[](size_t size)
-{
-	return core::CMemoryHookMgr::Inst()->allocate(size, ((void**)&size)[-1]);
-}
-
-void operator delete (void* pData)
-{
-	core::CMemoryHookMgr::Inst()->deallocate(pData);
-}
-
-void operator delete[](void* pData)
-{
-	core::CMemoryHookMgr::Inst()->deallocate(pData);
-}
-
-#endif

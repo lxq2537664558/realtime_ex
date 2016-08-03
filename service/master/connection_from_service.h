@@ -19,8 +19,8 @@ public:
 	virtual void		onDisconnect();
 	virtual bool		onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize);
 
-	const std::string&	getServiceName() const;
+	uint16_t			getServiceID() const;
 
 private:
-	std::string	m_szServiceName;
+	uint16_t	m_nServiceID;
 };

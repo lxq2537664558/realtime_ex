@@ -73,22 +73,11 @@ namespace core
 		@brief: 获取QPS
 		*/
 		uint32_t					getQPS() const;
-		/*
-		@brief: 开启检测泄漏内存
-		*/
-		void						beginLeakChecker(bool bDetail);
-		/*
-		@brief: 结束检测泄漏内存，并将内存泄漏信息保存到指定文件中
-		*/
-		void						endLeakChecker(const char* szName);
 		
 	protected:
 		virtual bool				onInit() { return true; }
 		virtual void				onProcess() { }
 		virtual void				onDestroy() { }
-
-		virtual void				onBeforeFrame() { }
-		virtual void				onAfterFrame() { }
 
 		virtual	void				onQuit() = 0;
 		void						doQuit();

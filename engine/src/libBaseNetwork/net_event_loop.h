@@ -11,13 +11,13 @@
 
 #include "network.h"
 
-
 namespace base
 {
 
 	class CNetSocket;
 	class CNetConnecter;
 	class CNetSendBufferBlock;
+	class CNetWakeup;
 
 	// 整个网络层，在Windows下采用select模型，在linux下采用epoll的水平触发模式
 	class CNetEventLoop :
@@ -31,6 +31,7 @@ namespace base
 		virtual bool	listen(const SNetAddr& netAddr, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, INetAccepterHandler* pHandler);
 		virtual bool	connect(const SNetAddr& netAddr, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, INetConnecterHandler* pHandler);
 		virtual void	update(int64_t nTime);
+		virtual void	wakeup();
 		virtual void	release();
 
 		void			addCloseSocket(CNetSocket* pNetSocket);
@@ -43,7 +44,8 @@ namespace base
 		int32_t			getSendConnecterCount() const;
 
 #ifndef _WIN32
-		void			updateEpollOperator(CNetSocket* pNetSocket, int32_t nOperator);
+		void			updateEpollState(CNetSocket* pNetSocket, int32_t nOperator);
+		int32_t			getEpoll() const;
 #endif
 
 	private:
@@ -55,8 +57,11 @@ namespace base
 
 		uint32_t						m_nMaxSocketCount;
 
+		CNetWakeup*						m_pWakeup;
+
 #ifndef _WIN32
 		int32_t							m_nEpoll;
+		uint32_t						m_nExtraSocketCount;
 		std::vector<struct epoll_event>	m_vecEpollEvent;
 #endif
 	};

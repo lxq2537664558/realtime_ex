@@ -1,9 +1,10 @@
 #pragma once
 
 #include "libCoreCommon/base_app.h"
+#include "libCoreServiceKit/core_service_app.h"
 
 class CTestServiceApp2
-	: public core::CBaseApp
+	: public core::CCoreServiceApp
 {
 public:
 	CTestServiceApp2();

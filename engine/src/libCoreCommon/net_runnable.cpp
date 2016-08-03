@@ -17,6 +17,7 @@ core::CNetRunnable*	g_pNetRunnable;
 
 #define _CYCLE_TIME 10
 
+
 namespace core
 {
 	CNetRunnable::CNetRunnable()
@@ -45,8 +46,8 @@ namespace core
 
 	bool CNetRunnable::init(uint32_t nMaxSocketCount)
 	{
-		this->m_pMessageQueue = new CMessageQueue();
-		if (!this->m_pMessageQueue->init(false))
+		this->m_pMessageQueue = new CNetMessageQueue();
+		if (!this->m_pMessageQueue->init())
 			return false;
 
 		this->m_pCoreConnectionMgr = new CCoreConnectionMgr();
@@ -75,7 +76,7 @@ namespace core
 		return this->m_pCoreConnectionMgr;
 	}
 
-	CMessageQueue* CNetRunnable::getMessageQueue() const
+	CNetMessageQueue* CNetRunnable::getMessageQueue() const
 	{
 		return this->m_pMessageQueue;
 	}
@@ -92,12 +93,32 @@ namespace core
 
 	bool CNetRunnable::onProcess()
 	{
-		int64_t nBeginLoopTime = base::getProcessPassTime();
+		int64_t nBeginSamplingTime = base::getProcessPassTime();
+
+		int64_t nCurTime = base::getGmtTime();
+		// windows下没有实现事件通知机制，所以这边直接等待1ms
+#ifndef _WIN32
+		int64_t nWaitTime = std::max<int64_t>(0, _CYCLE_TIME - (nCurTime - this->m_nLastCheckTime) / 1000);
+#else
+		int64_t nWaitTime = 1;
+#endif
+		this->m_pCoreConnectionMgr->update(nWaitTime);
+
+		nCurTime = base::getGmtTime();
+		if (nCurTime - this->m_nLastCheckTime >= _CYCLE_TIME)
+		{
+			this->m_nLastCheckTime = nCurTime;
+			SMessagePacket sMessagePacket;
+			sMessagePacket.nType = eMCT_TIMER;
+			sMessagePacket.pData = nullptr;
+			sMessagePacket.nDataSize = 0;
+			CBaseAppImpl::Inst()->getMessageQueue()->send(sMessagePacket);
+
+			this->m_pCoreConnectionMgr->onTimer(nCurTime);
+		}
 		
 		static std::vector<SMessagePacket> vecMessagePacket;
-		PROFILING_BEGIN(this->m_pMessageQueue->popMessagePacket_NetRunnable)
-		this->m_pMessageQueue->popMessagePacket(vecMessagePacket);
-		PROFILING_END(this->m_pMessageQueue->popMessagePacket_NetRunnable)
+		this->m_pMessageQueue->recv(vecMessagePacket);
 
 		for (auto iter = vecMessagePacket.begin(); iter != vecMessagePacket.end(); ++iter)
 		{
@@ -286,26 +307,9 @@ namespace core
 				PrintWarning("invalid cmd type: %d", sMessagePacket.nType);
 			}
 		}
-		
-		int64_t nEndLoopTime = base::getProcessPassTime();
-		int64_t nNetWaitTime = std::max<int64_t>(0, _CYCLE_TIME - (nEndLoopTime - nBeginLoopTime) / 1000);
-		this->m_pCoreConnectionMgr->update(nNetWaitTime);
-		
-		int64_t nCurTime = base::getGmtTime();
-		if (nCurTime - this->m_nLastCheckTime >= _CYCLE_TIME)
-		{
-			this->m_nLastCheckTime = nCurTime;
-			SMessagePacket sMessagePacket;
-			sMessagePacket.nType = eMCT_TIMER;
-			sMessagePacket.pData = nullptr;
-			sMessagePacket.nDataSize = 0;
-			CBaseAppImpl::Inst()->getMessageQueue()->pushMessagePacket(sMessagePacket);
-			
-			this->m_pCoreConnectionMgr->onTimer(nCurTime);
-		}
 
-
-		this->m_nTotalSamplingTime = this->m_nTotalSamplingTime + (uint32_t)(base::getProcessPassTime() - nBeginLoopTime);
+		int64_t nEndSamplingTime = base::getProcessPassTime();
+		this->m_nTotalSamplingTime = this->m_nTotalSamplingTime + (uint32_t)(nEndSamplingTime - nBeginSamplingTime);
 
 		if (this->m_nTotalSamplingTime / 1000 >= CBaseAppImpl::Inst()->getSamplingTime())
 		{

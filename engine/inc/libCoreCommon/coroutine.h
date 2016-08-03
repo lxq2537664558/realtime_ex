@@ -20,6 +20,10 @@ namespace core
 		*/
 		uint64_t	start(std::function<void(uint64_t)> fn);
 		/**
+		@brief: 关闭指定协程
+		*/
+		void		close(uint64_t nID);
+		/**
 		@brief: 恢复某一个协程执行，可以传一个参数，yield函数返回后会取到，如果协程第一次执行就是入口函数的参数
 		*/
 		void		resume(uint64_t nID, uint64_t nContext);

@@ -101,12 +101,14 @@
     <ClInclude Include="..\..\inc\libBaseCommon\buf_file.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\base_time.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\base_common.h" />
+    <ClInclude Include="..\..\inc\libBaseCommon\circle_queue.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\debug_helper.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\encryptor.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\exception_handler.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\defer.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\logger.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\md5.h" />
+    <ClInclude Include="..\..\inc\libBaseCommon\memory_hook.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\noncopyable.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\noninheritable.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\profiling.h" />
@@ -125,6 +127,7 @@
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\inc\libBaseCommon\circle_queue.inl" />
     <None Include="..\..\inc\libBaseCommon\link.inl" />
   </ItemGroup>
   <ItemGroup>
@@ -136,6 +139,8 @@
     <ClCompile Include="exception_handler.cpp" />
     <ClCompile Include="logger.cpp" />
     <ClCompile Include="md5.cpp" />
+    <ClCompile Include="memory_hook.cpp" />
+    <ClCompile Include="memory_new.cpp" />
     <ClCompile Include="profiling.cpp" />
     <ClCompile Include="rand_gen.cpp" />
     <ClCompile Include="stdafx.cpp" />

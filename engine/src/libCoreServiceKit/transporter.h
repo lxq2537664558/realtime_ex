@@ -18,17 +18,19 @@ namespace core
 
 		bool					init();
 
-		bool					call(const std::string& szServiceName, const SRequestMessageInfo& sRequestMessageInfo);
-		bool					response(const std::string& szServiceName, const SResponseMessageInfo& sResponseMessageInfo);
+		bool					invoke(uint16_t nServiceID, const SRequestMessageInfo& sRequestMessageInfo);
+		bool					response(uint16_t nServiceID, const SResponseMessageInfo& sResponseMessageInfo);
 
-		bool					forward(const std::string& szServiceName, const SGateForwardMessageInfo& sGateMessageInfo);
+		bool					forward(uint16_t nServiceID, const SGateForwardMessageInfo& sGateMessageInfo);
 
-		bool					send(const std::string& szServiceName, const SGateMessageInfo& sGateMessageInfo);
+		bool					send(uint16_t nServiceID, const SGateMessageInfo& sGateMessageInfo);
 
-		bool					broadcast(const std::string& szServiceName, const SGateBroadcastMessageInfo& sGateBroadcastMessageInfo);
+		bool					broadcast(uint16_t nServiceID, const SGateBroadcastMessageInfo& sGateBroadcastMessageInfo);
 
 		SServiceSessionInfo&	getServiceSessionInfo();
+
 		SResponseWaitInfo*		getResponseWaitInfo(uint64_t nSessionID, bool bErase);
+		void					addResponseWaitInfo(uint64_t nSessionID, uint64_t nTraceID);
 
 		uint64_t				genSessionID();
 

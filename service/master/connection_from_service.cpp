@@ -7,6 +7,7 @@
 
 
 CConnectionFromService::CConnectionFromService()
+	: m_nServiceID(0)
 {
 }
 
@@ -14,7 +15,6 @@ CConnectionFromService::~CConnectionFromService()
 {
 
 }
-
 
 bool CConnectionFromService::init(const std::string& szContext)
 {
@@ -31,9 +31,9 @@ void CConnectionFromService::release()
 	delete this;
 }
 
-const std::string& CConnectionFromService::getServiceName() const
+uint16_t CConnectionFromService::getServiceID() const
 {
-	return this->m_szServiceName;
+	return this->m_nServiceID;
 }
 
 void CConnectionFromService::onConnect()
@@ -42,7 +42,7 @@ void CConnectionFromService::onConnect()
 
 void CConnectionFromService::onDisconnect()
 {
-	CMasterApp::Inst()->getServiceMgr()->unregisterService(this->m_szServiceName);
+	CMasterApp::Inst()->getServiceMgr()->unregisterService(this->m_nServiceID);
 }
 
 bool CConnectionFromService::onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize)
@@ -57,11 +57,11 @@ bool CConnectionFromService::onDispatch(uint8_t nMessageType, const void* pData,
 		core::smt_register_service_base_info netMsg;
 		netMsg.unpack(pData, nSize);
 		
-		this->m_szServiceName = netMsg.sServiceBaseInfo.szName;
+		this->m_nServiceID = netMsg.sServiceBaseInfo.nID;
 		if (!CMasterApp::Inst()->getServiceMgr()->registerService(this, netMsg.sServiceBaseInfo))
 		{
-			PrintWarning("dup service service_name: %s", this->m_szServiceName.c_str());
-			this->m_szServiceName.clear();
+			PrintWarning("dup service service_id: %d", this->m_nServiceID);
+			this->m_nServiceID = 0;
 			this->shutdown(true, "dup service connection");
 			return true;
 		}
@@ -71,7 +71,7 @@ bool CConnectionFromService::onDispatch(uint8_t nMessageType, const void* pData,
 		core::smt_unregister_service_base_info netMsg;
 		netMsg.unpack(pData, nSize);
 
-		CMasterApp::Inst()->getServiceMgr()->unregisterService(netMsg.szName);
+		CMasterApp::Inst()->getServiceMgr()->unregisterService(this->m_nServiceID);
 	}
 
 	return true;

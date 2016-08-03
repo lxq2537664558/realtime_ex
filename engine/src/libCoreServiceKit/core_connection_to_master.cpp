@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "core_connection_to_master.h"
 #include "proto_system.h"
-#include "core_service_kit_impl.h"
+#include "core_service_app_impl.h"
 
 #include "libCoreCommon/base_app.h"
 #include "libCoreCommon/base_connection_mgr.h"
@@ -44,21 +44,21 @@ namespace core
 		}
 
 		smt_register_service_base_info netMsg;
-		netMsg.sServiceBaseInfo = CCoreServiceKitImpl::Inst()->getServiceBaseInfo();
+		netMsg.sServiceBaseInfo = CCoreServiceAppImpl::Inst()->getServiceBaseInfo();
 
 		base::CWriteBuf& writeBuf = CBaseApp::Inst()->getWriteBuf();
 		netMsg.pack(writeBuf);
 		
 		this->send(eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
 
-		CCoreServiceKitImpl::Inst()->setCoreConnectionToMaster(this);
+		CCoreServiceAppImpl::Inst()->setCoreConnectionToMaster(this);
 
-		CCoreServiceKitImpl::Inst()->getCoreServiceInvoker()->onConnectToMaster();
+		CCoreServiceAppImpl::Inst()->getCoreServiceInvoker()->onConnectToMaster();
 	}
 
 	void CCoreConnectionToMaster::onDisconnect()
 	{
-		CCoreServiceKitImpl::Inst()->setCoreConnectionToMaster(nullptr);
+		CCoreServiceAppImpl::Inst()->setCoreConnectionToMaster(nullptr);
 	}
 
 	bool CCoreConnectionToMaster::onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize)
@@ -73,14 +73,14 @@ namespace core
 			smt_sync_service_base_info netMsg;
 			netMsg.unpack(pData, nSize);
 			
-			CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->addServiceBaseInfo(netMsg.sServiceBaseInfo);
+			CCoreServiceAppImpl::Inst()->getCoreServiceProxy()->addServiceBaseInfo(netMsg.sServiceBaseInfo);
 		}
 		else if (pHeader->nMessageID == eSMT_remove_service_base_info)
 		{
 			smt_remove_service_base_info netMsg;
 			netMsg.unpack(pData, nSize);
 
-			CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->delServiceBaseInfo(netMsg.szName);
+			CCoreServiceAppImpl::Inst()->getCoreServiceProxy()->delServiceBaseInfo(netMsg.nServiceID);
 		}
 
 		return true;

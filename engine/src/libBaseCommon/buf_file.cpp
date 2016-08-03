@@ -97,10 +97,10 @@ namespace base
 		return true;
 	}
 
-	CWriteBuf::CWriteBuf()
-		: m_szBuf(nullptr)
-		, m_nBufSize(0)
+	CWriteBuf::CWriteBuf(uint32_t nBufSize)
+		: m_nBufSize(nBufSize)
 		, m_nCurPos(0)
+		, m_szBuf(new char[nBufSize])
 	{
 
 	}
@@ -108,16 +108,6 @@ namespace base
 	CWriteBuf::~CWriteBuf()
 	{
 		SAFE_DELETE_ARRAY(this->m_szBuf);
-	}
-
-	bool CWriteBuf::init(uint32_t nBufSize)
-	{
-		DebugAstEx(this->m_szBuf == nullptr, false);
-
-		this->m_nBufSize = nBufSize;
-		this->m_szBuf = new char[nBufSize];
-
-		return true;
 	}
 
 	void CWriteBuf::clear()

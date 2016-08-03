@@ -51,9 +51,6 @@
     <ClInclude Include="..\..\inc\libCoreCommon\base_connection_factory.h">
       <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="memory_hook.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\inc\libCoreCommon\coroutine.h">
       <Filter>inc</Filter>
     </ClInclude>
@@ -63,9 +60,6 @@
     <ClInclude Include="coroutine_impl.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="message_queue.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="net_runnable.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -73,6 +67,15 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="base_app_impl.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreCommon\message.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="net_message_queue.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="logic_message_queue.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
@@ -113,9 +116,6 @@
     <ClCompile Include="core_connection_monitor.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="memory_hook.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="coroutine_mgr.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -125,13 +125,22 @@
     <ClCompile Include="coroutine_impl.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="message_queue.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="net_runnable.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="base_app_impl.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="message.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="memory_new.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="net_message_queue.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="logic_message_queue.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

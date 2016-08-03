@@ -51,6 +51,11 @@ namespace core
 			return pCoroutineImpl->getCoroutineID();
 		}
 
+		void close(uint64_t nID)
+		{
+
+		}
+
 		void sendMessage(uint64_t nID, void* pData)
 		{
 			CCoroutineImpl* pCoroutineImpl = CBaseAppImpl::Inst()->getCoroutineMgr()->getCoroutine(nID);
@@ -68,5 +73,6 @@ namespace core
 
 			return pCoroutineImpl->recvMessage();
 		}
+
 	}
 }

@@ -90,11 +90,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="memory_new.cpp" />
     <ClCompile Include="net_accepter.cpp" />
     <ClCompile Include="net_buffer.cpp" />
     <ClCompile Include="net_connecter.cpp" />
     <ClCompile Include="net_event_loop.cpp" />
     <ClCompile Include="net_socket.cpp" />
+    <ClCompile Include="net_wakeup.cpp" />
     <ClCompile Include="stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -105,6 +107,7 @@
     <ClInclude Include="net_event_loop.h" />
     <ClInclude Include="net_socket.h" />
     <ClInclude Include="network_base.h" />
+    <ClInclude Include="net_wakeup.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>

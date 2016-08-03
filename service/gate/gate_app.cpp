@@ -9,19 +9,16 @@
 #include "libCoreCommon/base_connection_mgr.h"
 #include "libCoreServiceKit/message_dispatcher.h"
 #include "libCoreServiceKit/message_registry.h"
-#include "libCoreServiceKit/core_service_kit.h"
 
 #include <functional>
 
 #include "tinyxml2/tinyxml2.h"
 
-static bool gate_before_filter(const std::string& szFromServiceName, uint8_t nMessageType, const void* pData, uint16_t nSize)
+static void gate_before_filter(uint16_t nFromServiceID, uint8_t nMessageType, const void* pData, uint16_t nSize)
 {
-	DebugAstEx(pData != nullptr, false);
+	DebugAst(pData != nullptr);
 
-	CGateMessageDispatcher::Inst()->dispatch(0, nMessageType, pData, nSize);
-
-	return true;
+	CGateMessageDispatcher::Inst()->dispatch(nFromServiceID, nMessageType, pData, nSize);
 }
 
 CGateApp::CGateApp()
@@ -36,19 +33,18 @@ CGateApp::~CGateApp()
 
 CGateApp* CGateApp::Inst()
 {
-	return static_cast<CGateApp*>(CBaseApp::Inst());
+	return static_cast<CGateApp*>(CCoreServiceApp::Inst());
 }
 
 bool CGateApp::onInit()
 {
-	this->m_pServiceConnectionFactory = new CServiceConnectionFactory();
-	this->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionFromClient, this->m_pServiceConnectionFactory);
-
-	if (!core::CCoreServiceKit::Inst()->init())
+	if (!CCoreServiceApp::onInit())
 	{
-		PrintWarning("core::CCoreServiceKit::Inst()->init()");
+		PrintWarning("CCoreServiceApp::onInit()");
 		return false;
 	}
+	this->m_pServiceConnectionFactory = new CServiceConnectionFactory();
+	this->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionFromClient, this->m_pServiceConnectionFactory);
 
 	core::CMessageRegistry::Inst()->addGlobalBeforeFilter(std::bind(gate_before_filter, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
 	
@@ -104,7 +100,7 @@ void CGateApp::onDestroy()
 	SAFE_DELETE(this->m_pGateSessionMgr);
 	SAFE_DELETE(this->m_pServiceConnectionFactory);
 
-	core::CCoreServiceKit::Inst()->release();
+	CCoreServiceApp::onDestroy();
 }
 
 void CGateApp::onQuit()

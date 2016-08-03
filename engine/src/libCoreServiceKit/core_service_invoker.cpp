@@ -3,7 +3,7 @@
 #include "proto_system.h"
 #include "core_connection_to_master.h"
 #include "core_service_kit_define.h"
-#include "core_service_kit_impl.h"
+#include "core_service_app_impl.h"
 
 #include "libCoreCommon/base_app.h"
 
@@ -74,7 +74,7 @@ namespace core
 
 	void CCoreServiceInvoker::onConnectToMaster()
 	{
-		CCoreConnectionToMaster* pCoreConnectionToMaster = CCoreServiceKitImpl::Inst()->getConnectionToMaster();
+		CCoreConnectionToMaster* pCoreConnectionToMaster = CCoreServiceAppImpl::Inst()->getConnectionToMaster();
 		DebugAst(nullptr != pCoreConnectionToMaster);
 	}
 }

@@ -97,6 +97,7 @@ namespace core
 		, m_pBaseConnectionMgr(nullptr)
 		, m_pCoroutineMgr(nullptr)
 		, m_nRunState(eARS_Start)
+		, m_writeBuf(UINT16_MAX)
 		, m_bMarkQuit(false)
 		, m_nTotalSamplingTime(0)
 		, m_nCycleCount(0)
@@ -310,7 +311,7 @@ namespace core
 			return false;
 		}
 
-		if (!base::initLog(pLogXML->IntAttribute("sync") != 0, pLogXML->Attribute("path")))
+		if (!base::initLog(pLogXML->IntAttribute("async") != 0, pLogXML->Attribute("path")))
 		{
 			fprintf(stderr, "init log error\n");
 			return false;
@@ -336,20 +337,14 @@ namespace core
 			return false;
 		}
 
-		if (!this->m_writeBuf.init(UINT16_MAX))
-		{
-			PrintWarning("this->m_writeBuf.init(UINT16_MAX)");
-			return false;
-		}
-
 		if (!initMonitor())
 		{
 			PrintWarning("initMonitor()");
 			return false;
 		}
 
-		this->m_pMessageQueue = new CMessageQueue();
-		if (!this->m_pMessageQueue->init(true))
+		this->m_pMessageQueue = new CLogicMessageQueue();
+		if (!this->m_pMessageQueue->init())
 		{
 			PrintWarning("this->m_pMessageQueue->init error");
 			return false;
@@ -434,9 +429,7 @@ namespace core
 		int64_t nBeginTime = base::getProcessPassTime();
 
 		static std::vector<SMessagePacket> vecMessagePacket;
-		PROFILING_BEGIN(this->m_pMessageQueue->popMessagePacket_BaseAppImpl)
-		this->m_pMessageQueue->popMessagePacket(vecMessagePacket);
-		PROFILING_END(this->m_pMessageQueue->popMessagePacket_BaseAppImpl)
+		this->m_pMessageQueue->recv(vecMessagePacket);
 
 		for (auto iter = vecMessagePacket.begin(); iter != vecMessagePacket.end(); ++iter)
 		{
@@ -449,8 +442,8 @@ namespace core
 					SMCT_NOTIFY_SOCKET_CONNECT* pContext = reinterpret_cast<SMCT_NOTIFY_SOCKET_CONNECT*>(sMessagePacket.pData);
 					if (pContext == nullptr)
 					{
-					 PrintWarning("context == nullptr type: eMCT_NOTIFY_SOCKET_CONNECT");
-					 continue;
+						PrintWarning("context == nullptr type: eMCT_NOTIFY_SOCKET_CONNECT");
+						continue;
 					}
 					this->m_pBaseConnectionMgr->onConnect(pContext->nSocketID, pContext->szContext, pContext->nType, pContext->sLocalAddr, pContext->sRemoteAddr);
 					SAFE_DELETE(pContext);
@@ -508,17 +501,9 @@ namespace core
 
 			case eMCT_TIMER:
 				{
-					PROFILING_BEGIN(CBaseApp::Inst()->onBeforeFrame())
-					CBaseApp::Inst()->onBeforeFrame();
-					PROFILING_END(CBaseApp::Inst()->onBeforeFrame())
-
 					PROFILING_BEGIN(this->m_pTickerMgr->update)
 					this->m_pTickerMgr->update();
 					PROFILING_END(this->m_pTickerMgr->update)
-
-					PROFILING_BEGIN(CBaseApp::Inst()->onAfterFrame)
-					CBaseApp::Inst()->onAfterFrame();
-					PROFILING_END(CBaseApp::Inst()->onAfterFrame)
 
 					++this->m_nCycleCount;
 				}
@@ -530,6 +515,10 @@ namespace core
 				}
 			}
 		}
+
+		PROFILING_BEGIN(CBaseApp::Inst()->onProcess)
+		CBaseApp::Inst()->onProcess();
+		PROFILING_END(CBaseApp::Inst()->onProcess)
 
 		if (this->m_nRunState == eARS_Quitting && !this->m_bMarkQuit)
 		{
@@ -554,7 +543,7 @@ namespace core
 		return true;
 	}
 
-	CMessageQueue* CBaseAppImpl::getMessageQueue() const
+	CLogicMessageQueue* CBaseAppImpl::getMessageQueue() const
 	{
 		return this->m_pMessageQueue;
 	}
@@ -584,13 +573,17 @@ namespace core
 
 	void CBaseAppImpl::onQPS(uint64_t nContext)
 	{
-		//PrintInfo("QPS: %u", this->m_nQPS);
 		this->m_nQPS = 0;
 	}
 
 	void CBaseAppImpl::incQPS()
 	{
 		++this->m_nQPS;
+	}
+
+	uint32_t CBaseAppImpl::getQPS() const
+	{
+		return this->m_nQPS;
 	}
 
 }

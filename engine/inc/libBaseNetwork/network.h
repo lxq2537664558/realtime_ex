@@ -134,7 +134,6 @@ namespace base
 		virtual INetConnecterHandler* onAccept(INetConnecter* pNetConnecter) = 0;
 	};
 
-
 	/**
 	@brief: 网络监听器接口
 	*/
@@ -234,6 +233,10 @@ namespace base
 		@brief: 推动网络事件循环器
 		*/
 		virtual void	update(int64_t nTime) = 0;
+		/**
+		@brief: 在事件循环等待中唤醒等待
+		*/
+		virtual void	wakeup() = 0;
 		/**
 		@brief: 释放网络事件循环器
 		*/

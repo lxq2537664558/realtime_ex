@@ -114,6 +114,7 @@
   <ItemGroup>
     <ClCompile Include="lua_facade.cpp" />
     <ClCompile Include="lua_debug.cpp" />
+    <ClCompile Include="memory_new.cpp" />
     <ClCompile Include="snapshot.cpp" />
   </ItemGroup>
   <ItemGroup>

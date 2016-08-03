@@ -22,7 +22,6 @@
 #include "base_app.h"
 #include "base_app_impl.h"
 #include "core_connection_mgr.h"
-#include "memory_hook.h"
 
 // 放这里为了调试或者看dump的时候方便
 core::CBaseApp* g_pCoreApp = nullptr;
@@ -91,13 +90,9 @@ namespace core
 		base::enableProfiling(bProfiling);
 	}
 
-	void CBaseApp::beginLeakChecker(bool bDetail)
+	uint32_t CBaseApp::getQPS() const
 	{
-		beginMemoryLeakChecker(bDetail);
+		return CBaseAppImpl::Inst()->getQPS();
 	}
 
-	void CBaseApp::endLeakChecker(const char* szName)
-	{
-		endMemoryLeakChecker(szName);
-	}
 }

@@ -242,6 +242,8 @@ void CLogger::pushLog(SLogInfo* pLogInfo)
 	else
 	{
 		this->saveLog(pLogInfo);
+		char* szBuf = reinterpret_cast<char*>(pLogInfo);
+		delete[](szBuf);
 	}
 }
 

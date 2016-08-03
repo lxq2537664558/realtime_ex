@@ -35,6 +35,8 @@ namespace core
 		CCoreConnection*	getCoreConnectionByID(uint64_t nID) const;
 		uint32_t			getCoreConnectionCount(uint32_t nType) const;
 
+		void				wakeup();
+
 		void				onTimer(int64_t nTime);
 
 	private:

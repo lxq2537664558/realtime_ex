@@ -78,7 +78,7 @@ namespace core
 		sMessagePacket.pData = pContext;
 		sMessagePacket.nDataSize = sizeof(SMCT_NOTIFY_SOCKET_CONNECT_ACK);
 
-		CNetRunnable::Inst()->getMessageQueue()->pushMessagePacket(sMessagePacket);
+		CNetRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
 	}
 
 	void CBaseConnectionMgr::onDisconnect(uint64_t nSocketID)
@@ -127,7 +127,7 @@ namespace core
 		sMessagePacket.pData = pContext;
 		sMessagePacket.nDataSize = sizeof(SMCT_REQUEST_SOCKET_CONNECT);
 
-		CNetRunnable::Inst()->getMessageQueue()->pushMessagePacket(sMessagePacket);
+		CNetRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
 	}
 
 	void CBaseConnectionMgr::listen(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser)
@@ -146,7 +146,7 @@ namespace core
 		sMessagePacket.pData = pContext;
 		sMessagePacket.nDataSize = sizeof(SMCT_REQUEST_SOCKET_LISTEN);
 
-		CNetRunnable::Inst()->getMessageQueue()->pushMessagePacket(sMessagePacket);
+		CNetRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
 	}
 
 	uint32_t CBaseConnectionMgr::getBaseConnectionCount(uint32_t nType) const
@@ -207,7 +207,7 @@ namespace core
 		sMessagePacket.pData = pContext;
 		sMessagePacket.nDataSize = sizeof(SMCT_BROADCAST_SOCKET_DATA2)+nSize;
 		
-		CNetRunnable::Inst()->getMessageQueue()->pushMessagePacket(sMessagePacket);
+		CNetRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
 	}
 
 	void CBaseConnectionMgr::broadcast(std::vector<uint64_t>& vecSocketID, uint8_t nMessageType, const void* pData, uint16_t nSize)
@@ -226,7 +226,7 @@ namespace core
 		sMessagePacket.pData = pContext;
 		sMessagePacket.nDataSize = sizeof(SMCT_BROADCAST_SOCKET_DATA1) + nSize;
 
-		CNetRunnable::Inst()->getMessageQueue()->pushMessagePacket(sMessagePacket);
+		CNetRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
 	}
 
 	void CBaseConnectionMgr::setBaseConnectionFactory(uint32_t nType, CBaseConnectionFactory* pBaseConnectionFactory)

@@ -203,7 +203,7 @@ namespace base
 		this->m_nEvent |= eNET_Send;
 
 #ifndef _WIN32
-		this->m_pNetEventLoop->updateEpollOperator(this, EPOLL_CTL_MOD);
+		this->m_pNetEventLoop->updateEpollState(this, EPOLL_CTL_MOD);
 #endif
 	}
 
@@ -215,7 +215,7 @@ namespace base
 		this->m_nEvent &= ~eNET_Send;
 
 #ifndef _WIN32
-		this->m_pNetEventLoop->updateEpollOperator(this, EPOLL_CTL_MOD);
+		this->m_pNetEventLoop->updateEpollState(this, EPOLL_CTL_MOD);
 #endif
 	}
 
@@ -227,7 +227,7 @@ namespace base
 		this->m_nEvent &= ~eNET_Recv;
 
 #ifndef _WIN32
-		this->m_pNetEventLoop->updateEpollOperator(this, EPOLL_CTL_MOD);
+		this->m_pNetEventLoop->updateEpollState(this, EPOLL_CTL_MOD);
 #endif
 	}
 

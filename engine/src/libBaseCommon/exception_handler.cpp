@@ -22,7 +22,6 @@
 
 #include <signal.h>
 #include <iostream>
-#include <string>
 #include <memory>
 #include <mutex>
 
@@ -193,7 +192,7 @@ size_t CGenWinDump::getStackInfo(void** pStack, uint32_t nDepth, char* szBuf, si
 		pSymbol->MaxNameLength = 1024;
 		DWORD64 pAddr = reinterpret_cast<DWORD64>(pStack[i]);
 		HMODULE hModule = (HMODULE)::SymGetModuleBase64(::GetCurrentProcess(), pAddr);
-		std::string szFileName = "?";
+		char szFileName[MAX_PATH] = { '?' };
 		if (hModule != nullptr)
 		{
 			char szAllFileName[MAX_PATH] = { 0 };
@@ -201,17 +200,12 @@ size_t CGenWinDump::getStackInfo(void** pStack, uint32_t nDepth, char* szBuf, si
 			if (nRet != 0)
 			{
 				szAllFileName[nRet] = 0;
-				szFileName = szAllFileName;
-				std::string::size_type pos = szFileName.find_last_of('\\');
-				if (pos != std::string::npos)
-					szFileName = szFileName.substr(pos + 1);
-				else
-					szFileName = "?";
+				strncpy(szFileName, szAllFileName, MAX_PATH);
 			}
 		}
 
-		nLen += _snprintf(szBuf + nLen, nBufSize - nLen, "\t%s ", szFileName.c_str());
-		std::string szSymbolName = "?";
+		nLen += _snprintf(szBuf + nLen, nBufSize - nLen, "\t%s ", szFileName);
+		char szSymbolName[MAX_PATH] = { '?' };
 		DWORD64 nAddress = pAddr;
 		if (!::SymGetSymFromAddr64(GetCurrentProcess(), pAddr, 0, pSymbol))
 		{
@@ -220,16 +214,16 @@ size_t CGenWinDump::getStackInfo(void** pStack, uint32_t nDepth, char* szBuf, si
 				if (::SymGetSymFromAddr64(GetCurrentProcess(), pAddr, 0, pSymbol))
 				{
 					nAddress = pSymbol->Address;
-					szSymbolName = pSymbol->Name;
+					strncpy(szSymbolName, pSymbol->Name, MAX_PATH);
 				}
 			}
 		}
 		else
 		{
 			nAddress = pSymbol->Address;
-			szSymbolName = pSymbol->Name;
+			strncpy(szSymbolName, pSymbol->Name, MAX_PATH);
 		}
-		nLen += _snprintf(szBuf + nLen, nBufSize - nLen, "%s[0x%I64x]()\r\n", szSymbolName.c_str(), nAddress);
+		nLen += _snprintf(szBuf + nLen, nBufSize - nLen, "%s[0x%I64x]()\r\n", szSymbolName, nAddress);
 	}
 
 	if (nLen > 2)

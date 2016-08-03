@@ -2,7 +2,7 @@
 <root>
 	<!--服务基本信息-->
 	<base_info work_path = "./conf/" connections = "2000">
-		<log sync = "0" path = "./log/" debug = "1"/>
+		<log async = "0" path = "./log/" debug = "1"/>
 		<profiling sampling_time = "1000"/>
 		<heartbeat heartbeat_limit = "100000" heartbeat_time = "10000"/>
 		<time year = "2013" month = "4" day = "27" hour = "23" minute = "57" second = "0" enable = "0"/>

@@ -25,17 +25,19 @@ namespace core
 		bool						init();
 		
 		void						addServiceBaseInfo(const SServiceBaseInfo& sServiceBaseInfo);
-		void						delServiceBaseInfo(const std::string& szServiceName);
+		void						delServiceBaseInfo(uint16_t nServiceID);
 
-		const SServiceBaseInfo*		getServiceBaseInfo(const std::string& szServiceName) const;
+		uint16_t					getServiceID(const std::string& szServiceName) const;
+
+		const SServiceBaseInfo*		getServiceBaseInfo(uint16_t nServiceID) const;
 		
-		CCoreConnectionToService*	getCoreConnectionToService(const std::string& szName) const;
-		CCoreConnectionFromService*	getCoreConnectionFromService(const std::string& szName) const;
+		CCoreConnectionToService*	getCoreConnectionToService(uint16_t nServiceID) const;
+		CCoreConnectionFromService*	getCoreConnectionFromService(uint16_t nServiceID) const;
 		
 		bool						addCoreConnectionToService(CCoreConnectionToService* pCoreConnectionToService);
-		bool						addCoreConnectionFromService(const std::string& szServiceName, CCoreConnectionFromService* pCoreConnectionFromService);
-		void						delCoreConnectionToService(const std::string& szServiceName);
-		void						delCoreConnectionFromService(const std::string& szServiceName);
+		bool						addCoreConnectionFromService(uint16_t nServiceID, CCoreConnectionFromService* pCoreConnectionFromService);
+		void						delCoreConnectionToService(uint16_t nServiceID);
+		void						delCoreConnectionFromService(uint16_t nServiceID);
 
 	private:
 		struct SServiceInfo
@@ -48,6 +50,7 @@ namespace core
 			void	onTicker(uint64_t nContext);
 		};
 
-		std::map<std::string, SServiceInfo>	m_mapServiceInfo;
+		std::map<uint16_t, SServiceInfo>	m_mapServiceInfo;
+		std::map<std::string, uint16_t>		m_mapServiceName;
 	};
 }

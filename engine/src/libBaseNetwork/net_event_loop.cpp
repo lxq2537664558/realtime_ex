@@ -4,6 +4,7 @@
 #include "net_connecter.h"
 #include "net_accepter.h"
 #include "net_buffer.h"
+#include "net_wakeup.h"
 
 #include "libBaseCommon/debug_helper.h"
 #include "libBaseCommon/profiling.h"
@@ -14,8 +15,10 @@ namespace base
 		: m_nSendConnecterCount(0)
 		, m_nSocketCount(0)
 		, m_nMaxSocketCount(0)
+		, m_pWakeup(nullptr)
 #ifndef _WIN32
 		, m_nEpoll(0)
+		, m_nExtraSocketCount(0)
 #endif
 	{
 
@@ -31,22 +34,33 @@ namespace base
 
 			pSocket->forceClose();
 		}
+		SAFE_DELETE(this->m_pWakeup);
 		this->m_vecSocket.clear();
 		this->m_listCloseSocket.clear();
 #ifndef _WIN32
-		close(this->m_nEpoll);
+		::close(this->m_nEpoll);
 #endif
 	}
 
 	bool CNetEventLoop::init(uint32_t nMaxSocketCount)
-	{
-#ifndef _WIN32
-		this->m_nEpoll = epoll_create(nMaxSocketCount / 2);
-#endif
-
+	{	
 		this->m_nSendConnecterCount = 0;
 		this->m_nSocketCount = 0;
 		this->m_nMaxSocketCount = nMaxSocketCount;
+#ifndef _WIN32
+		this->m_nEpoll = epoll_create(nMaxSocketCount / 2);
+		if (this->m_nEpoll < 0)
+			return false;
+		
+		this->m_nExtraSocketCount = 1;
+#endif
+
+		this->m_pWakeup = new CNetWakeup();
+		if (!this->m_pWakeup->init(this))
+		{
+			SAFE_DELETE(this->m_pWakeup);
+			return false;
+		}
 		return true;
 	}
 
@@ -174,15 +188,17 @@ namespace base
 		do
 		{
 			PROFILING_BEGIN(epoll_wait)
+			this->m_pWakeup->wait(true);
 			int32_t nActiveCount = epoll_wait(this->m_nEpoll, &this->m_vecEpollEvent[0], this->m_vecEpollEvent.size(), nTime);
+			this->m_pWakeup->wait(false);
 			PROFILING_END(epoll_wait)
 			if (nActiveCount >= 0)
 			{
 				for (int32_t i = 0; i < nActiveCount; ++i)
 				{
-					CNetSocket* pNetSocket = static_cast<CNetSocket*>(this->m_vecEpollEvent[i].data.ptr);
-					if (pNetSocket != nullptr)
-						pNetSocket->onEvent(this->m_vecEpollEvent[i].events);
+					INetBase* pNetBase = reinterpret_cast<INetBase*>(this->m_vecEpollEvent[i].data.ptr);
+					if (pNetBase != nullptr)
+						pNetBase->onEvent(this->m_vecEpollEvent[i].events);
 				}
 				break;
 			}
@@ -200,7 +216,7 @@ namespace base
 	}
 
 #ifndef _WIN32
-	void CNetEventLoop::updateEpollOperator(CNetSocket* pNetSocket, int32_t nOperator)
+	void CNetEventLoop::updateEpollState(CNetSocket* pNetSocket, int32_t nOperator)
 	{
 		struct epoll_event event;
 		memset(&event, 0, sizeof(event));
@@ -208,6 +224,11 @@ namespace base
 		event.events = pNetSocket->getEvent();
 		if (epoll_ctl(this->m_nEpoll, nOperator, pNetSocket->GetSocketID(), &event) < 0)
 			PrintWarning("epoll_ctl error operator = %d error %d", nOperator, getLastError());
+	}
+
+	int32_t CNetEventLoop::getEpoll() const
+	{
+		return this->m_nEpoll;
 	}
 #endif
 
@@ -235,8 +256,8 @@ namespace base
 		PrintNW("addSocket socket_id %d socket_index %d", pNetSocket->GetSocketID(), pNetSocket->getSocketIndex());
 
 #ifndef _WIN32
-		this->m_vecEpollEvent.resize(this->m_nSocketCount);
-		this->updateEpollOperator(pNetSocket, EPOLL_CTL_ADD);
+		this->m_vecEpollEvent.resize(this->m_nSocketCount + this->m_nExtraSocketCount);
+		this->updateEpollState(pNetSocket, EPOLL_CTL_ADD);
 #endif
 		return true;
 	}
@@ -259,8 +280,8 @@ namespace base
 		pNetSocket->setSocketIndex(_Invalid_SocketIndex);
 
 #ifndef _WIN32
-		this->m_vecEpollEvent.resize(this->m_nSocketCount);
-		this->updateEpollOperator(pNetSocket, EPOLL_CTL_DEL);
+		this->m_vecEpollEvent.resize(this->m_nSocketCount + this->m_nExtraSocketCount);
+		this->updateEpollState(pNetSocket, EPOLL_CTL_DEL);
 #endif
 	}
 
@@ -306,6 +327,11 @@ namespace base
 	int32_t CNetEventLoop::getSendConnecterCount() const
 	{
 		return this->m_nSendConnecterCount;
+	}
+
+	void CNetEventLoop::wakeup()
+	{
+		this->m_pWakeup->wakeup();
 	}
 
 

@@ -145,6 +145,7 @@ namespace base
 
 	void CNetConnecter::onRecv()
 	{
+		PROFILING_GUARD(CNetConnecter::onRecv)
 		while (true)
 		{
 			uint32_t nBufSize = this->m_pRecvBuffer->getFreeSize();
@@ -195,6 +196,7 @@ namespace base
 
 	void CNetConnecter::onSend()
 	{
+		PROFILING_GUARD(CNetConnecter::onSend)
 		while (true)
 		{
 			uint32_t nBufSize = 0;
@@ -338,6 +340,8 @@ namespace base
 		|| eNCS_Disconnected == this->m_eConnecterState
 		|| (eNCS_Disconnecting == this->m_eConnecterState && (eCT_Send&this->m_nCloseType) != 0))
 			return;
+
+		PROFILING_GUARD(CNetConnecter::send)
 
 		this->m_pSendBuffer->push(reinterpret_cast<const char*>(pData), nDataSize);
 		uint32_t nSendDataSize = this->m_pSendBuffer->getDataSize();

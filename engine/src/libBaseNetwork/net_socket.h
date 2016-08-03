@@ -5,7 +5,22 @@
 
 namespace base
 {
-	class CNetSocket
+	/**
+	@brief: 网络基础类
+	*/
+	class INetBase
+	{
+	public:
+		virtual ~INetBase() { }
+
+		/**
+		@brief: 事件回调
+		*/
+		virtual void	onEvent(uint32_t nEvent) = 0;
+	};
+
+	class CNetSocket :
+		public INetBase
 	{
 		friend class CNetEventLoop;
 
@@ -13,9 +28,9 @@ namespace base
 		CNetSocket();
 		~CNetSocket();
 
+		virtual bool	init(uint32_t nSendBufferSize, uint32_t nRecvBufferSize, CNetEventLoop* pNetEventLoop);
 		virtual void	onEvent(uint32_t nEvent) = 0;
 		virtual void	forceClose();
-		virtual bool	init(uint32_t nSendBufferSize, uint32_t nRecvBufferSize, CNetEventLoop* pNetEventLoop);
 
 		bool			open();
 		bool			nonBlock();

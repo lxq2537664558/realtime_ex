@@ -3,7 +3,7 @@
 #include "message_dispatcher.h"
 #include "protobuf_helper.h"
 #include "core_service_kit_define.h"
-#include "core_service_kit_impl.h"
+#include "core_service_app_impl.h"
 
 #include "libBaseCommon/defer.h"
 
@@ -37,54 +37,41 @@ namespace core
 		return this->m_nNextSessionID;
 	}
 
-	bool CTransporter::call(const std::string& szServiceName, const SRequestMessageInfo& sRequestMessageInfo)
+	bool CTransporter::invoke(uint16_t nServiceID, const SRequestMessageInfo& sRequestMessageInfo)
 	{
 		DebugAstEx(sRequestMessageInfo.pData != nullptr, false);
 
-		uint64_t nTraceID = CCoreServiceKitImpl::Inst()->getInvokerTrace()->getCurTraceID();
+		uint64_t nTraceID = CCoreServiceAppImpl::Inst()->getInvokerTrace()->getCurTraceID();
 
-		CCoreConnectionToService* pCoreConnectionToService = CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getCoreConnectionToService(szServiceName);
+		CCoreConnectionToService* pCoreConnectionToService = CCoreServiceAppImpl::Inst()->getCoreServiceProxy()->getCoreConnectionToService(nServiceID);
 		if (nullptr == pCoreConnectionToService)
 		{
-			CCoreServiceKitImpl::Inst()->getInvokerTrace()->addTraceExtraInfo("nullptr == pCoreConnectionToService");
+			CCoreServiceAppImpl::Inst()->getInvokerTrace()->addTraceExtraInfo("nullptr == pCoreConnectionToService");
 			return false;
-		}
-
-		SResponseWaitInfo* pResponseWaitInfo = nullptr;
-		if (sRequestMessageInfo.nSessionID != 0)
-		{
-			pResponseWaitInfo = new SResponseWaitInfo();
-			pResponseWaitInfo->callback = nullptr;
-			pResponseWaitInfo->nSessionID = sRequestMessageInfo.nSessionID;
-			pResponseWaitInfo->nTraceID = nTraceID;
-			pResponseWaitInfo->nCoroutineID = sRequestMessageInfo.nCoroutineID;
-			pResponseWaitInfo->szServiceName = szServiceName;
-			pResponseWaitInfo->tickTimeout.setCallback(std::bind(&CTransporter::onRequestMessageTimeout, this, std::placeholders::_1));
-			CBaseApp::Inst()->registerTicker(&pResponseWaitInfo->tickTimeout, CCoreServiceKitImpl::Inst()->getInvokeTimeout(), 0, sRequestMessageInfo.nSessionID);
-
-			this->m_mapResponseWaitInfo[pResponseWaitInfo->nSessionID] = pResponseWaitInfo;
 		}
 
 		// 野割cookice
 		request_cookice cookice;
 		cookice.nSessionID = sRequestMessageInfo.nSessionID;
 		cookice.nTraceID = nTraceID;
+		cookice.nFromActorID = sRequestMessageInfo.nFromActorID;
+		cookice.nToActorID = sRequestMessageInfo.nToActorID;
 
 		pCoreConnectionToService->send(eMT_REQUEST, &cookice, sizeof(cookice), sRequestMessageInfo.pData, sRequestMessageInfo.pData->nMessageSize);
 
 		return true;
 	}
 
-	bool CTransporter::response(const std::string& szServiceName, const SResponseMessageInfo& sResponseMessageInfo)
+	bool CTransporter::response(uint16_t nServiceID, const SResponseMessageInfo& sResponseMessageInfo)
 	{
 		DebugAstEx(sResponseMessageInfo.pData != nullptr, false);
 
-		uint64_t nTraceID = CCoreServiceKitImpl::Inst()->getInvokerTrace()->getCurTraceID();
+		uint64_t nTraceID = CCoreServiceAppImpl::Inst()->getInvokerTrace()->getCurTraceID();
 		
-		CCoreConnectionFromService* pCoreConnectionFromService = CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getCoreConnectionFromService(szServiceName);
+		CCoreConnectionFromService* pCoreConnectionFromService = CCoreServiceAppImpl::Inst()->getCoreServiceProxy()->getCoreConnectionFromService(nServiceID);
 		if (pCoreConnectionFromService == nullptr)
 		{
-			CCoreServiceKitImpl::Inst()->getInvokerTrace()->addTraceExtraInfo("pCoreServiceConnection == nullptr by response");
+			CCoreServiceAppImpl::Inst()->getInvokerTrace()->addTraceExtraInfo("pCoreServiceConnection == nullptr by response");
 			return false;
 		}
 
@@ -92,52 +79,51 @@ namespace core
 		cookice.nTraceID = nTraceID;
 		cookice.nSessionID = sResponseMessageInfo.nSessionID;
 		cookice.nResult = sResponseMessageInfo.nResult;
-		
+		cookice.nActorID = sResponseMessageInfo.nToActorID;
+
 		pCoreConnectionFromService->send(eMT_RESPONSE, &cookice, sizeof(cookice), sResponseMessageInfo.pData, sResponseMessageInfo.pData->nMessageSize);
 
 		return true;
 	}
 
-	bool CTransporter::forward(const std::string& szServiceName, const SGateForwardMessageInfo& sGateMessageInfo)
+	bool CTransporter::forward(uint16_t nServiceID, const SGateForwardMessageInfo& sGateMessageInfo)
 	{
 		DebugAstEx(sGateMessageInfo.pData != nullptr, false);
 
-		CCoreServiceKitImpl::Inst()->getInvokerTrace()->startNewTrace();
-		uint64_t nTraceID = CCoreServiceKitImpl::Inst()->getInvokerTrace()->getCurTraceID();
+		CCoreServiceAppImpl::Inst()->getInvokerTrace()->startNewTrace();
+		uint64_t nTraceID = CCoreServiceAppImpl::Inst()->getInvokerTrace()->getCurTraceID();
 
-		CCoreConnectionToService* pCoreConnectionToService = CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getCoreConnectionToService(szServiceName);
+		CCoreConnectionToService* pCoreConnectionToService = CCoreServiceAppImpl::Inst()->getCoreServiceProxy()->getCoreConnectionToService(nServiceID);
 		if (nullptr == pCoreConnectionToService)
 		{
-			CCoreServiceKitImpl::Inst()->getInvokerTrace()->addTraceExtraInfo("nullptr == pCoreConnectionToService");
+			CCoreServiceAppImpl::Inst()->getInvokerTrace()->addTraceExtraInfo("nullptr == pCoreConnectionToService");
 			return false;
 		}
-
 		
 		// 野割cookice
-		gate_cookice cookice;
-		cookice.nSessionID = sGateMessageInfo.nSessionID;
+		gate_forward_cookice cookice;
 		cookice.nTraceID = nTraceID;
-
+		cookice.nSessionID = sGateMessageInfo.nSessionID;
+		cookice.nActorID = sGateMessageInfo.nActorID;
 		pCoreConnectionToService->send(eMT_GATE_FORWARD, &cookice, sizeof(cookice), sGateMessageInfo.pData, sGateMessageInfo.pData->nMessageSize);
 
 		return true;
 	}
 
-	bool CTransporter::send(const std::string& szServiceName, const SGateMessageInfo& sGateMessageInfo)
+	bool CTransporter::send(uint16_t nServiceID, const SGateMessageInfo& sGateMessageInfo)
 	{
 		DebugAstEx(sGateMessageInfo.pData != nullptr, false);
 
-		uint64_t nTraceID = CCoreServiceKitImpl::Inst()->getInvokerTrace()->getCurTraceID();
-		CCoreConnectionToService* pCoreConnectionToService = CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getCoreConnectionToService(szServiceName);
+		uint64_t nTraceID = CCoreServiceAppImpl::Inst()->getInvokerTrace()->getCurTraceID();
+		CCoreConnectionToService* pCoreConnectionToService = CCoreServiceAppImpl::Inst()->getCoreServiceProxy()->getCoreConnectionToService(nServiceID);
 		if (nullptr == pCoreConnectionToService)
 		{
-			CCoreServiceKitImpl::Inst()->getInvokerTrace()->addTraceExtraInfo("nullptr == pCoreConnectionToService");
+			CCoreServiceAppImpl::Inst()->getInvokerTrace()->addTraceExtraInfo("nullptr == pCoreConnectionToService");
 			return false;
 		}
-
 		
 		// 野割cookice
-		gate_cookice cookice;
+		gate_send_cookice cookice;
 		cookice.nSessionID = sGateMessageInfo.nSessionID;
 		cookice.nTraceID = nTraceID;
 
@@ -146,11 +132,11 @@ namespace core
 		return true;
 	}
 
-	bool CTransporter::broadcast(const std::string& szServiceName, const SGateBroadcastMessageInfo& sGateBroadcastMessageInfo)
+	bool CTransporter::broadcast(uint16_t nServiceID, const SGateBroadcastMessageInfo& sGateBroadcastMessageInfo)
 	{
 		DebugAstEx(sGateBroadcastMessageInfo.pData != nullptr && !sGateBroadcastMessageInfo.vecSessionID.empty(), false);
 
-		CCoreConnectionToService* pCoreConnectionToService = CCoreServiceKitImpl::Inst()->getCoreServiceProxy()->getCoreConnectionToService(szServiceName);
+		CCoreConnectionToService* pCoreConnectionToService = CCoreServiceAppImpl::Inst()->getCoreServiceProxy()->getCoreConnectionToService(nServiceID);
 		if (pCoreConnectionToService == nullptr)
 			return false;
 		
@@ -181,23 +167,10 @@ namespace core
 			return;
 		}
 
-		CCoreServiceKitImpl::Inst()->getInvokerTrace()->addTraceExtraInfo("wait response time out session_id: "UINT64FMT" service_name: %s", pResponseWaitInfo->nSessionID, pResponseWaitInfo->szServiceName.c_str());
+		CCoreServiceAppImpl::Inst()->getInvokerTrace()->addTraceExtraInfo("wait response time out session_id: "UINT64FMT, pResponseWaitInfo->nSessionID);
 
 		if (pResponseWaitInfo->err != nullptr)
-		{
-			uint64_t nCoroutineID = coroutine::start([&](uint64_t){ pResponseWaitInfo->err(eRRT_TIME_OUT); });
-			coroutine::resume(nCoroutineID, 0);
-		}
-		else
-		{
-			if (pResponseWaitInfo->nCoroutineID != 0)
-			{
-				coroutine::sendMessage(pResponseWaitInfo->nCoroutineID, reinterpret_cast<void*>(eRRT_TIME_OUT));
-				coroutine::sendMessage(pResponseWaitInfo->nCoroutineID, nullptr);
-				coroutine::sendMessage(pResponseWaitInfo->nCoroutineID, nullptr);
-				coroutine::resume(pResponseWaitInfo->nCoroutineID, 0);
-			}
-		}
+			pResponseWaitInfo->err(eRRT_TIME_OUT);
 
 		this->m_mapResponseWaitInfo.erase(iter);
 		SAFE_DELETE(pResponseWaitInfo);
@@ -219,5 +192,20 @@ namespace core
 			this->m_mapResponseWaitInfo.erase(iter);
 
 		return pResponseWaitInfo;
+	}
+
+	void CTransporter::addResponseWaitInfo(uint64_t nSessionID, uint64_t nTraceID)
+	{
+		auto iter = this->m_mapResponseWaitInfo.find(nSessionID);
+		DebugAst(iter == this->m_mapResponseWaitInfo.end());
+
+		SResponseWaitInfo* pResponseWaitInfo = new SResponseWaitInfo();
+		pResponseWaitInfo->callback = nullptr;
+		pResponseWaitInfo->nSessionID = nSessionID;
+		pResponseWaitInfo->nTraceID = nTraceID;
+		pResponseWaitInfo->tickTimeout.setCallback(std::bind(&CTransporter::onRequestMessageTimeout, this, std::placeholders::_1));
+		CBaseApp::Inst()->registerTicker(&pResponseWaitInfo->tickTimeout, CCoreServiceAppImpl::Inst()->getInvokeTimeout(), 0, nSessionID);
+
+		this->m_mapResponseWaitInfo[pResponseWaitInfo->nSessionID] = pResponseWaitInfo;
 	}
 }

@@ -7,33 +7,36 @@
 #include "libCoreCommon/base_app.h"
 #include "libCoreServiceKit/message_registry.h"
 #include "libCoreServiceKit/cluster_invoker.h"
-#include "libCoreServiceKit/core_service_kit.h"
+#include "libCoreServiceKit/core_service_app.h"
 
 #include "../common/test_message_define.h"
 
-void service_request_msg_callback1(const std::string szFromService, uint32_t nMessageType, core::message_header_ptr pMessage)
+void service_request_msg_callback1(uint16_t nFromServiceID, uint32_t nMessageType, core::CMessage pMessage)
 {
 	SServiceResponseMsg1 service_msg;
-	service_msg.nID = std::static_pointer_cast<const SServiceRequestMsg1>(pMessage)->nID;
-	service_msg.nClientTime = std::static_pointer_cast<const SServiceRequestMsg1>(pMessage)->nClientTime;
+	service_msg.nClientID = reinterpret_cast<const SServiceRequestMsg1*>(pMessage.get())->nClientID;
+	service_msg.nID = reinterpret_cast<const SServiceRequestMsg1*>(pMessage.get())->nID;
+	service_msg.nClientTime = reinterpret_cast<const SServiceRequestMsg1*>(pMessage.get())->nClientTime;
 
 	core::CClusterInvoker::Inst()->response(&service_msg);
 }
 
-void service_request_msg_callback2(const std::string szFromService, uint32_t nMessageType, core::message_header_ptr pMessage)
+void service_request_msg_callback2(uint16_t nFromServiceID, uint32_t nMessageType, core::CMessage pMessage)
 {
 	SServiceResponseMsg2 service_msg;
-	service_msg.nID = std::static_pointer_cast<const SServiceRequestMsg2>(pMessage)->nID;
-	service_msg.nClientTime = std::static_pointer_cast<const SServiceRequestMsg2>(pMessage)->nClientTime;
+	service_msg.nClientID = reinterpret_cast<const SServiceRequestMsg2*>(pMessage.get())->nClientID;
+	service_msg.nID = reinterpret_cast<const SServiceRequestMsg2*>(pMessage.get())->nID;
+	service_msg.nClientTime = reinterpret_cast<const SServiceRequestMsg2*>(pMessage.get())->nClientTime;
 
 	core::CClusterInvoker::Inst()->response(&service_msg);
 }
 
-void service_request_msg_callback3(const std::string szFromService, uint32_t nMessageType, core::message_header_ptr pMessage)
+void service_request_msg_callback3(uint16_t nFromServiceID, uint32_t nMessageType, core::CMessage pMessage)
 {
 	SServiceResponseMsg3 service_msg;
-	service_msg.nID = std::static_pointer_cast<const SServiceRequestMsg3>(pMessage)->nID;
-	service_msg.nClientTime = std::static_pointer_cast<const SServiceRequestMsg3>(pMessage)->nClientTime;
+	service_msg.nClientID = reinterpret_cast<const SServiceRequestMsg3*>(pMessage.get())->nClientID;
+	service_msg.nID = reinterpret_cast<const SServiceRequestMsg3*>(pMessage.get())->nID;
+	service_msg.nClientTime = reinterpret_cast<const SServiceRequestMsg3*>(pMessage.get())->nClientTime;
 
 	core::CClusterInvoker::Inst()->response(&service_msg);
 }
@@ -53,7 +56,7 @@ CTestServiceApp2* CTestServiceApp2::Inst()
 
 bool CTestServiceApp2::onInit()
 {
-	core::CCoreServiceKit::Inst()->init();
+	CCoreServiceApp::onInit();
 	core::CMessageRegistry::Inst()->registerServiceCallback(eServiceRequestMsg1, &service_request_msg_callback1);
 	core::CMessageRegistry::Inst()->registerServiceCallback(eServiceRequestMsg2, &service_request_msg_callback2);
 	core::CMessageRegistry::Inst()->registerServiceCallback(eServiceRequestMsg3, &service_request_msg_callback3);

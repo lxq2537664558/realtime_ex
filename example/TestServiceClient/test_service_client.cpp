@@ -33,6 +33,7 @@ public:
 	CConnectToService()
 	{
 		nNextPacketID = 0;
+		nClientID = 0;
 	}
 
 	virtual ~CConnectToService() 
@@ -50,7 +51,7 @@ public:
 	virtual void onConnect()
 	{
 		PrintDebug("onConnect");
-
+		this->nClientID = (++g_nClientID);
 		this->requestMsg(1);
 	}
 	
@@ -62,7 +63,8 @@ public:
 	virtual bool onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize)
 	{
 		const SClientResponseMsg* pMsg = static_cast<const SClientResponseMsg*>(pData);
-		PrintInfo("onDispatch sync: %s id: %d cost: %d", pMsg->nSync ? "true" : "false", pMsg->nID, (uint32_t)(base::getGmtTime() - pMsg->nClientTime));
+		if (pMsg->nClientID == 1)
+			PrintInfo("onDispatch sync: %s id: %d cost: %d", pMsg->nSync ? "true" : "false", pMsg->nID, (uint32_t)(base::getGmtTime() - pMsg->nClientTime));
 		this->requestMsg(pMsg->nID + 1);
 		return true;
 	}
@@ -71,7 +73,8 @@ private:
 	void requestMsg(uint32_t nID)
 	{
 		SClientRequestMsg msg;
-		msg.nSync = 1;
+		msg.nSync = 0;
+		msg.nClientID = nClientID;
 		msg.nID = nID;
 		msg.nClientTime = base::getGmtTime();
 		this->send(eMT_CLIENT, &msg, sizeof(msg));
@@ -81,10 +84,15 @@ private:
 	}
 
 public:
+	uint32_t	nClientID;
 	uint64_t	nID;
 	uint32_t	nNextPacketID;
 	uint64_t	nSendTime;
+
+	static uint32_t g_nClientID;
 };
+
+uint32_t CConnectToService::g_nClientID = 0;
 
 class CServiceConnectionFactory :
 	public core::CBaseConnectionFactory
@@ -128,7 +136,7 @@ bool CTestServiceClientApp::onInit()
 {
 	CServiceConnectionFactory* pServiceConnectionFactory = new CServiceConnectionFactory();
 	this->getBaseConnectionMgr()->setBaseConnectionFactory(_BASE_CONNECTION_TYPE_BEGIN, pServiceConnectionFactory);
-	for (size_t i = 0; i < 1; ++i)
+	for (size_t i = 0; i < 100; ++i)
 	{
 		this->getBaseConnectionMgr()->connect("192.168.222.131", 8000, _BASE_CONNECTION_TYPE_BEGIN, "", 0, 0, default_client_message_parser);
 	}
