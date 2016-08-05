@@ -20,7 +20,7 @@
     <ClInclude Include="..\..\inc\libCoreCommon\coroutine.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\message.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\ticker.h" />
-    <ClInclude Include="base_app_impl.h" />
+    <ClInclude Include="core_app.h" />
     <ClInclude Include="core_connection.h" />
     <ClInclude Include="core_connection_mgr.h" />
     <ClInclude Include="core_connection_monitor.h" />
@@ -40,7 +40,7 @@
     <ClCompile Include="base_connection_mgr.cpp" />
     <ClCompile Include="base_app.cpp" />
     <ClCompile Include="base_object.cpp" />
-    <ClCompile Include="base_app_impl.cpp" />
+    <ClCompile Include="core_app.cpp" />
     <ClCompile Include="core_connection.cpp" />
     <ClCompile Include="core_connection_mgr.cpp" />
     <ClCompile Include="core_connection_monitor.cpp" />

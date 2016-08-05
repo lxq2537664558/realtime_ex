@@ -13,12 +13,12 @@ namespace core
 	/**
 	@brief: 核心框架类，单例，主要管理游戏中各个管理器
 	*/
-	class CBaseAppImpl :
-		public base::CSingleton<CBaseAppImpl>
+	class CCoreApp :
+		public base::CSingleton<CCoreApp>
 	{
 	public:
-		CBaseAppImpl();
-		~CBaseAppImpl();
+		CCoreApp();
+		~CCoreApp();
 
 		/**
 		@brief: 启动框架
@@ -82,6 +82,10 @@ namespace core
 		@brief: 增加QPS
 		*/
 		void				incQPS();
+		/*
+		@brief: 标记繁忙，这样逻辑线程可以不等待消息队列的数据
+		*/
+		void				busy();
 
 	private:
 		bool				onInit();
@@ -106,5 +110,6 @@ namespace core
 		bool					m_bMarkQuit;	// 这个参数作用是只触发一次onQuit
 		uint32_t				m_nQPS;
 		CTicker					m_tickerQPS;
+		bool					m_bBusy;
 	};
 }

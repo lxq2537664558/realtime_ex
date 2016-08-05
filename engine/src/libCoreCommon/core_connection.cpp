@@ -2,7 +2,7 @@
 #include "core_connection.h"
 #include "core_connection_mgr.h"
 #include "base_connection_mgr.h"
-#include "base_app_impl.h"
+#include "core_app.h"
 #include "base_app.h"
 #include "core_common.h"
 #include "base_connection.h"
@@ -140,7 +140,7 @@ namespace core
 		sMessagePacket.pData = pContext;
 		sMessagePacket.nDataSize = sizeof(SMCT_NOTIFY_SOCKET_CONNECT);
 
-		CBaseAppImpl::Inst()->getMessageQueue()->send(sMessagePacket);
+		CCoreApp::Inst()->getMessageQueue()->send(sMessagePacket);
 
 		this->m_nState = eCCS_Connectting;
 	}
@@ -167,7 +167,7 @@ namespace core
 		sMessagePacket.pData = pContext;
 		sMessagePacket.nDataSize = sizeof(SMCT_NOTIFY_SOCKET_DISCONNECT);
 
-		CBaseAppImpl::Inst()->getMessageQueue()->send(sMessagePacket);
+		CCoreApp::Inst()->getMessageQueue()->send(sMessagePacket);
 
 		this->m_nState = eCCS_Disconnectting;
 		this->m_pNetConnecter = nullptr;
@@ -179,7 +179,7 @@ namespace core
 		if (nMessageType == eMT_HEARTBEAT)
 			return;
 
-		CBaseAppImpl::Inst()->incQPS();
+		CCoreApp::Inst()->incQPS();
 
 		this->m_monitor.onRecv(nSize);
 
@@ -195,7 +195,7 @@ namespace core
 		sMessagePacket.pData = pContext;
 		sMessagePacket.nDataSize = sizeof(SMCT_RECV_SOCKET_DATA);
 
-		CBaseAppImpl::Inst()->getMessageQueue()->send(sMessagePacket);
+		CCoreApp::Inst()->getMessageQueue()->send(sMessagePacket);
 	}
 
 	void CCoreConnection::onHeartbeat()
@@ -203,7 +203,7 @@ namespace core
 		if (this->m_bHeartbeat)
 			return;
 		
-		if (this->m_nSendHeartbeatCount > CBaseAppImpl::Inst()->getHeartbeatLimit())
+		if (this->m_nSendHeartbeatCount > CCoreApp::Inst()->getHeartbeatLimit())
 		{
 			this->shutdown(true, "heart beat time out");
 			return;

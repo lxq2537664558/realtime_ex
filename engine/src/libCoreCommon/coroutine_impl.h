@@ -13,13 +13,6 @@
 
 namespace core
 {
-	enum ECoroutineYieldType
-	{
-		eCYT_Normal,
-		eCYT_Dead,
-		eCYT_Sleep,
-	};
-
 	class CCoroutineMgr;
 	class CCoroutineImpl :
 		public base::noncopyable
@@ -28,23 +21,28 @@ namespace core
 		CCoroutineImpl();
 		~CCoroutineImpl();
 
-		bool		init(uint64_t nID, std::function<void(uint64_t)> fn);
-		uint64_t	yield(ECoroutineYieldType eType);
+		bool		init(uint64_t nID, std::function<void(uint64_t)> callback);
+		uint64_t	yield(bool bNormal);
 		void		resume(uint64_t nContext);
 		uint32_t	getState() const;
 		void		setState(uint32_t nState);
 		uint64_t	getCoroutineID() const;
 		void		sendMessage(void* pData);
 		void*		recvMessage();
+
+		void		setCallback(std::function<void(uint64_t)> callback);
 		
 	private:
 		void		saveStack();
 
+#ifdef _WIN32
 		static void	onCallback(void* pParm);
-
+#else
+		static void	onCallback(uint32_t nParm1, uint32_t nParm2);
+#endif
 	private:
 		uint64_t						m_nID;
-		std::function<void(uint64_t)>	m_fn;
+		std::function<void(uint64_t)>	m_callback;
 		uint64_t						m_nContext;
 #ifdef _WIN32
 		void*							m_hHandle;

@@ -8,13 +8,8 @@
 
 namespace core
 {
-
-	class CClusterInvoker;
-	class CActor;
 	class CResponseFuture
 	{
-		friend class CClusterInvoker;
-		friend class CActor;
 	public:
 		CResponseFuture();
 		~CResponseFuture();
@@ -23,6 +18,9 @@ namespace core
 		void			then(InvokeCallback callback, InvokeErrCallback err);
 		CResponseFuture	then_r(InvokeCallbackEx callback);
 		CResponseFuture	then_r(InvokeCallbackEx callback, InvokeErrCallback err);
+
+		void			setSessionID(uint64_t nSessionID);
+		void			setActorID(uint64_t nActorID);
 
 	private:
 		uint64_t	m_nSessionID;

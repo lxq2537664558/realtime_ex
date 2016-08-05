@@ -1,7 +1,9 @@
 #include "stdafx.h"
-#include "actor.h"
+#include "base_actor.h"
+#include "base_actor_impl.h"
 #include "core_service_app_impl.h"
 #include "cluster_invoker.h"
+#include "base_actor_factory.h"
 
 #include "libCoreCommon/coroutine.h"
 
@@ -9,22 +11,23 @@
 
 namespace core
 {
-	CActor::CActor()
+	CBaseActor::CBaseActor()
+		: m_pBaseActorImpl(nullptr)
 	{
-		this->m_pActorBase = CCoreServiceAppImpl::Inst()->getScheduler()->createActorBase(this);
 	}
 
-	CActor::~CActor()
+	CBaseActor::~CBaseActor()
 	{
-		CCoreServiceAppImpl::Inst()->getScheduler()->destroyActorBase(this->m_pActorBase);
+		if (this->m_pBaseActorImpl != nullptr)
+			CCoreServiceAppImpl::Inst()->getScheduler()->destroyBaseActor(this->m_pBaseActorImpl);
 	}
 
-	uint64_t CActor::getID() const
+	uint64_t CBaseActor::getID() const
 	{
-		return this->m_pActorBase->getID();
+		return this->m_pBaseActorImpl->getID();
 	}
 
-	bool CActor::invoke(uint64_t nID, const message_header* pData)
+	bool CBaseActor::invoke(uint64_t nID, const message_header* pData)
 	{
 		SRequestMessageInfo sRequestMessageInfo;
 		sRequestMessageInfo.pData = const_cast<message_header*>(pData);
@@ -36,7 +39,7 @@ namespace core
 		return CCoreServiceAppImpl::Inst()->getScheduler()->invoke(sRequestMessageInfo);
 	}
 
-	uint32_t CActor::invoke(uint64_t nID, const message_header* pData, CMessage& pResultData)
+	uint32_t CBaseActor::invoke(uint64_t nID, const message_header* pData, CMessage& pResultData)
 	{
 		SRequestMessageInfo sRequestMessageInfo;
 		sRequestMessageInfo.pData = const_cast<message_header*>(pData);
@@ -48,7 +51,7 @@ namespace core
 		if (!CCoreServiceAppImpl::Inst()->getScheduler()->invoke(sRequestMessageInfo))
 			return eRRT_ERROR;
 
-		this->m_pActorBase->addResponseWaitInfo(sRequestMessageInfo.nSessionID, 0, coroutine::getCurrentID());
+		this->m_pBaseActorImpl->addResponseWaitInfo(sRequestMessageInfo.nSessionID, 0, coroutine::getCurrentID());
 
 		coroutine::yield();
 
@@ -60,7 +63,7 @@ namespace core
 		return nRet;
 	}
 
-	bool CActor::invoke_r(uint64_t nID, const message_header* pData, CResponseFuture& sResponseFuture)
+	bool CBaseActor::invoke_r(uint64_t nID, const message_header* pData, CResponseFuture& sResponseFuture)
 	{
 		SRequestMessageInfo sRequestMessageInfo;
 		sRequestMessageInfo.pData = const_cast<message_header*>(pData);
@@ -72,15 +75,15 @@ namespace core
 		if (!CCoreServiceAppImpl::Inst()->getScheduler()->invoke(sRequestMessageInfo))
 			return false;
 
-		this->m_pActorBase->addResponseWaitInfo(sRequestMessageInfo.nSessionID, 0, 0);
+		this->m_pBaseActorImpl->addResponseWaitInfo(sRequestMessageInfo.nSessionID, 0, 0);
 
-		sResponseFuture.m_nSessionID = sRequestMessageInfo.nSessionID;
-		sResponseFuture.m_nActorID = this->getID();
+		sResponseFuture.setSessionID(sRequestMessageInfo.nSessionID);
+		sResponseFuture.setActorID(this->getID());
 
 		return true;
 	}
 
-	bool CActor::invoke_r(uint64_t nID, const message_header* pData, InvokeCallback& callback)
+	bool CBaseActor::invoke_r(uint64_t nID, const message_header* pData, InvokeCallback& callback)
 	{
 		SRequestMessageInfo sRequestMessageInfo;
 		sRequestMessageInfo.pData = const_cast<message_header*>(pData);
@@ -92,9 +95,9 @@ namespace core
 		if (!CCoreServiceAppImpl::Inst()->getScheduler()->invoke(sRequestMessageInfo))
 			return false;
 
-		this->m_pActorBase->addResponseWaitInfo(sRequestMessageInfo.nSessionID, 0, 0);
+		this->m_pBaseActorImpl->addResponseWaitInfo(sRequestMessageInfo.nSessionID, 0, 0);
 
-		SResponseWaitInfo* pResponseWaitInfo = this->m_pActorBase->getResponseWaitInfo(sRequestMessageInfo.nSessionID, false);
+		SResponseWaitInfo* pResponseWaitInfo = this->m_pBaseActorImpl->getResponseWaitInfo(sRequestMessageInfo.nSessionID, false);
 		DebugAstEx(nullptr != pResponseWaitInfo, false);
 		
 		pResponseWaitInfo->callback = [callback](SResponseWaitInfo*, uint8_t nMessageType, CMessage pMessage)->void
@@ -105,17 +108,17 @@ namespace core
 		return true;
 	}
 
-	SActorSessionInfo CActor::getActorSessionInfo() const
+	SActorSessionInfo CBaseActor::getActorSessionInfo() const
 	{
-		return this->m_pActorBase->getActorSessionInfo();
+		return this->m_pBaseActorImpl->getActorSessionInfo();
 	}
 
-	void CActor::response(const message_header* pData)
+	void CBaseActor::response(const message_header* pData)
 	{
 		this->response(this->getActorSessionInfo(), pData);
 	}
 
-	void CActor::response(const SActorSessionInfo& sActorSessionInfo, const message_header* pData)
+	void CBaseActor::response(const SActorSessionInfo& sActorSessionInfo, const message_header* pData)
 	{
 		SResponseMessageInfo sResponseMessageInfo;
 		sResponseMessageInfo.nSessionID = sActorSessionInfo.nSessionID;
@@ -127,18 +130,60 @@ namespace core
 		bool bRet = CCoreServiceAppImpl::Inst()->getScheduler()->response(sResponseMessageInfo);
 	}
 
-	uint16_t CActor::getServiceID(uint64_t nActorID)
+	void CBaseActor::registerCallback(uint16_t nMessageID, ActorCallback callback)
+	{
+		this->m_pBaseActorImpl->registerCallback(nMessageID, callback);
+	}
+
+	void CBaseActor::registerGateForwardCallback(uint16_t nMessageID, ActorGateForwardCallback callback)
+	{
+
+	}
+
+	uint16_t CBaseActor::getServiceID(uint64_t nActorID)
 	{
 		return (uint16_t)(nActorID >> _REMOTE_ACTOR_BIT);
 	}
 
-	uint64_t CActor::getLocalActorID(uint64_t nActorID)
+	uint64_t CBaseActor::getLocalActorID(uint64_t nActorID)
 	{
 		return nActorID & 0x0000ffffffffffff;
 	}
 
-	uint64_t CActor::getRemoteActorID(uint16_t nServiceID, uint64_t nActorID)
+	uint64_t CBaseActor::makeRemoteActorID(uint16_t nServiceID, uint64_t nActorID)
 	{
 		return (uint64_t)nServiceID << _REMOTE_ACTOR_BIT | nActorID;
+	}
+
+	CBaseActor* CBaseActor::createActor(void* pContext, CBaseActorFactory* pBaseActorFactory)
+	{
+		DebugAstEx(pBaseActorFactory != nullptr, nullptr);
+
+		CBaseActor* pBaseActor = pBaseActorFactory->createBaseActor();
+		pBaseActor->m_pBaseActorImpl = CCoreServiceAppImpl::Inst()->getScheduler()->createBaseActor(pBaseActor);
+		if (pBaseActor->m_pBaseActorImpl == nullptr)
+		{
+			SAFE_DELETE(pBaseActor);
+			return nullptr;
+		}
+
+		if (!pBaseActor->onInit(pContext))
+		{
+			SAFE_DELETE(pBaseActor);
+			return nullptr;
+		}
+
+		PrintInfo("create actor id: "UINT64FMT, pBaseActor->getID());
+
+		return pBaseActor;
+	}
+
+	void CBaseActor::release()
+	{
+		this->onDestroy();
+
+		PrintInfo("destroy actor id: "UINT64FMT, this->getID());
+
+		delete this;
 	}
 }

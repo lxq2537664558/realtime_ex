@@ -21,12 +21,14 @@ namespace core
 		char*			getMainStack() const;
 		uint32_t		getMainStackSize() const;
 
-		CCoroutineImpl*	startCoroutine(std::function<void(uint64_t)> fn);
+		CCoroutineImpl*	createCoroutine(std::function<void(uint64_t)> callback);
 		CCoroutineImpl*	getCoroutine(uint64_t nID) const;
-		void			recycleCoroutine(CCoroutineImpl* pCoroutineImpl);
+		void			addRecycleCoroutine(CCoroutineImpl* pCoroutineImpl);
 
 		void			setCurrentCoroutine(CCoroutineImpl* pCoroutineImpl);
 		CCoroutineImpl*	getCurrentCoroutine() const;
+
+		void			update();
 		
 	private:
 		uint64_t								m_nNextCoroutineID;

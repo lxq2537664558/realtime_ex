@@ -3,7 +3,7 @@
 #include "core_common.h"
 #include "core_connection.h"
 #include "core_connection_mgr.h"
-#include "base_app_impl.h"
+#include "core_app.h"
 #include "message_command.h"
 
 #include "libBaseCommon/debug_helper.h"
@@ -112,7 +112,7 @@ namespace core
 			sMessagePacket.nType = eMCT_TIMER;
 			sMessagePacket.pData = nullptr;
 			sMessagePacket.nDataSize = 0;
-			CBaseAppImpl::Inst()->getMessageQueue()->send(sMessagePacket);
+			CCoreApp::Inst()->getMessageQueue()->send(sMessagePacket);
 
 			this->m_pCoreConnectionMgr->onTimer(nCurTime);
 		}
@@ -311,7 +311,7 @@ namespace core
 		int64_t nEndSamplingTime = base::getProcessPassTime();
 		this->m_nTotalSamplingTime = this->m_nTotalSamplingTime + (uint32_t)(nEndSamplingTime - nBeginSamplingTime);
 
-		if (this->m_nTotalSamplingTime / 1000 >= CBaseAppImpl::Inst()->getSamplingTime())
+		if (this->m_nTotalSamplingTime / 1000 >= CCoreApp::Inst()->getSamplingTime())
 		{
 			base::profiling(this->m_nTotalSamplingTime);
 			this->m_nTotalSamplingTime = 0;

@@ -10,7 +10,7 @@
 namespace core
 {
 	class CBaseConnection;
-	class CBaseAppImpl;
+	class CCoreApp;
 	class CBaseConnectionFactory;
 	/**
 	@brief: 基础连接管理类，主要管理基础连接以及发起连接跟发起监听
@@ -19,7 +19,7 @@ namespace core
 		public base::noncopyable
 	{
 		friend class CBaseConnection;
-		friend class CBaseAppImpl;
+		friend class CCoreApp;
 
 	public:
 		CBaseConnectionMgr();

@@ -62,13 +62,15 @@ namespace core
 
 	class CResponseFuture;
 	
-	typedef std::function<void(uint8_t, CMessage)>								InvokeCallback;			// RPC消息响应回调函数类型
-	typedef std::function<CResponseFuture(uint8_t, CMessage)>					InvokeCallbackEx;		// RPC消息响应回调函数类型
-	typedef std::function<void(uint32_t)>										InvokeErrCallback;		// RPC错误响应回调函数类型
-	typedef std::function<void(uint16_t, uint8_t, CMessage)>					ServiceCallback;		// 服务消息处理函数类型(这里服务名字必须是值，不能是引用，因为有协程)
-	typedef std::function<void(SClientSessionInfo, uint8_t, CMessage)>			GateForwardCallback;	// 经网关服务转发的客户端消息处理函数类型
-	typedef std::function<void(uint64_t, CMessage)>								ClientCallback;			// 客户端消息处理函数类型
-	typedef std::function<void(uint16_t, uint8_t, const void*, uint16_t)>		ServiceGlobalFilter;	// 全局的消息过滤器类型
+	typedef std::function<void(uint8_t, CMessage)>								InvokeCallback;				// RPC消息响应回调函数类型
+	typedef std::function<CResponseFuture(uint8_t, CMessage)>					InvokeCallbackEx;			// RPC消息响应回调函数类型
+	typedef std::function<void(uint32_t)>										InvokeErrCallback;			// RPC错误响应回调函数类型
+	typedef std::function<void(uint16_t, uint8_t, CMessage)>					ServiceCallback;			// 服务消息处理函数类型(这里服务名字必须是值，不能是引用，因为有协程)
+	typedef std::function<void(SClientSessionInfo, uint8_t, CMessage)>			GateForwardCallback;		// 经网关服务转发的客户端消息处理函数类型
+	typedef std::function<void(uint64_t, CMessage)>								ClientCallback;				// 客户端消息处理函数类型
+	typedef std::function<void(uint16_t, uint8_t, const void*, uint16_t)>		ServiceGlobalFilter;		// 全局的消息过滤器类型
+	typedef std::function<void(uint64_t, CMessage)>								ActorCallback;				// actor消息处理函数类型
+	typedef std::function<void(SClientSessionInfo, CMessage)>					ActorGateForwardCallback;	// actor消息处理函数类型
 
 #pragma pack(push,1)
 	struct gate_forward_cookice

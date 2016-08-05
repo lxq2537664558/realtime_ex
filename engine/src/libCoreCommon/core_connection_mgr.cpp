@@ -7,7 +7,7 @@
 #include "base_app.h"
 #include "message_command.h"
 #include "logic_message_queue.h"
-#include "base_app_impl.h"
+#include "core_app.h"
 
 #include "libBaseCommon/base_time.h"
 #include "libBaseCommon/logger.h"
@@ -37,7 +37,7 @@ namespace core
 		sMessagePacket.pData = pContext;
 		sMessagePacket.nDataSize = sizeof(SMCT_NOTIFY_SOCKET_CONNECT_REFUSE);
 
-		CBaseAppImpl::Inst()->getMessageQueue()->send(sMessagePacket);
+		CCoreApp::Inst()->getMessageQueue()->send(sMessagePacket);
 
 		pCoreConnectionMgr->delActiveWaitConnecterHandler(this);
 	}

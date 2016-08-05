@@ -7,18 +7,8 @@
 
 namespace core
 {
-	/**
-	@brief: 集群服务调用器
-	*/
-	class CClusterInvoker :
-		public base::CSingleton<CClusterInvoker>
+	namespace cluster_invoker
 	{
-	public:
-		CClusterInvoker();
-		~CClusterInvoker();
-
-		bool				init();
-
 		/**
 		@brief: 调用指定远程服务的消息，远程服务不用返回消息
 		*/
@@ -55,7 +45,7 @@ namespace core
 		/**
 		@brief: 获取当前服务session信息
 		*/
-		SServiceSessionInfo	getServiceSessionInfo() const;
+		SServiceSessionInfo	getServiceSessionInfo();
 		//=============================上面是对集群内部服务之间的消息发送函数=========================//
 
 		//=================================下面是对客户端的消息处理函数==============================//

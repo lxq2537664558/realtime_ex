@@ -33,7 +33,7 @@ namespace core
 		SResponseWaitInfo* pResponseWaitInfo = nullptr;
 		if (this->m_nActorID != 0)
 		{
-			CActorBase* pActorBase = CCoreServiceAppImpl::Inst()->getScheduler()->getActorBase(this->m_nActorID);
+			CBaseActorImpl* pActorBase = CCoreServiceAppImpl::Inst()->getScheduler()->getBaseActor(this->m_nActorID);
 			if (nullptr == pActorBase)
 			{
 				PrintWarning("CResponseFuture::then error invalid actor id: "UINT64FMT" session id: "UINT64FMT, this->m_nActorID, this->m_nSessionID);
@@ -86,7 +86,7 @@ namespace core
 		SResponseWaitInfo* pResponseWaitInfo = nullptr;
 		if (this->m_nActorID != 0)
 		{
-			CActorBase* pActorBase = CCoreServiceAppImpl::Inst()->getScheduler()->getActorBase(this->m_nActorID);
+			CBaseActorImpl* pActorBase = CCoreServiceAppImpl::Inst()->getScheduler()->getBaseActor(this->m_nActorID);
 			if (nullptr == pActorBase)
 			{
 				PrintWarning("CResponseFuture::then_r error invalid actor id: "UINT64FMT" session id: "UINT64FMT, this->m_nActorID, this->m_nSessionID);
@@ -111,7 +111,7 @@ namespace core
 			SResponseWaitInfo* pNextResponseWaitInfo = nullptr;
 			if (sResponsePromise.m_nActorID != 0)
 			{
-				CActorBase* pActorBase = CCoreServiceAppImpl::Inst()->getScheduler()->getActorBase(sResponsePromise.m_nActorID);
+				CBaseActorImpl* pActorBase = CCoreServiceAppImpl::Inst()->getScheduler()->getBaseActor(sResponsePromise.m_nActorID);
 				if (nullptr == pActorBase)
 				{
 					PrintWarning("CResponseFuture::then_r error invalid actor id: "UINT64FMT" session id: "UINT64FMT, sResponsePromise.m_nActorID, sResponsePromise.m_nSessionID);
@@ -154,5 +154,15 @@ namespace core
 
 		this->m_nSessionID = 0;
 		return sResponsePromise;
+	}
+
+	void CResponseFuture::setSessionID(uint64_t nSessionID)
+	{
+		this->m_nSessionID = nSessionID;
+	}
+
+	void CResponseFuture::setActorID(uint64_t nActorID)
+	{
+		this->m_nActorID = nActorID;
 	}
 }

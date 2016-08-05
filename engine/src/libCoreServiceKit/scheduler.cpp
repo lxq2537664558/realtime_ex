@@ -1,9 +1,8 @@
 #include "stdafx.h"
 #include "scheduler.h"
 #include "core_service_app_impl.h"
-#include "message_registry.h"
 #include "message_dispatcher.h"
-#include "actor.h"
+#include "base_actor.h"
 
 #include "libCoreCommon/base_app.h"
 #include "libCoreCommon/coroutine.h"
@@ -21,7 +20,7 @@ static bool actor_message_forward(uint16_t nFromServiceID, uint8_t nMessageType,
 
 		if (pCookice->nToActorID != 0)
 		{
-			core::CActorBase* pActorBase = core::CCoreServiceAppImpl::Inst()->getScheduler()->getActorBase(pCookice->nToActorID);
+			core::CBaseActorImpl* pActorBase = core::CCoreServiceAppImpl::Inst()->getScheduler()->getBaseActor(pCookice->nToActorID);
 			if (NULL == pActorBase)
 				return true;
 			
@@ -32,7 +31,7 @@ static bool actor_message_forward(uint16_t nFromServiceID, uint8_t nMessageType,
 			sMessagePacket.pData = const_cast<void*>(pData);
 			pActorBase->getChannel()->send(sMessagePacket);
 
-			core::CCoreServiceAppImpl::Inst()->getScheduler()->addWorkActorBase(pActorBase);
+			core::CCoreServiceAppImpl::Inst()->getScheduler()->addWorkBaseActor(pActorBase);
 
 			return false;
 		}
@@ -45,7 +44,7 @@ static bool actor_message_forward(uint16_t nFromServiceID, uint8_t nMessageType,
 
 		if (pCookice->nActorID != 0)
 		{
-			core::CActorBase* pActorBase = core::CCoreServiceAppImpl::Inst()->getScheduler()->getActorBase(pCookice->nActorID);
+			core::CBaseActorImpl* pActorBase = core::CCoreServiceAppImpl::Inst()->getScheduler()->getBaseActor(pCookice->nActorID);
 			if (NULL == pActorBase)
 				return true;
 
@@ -56,7 +55,7 @@ static bool actor_message_forward(uint16_t nFromServiceID, uint8_t nMessageType,
 			sMessagePacket.pData = const_cast<void*>(pData);
 			pActorBase->getChannel()->send(sMessagePacket);
 
-			core::CCoreServiceAppImpl::Inst()->getScheduler()->addWorkActorBase(pActorBase);
+			core::CCoreServiceAppImpl::Inst()->getScheduler()->addWorkBaseActor(pActorBase);
 
 			return false;
 		}
@@ -69,7 +68,7 @@ static bool actor_message_forward(uint16_t nFromServiceID, uint8_t nMessageType,
 
 		if (pCookice->nActorID != 0)
 		{
-			core::CActorBase* pActorBase = core::CCoreServiceAppImpl::Inst()->getScheduler()->getActorBase(pCookice->nActorID);
+			core::CBaseActorImpl* pActorBase = core::CCoreServiceAppImpl::Inst()->getScheduler()->getBaseActor(pCookice->nActorID);
 			if (NULL == pActorBase)
 				return true;
 
@@ -80,7 +79,7 @@ static bool actor_message_forward(uint16_t nFromServiceID, uint8_t nMessageType,
 			sMessagePacket.pData = const_cast<void*>(pData);
 			pActorBase->getChannel()->send(sMessagePacket);
 			
-			core::CCoreServiceAppImpl::Inst()->getScheduler()->addWorkActorBase(pActorBase);
+			core::CCoreServiceAppImpl::Inst()->getScheduler()->addWorkBaseActor(pActorBase);
 
 			return false;
 		}
@@ -108,10 +107,10 @@ namespace core
 		return true;
 	}
 
-	CActorBase* CScheduler::getActorBase(uint64_t nID) const
+	CBaseActorImpl* CScheduler::getBaseActor(uint64_t nID) const
 	{
-		auto iter = this->m_mapActorBase.find(nID);
-		if (iter == this->m_mapActorBase.end())
+		auto iter = this->m_mapBaseActor.find(nID);
+		if (iter == this->m_mapBaseActor.end())
 			return nullptr;
 
 		return iter->second;
@@ -119,22 +118,22 @@ namespace core
 
 	bool CScheduler::invoke(const SRequestMessageInfo& sRequestMessageInfo)
 	{
-		auto iter = this->m_mapActorBase.find(sRequestMessageInfo.nFromActorID);
-		if (iter == this->m_mapActorBase.end())
+		auto iter = this->m_mapBaseActor.find(sRequestMessageInfo.nFromActorID);
+		if (iter == this->m_mapBaseActor.end())
 			return false;
 
-		CActorBase* pFromActorBase = iter->second;
-		DebugAstEx(pFromActorBase != nullptr, false);
+		CBaseActorImpl* pFromBaseActorImpl = iter->second;
+		DebugAstEx(pFromBaseActorImpl != nullptr, false);
 
-		uint16_t nServiceID = CActor::getServiceID(sRequestMessageInfo.nToActorID);
+		uint16_t nServiceID = CBaseActor::getServiceID(sRequestMessageInfo.nToActorID);
 		if (nServiceID == 0)
 		{
-			auto iter = this->m_mapActorBase.find(sRequestMessageInfo.nToActorID);
-			if (iter == this->m_mapActorBase.end())
+			auto iter = this->m_mapBaseActor.find(sRequestMessageInfo.nToActorID);
+			if (iter == this->m_mapBaseActor.end())
 				return false;
 
-			CActorBase* pToActorBase = iter->second;
-			DebugAstEx(pToActorBase != nullptr, false);
+			CBaseActorImpl* pToBaseActorImpl = iter->second;
+			DebugAstEx(pToBaseActorImpl != nullptr, false);
 
 			char* pData = new char[sizeof(request_cookice) + sRequestMessageInfo.pData->nMessageSize];
 			// Ìî³äcookice
@@ -152,31 +151,31 @@ namespace core
 			sMessagePacket.nDataSize = sRequestMessageInfo.pData->nMessageSize + sizeof(request_cookice);
 			sMessagePacket.pData = pData;
 
-			pToActorBase->getChannel()->send(sMessagePacket);
+			pToBaseActorImpl->getChannel()->send(sMessagePacket);
 
-			this->m_mapWorkActorBase[pToActorBase->getID()] = pToActorBase;
+			this->m_mapWorkBaseActor[pToBaseActorImpl->getID()] = pToBaseActorImpl;
 
 			return true;
 		}
 		else
 		{
-			const_cast<SRequestMessageInfo&>(sRequestMessageInfo).nToActorID = CActor::getLocalActorID(sRequestMessageInfo.nToActorID);
-			const_cast<SRequestMessageInfo&>(sRequestMessageInfo).nFromActorID = CActor::getRemoteActorID(CCoreServiceAppImpl::Inst()->getServiceBaseInfo().nID, sRequestMessageInfo.nFromActorID);
+			const_cast<SRequestMessageInfo&>(sRequestMessageInfo).nToActorID = CBaseActor::getLocalActorID(sRequestMessageInfo.nToActorID);
+			const_cast<SRequestMessageInfo&>(sRequestMessageInfo).nFromActorID = CBaseActor::makeRemoteActorID(CCoreServiceAppImpl::Inst()->getServiceBaseInfo().nID, sRequestMessageInfo.nFromActorID);
 			return CCoreServiceAppImpl::Inst()->getTransporter()->invoke(nServiceID, sRequestMessageInfo);
 		}
 	}
 
 	bool CScheduler::response(const SResponseMessageInfo& sResponseMessageInfo)
 	{
-		uint16_t nServiceID = CActor::getServiceID(sResponseMessageInfo.nToActorID);
+		uint16_t nServiceID = CBaseActor::getServiceID(sResponseMessageInfo.nToActorID);
 		if (nServiceID == 0)
 		{
-			auto iter = this->m_mapActorBase.find(sResponseMessageInfo.nToActorID);
-			if (iter == this->m_mapActorBase.end())
+			auto iter = this->m_mapBaseActor.find(sResponseMessageInfo.nToActorID);
+			if (iter == this->m_mapBaseActor.end())
 				return false;
 
-			CActorBase* pToActorBase = iter->second;
-			DebugAstEx(pToActorBase != nullptr, false);
+			CBaseActorImpl* pToBaseActorImpl = iter->second;
+			DebugAstEx(pToBaseActorImpl != nullptr, false);
 
 			char* pData = new char[sizeof(response_cookice) + sResponseMessageInfo.pData->nMessageSize];
 
@@ -193,54 +192,57 @@ namespace core
 			sMessagePacket.nDataSize = sResponseMessageInfo.pData->nMessageSize + sizeof(response_cookice);
 			sMessagePacket.pData = pData;
 
-			pToActorBase->getChannel()->send(sMessagePacket);
+			pToBaseActorImpl->getChannel()->send(sMessagePacket);
 
-			this->m_mapWorkActorBase[pToActorBase->getID()] = pToActorBase;
+			this->m_mapWorkBaseActor[pToBaseActorImpl->getID()] = pToBaseActorImpl;
 
 			return true;
 		}
 		else
 		{
-			const_cast<SResponseMessageInfo&>(sResponseMessageInfo).nToActorID = CActor::getLocalActorID(sResponseMessageInfo.nToActorID);
+			const_cast<SResponseMessageInfo&>(sResponseMessageInfo).nToActorID = CBaseActor::getLocalActorID(sResponseMessageInfo.nToActorID);
 			return CCoreServiceAppImpl::Inst()->getTransporter()->response(nServiceID, sResponseMessageInfo);
 		}
 	}
 
 	void CScheduler::run()
 	{
-		std::map<uint64_t, CActorBase*> mapWorkActorBase;
-		mapWorkActorBase.swap(this->m_mapWorkActorBase);
-		for (auto iter = mapWorkActorBase.begin(); iter != mapWorkActorBase.end(); ++iter)
+		std::map<uint64_t, CBaseActorImpl*> mapWorkBaseActor;
+		mapWorkBaseActor.swap(this->m_mapWorkBaseActor);
+		for (auto iter = mapWorkBaseActor.begin(); iter != mapWorkBaseActor.end(); ++iter)
 		{
-			iter->second->run();
+			iter->second->process();
 		}
+
+		if (!this->m_mapWorkBaseActor.empty())
+			CBaseApp::Inst()->busy();
 	}
 
-	CActorBase* CScheduler::createActorBase(CActor* pActor)
+	CBaseActorImpl* CScheduler::createBaseActor(CBaseActor* pActor)
 	{
 		DebugAstEx(pActor != nullptr, nullptr);
 
-		CActorBase* pActorBase = new CActorBase(this->m_nNextActorID++, pActor);
+		CBaseActorImpl* pBaseActorImpl = new CBaseActorImpl(this->m_nNextActorID++, pActor);
 
-		this->m_mapActorBase[pActorBase->getID()] = pActorBase;
+		this->m_mapBaseActor[pBaseActorImpl->getID()] = pBaseActorImpl;
 
-		return pActorBase;
+		return pBaseActorImpl;
 	}
 
-	void CScheduler::destroyActorBase(CActorBase* pActorBase)
+	void CScheduler::destroyBaseActor(CBaseActorImpl* pBaseActorImpl)
 	{
-		DebugAst(pActorBase != nullptr);
+		DebugAst(pBaseActorImpl != nullptr);
 
-		this->m_mapActorBase.erase(pActorBase->getID());
+		this->m_mapBaseActor.erase(pBaseActorImpl->getID());
 
-		SAFE_DELETE(pActorBase);
+		SAFE_DELETE(pBaseActorImpl);
 	}
 
-	void CScheduler::addWorkActorBase(CActorBase* pActorBase)
+	void CScheduler::addWorkBaseActor(CBaseActorImpl* pBaseActorImpl)
 	{
-		DebugAst(pActorBase != nullptr);
+		DebugAst(pBaseActorImpl != nullptr);
 
-		this->m_mapWorkActorBase[pActorBase->getID()] = pActorBase;
+		this->m_mapWorkBaseActor[pBaseActorImpl->getID()] = pBaseActorImpl;
 	}
 
 }

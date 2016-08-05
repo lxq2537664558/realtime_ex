@@ -1,6 +1,6 @@
 #include "stdafx.h"
-#include "actor_base.h"
-#include "actor.h"
+#include "base_actor_impl.h"
+#include "base_actor.h"
 #include "service_base.h"
 #include "core_service_app_impl.h"
 
@@ -12,25 +12,25 @@
 
 namespace core
 {
-	CActorBase::CActorBase(uint64_t nID, CActor* pActor)
+	CBaseActorImpl::CBaseActorImpl(uint64_t nID, CBaseActor* pActor)
 		: m_channel(_DEFAULT_CHANNEL_CAP)
 		, m_nID(nID)
-		, m_pActor(pActor)
+		, m_pBaseActor(pActor)
 	{
 
 	}
 
-	CActorBase::~CActorBase()
+	CBaseActorImpl::~CBaseActorImpl()
 	{
 
 	}
 
-	uint64_t CActorBase::getID() const
+	uint64_t CBaseActorImpl::getID() const
 	{
 		return this->m_nID;
 	}
 
-	void CActorBase::run()
+	void CBaseActorImpl::process()
 	{
 		if (this->m_channel.empty())
 			return;
@@ -54,11 +54,15 @@ namespace core
 				// °þµôcookice
 				const message_header* pHeader = reinterpret_cast<const message_header*>(pCookice + 1);
 
-				void* pData = sMessagePacket.pData;
-				pMessage = CMessage(const_cast<message_header*>(pHeader), [pData](const void*){ delete[] reinterpret_cast<const char*>(pData); });
-				uint64_t nCoroutineID = coroutine::start([&](uint64_t){ this->m_pActor->onDispatch(pCookice->nFromActorID, sMessagePacket.nType, pMessage); });
-				coroutine::resume(nCoroutineID, 0);
-
+				auto iter = this->m_mapActorCallback.find(pHeader->nMessageID);
+				if (iter != this->m_mapActorCallback.end())
+				{
+					ActorCallback& callback = iter->second;
+					void* pData = sMessagePacket.pData;
+					pMessage = CMessage(const_cast<message_header*>(pHeader), [pData](const void*){ delete[] reinterpret_cast<const char*>(pData); });
+					uint64_t nCoroutineID = coroutine::create([&](uint64_t){ callback(pCookice->nFromActorID, pMessage); });
+					coroutine::resume(nCoroutineID, 0);
+				}
 				this->m_sActorSessionInfo.nActorID = 0;
 				this->m_sActorSessionInfo.nSessionID = 0;
 			}
@@ -77,14 +81,14 @@ namespace core
 					{
 						void* pData = sMessagePacket.pData;
 						pMessage = CMessage(const_cast<message_header*>(pHeader), [pData](const void*){ delete[] reinterpret_cast<const char*>(pData); });
-						uint64_t nCoroutineID = coroutine::start([&](uint64_t){ pResponseWaitInfo->callback(pResponseWaitInfo, sMessagePacket.nType, pMessage); });
+						uint64_t nCoroutineID = coroutine::create([&](uint64_t){ pResponseWaitInfo->callback(pResponseWaitInfo, sMessagePacket.nType, pMessage); });
 						coroutine::resume(nCoroutineID, 0);
 					}
 					else if (pResponseWaitInfo->err != nullptr && pCookice->nResult != eRRT_OK)
 					{
 						void* pData = sMessagePacket.pData;
 						pMessage = CMessage(const_cast<message_header*>(pHeader), [pData](const void*){ delete[] reinterpret_cast<const char*>(pData); });
-						uint64_t nCoroutineID = coroutine::start([&](uint64_t){ pResponseWaitInfo->err((EResponseResultType)pCookice->nResult); });
+						uint64_t nCoroutineID = coroutine::create([&](uint64_t){ pResponseWaitInfo->err((EResponseResultType)pCookice->nResult); });
 						coroutine::resume(nCoroutineID, 0);
 					}
 					else if (pResponseWaitInfo->nCoroutineID != 0)
@@ -108,10 +112,15 @@ namespace core
 
 				SClientSessionInfo session((uint16_t)sMessagePacket.nID, pCookice->nSessionID);
 
-				void* pData = sMessagePacket.pData;
-				pMessage = CMessage(const_cast<message_header*>(pHeader), [pData](const void*){ delete[] reinterpret_cast<const char*>(pData); });
-				uint64_t nCoroutineID = coroutine::start([&](uint64_t){ this->m_pActor->onForward(session, sMessagePacket.nType, pMessage); });
-				coroutine::resume(nCoroutineID, 0);
+				auto iter = this->m_mapActorGateForwardCallback.find(pHeader->nMessageID);
+				if (iter != this->m_mapActorGateForwardCallback.end())
+				{
+					ActorGateForwardCallback& callback = iter->second;
+					void* pData = sMessagePacket.pData;
+					pMessage = CMessage(const_cast<message_header*>(pHeader), [pData](const void*){ delete[] reinterpret_cast<const char*>(pData); });
+					uint64_t nCoroutineID = coroutine::create([&](uint64_t){ callback(session, pMessage); });
+					coroutine::resume(nCoroutineID, 0);
+				}
 			}
 
 			if (pMessage == nullptr || pMessage.unique())
@@ -125,20 +134,20 @@ namespace core
 		}
 
 		if (!this->m_channel.empty())
-			CCoreServiceAppImpl::Inst()->getScheduler()->addWorkActorBase(this);
+			CCoreServiceAppImpl::Inst()->getScheduler()->addWorkBaseActor(this);
 	}
 
-	CChannel* CActorBase::getChannel()
+	CChannel* CBaseActorImpl::getChannel()
 	{
 		return &this->m_channel;
 	}
 
-	core::SActorSessionInfo CActorBase::getActorSessionInfo() const
+	core::SActorSessionInfo CBaseActorImpl::getActorSessionInfo() const
 	{
 		return this->m_sActorSessionInfo;
 	}
 
-	void CActorBase::onRequestMessageTimeout(uint64_t nContext)
+	void CBaseActorImpl::onRequestMessageTimeout(uint64_t nContext)
 	{
 		auto iter = this->m_mapResponseWaitInfo.find(nContext);
 		if (iter == this->m_mapResponseWaitInfo.end())
@@ -175,7 +184,7 @@ namespace core
 		this->m_channel.send(sMessagePacket);
 	}
 
-	void CActorBase::addResponseWaitInfo(uint64_t nSessionID, uint64_t nTraceID, uint64_t nCoroutineID)
+	void CBaseActorImpl::addResponseWaitInfo(uint64_t nSessionID, uint64_t nTraceID, uint64_t nCoroutineID)
 	{
 		auto iter = this->m_mapResponseWaitInfo.find(nSessionID);
 		DebugAst(iter == this->m_mapResponseWaitInfo.end());
@@ -185,13 +194,13 @@ namespace core
 		pResponseWaitInfo->nSessionID = nSessionID;
 		pResponseWaitInfo->nTraceID = nTraceID;
 		pResponseWaitInfo->nCoroutineID = nCoroutineID;
-		pResponseWaitInfo->tickTimeout.setCallback(std::bind(&CActorBase::onRequestMessageTimeout, this, std::placeholders::_1));
+		pResponseWaitInfo->tickTimeout.setCallback(std::bind(&CBaseActorImpl::onRequestMessageTimeout, this, std::placeholders::_1));
 		CBaseApp::Inst()->registerTicker(&pResponseWaitInfo->tickTimeout, CCoreServiceAppImpl::Inst()->getInvokeTimeout(), 0, nSessionID);
 
 		this->m_mapResponseWaitInfo[pResponseWaitInfo->nSessionID] = pResponseWaitInfo;
 	}
 
-	SResponseWaitInfo* CActorBase::getResponseWaitInfo(uint64_t nSessionID, bool bErase)
+	SResponseWaitInfo* CBaseActorImpl::getResponseWaitInfo(uint64_t nSessionID, bool bErase)
 	{
 		auto iter = this->m_mapResponseWaitInfo.find(nSessionID);
 		if (iter == this->m_mapResponseWaitInfo.end())
@@ -202,5 +211,21 @@ namespace core
 			this->m_mapResponseWaitInfo.erase(iter);
 
 		return pResponseWaitInfo;
+	}
+
+	void CBaseActorImpl::registerCallback(uint16_t nMessageID, ActorCallback callback)
+	{
+		if (callback == nullptr)
+			this->m_mapActorCallback.erase(nMessageID);
+		else
+			this->m_mapActorCallback[nMessageID] = callback;
+	}
+
+	void CBaseActorImpl::registerGateForwardCallback(uint16_t nMessageID, ActorGateForwardCallback callback)
+	{
+		if (callback == nullptr)
+			this->m_mapActorGateForwardCallback.erase(nMessageID);
+		else
+			this->m_mapActorGateForwardCallback[nMessageID] = callback;
 	}
 }

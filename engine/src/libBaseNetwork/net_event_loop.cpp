@@ -187,6 +187,9 @@ namespace base
 #else
 		do
 		{
+			if (this->m_nSocketCount == 0)
+				return;
+
 			PROFILING_BEGIN(epoll_wait)
 			this->m_pWakeup->wait(true);
 			int32_t nActiveCount = epoll_wait(this->m_nEpoll, &this->m_vecEpollEvent[0], this->m_vecEpollEvent.size(), nTime);

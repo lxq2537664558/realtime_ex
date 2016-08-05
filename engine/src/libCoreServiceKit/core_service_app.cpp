@@ -52,6 +52,26 @@ namespace core
 		CCoreServiceAppImpl::Inst()->setServiceDisconnectCallback(funDisconnect);
 	}
 
+	void CCoreServiceApp::registerServiceCallback(uint16_t nMessageID, ServiceCallback callback)
+	{
+		CCoreServiceAppImpl::Inst()->getCoreServiceInvoker()->registerCallback(nMessageID, callback);
+	}
+
+	void CCoreServiceApp::registerGateForwardCallback(uint16_t nMessageID, GateForwardCallback callback)
+	{
+		CCoreServiceAppImpl::Inst()->getCoreServiceInvoker()->registerCallback(nMessageID, callback);
+	}
+
+	void CCoreServiceApp::addGlobalBeforeFilter(ServiceGlobalFilter callback)
+	{
+		CCoreServiceAppImpl::Inst()->addGlobalBeforeFilter(callback);
+	}
+
+	void CCoreServiceApp::addGlobalAfterFilter(ServiceGlobalFilter callback)
+	{
+		CCoreServiceAppImpl::Inst()->addGlobalAfterFilter(callback);
+	}
+
 	bool CCoreServiceApp::onInit()
 	{
 		return CCoreServiceAppImpl::Inst()->init();

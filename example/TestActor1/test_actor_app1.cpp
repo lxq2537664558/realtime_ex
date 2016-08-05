@@ -5,7 +5,6 @@
 #include "test_actor_app1.h"
 
 #include "libCoreCommon/base_app.h"
-#include "libCoreServiceKit/message_registry.h"
 #include "libCoreServiceKit/cluster_invoker.h"
 #include "libCoreServiceKit/core_service_app.h"
 
@@ -13,7 +12,8 @@
 #include "libCoreServiceKit/response_future.h"
 #include "libBaseCommon/base_time.h"
 #include "libBaseCommon/memory_hook.h"
-#include "libCoreServiceKit/actor.h"
+#include "libCoreServiceKit/base_actor.h"
+#include "libCoreServiceKit/base_actor_factory.h"
 
 CTestActorApp1::CTestActorApp1()
 {
@@ -28,7 +28,7 @@ CTestActorApp1* CTestActorApp1::Inst()
 	return static_cast<CTestActorApp1*>(core::CCoreServiceApp::Inst());
 }
 
-class CTestActor1 : public core::CActor
+class CTestActor1 : public core::CBaseActor
 {
 public:
 	CTestActor1()
@@ -41,20 +41,24 @@ public:
 
 	}
 
-	virtual void onDispatch(uint64_t nFrom, uint8_t nMessageType, core::CMessage pMessage)
+	virtual bool onInit(void* pContext)
 	{
-		if (nMessageType == eMT_REQUEST)
-		{
-			uint64_t nActorID = reinterpret_cast<const CServiceRequestActor1*>(pMessage.get())->nActorID;
+		this->registerCallback(eServiceRequestActor1, std::bind(&CTestActor1::onRequest, this, std::placeholders::_1, std::placeholders::_2));
+		
+		return true;
+	}
 
-			while (true)
-			{
-				CServiceRequestActor2 netMsg;
-				netMsg.nID = this->m_nID++;
-				core::CMessage pResultData;
-				this->invoke(nActorID, &netMsg, pResultData);
-				PrintInfo("Actor1 ID: %d", reinterpret_cast<const CServiceResponseActor2*>(pResultData.get())->nID);
-			}
+	void onRequest(uint64_t nFrom, core::CMessage pMessage)
+	{
+		uint64_t nActorID = reinterpret_cast<const CServiceRequestActor1*>(pMessage.get())->nActorID;
+
+		while (true)
+		{
+			CServiceRequestActor2 netMsg;
+			netMsg.nID = this->m_nID++;
+			core::CMessage pResultData;
+			this->invoke(nActorID, &netMsg, pResultData);
+			PrintInfo("Actor1 ID: %d", reinterpret_cast<const CServiceResponseActor2*>(pResultData.get())->nID);
 		}
 	}
 
@@ -62,12 +66,12 @@ private:
 	uint32_t	m_nID;
 };
 
-class CTestActor2 : public core::CActor
+class CTestActor2 : public core::CBaseActor
 {
 public:
 	CTestActor2()
 	{
-
+		
 	}
 
 	virtual ~CTestActor2()
@@ -75,26 +79,52 @@ public:
 
 	}
 
-	virtual void onDispatch(uint64_t nFrom, uint8_t nMessageType, core::CMessage pMessage)
+	virtual bool onInit(void* pContext)
 	{
-		if (nMessageType == eMT_REQUEST)
-		{
-			CServiceResponseActor2 netMsg;
-			netMsg.nID = reinterpret_cast<const CServiceRequestActor2*>(pMessage.get())->nID;
+		this->registerCallback(eServiceRequestActor2, std::bind(&CTestActor2::onRequest, this, std::placeholders::_1, std::placeholders::_2));
 
-			this->response(&netMsg);
-		}
+		return true;
 	}
 
-	virtual void		onForward(core::SClientSessionInfo sClientSessionInfo, uint8_t nMessageType, core::CMessage pMessage) { }
+	void onRequest(uint64_t nFrom, core::CMessage pMessage)
+	{
+		CServiceResponseActor2 netMsg;
+		netMsg.nID = reinterpret_cast<const CServiceRequestActor2*>(pMessage.get())->nID;
+
+		this->response(&netMsg);
+	}
+};
+
+class CTestActorFactory1 :
+	public core::CBaseActorFactory
+{
+public:
+	core::CBaseActor* createBaseActor()
+	{
+		return new CTestActor1();
+	}
+};
+
+class CTestActorFactory2 :
+	public core::CBaseActorFactory
+{
+public:
+	core::CBaseActor* createBaseActor()
+	{
+		return new CTestActor2();
+	}
 };
 
 bool CTestActorApp1::onInit()
 {
 	CCoreServiceApp::onInit();
 
-	core::CActor* pActor1 = new CTestActor1();
-	core::CActor* pActor2 = new CTestActor2();
+	CTestActorFactory1* pTestActorFactory1 = new CTestActorFactory1();
+	CTestActorFactory2* pTestActorFactory2 = new CTestActorFactory2();
+
+
+	core::CBaseActor* pActor1 = core::CBaseActor::createActor("", pTestActorFactory1);
+	core::CBaseActor* pActor2 = core::CBaseActor::createActor("", pTestActorFactory2);
 
 	for (size_t i = 0; i < 100; ++i)
 	{

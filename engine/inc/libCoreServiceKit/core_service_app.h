@@ -29,6 +29,22 @@ namespace core
 		*/
 		void							setServiceDisconnectCallback(std::function<void(uint16_t)> funDisconnect);
 		/**
+		@brief: 注册普通服务消息
+		*/
+		void							registerServiceCallback(uint16_t nMessageID, ServiceCallback callback);
+		/**
+		@brief: 注册经网关服务转发客户端的消息
+		*/
+		void							registerGateForwardCallback(uint16_t nMessageID, GateForwardCallback callback);
+		/**
+		@brief: 添加服务之间的前置过滤器
+		*/
+		void							addGlobalBeforeFilter(ServiceGlobalFilter callback);
+		/**
+		@brief: 添加服务之间的后置过滤器
+		*/
+		void							addGlobalAfterFilter(ServiceGlobalFilter callback);
+		/**
 		@brief: 开始一个新的trace
 		*/
 		void							startNewTrace();

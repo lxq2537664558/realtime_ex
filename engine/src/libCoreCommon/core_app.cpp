@@ -19,7 +19,7 @@
 #include "libBaseCommon/thread_base.h"
 #include "libBaseCommon/logger.h"
 
-#include "base_app_impl.h"
+#include "core_app.h"
 #include "base_app.h"
 #include "base_object.h"
 #include "ticker_mgr.h"
@@ -91,7 +91,7 @@ static bool initProcessInfo(size_t argc, char** argv, const char* title)
 
 namespace core
 {
-	CBaseAppImpl::CBaseAppImpl()
+	CCoreApp::CCoreApp()
 		: m_pTickerMgr(nullptr)
 		, m_pMessageQueue(nullptr)
 		, m_pBaseConnectionMgr(nullptr)
@@ -104,15 +104,16 @@ namespace core
 		, m_nHeartbeatLimit(0)
 		, m_nHeartbeatTime(0)
 		, m_nQPS(0)
+		, m_bBusy(false)
 	{
 	}
 
-	CBaseAppImpl::~CBaseAppImpl()
+	CCoreApp::~CCoreApp()
 	{
 
 	}
 
-	bool CBaseAppImpl::run(int32_t argc, char** argv, const char* szConfig)
+	bool CCoreApp::run(int32_t argc, char** argv, const char* szConfig)
 	{
 		if (nullptr == szConfig)
 		{
@@ -143,43 +144,43 @@ namespace core
 		return true;
 	}
 
-	void CBaseAppImpl::registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
+	void CCoreApp::registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
 	{
 		this->m_pTickerMgr->registerTicker(pTicker, nStartTime, nIntervalTime, nContext);
 	}
 
-	void CBaseAppImpl::unregisterTicker(CTicker* pTicker)
+	void CCoreApp::unregisterTicker(CTicker* pTicker)
 	{
 		this->m_pTickerMgr->unregisterTicker(pTicker);
 	}
 
-	int64_t CBaseAppImpl::getLogicTime() const
+	int64_t CCoreApp::getLogicTime() const
 	{
 		return this->m_pTickerMgr->getLogicTime();
 	}
 
-	CBaseConnectionMgr* CBaseAppImpl::getBaseConnectionMgr() const
+	CBaseConnectionMgr* CCoreApp::getBaseConnectionMgr() const
 	{
 		return this->m_pBaseConnectionMgr;
 	}
 
-	CCoroutineMgr* CBaseAppImpl::getCoroutineMgr() const
+	CCoroutineMgr* CCoreApp::getCoroutineMgr() const
 	{
 		return this->m_pCoroutineMgr;
 	}
 
-	const std::string& CBaseAppImpl::getConfigFileName() const
+	const std::string& CCoreApp::getConfigFileName() const
 	{
 		return this->m_szConfig;
 	}
 
-	base::CWriteBuf& CBaseAppImpl::getWriteBuf() const
+	base::CWriteBuf& CCoreApp::getWriteBuf() const
 	{
 		const_cast<base::CWriteBuf&>(this->m_writeBuf).clear();
 		return const_cast<base::CWriteBuf&>(this->m_writeBuf);
 	}
 
-	bool CBaseAppImpl::onInit()
+	bool CCoreApp::onInit()
 	{
 		// 首先获取可执行文件目录
 		char szBinPath[MAX_PATH] = { 0 };
@@ -278,11 +279,11 @@ namespace core
 		memset(&sig_action, 0, sizeof(sig_action));
 		sig_action.sa_sigaction = [](int32_t signo, siginfo_t*, void* ptr)->void
 		{
-			if (CBaseAppImpl::Inst()->m_nRunState != eARS_Normal)
+			if (CCoreApp::Inst()->m_nRunState != eARS_Normal)
 				return;
 
 			PrintInfo("server start quit");
-			CBaseAppImpl::Inst()->m_nRunState = eARS_Quitting;
+			CCoreApp::Inst()->m_nRunState = eARS_Quitting;
 		};
 		sig_action.sa_flags = SA_SIGINFO;
 		sigaction(SIGUSR1, &sig_action, 0);
@@ -386,7 +387,7 @@ namespace core
 			this->m_nHeartbeatTime = _DEFAULT_HEARTBEAT_TIME;
 		}
 
-		this->m_tickerQPS.setCallback(std::bind(&CBaseAppImpl::onQPS, this, std::placeholders::_1));
+		this->m_tickerQPS.setCallback(std::bind(&CCoreApp::onQPS, this, std::placeholders::_1));
 		this->registerTicker(&this->m_tickerQPS, 1000, 1000, 0);
 
 		SAFE_DELETE(pConfigXML);
@@ -398,7 +399,7 @@ namespace core
 		return CBaseApp::Inst()->onInit();
 	}
 
-	void CBaseAppImpl::onDestroy()
+	void CCoreApp::onDestroy()
 	{
 		CBaseApp::Inst()->onDestroy();
 
@@ -424,12 +425,12 @@ namespace core
 #endif
 	}
 
-	bool CBaseAppImpl::onProcess()
+	bool CCoreApp::onProcess()
 	{
 		int64_t nBeginTime = base::getProcessPassTime();
 
 		static std::vector<SMessagePacket> vecMessagePacket;
-		this->m_pMessageQueue->recv(vecMessagePacket);
+		this->m_pMessageQueue->recv(vecMessagePacket, !this->m_bBusy);
 
 		for (auto iter = vecMessagePacket.begin(); iter != vecMessagePacket.end(); ++iter)
 		{
@@ -505,6 +506,10 @@ namespace core
 					this->m_pTickerMgr->update();
 					PROFILING_END(this->m_pTickerMgr->update)
 
+					PROFILING_BEGIN(this->m_pCoroutineMgr->update)
+					this->m_pCoroutineMgr->update();
+					PROFILING_END(this->m_pCoroutineMgr->update)
+
 					++this->m_nCycleCount;
 				}
 				break;
@@ -543,12 +548,12 @@ namespace core
 		return true;
 	}
 
-	CLogicMessageQueue* CBaseAppImpl::getMessageQueue() const
+	CLogicMessageQueue* CCoreApp::getMessageQueue() const
 	{
 		return this->m_pMessageQueue;
 	}
 
-	void CBaseAppImpl::doQuit()
+	void CCoreApp::doQuit()
 	{
 		PrintInfo("CCoreApp::doQuit");
 		DebugAst(this->m_nRunState == eARS_Quitting);
@@ -556,34 +561,39 @@ namespace core
 		this->m_nRunState = eARS_Quit;
 	}
 
-	uint32_t CBaseAppImpl::getHeartbeatLimit() const
+	uint32_t CCoreApp::getHeartbeatLimit() const
 	{
 		return this->m_nHeartbeatLimit;
 	}
 
-	uint32_t CBaseAppImpl::getHeartbeatTime() const
+	uint32_t CCoreApp::getHeartbeatTime() const
 	{
 		return this->m_nHeartbeatTime;
 	}
 
-	uint32_t CBaseAppImpl::getSamplingTime() const
+	uint32_t CCoreApp::getSamplingTime() const
 	{
 		return this->m_nSamplingTime;
 	}
 
-	void CBaseAppImpl::onQPS(uint64_t nContext)
+	void CCoreApp::onQPS(uint64_t nContext)
 	{
 		this->m_nQPS = 0;
 	}
 
-	void CBaseAppImpl::incQPS()
+	void CCoreApp::incQPS()
 	{
 		++this->m_nQPS;
 	}
 
-	uint32_t CBaseAppImpl::getQPS() const
+	uint32_t CCoreApp::getQPS() const
 	{
 		return this->m_nQPS;
+	}
+
+	void CCoreApp::busy()
+	{
+		this->m_bBusy = true;
 	}
 
 }

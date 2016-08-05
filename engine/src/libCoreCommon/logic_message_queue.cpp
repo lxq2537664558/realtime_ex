@@ -33,14 +33,14 @@ namespace core
 			this->m_cond.notify_one();
 	}
 
-	void CLogicMessageQueue::recv(std::vector<SMessagePacket>& vecMessagePacket)
+	void CLogicMessageQueue::recv(std::vector<SMessagePacket>& vecMessagePacket, bool bWait)
 	{
 		PROFILING_GUARD(CLogicMessageQueue::recv);
 		vecMessagePacket.clear();
 
 		std::unique_lock<std::mutex> guard(this->m_lock);
 		
-		while (this->m_queue.empty())
+		while (bWait && this->m_queue.empty())
 		{
 			this->m_cond.wait(guard);
 		}

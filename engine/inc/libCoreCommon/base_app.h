@@ -20,13 +20,13 @@ namespace core
 
 	class CBaseConnectionMgr;
 	class CCoreConnectionMgr;
-	class CBaseAppImpl;
+	class CCoreApp;
 	/**
 	@brief: 基础框架类
 	*/
 	class CBaseApp
 	{
-		friend class CBaseAppImpl;
+		friend class CCoreApp;
 		friend class CCoreConnectionMgr;
 
 	public:
@@ -73,6 +73,11 @@ namespace core
 		@brief: 获取QPS
 		*/
 		uint32_t					getQPS() const;
+		/*
+		@brief: 标记繁忙，这样逻辑线程可以不等待消息队列的数据
+		*/
+		void						busy();
+
 		
 	protected:
 		virtual bool				onInit() { return true; }

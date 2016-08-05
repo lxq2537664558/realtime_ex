@@ -1,9 +1,11 @@
 #include "stdafx.h"
 #include "coroutine_mgr.h"
 #include "coroutine_impl.h"
-#include "base_app_impl.h"
+#include "core_app.h"
 
 #include "libBaseCommon/debug_helper.h"
+
+#define _MAX_CO_RECYCLE_COUNT	100
 
 namespace core
 {
@@ -59,23 +61,27 @@ namespace core
 		this->m_pCurrentCoroutine = pCoroutineImpl;
 	}
 
-	CCoroutineImpl* CCoroutineMgr::startCoroutine(std::function<void(uint64_t)> fn)
+	CCoroutineImpl* CCoroutineMgr::createCoroutine(std::function<void(uint64_t)> callback)
 	{
+		DebugAstEx(callback != nullptr, nullptr);
+
 		CCoroutineImpl* pCoroutineImpl = nullptr;
 		if (!this->m_listRecycleCoroutineImpl.empty())
 		{
 			pCoroutineImpl = this->m_listRecycleCoroutineImpl.front();
 			this->m_listRecycleCoroutineImpl.pop_front();
+
+			pCoroutineImpl->setCallback(callback);
+			pCoroutineImpl->setState(eCS_SUSPEND);
 		}
 		else
 		{
 			pCoroutineImpl = new CCoroutineImpl();
-		}
-		
-		if (!pCoroutineImpl->init(this->m_nNextCoroutineID++, fn))
-		{
-			SAFE_DELETE(pCoroutineImpl);
-			return pCoroutineImpl;
+			if (!pCoroutineImpl->init(this->m_nNextCoroutineID++, callback))
+			{
+				SAFE_DELETE(pCoroutineImpl);
+				return nullptr;
+			}
 		}
 
 		this->m_mapCoroutineImpl[pCoroutineImpl->getCoroutineID()] = pCoroutineImpl;
@@ -92,12 +98,24 @@ namespace core
 		return iter->second;
 	}
 
-	void CCoroutineMgr::recycleCoroutine(CCoroutineImpl* pCoroutineImpl)
+	void CCoroutineMgr::addRecycleCoroutine(CCoroutineImpl* pCoroutineImpl)
 	{
-		DebugAst(pCoroutineImpl != nullptr && pCoroutineImpl->getState() == eCS_DEAD);
+		DebugAst(pCoroutineImpl != nullptr);
 
 		this->m_mapCoroutineImpl.erase(pCoroutineImpl->getCoroutineID());
 
 		this->m_listRecycleCoroutineImpl.push_back(pCoroutineImpl);
 	}
+
+	void CCoroutineMgr::update()
+	{
+		while (this->m_listRecycleCoroutineImpl.size() > _MAX_CO_RECYCLE_COUNT)
+		{
+			CCoroutineImpl* pCoroutineImpl = *this->m_listRecycleCoroutineImpl.begin();
+			SAFE_DELETE(pCoroutineImpl);
+
+			this->m_listRecycleCoroutineImpl.pop_front();
+		}
+	}
+
 }

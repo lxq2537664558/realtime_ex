@@ -3,7 +3,6 @@
 #include "core_connection_to_master.h"
 #include "message_dispatcher.h"
 #include "cluster_invoker.h"
-#include "message_registry.h"
 #include "core_service_kit_define.h"
 #include "core_service_proxy.h"
 #include "service_connection_factory.h"
@@ -136,18 +135,6 @@ namespace core
 			return false;
 		}
 
-		if (!CClusterInvoker::Inst()->init())
-		{
-			PrintWarning("CClusterInvoker::Inst()->init()");
-			return false;
-		}
-
-		if (!CMessageRegistry::Inst()->init())
-		{
-			PrintWarning("CMessageRegistry::Inst()->init()");
-			return false;
-		}
-
 		if (!CMessageDispatcher::Inst()->init())
 		{
 			PrintWarning("CMessageDispatcher::Inst()->init()");
@@ -191,8 +178,6 @@ namespace core
 		SAFE_DELETE(this->m_pLuaFacade);
 
 		CMessageDispatcher::Inst()->release();
-		CMessageRegistry::Inst()->release();
-		CClusterInvoker::Inst()->release();
 	}
 
 	void CCoreServiceAppImpl::run()

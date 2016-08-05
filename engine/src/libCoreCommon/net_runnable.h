@@ -6,11 +6,11 @@
 namespace core
 {
 	class CCoreConnectionMgr;
-	class CBaseAppImpl;
+	class CCoreApp;
 	class CNetRunnable :
 		public base::IRunnable
 	{
-		friend class CBaseAppImpl;
+		friend class CCoreApp;
 
 	public:
 		CNetRunnable();

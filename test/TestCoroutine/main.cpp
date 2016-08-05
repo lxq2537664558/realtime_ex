@@ -26,12 +26,19 @@ class CTestApp :
 {
 public:
 	virtual bool onInit()
-	{	
-		uint64_t nCoroutineID = core::coroutine::start(std::bind(&fun1, std::placeholders::_1));
-		core::coroutine::resume(nCoroutineID, 0);
-		core::coroutine::resume(nCoroutineID, 0);
+	{
+		std::vector<uint64_t> vecID;
+		for (size_t i = 0; i < 1000; ++i)
+		{
+			vecID.push_back(core::coroutine::create(std::bind(&fun1, std::placeholders::_1)));
+		}
 
-		nCoroutineID = core::coroutine::start(std::bind(&fun1, std::placeholders::_1));
+		for (size_t i = 0; i < vecID.size(); ++i)
+		{
+			core::coroutine::resume(vecID[i], 0);
+			core::coroutine::resume(vecID[i], 0);
+		}
+		uint64_t nCoroutineID = core::coroutine::create(std::bind(&fun1, std::placeholders::_1));
 		core::coroutine::resume(nCoroutineID, 0);
 		core::coroutine::resume(nCoroutineID, 0);
 

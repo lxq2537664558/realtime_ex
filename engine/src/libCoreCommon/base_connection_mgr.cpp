@@ -2,7 +2,7 @@
 #include "base_connection_mgr.h"
 #include "base_connection.h"
 #include "base_app.h"
-#include "base_app_impl.h"
+#include "core_app.h"
 #include "core_connection_mgr.h"
 #include "core_connection.h"
 #include "message_command.h"

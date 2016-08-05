@@ -1,6 +1,6 @@
 #pragma once
 
-#include "actor_base.h"
+#include "base_actor_impl.h"
 #include "service_base.h"
 
 #include <map>
@@ -16,21 +16,21 @@ namespace core
 
 		bool				init();
 
-		CActorBase*			createActorBase(CActor* pActor);
-		void				destroyActorBase(CActorBase* pActorBase);
+		CBaseActorImpl*		createBaseActor(CBaseActor* pActor);
+		void				destroyBaseActor(CBaseActorImpl* pActorBase);
 
 		bool				invoke(const SRequestMessageInfo& sRequestMessageInfo);
 		bool				response(const SResponseMessageInfo& sResponseMessageInfo);
 
-		CActorBase*			getActorBase(uint64_t nID) const;
+		CBaseActorImpl*		getBaseActor(uint64_t nID) const;
 
-		void				addWorkActorBase(CActorBase* pActorBase);
+		void				addWorkBaseActor(CBaseActorImpl* pActorBase);
 
 		void				run();
 	
 	private:
 		uint64_t								m_nNextActorID;
-		std::map<uint64_t, CActorBase*>			m_mapActorBase;
-		std::map<uint64_t, CActorBase*>			m_mapWorkActorBase;
+		std::map<uint64_t, CBaseActorImpl*>		m_mapBaseActor;
+		std::map<uint64_t, CBaseActorImpl*>		m_mapWorkBaseActor;
 	};
 }

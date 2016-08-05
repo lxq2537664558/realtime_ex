@@ -5,13 +5,18 @@
 
 namespace core
 {
-	class CActorBase;
-	class CActor :
+	class CBaseActorImpl;
+	class CBaseActorFactory;
+	class CBaseActor :
 		public base::noncopyable
 	{
+	protected:
+		CBaseActor();
+		virtual ~CBaseActor();
+
 	public:
-		CActor();
-		virtual ~CActor();
+		virtual bool		onInit(void* pContext) { return true; }
+		virtual void		onDestroy() { }
 
 		uint64_t			getID() const;
 
@@ -24,14 +29,18 @@ namespace core
 		void				response(const message_header* pData);
 		void				response(const SActorSessionInfo& sActorSessionInfo, const message_header* pData);
 
-		virtual void		onDispatch(uint64_t nFrom, uint8_t nMessageType, CMessage pMessage) { }
-		virtual void		onForward(core::SClientSessionInfo sClientSessionInfo, uint8_t nMessageType, CMessage pMessage) { }
+		void				registerCallback(uint16_t nMessageID, ActorCallback callback);
+		void				registerGateForwardCallback(uint16_t nMessageID, ActorGateForwardCallback callback);
+		
+		void				release();
+
+		static CBaseActor*	createActor(void* pContext, CBaseActorFactory* pBaseActorFactory);
 
 		static uint16_t		getServiceID(uint64_t nActorID);
 		static uint64_t		getLocalActorID(uint64_t nActorID);
-		static uint64_t		getRemoteActorID(uint16_t nServiceID, uint64_t nActorID);
+		static uint64_t		makeRemoteActorID(uint16_t nServiceID, uint64_t nActorID);
 
 	private:
-		CActorBase*	m_pActorBase;
+		CBaseActorImpl*	m_pBaseActorImpl;
 	};
 }

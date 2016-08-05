@@ -17,7 +17,7 @@ namespace core
 
 		bool	init();
 		void	send(const SMessagePacket& sMessagePacket);
-		void	recv(std::vector<SMessagePacket>& vecMessagePacket);
+		void	recv(std::vector<SMessagePacket>& vecMessagePacket, bool bWait);
 
 	private:
 		base::CCircleQueue<SMessagePacket, false>	

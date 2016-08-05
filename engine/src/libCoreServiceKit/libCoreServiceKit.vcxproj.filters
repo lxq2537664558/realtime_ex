@@ -26,9 +26,6 @@
     <ClInclude Include="..\..\inc\libCoreServiceKit\message_dispatcher.h">
       <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreServiceKit\message_registry.h">
-      <Filter>inc</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\inc\libCoreServiceKit\proto_system.h">
       <Filter>inc</Filter>
     </ClInclude>
@@ -65,12 +62,6 @@
     <ClInclude Include="core_connection_from_service.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreServiceKit\actor.h">
-      <Filter>inc</Filter>
-    </ClInclude>
-    <ClInclude Include="actor_base.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="scheduler.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -81,6 +72,15 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\inc\libCoreServiceKit\response_future.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreServiceKit\base_actor.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="base_actor_impl.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreServiceKit\base_actor_factory.h">
       <Filter>inc</Filter>
     </ClInclude>
   </ItemGroup>
@@ -95,9 +95,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="message_dispatcher.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="message_registry.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="protobuf_helper.cpp">
@@ -124,12 +121,6 @@
     <ClCompile Include="core_connection_from_service.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="actor_base.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="actor.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="scheduler.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -140,6 +131,12 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="response_future.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="base_actor_impl.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="base_actor.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

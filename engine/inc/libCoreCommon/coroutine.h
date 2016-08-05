@@ -7,6 +7,7 @@ namespace core
 {
 	enum ECoroutineState
 	{
+		eCS_NONE,
 		eCS_DEAD,	// 死亡状态
 		eCS_READY,	// 等待执行（重来都没有被执行过）
 		eCS_RUNNING,// 执行状态
@@ -18,7 +19,7 @@ namespace core
 		/**
 		@brief: 启动协程，传入协程入口函数
 		*/
-		uint64_t	start(std::function<void(uint64_t)> fn);
+		uint64_t	create(std::function<void(uint64_t)> fn);
 		/**
 		@brief: 关闭指定协程
 		*/
