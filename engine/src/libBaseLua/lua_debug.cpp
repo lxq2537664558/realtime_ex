@@ -604,7 +604,9 @@ void CDebugger::printTableVar(lua_State *pL, int32_t nIndex, int32_t nDepth)
 	}
 
 	if (bEmpty)
+	{
 		this->debugResponse(false, " }");
+	}
 	else
 	{
 		for (int32_t i = 0; i < nDepth - 1; ++i)

@@ -54,7 +54,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBBASELUA_EXPORTS;__BUILD_BASE_LUA_DLL__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBBASELUA_EXPORTS;__BUILD_BASE_LUA_DLL__;LUA_BUILD_AS_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>../../inc;../../inc/libBaseLua;../../../3rd/lua/include/;</AdditionalIncludeDirectories>
       <StringPooling>true</StringPooling>
     </ClCompile>
@@ -105,16 +105,24 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\inc\libBaseLua\lua_function.h" />
+    <ClInclude Include="..\..\inc\libBaseLua\class_binder.h" />
+    <ClInclude Include="..\..\inc\libBaseLua\namespace_binder.h" />
     <ClInclude Include="..\..\inc\libBaseLua\lua_facade.h" />
     <ClInclude Include="lua_debug.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\inc\libBaseLua\lua_facade.inl" />
+    <None Include="..\..\inc\libBaseLua\lua_function.inl" />
+    <None Include="..\..\inc\libBaseLua\class_binder.inl" />
+    <None Include="..\..\inc\libBaseLua\base_lua.h" />
+    <None Include="..\..\inc\libBaseLua\namespace_binder.inl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="lua_facade.cpp" />
     <ClCompile Include="lua_debug.cpp" />
+    <ClCompile Include="lua_function.cpp" />
     <ClCompile Include="memory_new.cpp" />
+    <ClCompile Include="namespace_binder.cpp" />
     <ClCompile Include="snapshot.cpp" />
   </ItemGroup>
   <ItemGroup>

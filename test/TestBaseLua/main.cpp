@@ -2,6 +2,10 @@
 
 #include <string>
 #include <iostream>
+#include "libBaseLua/namespace_binder.h"
+#include "libBaseLua/lua_function.h"
+#include "libBaseLua/class_binder.h"
+
 using namespace std;
 
 base::CLuaFacade* pLua = nullptr;
@@ -17,9 +21,9 @@ public:
 	static int s;
 
 public:
-	CAA( int32_t b)
+	CAA( int32_t a)
 	{
-		this->a = b;
+		this->a = a;
 		cout << "CAA::CAA()" << endl;
 	}
 
@@ -51,7 +55,7 @@ public:
 	void fun3( int a, int b, int c ) const
 	{
 		cout << "fun3 " << a << " " << b << " " << c << endl;
-		pLua->call("lua_fun2", 666);
+		//pLua->call("lua_fun2", 666);
 		//return 0;
 	}
 
@@ -89,6 +93,20 @@ public:
 	{
 		cout << "fun9" << endl;
 		//return 0;
+	}
+};
+
+class CBB : public CAA
+{
+public:
+	CBB(uint32_t a, uint32_t b) : CAA(a) 
+	{
+		this->b = b;
+	}
+
+	void funB(int64_t v) const
+	{
+		cout << "v: " << v << endl;
 	}
 };
 
@@ -160,12 +178,12 @@ uint64_t funXXX( int64_t a )
 
 void fun64( int64_t id )
 {
-	pLua->call( "fun", 888 );
+	//pLua->call( "fun", 888 );
 }
 
-void funAA(CAA* pAA)
+CAA* funAA(CAA* pAA)
 {
-	delete pAA;
+	return new CAA(123456);
 }
 
 CAA* getAA()
@@ -175,7 +193,7 @@ CAA* getAA()
 
 int main(int argc, wchar_t* argv[])
 {
-	base::initLog( false );
+	base::initLog(false, "");
 	base::initProfiling(true);
 	base::initProcessExceptionHander();
 	pLua = new base::CLuaFacade();
@@ -183,33 +201,38 @@ int main(int argc, wchar_t* argv[])
 	pLua->startDebug("0.0.0.0", 12345);
 	pLua->addSeachPath( "../../../test/TestBaseLua" );
 
-	
-	pLua->registerClass<CAA>("CAA", base::lua_helper::createObject<CAA, int32_t>);
-	pLua->registerClassFunction("fun0", &CAA::fun0);
-	pLua->registerClassFunction("fun1", &CAA::fun1);
-	pLua->registerClassFunction("fun2", &CAA::fun2);
-	pLua->registerClassFunction("fun3", &CAA::fun3);
-	pLua->registerClassFunction("fun4", &CAA::fun4);
-	pLua->registerClassFunction("fun5", &CAA::fun5);
-	pLua->registerClassFunction("fun6", &CAA::fun6);
-	pLua->registerClassFunction("fun7", &CAA::fun7);
-	pLua->registerClassFunction("fun8", &CAA::fun8);
-	pLua->registerClassFunction("fun9", &CAA::fun9);
-	pLua->registerClassMember("a", &CAA::a);
-	pLua->registerClassStaticMember("CAA", "s", &CAA::s);
+	base::CNamespaceBinder sNamespaceBinder(pLua);
 
-	pLua->registerFunction("funXX", &funXX);
-	pLua->registerFunction("fun64", &fun64);
-	pLua->registerFunction("funXXX", &funXXX);
-	pLua->registerFunction("funAA", &funAA);
-	pLua->registerFunction("getAA", &getAA);
+	sNamespaceBinder.begin("cc");
+	sNamespaceBinder.registerClass<CAA>("CAA", base::CClassBinder<CAA>::createObject<uint32_t>)
+		.registerFunction("fun0", &CAA::fun0)
+		.registerMember("a", &CAA::a)
+		.registerStaticMember("s", &CAA::s)
+		.endClass();
+
+	CAA* pAA = new CAA(999);
+	
+	sNamespaceBinder.registerFunction("funAA", funAA);
+	sNamespaceBinder.registerConstData("hhhh", pAA);
+
+	sNamespaceBinder.registerClass<CBB>("CBB", "cc.CAA", base::CClassBinder<CBB>::createObject<uint32_t, uint32_t>)
+		.registerFunction("funB", &CBB::funB)
+		.endClass();
+
 	pLua->loadFile("test");
+
+	uint32_t nRet = 0;
+	base::CLuaFunction callFunction(pLua, "fun_lua");
+	callFunction.callR(nRet, 100, 200);
+	base::CLuaFunction callFunction2(callFunction);
+	callFunction2.callR(nRet, 100, 200);
+	base::CLuaFunction::callR(pLua, "fun_lua", nRet, 300, 400);
 
 	while (true)
 	{
 		pLua->updateDebug();
-		uint32_t ret;
-		pLua->callR("lua_fun", ret, 100);
+// 		uint32_t ret;
+// 		base::CLuaFunction::callR(pLua, "fun_lua", ret, 300, 400);
 		Sleep(1);
 	}
 	Sleep(~0);

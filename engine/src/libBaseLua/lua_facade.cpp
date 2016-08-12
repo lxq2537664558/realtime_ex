@@ -59,41 +59,42 @@ namespace base
 
 		lua_State* pL = this->getActiveLuaState();
 
-		int32_t tbl = lua_gettop(pL);
-		lua_getglobal(pL, _REF_OBJECT_TBL_NAME);
+		int32_t nRef = lua_gettop(pL);
+		lua_pushstring(pL, _REF_OBJECT_TBL_NAME);
+		lua_rawget(pL, LUA_REGISTRYINDEX);
 		// 查看对象是否存在
 		lua_pushlightuserdata(pL, pObject);
 		lua_rawget(pL, -2);
 		if (lua_isnil(pL, -1))
 		{
 			lua_pop(pL, -1);
-			lua_getglobal(pL, _WEAK_OBJECT_TBL_NAME);
+			lua_pushstring(pL, _WEAK_OBJECT_TBL_NAME);
+			lua_rawget(pL, LUA_REGISTRYINDEX);
 			lua_pushlightuserdata(pL, pObject);
 			lua_rawget(pL, -2);
 			if (!lua_isuserdata(pL, -1))
 			{
-				lua_settop(pL, tbl);
+				PrintWarning("add object ref error object is gc: 0x%x", pObject);
+				lua_settop(pL, nRef);
 				return;
 			}
 
 			SObjectWraper* pObjectWraper = reinterpret_cast<SObjectWraper*>(lua_touserdata(pL, -1));
-			if (nullptr == pObjectWraper)
-			{
-				lua_settop(pL, tbl);
-				return;
-			}
 			if (pObjectWraper->pObject != pObject)
 			{
-				lua_settop(pL, tbl);
+				PrintWarning("add object ref error unknown : 0x%x", pObject);
+				lua_settop(pL, nRef);
 				return;
 			}
 			if (!pObjectWraper->bGc)
 			{
-				lua_settop(pL, tbl);
+				PrintWarning("add object ref error c++ control object: 0x%x", pObject);
+				lua_settop(pL, nRef);
 				return;
 			}
 
-			lua_getglobal(pL, _REF_OBJECT_TBL_NAME);
+			lua_pushstring(pL, _REF_OBJECT_TBL_NAME);
+			lua_rawget(pL, LUA_REGISTRYINDEX);
 			lua_pushlightuserdata(pL, pObject);
 			lua_pushvalue(pL, -3);
 			lua_rawset(pL, -3);
@@ -101,25 +102,20 @@ namespace base
 		}
 		else if (!lua_isuserdata(pL, -1))
 		{
-			lua_settop(pL, tbl);
+			lua_settop(pL, nRef);
 			return;
 		}
 
 		SObjectWraper* pObjectWraper = reinterpret_cast<SObjectWraper*>(lua_touserdata(pL, -1));
-		if (nullptr == pObjectWraper)
-		{
-			lua_settop(pL, tbl);
-			return;
-		}
 		if (pObjectWraper->pObject != pObject)
 		{
-			lua_settop(pL, tbl);
+			lua_settop(pL, nRef);
 			return;
 		}
 		// 生命周期由C++控制的对象做引用计数没有意义
 		if (!pObjectWraper->bGc)
 		{
-			lua_settop(pL, tbl);
+			lua_settop(pL, nRef);
 			return;
 		}
 
@@ -128,7 +124,7 @@ namespace base
 		lua_pushvalue(pL, -2);
 
 		lua_rawset(pL, -3);
-		lua_settop(pL, tbl);
+		lua_settop(pL, nRef);
 	}
 
 	void CLuaFacade::delObjectRef(void* pObject)
@@ -138,7 +134,8 @@ namespace base
 		lua_State* pL = this->getActiveLuaState();
 
 		int32_t tbl = lua_gettop(pL);
-		lua_getglobal(pL, _REF_OBJECT_TBL_NAME);
+		lua_pushstring(pL, _REF_OBJECT_TBL_NAME);
+		lua_rawget(pL, LUA_REGISTRYINDEX);
 		// 查看对象是否存在
 		lua_pushlightuserdata(pL, pObject);
 		lua_rawget(pL, -2);
@@ -148,11 +145,6 @@ namespace base
 			return;
 		}
 		SObjectWraper* pObjectWraper = reinterpret_cast<SObjectWraper*>(lua_touserdata(pL, -1));
-		if (nullptr == pObjectWraper)
-		{
-			lua_settop(pL, tbl);
-			return;
-		}
 		if (pObjectWraper->pObject != pObject)
 		{
 			lua_settop(pL, tbl);
@@ -184,7 +176,8 @@ namespace base
 		lua_State* pL = this->getActiveLuaState();
 
 		int32_t tbl = lua_gettop(pL);
-		lua_getglobal(pL, _WEAK_OBJECT_TBL_NAME);
+		lua_pushstring(pL, _WEAK_OBJECT_TBL_NAME);
+		lua_rawget(pL, LUA_REGISTRYINDEX);
 		// 查看对象是否存在
 		lua_pushlightuserdata(pL, pObject);
 		lua_rawget(pL, -2);
@@ -233,14 +226,15 @@ namespace base
 		lua_pushglobaltable(this->m_pMainLuaState);
 		luaL_setfuncs(this->m_pMainLuaState, zFuncs, 0);
 
+		lua_pushstring(this->m_pMainLuaState, _FACADE_NAME);
 		lua_pushlightuserdata(this->m_pMainLuaState, this);
-		lua_setglobal(this->m_pMainLuaState, _FACADE_NAME);
-
-		//initLuaHelper( this );
+		lua_rawset(this->m_pMainLuaState, LUA_REGISTRYINDEX);
 
 		// 创建 ref_object_table
 		lua_newtable(this->m_pMainLuaState);
-		lua_setglobal(this->m_pMainLuaState, _REF_OBJECT_TBL_NAME);
+		lua_pushstring(this->m_pMainLuaState, _REF_OBJECT_TBL_NAME);
+		lua_pushvalue(this->m_pMainLuaState, -2);
+		lua_rawset(this->m_pMainLuaState, LUA_REGISTRYINDEX);
 
 		lua_pushliteral(this->m_pMainLuaState, "__mode");
 		lua_pushstring(this->m_pMainLuaState, "k");
@@ -248,9 +242,9 @@ namespace base
 
 		// 创建 weak_object_table
 		lua_newtable(this->m_pMainLuaState);
-		lua_pushvalue(this->m_pMainLuaState, -1);
-
-		lua_setglobal(this->m_pMainLuaState, _WEAK_OBJECT_TBL_NAME);
+		lua_pushstring(this->m_pMainLuaState, _WEAK_OBJECT_TBL_NAME);
+		lua_pushvalue(this->m_pMainLuaState, -2);
+		lua_rawset(this->m_pMainLuaState, LUA_REGISTRYINDEX);
 
 		// weak_object_table.mt = weak_object_table
 		lua_pushvalue(this->m_pMainLuaState, -1);
@@ -311,7 +305,7 @@ namespace base
 
 		lua_State* pL = this->getActiveLuaState();
 
-		lua_pushcclosure(pL, lua_helper::onError, 0);
+		lua_pushcclosure(pL, onError, 0);
 		int32_t nErrIdx = lua_gettop(pL);
 		bool bRet = false;
 		if (luaL_loadbuffer(pL, szBuf, strlen(szBuf), szBufName) == 0)
@@ -368,15 +362,8 @@ namespace base
 		return this->m_pActiveLuaState;
 	}
 
-	namespace lua_helper
+	lua_State* CLuaFacade::getState() const
 	{
-		int32_t onError(lua_State* pL)
-		{
-			PrintWarning("lua error : %s", lua_tostring(pL, -1));
-
-			printStack(pL, 0);
-
-			return 0;
-		}
+		return this->m_pMainLuaState;
 	}
 }

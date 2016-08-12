@@ -15,11 +15,15 @@
     <ClInclude Include="lua_debug.h">
       <Filter>src</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\inc\libBaseLua\lua_facade.inl">
-      <Filter>src</Filter>
-    </None>
+    <ClInclude Include="..\..\inc\libBaseLua\namespace_binder.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libBaseLua\class_binder.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libBaseLua\lua_function.h">
+      <Filter>inc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="snapshot.cpp">
@@ -34,5 +38,25 @@
     <ClCompile Include="memory_new.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="namespace_binder.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="lua_function.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\inc\libBaseLua\namespace_binder.inl">
+      <Filter>inc</Filter>
+    </None>
+    <None Include="..\..\inc\libBaseLua\class_binder.inl">
+      <Filter>inc</Filter>
+    </None>
+    <None Include="..\..\inc\libBaseLua\base_lua.h">
+      <Filter>inc</Filter>
+    </None>
+    <None Include="..\..\inc\libBaseLua\lua_function.inl">
+      <Filter>inc</Filter>
+    </None>
   </ItemGroup>
 </Project>
