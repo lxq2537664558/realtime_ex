@@ -169,8 +169,7 @@ namespace core
 
 		CCoreServiceAppImpl::Inst()->getInvokerTrace()->addTraceExtraInfo("wait response time out session_id: "UINT64FMT, pResponseWaitInfo->nSessionID);
 
-		if (pResponseWaitInfo->err != nullptr)
-			pResponseWaitInfo->err(eRRT_TIME_OUT);
+		pResponseWaitInfo->callback(pResponseWaitInfo, nullptr, eRRT_TIME_OUT);
 
 		this->m_mapResponseWaitInfo.erase(iter);
 		SAFE_DELETE(pResponseWaitInfo);

@@ -1,5 +1,24 @@
 namespace base
 {
+	template<> inline CLuaFunction read2Cpp(lua_State* pL, int32_t nIndex, bool& bError)
+	{
+		bError = false;
+		if (!lua_isfunction(pL, nIndex))
+		{
+			bError = true;
+
+			return CLuaFunction();
+		}
+
+		int32_t nRef = luaL_ref(pL, LUA_REGISTRYINDEX);
+		lua_pushstring(pL, _FACADE_NAME);
+		lua_rawget(pL, LUA_REGISTRYINDEX);
+		CLuaFacade* pLuaFacade = reinterpret_cast<CLuaFacade*>(lua_touserdata(pL, -1));
+		lua_pop(pL, 1);
+
+		return CLuaFunction(pLuaFacade, nRef);
+	}
+
 	template<typename ...Args>
 	bool base::CLuaFunction::call(Args... args)
 	{

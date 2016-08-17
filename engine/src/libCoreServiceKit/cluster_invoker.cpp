@@ -7,6 +7,7 @@
 
 #include "libBaseCommon/debug_helper.h"
 #include "libCoreCommon/coroutine.h"
+#include "libCoreCommon/promise.h"
 
 namespace core
 {
@@ -42,7 +43,18 @@ namespace core
 
 			CCoreServiceAppImpl::Inst()->getTransporter()->addResponseWaitInfo(sRequestMessageInfo.nSessionID, 0);
 
-			sResponseFuture.setSessionID(sRequestMessageInfo.nSessionID);
+			SResponseWaitInfo* pResponseWaitInfo = CCoreServiceAppImpl::Inst()->getTransporter()->getResponseWaitInfo(sRequestMessageInfo.nSessionID, false);
+			DebugAstEx(nullptr != pResponseWaitInfo, false);
+
+			std::shared_ptr<CPromise<CMessage>> pPromise = std::make_shared<CPromise<CMessage>>();
+
+			pResponseWaitInfo->callback = [pPromise](SResponseWaitInfo* pResponseWaitInfo, CMessage pMessage, uint32_t nErrorCode)->void
+			{
+				pPromise->setValue(pMessage, nErrorCode);
+			};
+
+			sResponseFuture = pPromise->getFuture();
+
 			return true;
 		}
 
@@ -65,9 +77,9 @@ namespace core
 			SResponseWaitInfo* pResponseWaitInfo = CCoreServiceAppImpl::Inst()->getTransporter()->getResponseWaitInfo(sRequestMessageInfo.nSessionID, false);
 			DebugAstEx(nullptr != pResponseWaitInfo, false);
 
-			pResponseWaitInfo->callback = [callback](SResponseWaitInfo*, uint8_t nMessageType, CMessage pMessage)->void
+			pResponseWaitInfo->callback = [callback](SResponseWaitInfo*, CMessage pMessage, uint32_t nErrorCode)->void
 			{
-				callback(nMessageType, pMessage);
+				callback(pMessage, nErrorCode);
 			};
 
 			return true;

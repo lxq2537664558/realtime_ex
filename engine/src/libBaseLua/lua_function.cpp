@@ -28,6 +28,21 @@ namespace base
 		}
 	}
 
+
+	CLuaFunction::CLuaFunction(CLuaFacade* pLuaFacade, int32_t nRef)
+		: m_pLuaFacade(pLuaFacade)
+		, m_nRef(nRef)
+	{
+
+	}
+
+	CLuaFunction::CLuaFunction()
+		: m_pLuaFacade(nullptr)
+		, m_nRef(LUA_REFNIL)
+	{
+
+	}
+
 	CLuaFunction::CLuaFunction(const CLuaFunction&lhs)
 		: m_pLuaFacade(nullptr)
 		, m_nRef(LUA_REFNIL)

@@ -3,7 +3,6 @@
 #include "libCoreCommon/core_common.h"
 
 #include "core_service_kit_define.h"
-#include "response_future.h"
 
 namespace core
 {

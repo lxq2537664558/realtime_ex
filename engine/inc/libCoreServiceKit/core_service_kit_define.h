@@ -1,6 +1,7 @@
 #pragma once
 #include "libCoreCommon/core_common.h"
 #include "libCoreCommon/message.h"
+#include "libCoreCommon/future.h"
 
 #include <string>
 #include <vector>
@@ -60,11 +61,9 @@ namespace core
 		uint64_t	nSessionID;
 	};
 
-	class CResponseFuture;
+	typedef CFuture<CMessage>	CResponseFuture;
 	
-	typedef std::function<void(uint8_t, CMessage)>								InvokeCallback;				// RPC消息响应回调函数类型
-	typedef std::function<CResponseFuture(uint8_t, CMessage)>					InvokeCallbackEx;			// RPC消息响应回调函数类型
-	typedef std::function<void(uint32_t)>										InvokeErrCallback;			// RPC错误响应回调函数类型
+	typedef std::function<void(CMessage, uint32_t)>								InvokeCallback;				// RPC消息响应回调函数类型
 	typedef std::function<void(uint16_t, uint8_t, CMessage)>					ServiceCallback;			// 服务消息处理函数类型(这里服务名字必须是值，不能是引用，因为有协程)
 	typedef std::function<void(SClientSessionInfo, uint8_t, CMessage)>			GateForwardCallback;		// 经网关服务转发的客户端消息处理函数类型
 	typedef std::function<void(uint64_t, CMessage)>								ClientCallback;				// 客户端消息处理函数类型

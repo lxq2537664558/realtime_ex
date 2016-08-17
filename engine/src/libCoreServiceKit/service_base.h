@@ -1,9 +1,9 @@
 #pragma once
 
 #include "libCoreCommon/core_common.h"
+#include "libCoreCommon/promise.h"
 
 #include "core_service_kit_define.h"
-#include "response_future.h"
 
 #include <functional>
 #include <vector>
@@ -54,12 +54,8 @@ namespace core
 		uint64_t	nTraceID;
 		uint64_t	nCoroutineID;
 		CMessage	pResponseMessage;
-		std::function<void(SResponseWaitInfo*, uint8_t, CMessage)>
+		std::function<void(SResponseWaitInfo*, CMessage, uint32_t)>
 					callback;
-		std::function<void(uint32_t)>
-					err;
-		std::list<std::pair<std::function<void(SResponseWaitInfo*, uint8_t, CMessage)>, std::function<void(uint32_t)>>>
-					listPromise;
 	};
 
 	enum EBaseConnectionType

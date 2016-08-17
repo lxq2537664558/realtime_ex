@@ -70,12 +70,16 @@ namespace base
 	{
 		static inline void setName(const char* szClassName)
 		{
-			s_szClassName = szClassName;
+			size_t nLen = crt::strnlen(szClassName, _TRUNCATE);
+			s_szClassName = new char[nLen + 1];
+			crt::strcpy(s_szClassName, nLen + 1, szClassName);
 		}
 
 		static inline void setNamespaceName(const char* szNamespaceName)
 		{
-			s_szNamespaceName = szNamespaceName;
+			size_t nLen = crt::strnlen(szNamespaceName, _TRUNCATE);
+			s_szNamespaceName = new char[nLen + 1];
+			crt::strcpy(s_szNamespaceName, nLen + 1, szNamespaceName);
 		}
 
 		static inline const char* getName()
@@ -88,14 +92,14 @@ namespace base
 			return s_szNamespaceName;
 		}
 
-		static const char* s_szClassName;
-		static const char* s_szNamespaceName;
+		static char* s_szClassName;
+		static char* s_szNamespaceName;
 	};
 
 	template<class T>
-	const char* SClassName<T>::s_szClassName;
+	char* SClassName<T>::s_szClassName;
 	template<class T>
-	const char* SClassName<T>::s_szNamespaceName;
+	char* SClassName<T>::s_szNamespaceName;
 
 	inline void getMetatable(lua_State* pL, const char* szNamespaceName, const char* szName)
 	{

@@ -8,6 +8,8 @@ namespace base
 	{
 	public:
 		CLuaFunction(CLuaFacade* pLuaFacade, const char* szName);
+		CLuaFunction(CLuaFacade* pLuaFacade, int32_t nRef);
+		CLuaFunction();
 		~CLuaFunction();
 
 		CLuaFunction(const CLuaFunction&lhs);

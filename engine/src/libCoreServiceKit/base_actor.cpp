@@ -77,8 +77,17 @@ namespace core
 
 		this->m_pBaseActorImpl->addResponseWaitInfo(sRequestMessageInfo.nSessionID, 0, 0);
 
-		sResponseFuture.setSessionID(sRequestMessageInfo.nSessionID);
-		sResponseFuture.setActorID(this->getID());
+		SResponseWaitInfo* pResponseWaitInfo = this->m_pBaseActorImpl->getResponseWaitInfo(sRequestMessageInfo.nSessionID, false);
+		DebugAstEx(nullptr != pResponseWaitInfo, false);
+		
+		std::shared_ptr<CPromise<CMessage>> pPromise = std::make_shared<CPromise<CMessage>>();
+
+		pResponseWaitInfo->callback = [pPromise](SResponseWaitInfo* pResponseWaitInfo, CMessage pMessage, uint32_t nErrorCode)->void
+		{
+			pPromise->setValue(pMessage, nErrorCode);
+		};
+
+		sResponseFuture = pPromise->getFuture();
 
 		return true;
 	}
@@ -100,9 +109,9 @@ namespace core
 		SResponseWaitInfo* pResponseWaitInfo = this->m_pBaseActorImpl->getResponseWaitInfo(sRequestMessageInfo.nSessionID, false);
 		DebugAstEx(nullptr != pResponseWaitInfo, false);
 		
-		pResponseWaitInfo->callback = [callback](SResponseWaitInfo*, uint8_t nMessageType, CMessage pMessage)->void
+		pResponseWaitInfo->callback = [callback](SResponseWaitInfo*, CMessage pMessage, uint32_t nErrorCode)->void
 		{
-			callback(nMessageType, pMessage);
+			callback(pMessage, nErrorCode);
 		};
 
 		return true;

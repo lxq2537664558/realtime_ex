@@ -5,12 +5,10 @@
 #include "test_actor_app2.h"
 
 #include "libCoreCommon/base_app.h"
-#include "libCoreServiceKit/message_registry.h"
 #include "libCoreServiceKit/cluster_invoker.h"
 #include "libCoreServiceKit/core_service_app.h"
 
 #include "../common/test_message_define.h"
-#include "libCoreServiceKit/response_future.h"
 #include "libBaseCommon/base_time.h"
 #include "libBaseCommon/memory_hook.h"
 #include "libCoreServiceKit/actor.h"

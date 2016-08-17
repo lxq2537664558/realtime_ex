@@ -67,12 +67,12 @@
       <ProgramDatabaseFile>$(OutDir)$(TargetName).pdb</ProgramDatabaseFile>
     </Link>
     <PreBuildEvent>
-      <Command>
-      </Command>
+      <Command>del /a $(OutDir)liblua.dll 
+del /a $(OutDir)liblua.pdb</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>
-      </Command>
+      <Command>copy /y ..\..\..\3rd\lua\lib\win32\$(Configuration)\liblua.dll $(OutDir) 
+copy /y ..\..\..\3rd\lua\lib\win32\$(Configuration)\liblua.pdb $(OutDir)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

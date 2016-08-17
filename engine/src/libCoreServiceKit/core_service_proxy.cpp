@@ -34,9 +34,9 @@ namespace core
 		sServiceInfo.pCoreConnectionFromService = nullptr;
 		sServiceInfo.pCoreConnectionToService = nullptr;
 		sServiceInfo.sServiceBaseInfo = sServiceBaseInfo;
-		sServiceInfo.pTicker = new CTicker();
+		sServiceInfo.pTicker = std::make_unique<CTicker>();
 		sServiceInfo.pTicker->setCallback(std::bind(&SServiceInfo::onTicker, &sServiceInfo, std::placeholders::_1));
-		CBaseApp::Inst()->registerTicker(sServiceInfo.pTicker, 0, _CHECK_CONNECT_TIME, 0);
+		CBaseApp::Inst()->registerTicker(sServiceInfo.pTicker.get(), 0, _CHECK_CONNECT_TIME, 0);
 
 		this->m_mapServiceName[sServiceBaseInfo.szName] = sServiceBaseInfo.nID;
 
@@ -48,8 +48,6 @@ namespace core
 		auto iter = this->m_mapServiceInfo.find(nServiceID);
 		if (iter == this->m_mapServiceInfo.end())
 			return;
-
-		SAFE_DELETE(iter->second.pTicker);
 
 		std::string szServiceName = iter->second.sServiceBaseInfo.szName;
 		this->m_mapServiceName.erase(iter->second.sServiceBaseInfo.szName);

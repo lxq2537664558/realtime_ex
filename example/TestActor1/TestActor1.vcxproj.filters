@@ -27,11 +27,11 @@
     <ClInclude Include="targetver.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\common\test_message_define.h">
-      <Filter>common</Filter>
-    </ClInclude>
     <ClInclude Include="test_actor_app1.h">
       <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\test_message_define1.h">
+      <Filter>common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

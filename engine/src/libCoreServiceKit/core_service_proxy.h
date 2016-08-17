@@ -45,7 +45,7 @@ namespace core
 			SServiceBaseInfo			sServiceBaseInfo;
 			CCoreConnectionToService*	pCoreConnectionToService;
 			CCoreConnectionFromService*	pCoreConnectionFromService;
-			CTicker*					pTicker;
+			std::unique_ptr<CTicker>	pTicker;
 
 			void	onTicker(uint64_t nContext);
 		};

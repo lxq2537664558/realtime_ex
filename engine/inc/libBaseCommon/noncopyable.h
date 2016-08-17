@@ -7,12 +7,12 @@ namespace base
 
 	class __BASE_COMMON_API__ noncopyable
 	{
-	protected:
-		noncopyable() {}
-
 	private:
-		noncopyable(const noncopyable&);
-		const noncopyable& operator = (const noncopyable&);
+		noncopyable() = default;
+		~noncopyable() = default;
+
+		noncopyable(const noncopyable&) = delete;
+		const noncopyable& operator = (const noncopyable&) = delete;
 	};
 
 }

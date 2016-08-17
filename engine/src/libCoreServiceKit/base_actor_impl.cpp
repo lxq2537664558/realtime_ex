@@ -77,19 +77,20 @@ namespace core
 				{
 					Defer(delete pResponseWaitInfo);
 
-					if (pResponseWaitInfo->callback != nullptr && pCookice->nResult == eRRT_OK)
+					if (pResponseWaitInfo->callback != nullptr)
 					{
-						void* pData = sMessagePacket.pData;
-						pMessage = CMessage(const_cast<message_header*>(pHeader), [pData](const void*){ delete[] reinterpret_cast<const char*>(pData); });
-						uint64_t nCoroutineID = coroutine::create([&](uint64_t){ pResponseWaitInfo->callback(pResponseWaitInfo, sMessagePacket.nType, pMessage); });
-						coroutine::resume(nCoroutineID, 0);
-					}
-					else if (pResponseWaitInfo->err != nullptr && pCookice->nResult != eRRT_OK)
-					{
-						void* pData = sMessagePacket.pData;
-						pMessage = CMessage(const_cast<message_header*>(pHeader), [pData](const void*){ delete[] reinterpret_cast<const char*>(pData); });
-						uint64_t nCoroutineID = coroutine::create([&](uint64_t){ pResponseWaitInfo->err((EResponseResultType)pCookice->nResult); });
-						coroutine::resume(nCoroutineID, 0);
+						if (pCookice->nResult == eRRT_OK)
+						{
+							void* pData = sMessagePacket.pData;
+							pMessage = CMessage(const_cast<message_header*>(pHeader), [pData](const void*){ delete[] reinterpret_cast<const char*>(pData); });
+							uint64_t nCoroutineID = coroutine::create([&](uint64_t){ pResponseWaitInfo->callback(pResponseWaitInfo, pMessage, pCookice->nResult); });
+							coroutine::resume(nCoroutineID, 0);
+						}
+						else if (pCookice->nResult != eRRT_OK)
+						{
+							uint64_t nCoroutineID = coroutine::create([&](uint64_t){ pResponseWaitInfo->callback(pResponseWaitInfo, nullptr, pCookice->nResult); });
+							coroutine::resume(nCoroutineID, 0);
+						}
 					}
 					else if (pResponseWaitInfo->nCoroutineID != 0)
 					{
@@ -160,13 +161,6 @@ namespace core
 		if (nullptr == pResponseWaitInfo)
 		{
 			PrintWarning("nullptr == pResponseInfo session_id: "UINT64FMT, nContext);
-			return;
-		}
-
-		if (pResponseWaitInfo->err == nullptr)
-		{
-			this->m_mapResponseWaitInfo.erase(iter);
-			SAFE_DELETE(pResponseWaitInfo);
 			return;
 		}
 		

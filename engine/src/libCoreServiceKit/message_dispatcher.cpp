@@ -81,14 +81,14 @@ namespace core
 
 				Defer(delete pResponseWaitInfo);
 
-				if (pResponseWaitInfo->callback != nullptr && pCookice->nResult == eRRT_OK)
+				if (pCookice->nResult == eRRT_OK)
 				{
 					pMessage = CMessage(const_cast<message_header*>(pHeader));
-					pResponseWaitInfo->callback(pResponseWaitInfo, nMessageType, pMessage);
+					pResponseWaitInfo->callback(pResponseWaitInfo, pMessage, eRRT_OK);
 				}
-				else if (pResponseWaitInfo->err != nullptr && pCookice->nResult != eRRT_OK)
+				else if (pCookice->nResult != eRRT_OK)
 				{
-					pResponseWaitInfo->err((EResponseResultType)pCookice->nResult);
+					pResponseWaitInfo->callback(pResponseWaitInfo, nullptr, (EResponseResultType)pCookice->nResult);
 				}
 			}
 
