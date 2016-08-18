@@ -66,9 +66,7 @@ namespace core
 	typedef std::function<void(SClientSessionInfo, CMessage)>				GateForwardCallback;		// 经网关服务转发的客户端消息处理函数类型
 	typedef std::function<void(uint64_t, CMessage)>							ClientCallback;				// 客户端消息处理函数类型
 	typedef std::function<void(uint16_t, uint8_t, const void*, uint16_t)>	ServiceGlobalFilter;		// 全局的消息过滤器类型
-	typedef std::function<void(uint64_t, CMessage)>							ActorCallback;				// actor消息处理函数类型
-	typedef std::function<void(SClientSessionInfo, CMessage)>				ActorGateForwardCallback;	// actor消息处理函数类型
-
+	
 #pragma pack(push,1)
 	struct gate_forward_cookice
 	{
