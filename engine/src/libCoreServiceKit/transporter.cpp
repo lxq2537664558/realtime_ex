@@ -169,7 +169,7 @@ namespace core
 
 		CCoreServiceAppImpl::Inst()->getInvokerTrace()->addTraceExtraInfo("wait response time out session_id: "UINT64FMT, pResponseWaitInfo->nSessionID);
 
-		pResponseWaitInfo->callback(pResponseWaitInfo, nullptr, eRRT_TIME_OUT);
+		pResponseWaitInfo->callback(nullptr, eRRT_TIME_OUT);
 
 		this->m_mapResponseWaitInfo.erase(iter);
 		SAFE_DELETE(pResponseWaitInfo);
@@ -193,10 +193,10 @@ namespace core
 		return pResponseWaitInfo;
 	}
 
-	void CTransporter::addResponseWaitInfo(uint64_t nSessionID, uint64_t nTraceID)
+	SResponseWaitInfo* CTransporter::addResponseWaitInfo(uint64_t nSessionID, uint64_t nTraceID)
 	{
 		auto iter = this->m_mapResponseWaitInfo.find(nSessionID);
-		DebugAst(iter == this->m_mapResponseWaitInfo.end());
+		DebugAstEx(iter == this->m_mapResponseWaitInfo.end(), nullptr);
 
 		SResponseWaitInfo* pResponseWaitInfo = new SResponseWaitInfo();
 		pResponseWaitInfo->callback = nullptr;
@@ -206,5 +206,7 @@ namespace core
 		CBaseApp::Inst()->registerTicker(&pResponseWaitInfo->tickTimeout, CCoreServiceAppImpl::Inst()->getInvokeTimeout(), 0, nSessionID);
 
 		this->m_mapResponseWaitInfo[pResponseWaitInfo->nSessionID] = pResponseWaitInfo;
+
+		return pResponseWaitInfo;
 	}
 }

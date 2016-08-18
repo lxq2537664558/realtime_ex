@@ -13,6 +13,9 @@
 #include "libBaseCommon/memory_hook.h"
 #include "libCoreServiceKit/base_actor.h"
 #include "libCoreServiceKit/base_actor_factory.h"
+#include "libCoreServiceKit/actor_dispatch.h"
+
+#include <memory>
 
 CTestActorApp1::CTestActorApp1()
 {
@@ -27,7 +30,9 @@ CTestActorApp1* CTestActorApp1::Inst()
 	return static_cast<CTestActorApp1*>(core::CCoreServiceApp::Inst());
 }
 
-class CTestActor1 : public core::CBaseActor
+class CTestActor1 
+	: public core::CBaseActor
+	, public core::CActorDispatch<CTestActor1>
 {
 public:
 	CTestActor1()
@@ -42,22 +47,26 @@ public:
 
 	virtual bool onInit(void* pContext)
 	{
-		this->registerCallback(eServiceRequestActor1, std::bind(&CTestActor1::onRequest, this, std::placeholders::_1, std::placeholders::_2));
-		
+		REGISTER_MESSAGE_HANDLER(eServiceRequestActor1, &CTestActor1::onRequest, false);
 		return true;
 	}
 
-	void onRequest(uint64_t nFrom, core::CMessage pMessage)
+	virtual void onDispatch(uint64_t nFrom, uint8_t nMessageType, core::CMessage pMessage)
 	{
-		uint64_t nActorID = reinterpret_cast<const CServiceRequestActor1*>(pMessage.get())->nActorID;
+		this->dispatch(this, nFrom, nMessageType, pMessage);
+	}
+
+	void onRequest(uint64_t nFrom, std::shared_ptr<CServiceRequestActor1> pMessage)
+	{
+		uint64_t nActorID = pMessage->nActorID;
 
 		while (true)
 		{
 			CServiceRequestActor2 netMsg;
 			netMsg.nID = this->m_nID++;
-			core::CMessage pResultData;
+			std::shared_ptr<CServiceResponseActor2> pResultData;
 			this->invoke(nActorID, &netMsg, pResultData);
-			PrintInfo("Actor1 ID: %d", reinterpret_cast<const CServiceResponseActor2*>(pResultData.get())->nID);
+			PrintInfo("Actor1 ID: %d", pResultData->nID);
 		}
 	}
 
@@ -65,7 +74,9 @@ private:
 	uint32_t	m_nID;
 };
 
-class CTestActor2 : public core::CBaseActor
+class CTestActor2
+	: public core::CBaseActor
+	, public core::CActorDispatch<CTestActor2>
 {
 public:
 	CTestActor2()
@@ -80,31 +91,36 @@ public:
 
 	virtual bool onInit(void* pContext)
 	{
-		this->registerCallback(eServiceRequestActor2, std::bind(&CTestActor2::onRequest, this, std::placeholders::_1, std::placeholders::_2));
+		REGISTER_MESSAGE_HANDLER(eServiceRequestActor2, &CTestActor2::onRequest, true);
 
 		return true;
 	}
 
-	void onRequest(uint64_t nFrom, core::CMessage pMessage)
+	virtual void onDispatch(uint64_t nFrom, uint8_t nMessageType, core::CMessage pMessage)
+	{
+		this->dispatch(this, nFrom, nMessageType, pMessage);
+	}
+
+	void onRequest(uint64_t nFrom, std::shared_ptr<CServiceRequestActor2> pMessage)
 	{
 		CServiceRequestActor3 request3;
-		request3.nID = reinterpret_cast<const CServiceRequestActor2*>(pMessage.get())->nID;
+		request3.nID = pMessage->nID;
 
-		core::CResponseFuture sResponseFuture;
+		core::CFuture<std::shared_ptr<CServiceRequestActor3>> sResponseFuture;
 		this->invoke_r(this->m_nDstActorID, &request3, sResponseFuture);
 		core::SActorSessionInfo sActorSessionInfo = this->getActorSessionInfo();
-		sResponseFuture.then_r([this](core::CMessage pMessage, uint32_t nErrorCode)
+		sResponseFuture.then_r([this](std::shared_ptr<CServiceRequestActor3> pMessage, uint32_t nErrorCode)
 		{
 			CServiceRequestActor4 request4;
-			request4.nID = reinterpret_cast<const CServiceRequestActor3*>(pMessage.get())->nID;
-			core::CResponseFuture sResponseFuture;
+			request4.nID = pMessage->nID;
+			core::CFuture<std::shared_ptr<CServiceRequestActor4>> sResponseFuture;
 			this->invoke_r(this->m_nDstActorID, &request4, sResponseFuture);
 
 			return sResponseFuture;
-		}).then([this, sActorSessionInfo](core::CMessage pMessage, uint32_t nErrorCode)
+		}).then([this, sActorSessionInfo](std::shared_ptr<CServiceRequestActor4> pMessage, uint32_t nErrorCode)
 		{
 			CServiceResponseActor2 netMsg;
-			netMsg.nID = reinterpret_cast<const CServiceRequestActor4*>(pMessage.get())->nID;
+			netMsg.nID = pMessage->nID;
 			this->response(sActorSessionInfo, &netMsg);
 		});
 	}
@@ -112,7 +128,9 @@ public:
 	uint64_t m_nDstActorID;
 };
 
-class CTestActor3 : public core::CBaseActor
+class CTestActor3
+	: public core::CBaseActor
+	, public core::CActorDispatch<CTestActor3>
 {
 public:
 	CTestActor3()
@@ -127,24 +145,28 @@ public:
 
 	virtual bool onInit(void* pContext)
 	{
-		this->registerCallback(eServiceRequestActor3, std::bind(&CTestActor3::onRequest3, this, std::placeholders::_1, std::placeholders::_2));
-		this->registerCallback(eServiceRequestActor4, std::bind(&CTestActor3::onRequest4, this, std::placeholders::_1, std::placeholders::_2));
-
+		REGISTER_MESSAGE_HANDLER(eServiceRequestActor3, &CTestActor3::onRequest3, true);
+		REGISTER_MESSAGE_HANDLER(eServiceRequestActor4, &CTestActor3::onRequest4, true);
 		return true;
 	}
 
-	void onRequest3(uint64_t nFrom, core::CMessage pMessage)
+	virtual void onDispatch(uint64_t nFrom, uint8_t nMessageType, core::CMessage pMessage)
+	{
+		this->dispatch(this, nFrom, nMessageType, pMessage);
+	}
+
+	void onRequest3(uint64_t nFrom, std::shared_ptr<CServiceRequestActor3> pMessage)
 	{
 		CServiceResponseActor3 netMsg;
-		netMsg.nID = reinterpret_cast<const CServiceRequestActor3*>(pMessage.get())->nID;
+		netMsg.nID = pMessage->nID;
 
 		this->response(&netMsg);
 	}
 
-	void onRequest4(uint64_t nFrom, core::CMessage pMessage)
+	void onRequest4(uint64_t nFrom, std::shared_ptr<CServiceRequestActor4> pMessage)
 	{
 		CServiceResponseActor4 netMsg;
-		netMsg.nID = reinterpret_cast<const CServiceRequestActor4*>(pMessage.get())->nID;
+		netMsg.nID = pMessage->nID;
 
 		this->response(&netMsg);
 	}
@@ -194,7 +216,7 @@ bool CTestActorApp1::onInit()
 
 	dynamic_cast<CTestActor2*>(pActor2)->m_nDstActorID = pActor3->getID();
 
-	for (size_t i = 0; i < 100; ++i)
+	for (size_t i = 0; i < 1; ++i)
 	{
 		CServiceRequestActor1 netMsg;
 		netMsg.nActorID = pActor2->getID();
@@ -212,6 +234,7 @@ void CTestActorApp1::onQuit()
 {
 	this->doQuit();
 }
+
 
 int32_t main(int argc, char* argv[])
 {

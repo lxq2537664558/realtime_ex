@@ -32,90 +32,36 @@ namespace core
 		SRequestMessageInfo sRequestMessageInfo;
 		sRequestMessageInfo.pData = const_cast<message_header*>(pData);
 		sRequestMessageInfo.nSessionID = 0;
-		sRequestMessageInfo.nCoroutineID = 0;
 		sRequestMessageInfo.nFromActorID = this->getID();
 		sRequestMessageInfo.nToActorID = nID;
 
 		return CCoreServiceAppImpl::Inst()->getScheduler()->invoke(sRequestMessageInfo);
 	}
 
-	uint32_t CBaseActor::invoke(uint64_t nID, const message_header* pData, CMessage& pResultData)
-	{
-		SRequestMessageInfo sRequestMessageInfo;
-		sRequestMessageInfo.pData = const_cast<message_header*>(pData);
-		sRequestMessageInfo.nSessionID = CCoreServiceAppImpl::Inst()->getTransporter()->genSessionID();
-		sRequestMessageInfo.nCoroutineID = coroutine::getCurrentID();
-		sRequestMessageInfo.nFromActorID = this->getID();
-		sRequestMessageInfo.nToActorID = nID;
-
-		if (!CCoreServiceAppImpl::Inst()->getScheduler()->invoke(sRequestMessageInfo))
-			return eRRT_ERROR;
-
-		this->m_pBaseActorImpl->addResponseWaitInfo(sRequestMessageInfo.nSessionID, 0, coroutine::getCurrentID());
-
-		coroutine::yield();
-
-		SResponseWaitInfo* pResponseWaitInfo = reinterpret_cast<SResponseWaitInfo*>(coroutine::recvMessage(coroutine::getCurrentID()));
-		DebugAstEx(pResponseWaitInfo != nullptr, eRRT_ERROR);
-		uint32_t nRet = (uint32_t)reinterpret_cast<uint64_t>(coroutine::recvMessage(coroutine::getCurrentID()));
-
-		pResultData = pResponseWaitInfo->pResponseMessage;
-		return nRet;
-	}
-
-	bool CBaseActor::invoke_r(uint64_t nID, const message_header* pData, CResponseFuture& sResponseFuture)
-	{
-		SRequestMessageInfo sRequestMessageInfo;
-		sRequestMessageInfo.pData = const_cast<message_header*>(pData);
-		sRequestMessageInfo.nSessionID = CCoreServiceAppImpl::Inst()->getTransporter()->genSessionID();
-		sRequestMessageInfo.nCoroutineID = coroutine::getCurrentID();
-		sRequestMessageInfo.nFromActorID = this->getID();
-		sRequestMessageInfo.nToActorID = nID;
-
-		if (!CCoreServiceAppImpl::Inst()->getScheduler()->invoke(sRequestMessageInfo))
-			return false;
-
-		this->m_pBaseActorImpl->addResponseWaitInfo(sRequestMessageInfo.nSessionID, 0, 0);
-
-		SResponseWaitInfo* pResponseWaitInfo = this->m_pBaseActorImpl->getResponseWaitInfo(sRequestMessageInfo.nSessionID, false);
-		DebugAstEx(nullptr != pResponseWaitInfo, false);
-		
-		std::shared_ptr<CPromise<CMessage>> pPromise = std::make_shared<CPromise<CMessage>>();
-
-		pResponseWaitInfo->callback = [pPromise](SResponseWaitInfo* pResponseWaitInfo, CMessage pMessage, uint32_t nErrorCode)->void
-		{
-			pPromise->setValue(pMessage, nErrorCode);
-		};
-
-		sResponseFuture = pPromise->getFuture();
-
-		return true;
-	}
-
-	bool CBaseActor::invoke_r(uint64_t nID, const message_header* pData, InvokeCallback& callback)
-	{
-		SRequestMessageInfo sRequestMessageInfo;
-		sRequestMessageInfo.pData = const_cast<message_header*>(pData);
-		sRequestMessageInfo.nSessionID = CCoreServiceAppImpl::Inst()->getTransporter()->genSessionID();
-		sRequestMessageInfo.nCoroutineID = coroutine::getCurrentID();
-		sRequestMessageInfo.nFromActorID = this->getID();
-		sRequestMessageInfo.nToActorID = nID;
-
-		if (!CCoreServiceAppImpl::Inst()->getScheduler()->invoke(sRequestMessageInfo))
-			return false;
-
-		this->m_pBaseActorImpl->addResponseWaitInfo(sRequestMessageInfo.nSessionID, 0, 0);
-
-		SResponseWaitInfo* pResponseWaitInfo = this->m_pBaseActorImpl->getResponseWaitInfo(sRequestMessageInfo.nSessionID, false);
-		DebugAstEx(nullptr != pResponseWaitInfo, false);
-		
-		pResponseWaitInfo->callback = [callback](SResponseWaitInfo*, CMessage pMessage, uint32_t nErrorCode)->void
-		{
-			callback(pMessage, nErrorCode);
-		};
-
-		return true;
-	}
+// 	uint32_t CBaseActor::invoke(uint64_t nID, const message_header* pData, CMessage& pResultData)
+// 	{
+// 		SRequestMessageInfo sRequestMessageInfo;
+// 		sRequestMessageInfo.pData = const_cast<message_header*>(pData);
+// 		sRequestMessageInfo.nSessionID = CCoreServiceAppImpl::Inst()->getTransporter()->genSessionID();
+// 		sRequestMessageInfo.nCoroutineID = coroutine::getCurrentID();
+// 		sRequestMessageInfo.nFromActorID = this->getID();
+// 		sRequestMessageInfo.nToActorID = nID;
+// 
+// 		if (!CCoreServiceAppImpl::Inst()->getScheduler()->invoke(sRequestMessageInfo))
+// 			return eRRT_ERROR;
+// 
+// 		this->m_pBaseActorImpl->addResponseWaitInfo(sRequestMessageInfo.nSessionID, 0, coroutine::getCurrentID());
+// 
+// 		coroutine::yield();
+// 
+// 		CMessage* pMessage = reinterpret_cast<CMessage*>(coroutine::recvMessage(coroutine::getCurrentID()));
+// 		uint32_t nRet = (uint32_t)reinterpret_cast<uint64_t>(coroutine::recvMessage(coroutine::getCurrentID()));
+// 
+// 		pResultData = *pMessage;
+// 		SAFE_DELETE(pMessage);
+// 
+// 		return nRet;
+// 	}
 
 	SActorSessionInfo CBaseActor::getActorSessionInfo() const
 	{
@@ -137,16 +83,6 @@ namespace core
 		sResponseMessageInfo.nToActorID = sActorSessionInfo.nActorID;
 
 		bool bRet = CCoreServiceAppImpl::Inst()->getScheduler()->response(sResponseMessageInfo);
-	}
-
-	void CBaseActor::registerCallback(uint16_t nMessageID, ActorCallback callback)
-	{
-		this->m_pBaseActorImpl->registerCallback(nMessageID, callback);
-	}
-
-	void CBaseActor::registerGateForwardCallback(uint16_t nMessageID, ActorGateForwardCallback callback)
-	{
-
 	}
 
 	uint16_t CBaseActor::getServiceID(uint64_t nActorID)
@@ -195,4 +131,24 @@ namespace core
 
 		delete this;
 	}
+
+	bool CBaseActor::invokeImpl(uint64_t nID, const message_header* pData, uint64_t nCoroutineID, const std::function<void(std::shared_ptr<message_header>, uint32_t)>& callback)
+	{
+		SRequestMessageInfo sRequestMessageInfo;
+		sRequestMessageInfo.pData = const_cast<message_header*>(pData);
+		sRequestMessageInfo.nSessionID = CCoreServiceAppImpl::Inst()->getTransporter()->genSessionID();
+		sRequestMessageInfo.nFromActorID = this->getID();
+		sRequestMessageInfo.nToActorID = nID;
+
+		if (!CCoreServiceAppImpl::Inst()->getScheduler()->invoke(sRequestMessageInfo))
+			return false;
+
+		SResponseWaitInfo* pResponseWaitInfo = this->m_pBaseActorImpl->addResponseWaitInfo(sRequestMessageInfo.nSessionID, 0, nCoroutineID);
+		DebugAstEx(nullptr != pResponseWaitInfo, false);
+	
+		pResponseWaitInfo->callback = callback;
+
+		return true;
+	}
+
 }

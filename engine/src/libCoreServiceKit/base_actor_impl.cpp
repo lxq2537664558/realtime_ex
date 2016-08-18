@@ -41,7 +41,7 @@ namespace core
 			if (!this->m_channel.recv(sMessagePacket))
 				break;
 
-			CMessage pMessage = nullptr;
+			std::shared_ptr<message_header> pMessage = nullptr;
 			if ((sMessagePacket.nType&eMT_TYPE_MASK) == eMT_REQUEST)
 			{
 				DebugAst(sMessagePacket.nDataSize > sizeof(request_cookice));
@@ -53,16 +53,11 @@ namespace core
 
 				// °þµôcookice
 				const message_header* pHeader = reinterpret_cast<const message_header*>(pCookice + 1);
+				void* pData = sMessagePacket.pData;
+				pMessage = std::shared_ptr<message_header>(const_cast<message_header*>(pHeader), [pData](const void*){ delete[] reinterpret_cast<const char*>(pData); });
 
-				auto iter = this->m_mapActorCallback.find(pHeader->nMessageID);
-				if (iter != this->m_mapActorCallback.end())
-				{
-					ActorCallback& callback = iter->second;
-					void* pData = sMessagePacket.pData;
-					pMessage = CMessage(const_cast<message_header*>(pHeader), [pData](const void*){ delete[] reinterpret_cast<const char*>(pData); });
-					uint64_t nCoroutineID = coroutine::create([&](uint64_t){ callback(pCookice->nFromActorID, pMessage); });
-					coroutine::resume(nCoroutineID, 0);
-				}
+				this->m_pBaseActor->onDispatch(pCookice->nFromActorID, sMessagePacket.nType, pMessage);
+				
 				this->m_sActorSessionInfo.nActorID = 0;
 				this->m_sActorSessionInfo.nSessionID = 0;
 			}
@@ -82,23 +77,22 @@ namespace core
 						if (pCookice->nResult == eRRT_OK)
 						{
 							void* pData = sMessagePacket.pData;
-							pMessage = CMessage(const_cast<message_header*>(pHeader), [pData](const void*){ delete[] reinterpret_cast<const char*>(pData); });
-							uint64_t nCoroutineID = coroutine::create([&](uint64_t){ pResponseWaitInfo->callback(pResponseWaitInfo, pMessage, pCookice->nResult); });
-							coroutine::resume(nCoroutineID, 0);
+							pMessage = std::shared_ptr<message_header>(const_cast<message_header*>(pHeader), [pData](const void*){ delete[] reinterpret_cast<const char*>(pData); });
+							pResponseWaitInfo->callback(pMessage, pCookice->nResult);
 						}
 						else if (pCookice->nResult != eRRT_OK)
 						{
-							uint64_t nCoroutineID = coroutine::create([&](uint64_t){ pResponseWaitInfo->callback(pResponseWaitInfo, nullptr, pCookice->nResult); });
-							coroutine::resume(nCoroutineID, 0);
+							pResponseWaitInfo->callback(nullptr, pCookice->nResult);
 						}
 					}
 					else if (pResponseWaitInfo->nCoroutineID != 0)
 					{
 						void* pData = sMessagePacket.pData;
-						pMessage = CMessage(const_cast<message_header*>(pHeader), [pData](const void*){ delete[] reinterpret_cast<const char*>(pData); });
-						pResponseWaitInfo->pResponseMessage = pMessage;
+						pMessage = std::shared_ptr<message_header>(const_cast<message_header*>(pHeader), [pData](const void*){ delete[] reinterpret_cast<const char*>(pData); });
 
-						coroutine::sendMessage(pResponseWaitInfo->nCoroutineID, pResponseWaitInfo);
+						CMessage* pNewMessage = new CMessage();
+						*pNewMessage = pMessage;
+						coroutine::sendMessage(pResponseWaitInfo->nCoroutineID, pNewMessage);
 						coroutine::sendMessage(pResponseWaitInfo->nCoroutineID, reinterpret_cast<void*>(pCookice->nResult));
 
 						coroutine::resume(pResponseWaitInfo->nCoroutineID, 0);
@@ -112,26 +106,11 @@ namespace core
 				const message_header* pHeader = reinterpret_cast<const message_header*>(pCookice + 1);
 
 				SClientSessionInfo session((uint16_t)sMessagePacket.nID, pCookice->nSessionID);
+				void* pData = sMessagePacket.pData;
+				pMessage = std::shared_ptr<message_header>(const_cast<message_header*>(pHeader), [pData](const void*){ delete[] reinterpret_cast<const char*>(pData); });
 
-				auto iter = this->m_mapActorGateForwardCallback.find(pHeader->nMessageID);
-				if (iter != this->m_mapActorGateForwardCallback.end())
-				{
-					ActorGateForwardCallback& callback = iter->second;
-					void* pData = sMessagePacket.pData;
-					pMessage = CMessage(const_cast<message_header*>(pHeader), [pData](const void*){ delete[] reinterpret_cast<const char*>(pData); });
-					uint64_t nCoroutineID = coroutine::create([&](uint64_t){ callback(session, pMessage); });
-					coroutine::resume(nCoroutineID, 0);
-				}
+				this->m_pBaseActor->onGateForward(session, sMessagePacket.nType, pMessage);
 			}
-
-			if (pMessage == nullptr || pMessage.unique())
-			{
-				char* pBuf = reinterpret_cast<char*>(sMessagePacket.pData);
-				SAFE_DELETE_ARRAY(pBuf);
-			}
-
-			if (pMessage.unique())
-				pMessage.clear(false);
 		}
 
 		if (!this->m_channel.empty())
@@ -178,10 +157,10 @@ namespace core
 		this->m_channel.send(sMessagePacket);
 	}
 
-	void CBaseActorImpl::addResponseWaitInfo(uint64_t nSessionID, uint64_t nTraceID, uint64_t nCoroutineID)
+	SResponseWaitInfo* CBaseActorImpl::addResponseWaitInfo(uint64_t nSessionID, uint64_t nTraceID, uint64_t nCoroutineID)
 	{
 		auto iter = this->m_mapResponseWaitInfo.find(nSessionID);
-		DebugAst(iter == this->m_mapResponseWaitInfo.end());
+		DebugAstEx(iter == this->m_mapResponseWaitInfo.end(), nullptr);
 
 		SResponseWaitInfo* pResponseWaitInfo = new SResponseWaitInfo();
 		pResponseWaitInfo->callback = nullptr;
@@ -192,6 +171,8 @@ namespace core
 		CBaseApp::Inst()->registerTicker(&pResponseWaitInfo->tickTimeout, CCoreServiceAppImpl::Inst()->getInvokeTimeout(), 0, nSessionID);
 
 		this->m_mapResponseWaitInfo[pResponseWaitInfo->nSessionID] = pResponseWaitInfo;
+
+		return pResponseWaitInfo;
 	}
 
 	SResponseWaitInfo* CBaseActorImpl::getResponseWaitInfo(uint64_t nSessionID, bool bErase)
@@ -205,21 +186,5 @@ namespace core
 			this->m_mapResponseWaitInfo.erase(iter);
 
 		return pResponseWaitInfo;
-	}
-
-	void CBaseActorImpl::registerCallback(uint16_t nMessageID, ActorCallback callback)
-	{
-		if (callback == nullptr)
-			this->m_mapActorCallback.erase(nMessageID);
-		else
-			this->m_mapActorCallback[nMessageID] = callback;
-	}
-
-	void CBaseActorImpl::registerGateForwardCallback(uint16_t nMessageID, ActorGateForwardCallback callback)
-	{
-		if (callback == nullptr)
-			this->m_mapActorGateForwardCallback.erase(nMessageID);
-		else
-			this->m_mapActorGateForwardCallback[nMessageID] = callback;
 	}
 }

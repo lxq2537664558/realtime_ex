@@ -145,6 +145,7 @@
     <ClInclude Include="..\..\inc\libCoreServiceKit\base_actor_factory.h" />
     <ClInclude Include="..\..\inc\libCoreServiceKit\cluster_invoker.h" />
     <ClInclude Include="..\..\inc\libCoreServiceKit\core_service_app.h" />
+    <ClInclude Include="..\..\inc\libCoreServiceKit\actor_dispatch.h" />
     <ClInclude Include="..\..\inc\libCoreServiceKit\future.h" />
     <ClInclude Include="..\..\inc\libCoreServiceKit\message_dispatcher.h" />
     <ClInclude Include="..\..\inc\libCoreServiceKit\promise.h" />
@@ -199,6 +200,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\inc\libCoreServiceKit\actor_dispatch.inl" />
+    <None Include="..\..\inc\libCoreServiceKit\base_actor.inl" />
+    <None Include="..\..\inc\libCoreServiceKit\cluster_invoker.inl" />
     <None Include="..\..\inc\libCoreServiceKit\future.inl" />
     <None Include="..\..\inc\libCoreServiceKit\promise.inl" />
   </ItemGroup>

@@ -86,6 +86,9 @@
     <ClInclude Include="..\..\inc\libCoreServiceKit\promise.h">
       <Filter>inc</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreServiceKit\actor_dispatch.h">
+      <Filter>inc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -145,6 +148,15 @@
       <Filter>inc</Filter>
     </None>
     <None Include="..\..\inc\libCoreServiceKit\promise.inl">
+      <Filter>inc</Filter>
+    </None>
+    <None Include="..\..\inc\libCoreServiceKit\base_actor.inl">
+      <Filter>inc</Filter>
+    </None>
+    <None Include="..\..\inc\libCoreServiceKit\actor_dispatch.inl">
+      <Filter>inc</Filter>
+    </None>
+    <None Include="..\..\inc\libCoreServiceKit\cluster_invoker.inl">
       <Filter>inc</Filter>
     </None>
   </ItemGroup>

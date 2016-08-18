@@ -24,25 +24,17 @@ namespace core
 		void				process();
 		CChannel*			getChannel();
 		SActorSessionInfo	getActorSessionInfo() const;
-		void				addResponseWaitInfo(uint64_t nSessionID, uint64_t nTraceID, uint64_t nCoroutineID);
+		SResponseWaitInfo*	addResponseWaitInfo(uint64_t nSessionID, uint64_t nTraceID, uint64_t nCoroutineID);
 		SResponseWaitInfo*	getResponseWaitInfo(uint64_t nSessionID, bool bErase);
-
-		void				registerCallback(uint16_t nMessageID, ActorCallback callback);
-		void				registerGateForwardCallback(uint16_t nMessageID, ActorGateForwardCallback callback);
 
 	private:
 		void				onRequestMessageTimeout(uint64_t nContext);
 
 	private:
-		std::map<uint16_t, ActorCallback>
-							m_mapActorCallback;
-		std::map<uint16_t, ActorGateForwardCallback>
-							m_mapActorGateForwardCallback;
 		uint64_t			m_nID;
 		CBaseActor*			m_pBaseActor;
 		SActorSessionInfo	m_sActorSessionInfo;
 		CChannel			m_channel;
-
 		std::map<uint64_t, SResponseWaitInfo*>
 							m_mapResponseWaitInfo;
 	};

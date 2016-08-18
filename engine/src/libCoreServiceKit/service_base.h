@@ -1,7 +1,6 @@
 #pragma once
 
 #include "libCoreCommon/core_common.h"
-#include "libCoreCommon/promise.h"
 
 #include "core_service_kit_define.h"
 
@@ -15,7 +14,6 @@ namespace core
 		uint64_t		nFromActorID;
 		uint64_t		nToActorID;
 		uint64_t		nSessionID;
-		uint64_t		nCoroutineID;
 		message_header*	pData;
 	};
 
@@ -53,8 +51,7 @@ namespace core
 		uint64_t	nSessionID;
 		uint64_t	nTraceID;
 		uint64_t	nCoroutineID;
-		CMessage	pResponseMessage;
-		std::function<void(SResponseWaitInfo*, CMessage, uint32_t)>
+		std::function<void(CMessage, uint32_t)>
 					callback;
 	};
 

@@ -24,6 +24,11 @@ namespace core
 		return CCoreServiceAppImpl::Inst()->getServiceBaseInfo();
 	}
 
+	uint16_t CCoreServiceApp::getServiceID(const std::string& szServiceName) const
+	{
+		return CCoreServiceAppImpl::Inst()->getCoreServiceProxy()->getServiceID(szServiceName);
+	}
+
 	void CCoreServiceApp::startNewTrace()
 	{
 		CCoreServiceAppImpl::Inst()->getInvokerTrace()->startNewTrace();

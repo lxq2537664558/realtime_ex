@@ -8,7 +8,6 @@
 
 #include "libCoreCommon/base_connection_mgr.h"
 #include "libCoreServiceKit/message_dispatcher.h"
-#include "libCoreServiceKit/message_registry.h"
 
 #include <functional>
 
@@ -46,7 +45,7 @@ bool CGateApp::onInit()
 	this->m_pServiceConnectionFactory = new CServiceConnectionFactory();
 	this->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionFromClient, this->m_pServiceConnectionFactory);
 
-	core::CMessageRegistry::Inst()->addGlobalBeforeFilter(std::bind(gate_before_filter, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
+	this->addGlobalBeforeFilter(std::bind(gate_before_filter, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
 	
 	if (!CGateMessageDispatcher::Inst()->init())
 	{

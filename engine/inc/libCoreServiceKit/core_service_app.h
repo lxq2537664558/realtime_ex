@@ -21,6 +21,10 @@ namespace core
 		*/
 		const SServiceBaseInfo&			getServiceBaseInfo() const;
 		/**
+		@brief: 根据服务名字获取服务id
+		*/
+		uint16_t						getServiceID(const std::string& szServiceName) const;
+		/**
 		@brief: 设置全局的服务连接成功回调
 		*/
 		void							setServiceConnectCallback(std::function<void(uint16_t)> funConnect);

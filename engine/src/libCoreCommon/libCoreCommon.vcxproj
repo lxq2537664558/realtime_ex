@@ -18,7 +18,6 @@
     <ClInclude Include="..\..\inc\libCoreCommon\base_object.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\core_common.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\coroutine.h" />
-    <ClInclude Include="..\..\inc\libCoreCommon\message.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\ticker.h" />
     <ClInclude Include="core_app.h" />
     <ClInclude Include="core_connection.h" />
@@ -50,7 +49,6 @@
     <ClCompile Include="fix_memory_pool.cpp" />
     <ClCompile Include="logic_message_queue.cpp" />
     <ClCompile Include="memory_new.cpp" />
-    <ClCompile Include="message.cpp" />
     <ClCompile Include="net_message_queue.cpp" />
     <ClCompile Include="monitor.cpp" />
     <ClCompile Include="net_runnable.cpp" />

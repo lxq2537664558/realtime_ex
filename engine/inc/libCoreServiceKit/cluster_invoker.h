@@ -6,32 +6,45 @@
 
 namespace core
 {
-	namespace cluster_invoker
+	class CClusterInvoker :
+		public base::CSingleton<CClusterInvoker>
 	{
+	public:
+		CClusterInvoker();
+		~CClusterInvoker();
+
+		bool				init();
+
 		/**
 		@brief: 调用指定远程服务的消息，远程服务不用返回消息
 		*/
 		bool				invoke(uint16_t nServiceID, const message_header* pData);
 		/**
-		@brief: 调用指定远程服务的消息，需要提供远程服务消息返回的响应函数回调,以promise的形式提供
-		*/
-		bool				invoke_r(uint16_t nServiceID, const message_header* pData, CResponseFuture& sResponseFuture);
-		/**
-		@brief: 调用指定远程服务的消息，需要提供远程服务消息返回的响应函数回调
-		*/
-		bool				invoke_r(uint16_t nServiceID, const message_header* pData, InvokeCallback& callback);
-		/**
 		@brief: 调用指定远程服务的消息，远程服务不用返回消息
 		*/
 		bool				invoke(const std::string& szServiceName, const message_header* pData);
+
 		/**
 		@brief: 调用指定远程服务的消息，需要提供远程服务消息返回的响应函数回调,以promise的形式提供
 		*/
-		bool				invoke_r(const std::string& szServiceName, const message_header* pData, CResponseFuture& sResponseFuture);
+		template<class T>
+		inline bool			invoke_r(uint16_t nServiceID, const message_header* pData, CFuture<std::shared_ptr<T>>& sFuture);
+		/**
+		@brief: 调用指定远程服务的消息，需要提供远程服务消息返回的响应函数回调,以promise的形式提供
+		*/
+		template<class T>
+		inline bool			invoke_r(const std::string& szServiceName, const message_header* pData, CFuture<std::shared_ptr<T>>& sFuture);
+
 		/**
 		@brief: 调用指定远程服务的消息，需要提供远程服务消息返回的响应函数回调
 		*/
-		bool				invoke_r(const std::string& szServiceName, const message_header* pData, InvokeCallback& callback);
+		template<class T>
+		inline bool			invoke_r(uint16_t nServiceID, const message_header* pData, const std::function<void(std::shared_ptr<T>, uint32_t)>& callback);
+		/**
+		@brief: 调用指定远程服务的消息，需要提供远程服务消息返回的响应函数回调
+		*/
+		template<class T>
+		inline bool			invoke_r(const std::string& szServiceName, const message_header* pData, const std::function<void(std::shared_ptr<T>, uint32_t)>& callback);
 		
 		/**
 		@brief: 响应远程服务的调用，发送响应消息
@@ -72,5 +85,10 @@ namespace core
 		@brief: 网关服务转发客户端消息
 		*/
 		bool				forward(const std::string& szServiceName, uint64_t nActorID, uint64_t nSessionID, const message_header* pData);
+
+	private:
+		bool				invokeImpl(uint16_t nServiceID, const message_header* pData, const std::function<void(std::shared_ptr<message_header>, uint32_t)>& callback);
 	};
 }
+
+#include "cluster_invoker.inl"

@@ -47,7 +47,7 @@ namespace core
 	}
 
 	template<class T>
-	uint32_t core::CFuture<T>::getError() const
+	uint32_t core::CFuture<T>::getErrorCode() const
 	{
 		if (!this->isReady())
 			return 0;

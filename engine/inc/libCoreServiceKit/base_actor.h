@@ -21,17 +21,23 @@ namespace core
 		uint64_t			getID() const;
 
 		bool				invoke(uint64_t nID, const message_header* pData);
-		bool				invoke_r(uint64_t nID, const message_header* pData, CResponseFuture& sActorResponseFuture);
-		bool				invoke_r(uint64_t nID, const message_header* pData, InvokeCallback& callback);
-		uint32_t			invoke(uint64_t nID, const message_header* pData, CMessage& pResultData);
+
+		template<class T>
+		bool				invoke_r(uint64_t nID, const message_header* pData, const std::function<void(std::shared_ptr<T>, uint32_t)>& callback);
+
+		template<class T>
+		inline uint32_t		invoke(uint64_t nID, const message_header* pData, std::shared_ptr<T>& pResultMessage);
+
+		template<class T>
+		inline bool			invoke_r(uint64_t nID, const message_header* pData, CFuture<std::shared_ptr<T>>& sFuture);
 
 		SActorSessionInfo	getActorSessionInfo() const;
 		void				response(const message_header* pData);
 		void				response(const SActorSessionInfo& sActorSessionInfo, const message_header* pData);
-
-		void				registerCallback(uint16_t nMessageID, ActorCallback callback);
-		void				registerGateForwardCallback(uint16_t nMessageID, ActorGateForwardCallback callback);
 		
+		virtual void		onDispatch(uint64_t nFrom, uint8_t nMessageType, CMessage pMessage) { }
+		virtual void		onGateForward(SClientSessionInfo sSession, uint8_t nMessageType, CMessage pMessage) { }
+
 		void				release();
 
 		static CBaseActor*	createActor(void* pContext, CBaseActorFactory* pBaseActorFactory);
@@ -41,6 +47,11 @@ namespace core
 		static uint64_t		makeRemoteActorID(uint16_t nServiceID, uint64_t nActorID);
 
 	private:
+		bool				invokeImpl(uint64_t nID, const message_header* pData, uint64_t nCoroutineID, const std::function<void(std::shared_ptr<message_header>, uint32_t)>& callback);
+
+	private:
 		CBaseActorImpl*	m_pBaseActorImpl;
 	};
 }
+
+#include "base_actor.inl"

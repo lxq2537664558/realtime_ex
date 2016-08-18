@@ -30,7 +30,7 @@ namespace core
 		SServiceSessionInfo&	getServiceSessionInfo();
 
 		SResponseWaitInfo*		getResponseWaitInfo(uint64_t nSessionID, bool bErase);
-		void					addResponseWaitInfo(uint64_t nSessionID, uint64_t nTraceID);
+		SResponseWaitInfo*		addResponseWaitInfo(uint64_t nSessionID, uint64_t nTraceID);
 
 		uint64_t				genSessionID();
 

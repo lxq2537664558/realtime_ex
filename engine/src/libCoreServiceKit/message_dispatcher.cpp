@@ -55,7 +55,7 @@ namespace core
 			if (callback != nullptr)
 			{
 				pMessage = CMessage(const_cast<message_header*>(pHeader));
-				callback(nFromServiceID, nMessageType, pMessage);
+				callback(nFromServiceID, pMessage);
 			}
 			sServiceSessionInfo.nServiceID = 0;
 			sServiceSessionInfo.nSessionID = 0;
@@ -84,11 +84,11 @@ namespace core
 				if (pCookice->nResult == eRRT_OK)
 				{
 					pMessage = CMessage(const_cast<message_header*>(pHeader));
-					pResponseWaitInfo->callback(pResponseWaitInfo, pMessage, eRRT_OK);
+					pResponseWaitInfo->callback(pMessage, eRRT_OK);
 				}
 				else if (pCookice->nResult != eRRT_OK)
 				{
-					pResponseWaitInfo->callback(pResponseWaitInfo, nullptr, (EResponseResultType)pCookice->nResult);
+					pResponseWaitInfo->callback(nullptr, (EResponseResultType)pCookice->nResult);
 				}
 			}
 
@@ -108,7 +108,7 @@ namespace core
 			if (callback != nullptr)
 			{
 				pMessage = CMessage(const_cast<message_header*>(pHeader));
-				callback(session, nMessageType, pMessage);
+				callback(session, pMessage);
 			}
 			CCoreServiceAppImpl::Inst()->getInvokerTrace()->endRecv();
 		}

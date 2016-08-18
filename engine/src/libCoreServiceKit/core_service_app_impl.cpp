@@ -141,6 +141,12 @@ namespace core
 			return false;
 		}
 
+		if (!CClusterInvoker::Inst()->init())
+		{
+			PrintWarning("CClusterInvoker::Inst()->init()");
+			return false;
+		}
+
 		CBaseApp::Inst()->getBaseConnectionMgr()->setConnectRefuseCallback(std::bind(&CCoreServiceAppImpl::onConnectRefuse, this, std::placeholders::_1));
 
 		if (this->m_sServiceBaseInfo.nPort != 0)

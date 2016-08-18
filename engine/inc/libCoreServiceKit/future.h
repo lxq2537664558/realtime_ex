@@ -16,7 +16,7 @@ namespace core
 		T			val;
 	};
 
-	// 可以串联并联的future
+	// 支持串联并联的future
 	template<class T>
 	class CFuture
 	{
@@ -36,7 +36,7 @@ namespace core
 		bool		isReady() const;
 		bool		isVaild() const;
 		bool		getValue(T& val) const;
-		uint32_t	getError() const;
+		uint32_t	getErrorCode() const;
 
 		void		then(const std::function<void(T, uint32_t)>& fn);
 		
