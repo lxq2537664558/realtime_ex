@@ -35,9 +35,8 @@ namespace core
 
 	int32_t serialize_protobuf_message_to_buf(const google::protobuf::Message* pMessage, void* pData, uint16_t nSize)
 	{
-		DebugAstEx(pMessage != nullptr && pData != nullptr, false);
+		DebugAstEx(pMessage != nullptr && pData != nullptr, -1);
 
-		std::string szMessageData;
 		if (!pMessage->SerializeToArray(pData, nSize))
 			return -1;
 

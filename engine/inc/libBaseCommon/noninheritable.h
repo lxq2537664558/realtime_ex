@@ -3,7 +3,7 @@
 
 namespace base
 {
-	template<typename T>
+	template<class T>
 	class noninheritable
 	{
 		friend T;

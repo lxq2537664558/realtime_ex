@@ -42,6 +42,10 @@ namespace core
 		*/
 		void					shutdown(bool bForce, const std::string& szMsg);
 		/**
+		@brief: 消息解析器
+		*/
+		void					setMessageParser(MessageParser parser);
+		/**
 		@brief: 打开关闭心跳
 		*/
 		void					enableHeartbeat(bool bEnable);
@@ -68,18 +72,12 @@ namespace core
 		/**
 		@brief: 消息回调
 		*/
-		virtual bool			onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize) = 0;
+		virtual void			onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize) = 0;
 
 	private:
 		void					onHeartbeat(uint64_t nContext);
 
 	private:
-		bool		m_bHeartbeat;
-		CTicker		m_heartbeat;
-		uint32_t	m_nSendHeartbeatCount;
-
-		uint64_t	m_nID;
-		SNetAddr	m_sLocalAddr;
-		SNetAddr	m_sRemoteAddr;
+		CCoreConnection*	m_pCoreConnection;
 	};
 }

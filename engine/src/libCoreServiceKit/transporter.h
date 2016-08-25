@@ -18,19 +18,19 @@ namespace core
 
 		bool					init();
 
-		bool					invoke(uint16_t nServiceID, const SRequestMessageInfo& sRequestMessageInfo);
-		bool					response(uint16_t nServiceID, const SResponseMessageInfo& sResponseMessageInfo);
+		bool					invoke(uint16_t nNodeID, const SRequestMessageInfo& sRequestMessageInfo);
+		bool					response(uint16_t nNodeID, const SResponseMessageInfo& sResponseMessageInfo);
 
-		bool					forward(uint16_t nServiceID, const SGateForwardMessageInfo& sGateMessageInfo);
+		bool					forward(uint16_t nNodeID, const SGateForwardMessageInfo& sGateMessageInfo);
 
-		bool					send(uint16_t nServiceID, const SGateMessageInfo& sGateMessageInfo);
+		bool					send(uint16_t nNodeID, const SGateMessageInfo& sGateMessageInfo);
 
-		bool					broadcast(uint16_t nServiceID, const SGateBroadcastMessageInfo& sGateBroadcastMessageInfo);
+		bool					broadcast(uint16_t nNodeID, const SGateBroadcastMessageInfo& sGateBroadcastMessageInfo);
 
-		SServiceSessionInfo&	getServiceSessionInfo();
+		SNodeSessionInfo&		getNodeSessionInfo();
 
 		SResponseWaitInfo*		getResponseWaitInfo(uint64_t nSessionID, bool bErase);
-		SResponseWaitInfo*		addResponseWaitInfo(uint64_t nSessionID, uint64_t nTraceID);
+		SResponseWaitInfo*		addResponseWaitInfo(uint64_t nSessionID);
 
 		uint64_t				genSessionID();
 
@@ -39,7 +39,7 @@ namespace core
 		
 	private:
 		uint64_t									m_nNextSessionID;
-		SServiceSessionInfo							m_sServiceSessionInfo;
+		SNodeSessionInfo							m_sNodeSessionInfo;
 		std::map<uint64_t, SResponseWaitInfo*>		m_mapResponseWaitInfo;
 	};
 }

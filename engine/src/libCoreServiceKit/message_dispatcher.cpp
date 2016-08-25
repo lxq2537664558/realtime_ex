@@ -25,42 +25,49 @@ namespace core
 		return true;
 	}
 
-	bool CMessageDispatcher::dispatch(uint16_t nFromServiceID, uint8_t nMessageType, const void* pData, uint16_t nSize)
+	void CMessageDispatcher::dispatch(uint64_t nFromSocketID, uint16_t nFromNodeID, uint8_t nMessageType, const void* pData, uint16_t nSize)
 	{
-		DebugAstEx(pData != nullptr, true);
+		DebugAst(pData != nullptr);
 
-		const std::vector<ServiceGlobalFilter>& vecGlobalBeforeFilter = CCoreServiceAppImpl::Inst()->getGlobalBeforeFilter();
+		bool bFilter = false;
+		const std::vector<GlobalBeforeFilter>& vecGlobalBeforeFilter = CCoreServiceAppImpl::Inst()->getGlobalBeforeFilter();
 		for (size_t i = 0; i < vecGlobalBeforeFilter.size(); ++i)
 		{
-			vecGlobalBeforeFilter[i](nFromServiceID, nMessageType, pData, nSize);
+			if (!vecGlobalBeforeFilter[i](nFromSocketID, nFromNodeID, nMessageType, pData, nSize))
+			{
+				bFilter = true;
+				break;
+			}
 		}
+		if (bFilter)
+			return;
 
 		CMessage pMessage = nullptr;
 		if ((nMessageType&eMT_TYPE_MASK) == eMT_REQUEST)
 		{
-			DebugAstEx(nSize > sizeof(request_cookice), true);
+			DebugAst(nSize > sizeof(request_cookice));
 
 			const request_cookice* pCookice = reinterpret_cast<const request_cookice*>(pData);
 
-			SServiceSessionInfo& sServiceSessionInfo = CCoreServiceAppImpl::Inst()->getTransporter()->getServiceSessionInfo();
-			sServiceSessionInfo.nServiceID = nFromServiceID;
-			sServiceSessionInfo.nSessionID = pCookice->nSessionID;
+			SNodeSessionInfo& sNodeSessionInfo = CCoreServiceAppImpl::Inst()->getTransporter()->getNodeSessionInfo();
+			sNodeSessionInfo.nNodeID = nFromNodeID;
+			sNodeSessionInfo.nSessionID = pCookice->nSessionID;
 
 			// °þµôcookice
 			const message_header* pHeader = reinterpret_cast<const message_header*>(pCookice + 1);
 
-			CCoreServiceAppImpl::Inst()->getInvokerTrace()->beginRecv(pCookice->nTraceID, pHeader->nMessageID, nFromServiceID);
-
-			ServiceCallback& callback = CCoreServiceAppImpl::Inst()->getCoreServiceInvoker()->getCallback(pHeader->nMessageID);
+			auto& callback = CCoreServiceAppImpl::Inst()->getCoreMessageRegistry()->getCallback(pHeader->nMessageID);
 			if (callback != nullptr)
 			{
-				pMessage = CMessage(const_cast<message_header*>(pHeader));
-				callback(nFromServiceID, pMessage);
+				CCoreServiceAppImpl::Inst()->getInvokerTrace()->traceBeginRecv(pCookice->nTraceID, pHeader->nMessageID, nFromNodeID);
+				char* pNewData = new char[pHeader->nMessageSize];
+				memcpy(pNewData, pHeader, pHeader->nMessageSize);
+				pMessage = CMessage(reinterpret_cast<message_header*>(pNewData));
+				bFilter = !callback(nFromNodeID, pMessage);
+				CCoreServiceAppImpl::Inst()->getInvokerTrace()->traceEndRecv();
 			}
-			sServiceSessionInfo.nServiceID = 0;
-			sServiceSessionInfo.nSessionID = 0;
-
-			CCoreServiceAppImpl::Inst()->getInvokerTrace()->endRecv();
+			sNodeSessionInfo.nNodeID = 0;
+			sNodeSessionInfo.nSessionID = 0;
 		}
 		else if ((nMessageType&eMT_TYPE_MASK) == eMT_RESPONSE)
 		{
@@ -68,31 +75,29 @@ namespace core
 			// °þµôcookice
 			const message_header* pHeader = reinterpret_cast<const message_header*>(pCookice + 1);
 
-			CCoreServiceAppImpl::Inst()->getInvokerTrace()->beginRecv(pCookice->nTraceID, pHeader->nMessageID, nFromServiceID);
-
 			if (pCookice->nActorID == 0)
 			{
 				SResponseWaitInfo* pResponseWaitInfo = CCoreServiceAppImpl::Inst()->getTransporter()->getResponseWaitInfo(pCookice->nSessionID, true);
 				if (nullptr == pResponseWaitInfo)
-				{
-					CCoreServiceAppImpl::Inst()->getInvokerTrace()->addTraceExtraInfo("invalid session id by message dispatcher"UINT64FMT, pCookice->nSessionID);
-					return true;
-				}
+					return;
 
+				CCoreServiceAppImpl::Inst()->getInvokerTrace()->traceSend(pResponseWaitInfo->nTraceID, pResponseWaitInfo->nMessageID, pResponseWaitInfo->nToID, pResponseWaitInfo->nBeginTime);
+				CCoreServiceAppImpl::Inst()->getInvokerTrace()->traceBeginRecv(pResponseWaitInfo->nTraceID, pHeader->nMessageID, nFromNodeID);
 				Defer(delete pResponseWaitInfo);
 
 				if (pCookice->nResult == eRRT_OK)
 				{
-					pMessage = CMessage(const_cast<message_header*>(pHeader));
+					char* pNewData = new char[pHeader->nMessageSize];
+					memcpy(pNewData, pHeader, pHeader->nMessageSize);
+					pMessage = CMessage(reinterpret_cast<message_header*>(pNewData));
 					pResponseWaitInfo->callback(pMessage, eRRT_OK);
 				}
 				else if (pCookice->nResult != eRRT_OK)
 				{
 					pResponseWaitInfo->callback(nullptr, (EResponseResultType)pCookice->nResult);
 				}
+				CCoreServiceAppImpl::Inst()->getInvokerTrace()->traceEndRecv();
 			}
-
-			CCoreServiceAppImpl::Inst()->getInvokerTrace()->endRecv();
 		}
 		else if ((nMessageType&eMT_TYPE_MASK) == eMT_GATE_FORWARD)
 		{
@@ -100,33 +105,27 @@ namespace core
 			// °þµôcookice
 			const message_header* pHeader = reinterpret_cast<const message_header*>(pCookice + 1);
 			
-			CCoreServiceAppImpl::Inst()->getInvokerTrace()->beginRecv(pCookice->nTraceID, pHeader->nMessageID, nFromServiceID);
-			
-			SClientSessionInfo session(nFromServiceID, pCookice->nSessionID);
+			SClientSessionInfo session(nFromNodeID, pCookice->nSessionID);
 
-			GateForwardCallback& callback = CCoreServiceAppImpl::Inst()->getCoreServiceInvoker()->getGateClientCallback(pHeader->nMessageID);
+			auto& callback = CCoreServiceAppImpl::Inst()->getCoreMessageRegistry()->getGateForwardCallback(pHeader->nMessageID);
 			if (callback != nullptr)
 			{
-				pMessage = CMessage(const_cast<message_header*>(pHeader));
-				callback(session, pMessage);
+				CCoreServiceAppImpl::Inst()->getInvokerTrace()->traceBeginRecv(pCookice->nTraceID, pHeader->nMessageID, nFromNodeID);
+				char* pNewData = new char[pHeader->nMessageSize];
+				memcpy(pNewData, pHeader, pHeader->nMessageSize);
+				pMessage = CMessage(reinterpret_cast<message_header*>(pNewData));
+				bFilter = !callback(session, pMessage);
+				CCoreServiceAppImpl::Inst()->getInvokerTrace()->traceEndRecv();
 			}
-			CCoreServiceAppImpl::Inst()->getInvokerTrace()->endRecv();
 		}
 
-		const std::vector<ServiceGlobalFilter>& vecGlobalAfterFilter = CCoreServiceAppImpl::Inst()->getGlobalAfterFilter();
+		if (bFilter)
+			return;
+
+		const std::vector<GlobalAfterFilter>& vecGlobalAfterFilter = CCoreServiceAppImpl::Inst()->getGlobalAfterFilter();
 		for (size_t i = 0; i < vecGlobalAfterFilter.size(); ++i)
 		{
-			vecGlobalAfterFilter[i](nFromServiceID, nMessageType, pData, nSize);
+			vecGlobalAfterFilter[i](nFromSocketID, nFromNodeID, nMessageType, pData, nSize);
 		}
-
-		if (this->m_forwardCallback == nullptr)
-			return true;
-
-		return this->m_forwardCallback(nFromServiceID, nMessageType, pData, nSize);
-	}
-
-	void CMessageDispatcher::setForwardCallback(std::function<bool(uint16_t, uint8_t, const void*, uint16_t)> callback)
-	{
-		this->m_forwardCallback = callback;
 	}
 }

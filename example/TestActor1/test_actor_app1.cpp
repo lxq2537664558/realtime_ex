@@ -13,9 +13,9 @@
 #include "libBaseCommon/memory_hook.h"
 #include "libCoreServiceKit/base_actor.h"
 #include "libCoreServiceKit/base_actor_factory.h"
-#include "libCoreServiceKit/actor_dispatch.h"
 
 #include <memory>
+#include "libCoreServiceKit/actor_message_registry.h"
 
 CTestActorApp1::CTestActorApp1()
 {
@@ -32,7 +32,7 @@ CTestActorApp1* CTestActorApp1::Inst()
 
 class CTestActor1 
 	: public core::CBaseActor
-	, public core::CActorDispatch<CTestActor1>
+	, public core::CActorMessageRegistry<CTestActor1>
 {
 public:
 	CTestActor1()
@@ -45,28 +45,28 @@ public:
 
 	}
 
+	DEFEND_ACTOR_MESSAGE_FUNCTION(CTestActor1)
+
 	virtual bool onInit(void* pContext)
 	{
-		REGISTER_MESSAGE_HANDLER(eServiceRequestActor1, &CTestActor1::onRequest, false);
+		REGISTER_ACTOR_MESSAGE_HANDLER(CTestActor1, eServiceRequestActor1, &CTestActor1::onRequest, false);
 		return true;
 	}
 
-	virtual void onDispatch(uint64_t nFrom, uint8_t nMessageType, core::CMessage pMessage)
-	{
-		this->dispatch(this, nFrom, nMessageType, pMessage);
-	}
-
-	void onRequest(uint64_t nFrom, std::shared_ptr<CServiceRequestActor1> pMessage)
+	void onRequest(CBaseActor* pBaseActor, uint64_t nFrom, std::shared_ptr<CServiceRequestActor1> pMessage)
 	{
 		uint64_t nActorID = pMessage->nActorID;
-
+		//PrintInfo("Time2: "UINT64FMT, base::getProcessPassTime());
 		while (true)
 		{
 			CServiceRequestActor2 netMsg;
 			netMsg.nID = this->m_nID++;
 			std::shared_ptr<CServiceResponseActor2> pResultData;
+			int64_t nBeginTime = base::getProcessPassTime();
 			this->invoke(nActorID, &netMsg, pResultData);
-			PrintInfo("Actor1 ID: %d", pResultData->nID);
+			int64_t nEndTime = base::getProcessPassTime();
+
+			PrintInfo("Actor1 ID: %d cost: "UINT64FMT, pResultData->nID, nEndTime - nBeginTime);
 		}
 	}
 
@@ -76,7 +76,7 @@ private:
 
 class CTestActor2
 	: public core::CBaseActor
-	, public core::CActorDispatch<CTestActor2>
+	, public core::CActorMessageRegistry<CTestActor2>
 {
 public:
 	CTestActor2()
@@ -89,28 +89,26 @@ public:
 
 	}
 
+	DEFEND_ACTOR_MESSAGE_FUNCTION(CTestActor2)
+
 	virtual bool onInit(void* pContext)
 	{
-		REGISTER_MESSAGE_HANDLER(eServiceRequestActor2, &CTestActor2::onRequest, true);
+		REGISTER_ACTOR_MESSAGE_HANDLER(CTestActor2, eServiceRequestActor2, &CTestActor2::onRequest, true);
 
 		return true;
 	}
 
-	virtual void onDispatch(uint64_t nFrom, uint8_t nMessageType, core::CMessage pMessage)
-	{
-		this->dispatch(this, nFrom, nMessageType, pMessage);
-	}
-
-	void onRequest(uint64_t nFrom, std::shared_ptr<CServiceRequestActor2> pMessage)
+	void onRequest(CBaseActor* pBaseActor, uint64_t nFrom, std::shared_ptr<CServiceRequestActor2> pMessage)
 	{
 		CServiceRequestActor3 request3;
 		request3.nID = pMessage->nID;
-
+		//PrintInfo("Time3: "UINT64FMT, base::getProcessPassTime());
 		core::CFuture<std::shared_ptr<CServiceRequestActor3>> sResponseFuture;
 		this->invoke_r(this->m_nDstActorID, &request3, sResponseFuture);
 		core::SActorSessionInfo sActorSessionInfo = this->getActorSessionInfo();
 		sResponseFuture.then_r([this](std::shared_ptr<CServiceRequestActor3> pMessage, uint32_t nErrorCode)
 		{
+			//PrintInfo("Time6: "UINT64FMT, base::getProcessPassTime());
 			CServiceRequestActor4 request4;
 			request4.nID = pMessage->nID;
 			core::CFuture<std::shared_ptr<CServiceRequestActor4>> sResponseFuture;
@@ -119,6 +117,7 @@ public:
 			return sResponseFuture;
 		}).then([this, sActorSessionInfo](std::shared_ptr<CServiceRequestActor4> pMessage, uint32_t nErrorCode)
 		{
+			//PrintInfo("Time7: "UINT64FMT, base::getProcessPassTime());
 			CServiceResponseActor2 netMsg;
 			netMsg.nID = pMessage->nID;
 			this->response(sActorSessionInfo, &netMsg);
@@ -130,7 +129,7 @@ public:
 
 class CTestActor3
 	: public core::CBaseActor
-	, public core::CActorDispatch<CTestActor3>
+	, public core::CActorMessageRegistry<CTestActor3>
 {
 public:
 	CTestActor3()
@@ -143,31 +142,28 @@ public:
 
 	}
 
+	DEFEND_ACTOR_MESSAGE_FUNCTION(CTestActor3)
+
 	virtual bool onInit(void* pContext)
 	{
-		REGISTER_MESSAGE_HANDLER(eServiceRequestActor3, &CTestActor3::onRequest3, true);
-		REGISTER_MESSAGE_HANDLER(eServiceRequestActor4, &CTestActor3::onRequest4, true);
+		REGISTER_ACTOR_MESSAGE_HANDLER(CTestActor3, eServiceRequestActor3, &CTestActor3::onRequest3, true);
+		REGISTER_ACTOR_MESSAGE_HANDLER(CTestActor3, eServiceRequestActor4, &CTestActor3::onRequest4, true);
 		return true;
 	}
 
-	virtual void onDispatch(uint64_t nFrom, uint8_t nMessageType, core::CMessage pMessage)
-	{
-		this->dispatch(this, nFrom, nMessageType, pMessage);
-	}
-
-	void onRequest3(uint64_t nFrom, std::shared_ptr<CServiceRequestActor3> pMessage)
+	void onRequest3(CBaseActor* pBaseActor, uint64_t nFrom, std::shared_ptr<CServiceRequestActor3> pMessage)
 	{
 		CServiceResponseActor3 netMsg;
 		netMsg.nID = pMessage->nID;
-
+		//PrintInfo("Time4: "UINT64FMT, base::getProcessPassTime());
 		this->response(&netMsg);
 	}
 
-	void onRequest4(uint64_t nFrom, std::shared_ptr<CServiceRequestActor4> pMessage)
+	void onRequest4(CBaseActor* pBaseActor, uint64_t nFrom, std::shared_ptr<CServiceRequestActor4> pMessage)
 	{
 		CServiceResponseActor4 netMsg;
 		netMsg.nID = pMessage->nID;
-
+		//PrintInfo("Time5: "UINT64FMT, base::getProcessPassTime());
 		this->response(&netMsg);
 	}
 };
@@ -219,6 +215,7 @@ bool CTestActorApp1::onInit()
 	for (size_t i = 0; i < 1; ++i)
 	{
 		CServiceRequestActor1 netMsg;
+		//PrintInfo("Time1: "UINT64FMT, base::getProcessPassTime());
 		netMsg.nActorID = pActor2->getID();
 		pActor1->invoke(pActor1->getID(), &netMsg);
 	}

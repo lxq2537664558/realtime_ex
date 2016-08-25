@@ -1,5 +1,6 @@
 #pragma once
 #include "libBaseCommon/noncopyable.h"
+#include "libCoreCommon/coroutine.h"
 
 #include "core_service_kit_define.h"
 
@@ -34,17 +35,17 @@ namespace core
 		SActorSessionInfo	getActorSessionInfo() const;
 		void				response(const message_header* pData);
 		void				response(const SActorSessionInfo& sActorSessionInfo, const message_header* pData);
-		
-		virtual void		onDispatch(uint64_t nFrom, uint8_t nMessageType, CMessage pMessage) { }
-		virtual void		onGateForward(SClientSessionInfo sSession, uint8_t nMessageType, CMessage pMessage) { }
 
 		void				release();
 
+		static void			registerMessageHandler(uint16_t nMessageID, const std::function<void(CBaseActor*, uint64_t, CMessage)>& handler, bool bAsync);
+		static void			registerForwardHandler(uint16_t nMessageID, const std::function<void(CBaseActor*, SClientSessionInfo, CMessage)>& handler, bool bAsync);
+
 		static CBaseActor*	createActor(void* pContext, CBaseActorFactory* pBaseActorFactory);
 
-		static uint16_t		getServiceID(uint64_t nActorID);
+		static uint16_t		getNodeID(uint64_t nActorID);
 		static uint64_t		getLocalActorID(uint64_t nActorID);
-		static uint64_t		makeRemoteActorID(uint16_t nServiceID, uint64_t nActorID);
+		static uint64_t		makeRemoteActorID(uint16_t nNodeID, uint64_t nActorID);
 
 	private:
 		bool				invokeImpl(uint64_t nID, const message_header* pData, uint64_t nCoroutineID, const std::function<void(std::shared_ptr<message_header>, uint32_t)>& callback);

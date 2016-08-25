@@ -1,7 +1,7 @@
 namespace core
 {
 	template<class T>
-	bool CClusterInvoker::invoke_r(uint16_t nServiceID, const message_header* pData, CFuture<std::shared_ptr<T>>& sFuture)
+	bool CClusterInvoker::invoke_r(uint16_t nNodeID, const message_header* pData, CFuture<std::shared_ptr<T>>& sFuture)
 	{
 		DebugAstEx(pData != nullptr, false);
 
@@ -12,7 +12,7 @@ namespace core
 			pPromise->setValue(std::static_pointer_cast<T>(pMessage), nErrorCode);
 		};
 
-		if (!this->invokeImpl(nServiceID, pData, callback))
+		if (!this->invokeImpl(nNodeID, pData, callback))
 			return false;
 
 		sFuture = pPromise->getFuture();
@@ -21,19 +21,19 @@ namespace core
 	}
 
 	template<class T>
-	bool CClusterInvoker::invoke_r(const std::string& szServiceName, const message_header* pData, CFuture<std::shared_ptr<T>>& sFuture)
+	bool CClusterInvoker::invoke_r(const std::string& szNodeName, const message_header* pData, CFuture<std::shared_ptr<T>>& sFuture)
 	{
 		DebugAstEx(pData != nullptr, false);
 
-		uint16_t nServiceID = CCoreServiceApp::Inst()->getServiceID(szServiceName);
-		if (nServiceID == 0)
+		uint16_t nNodeID = CCoreServiceApp::Inst()->getNodeID(szNodeName);
+		if (nNodeID == 0)
 			return false;
 
-		return invoke_r(nServiceID, pData, sFuture);
+		return invoke_r(nNodeID, pData, sFuture);
 	}
 
 	template<class T>
-	bool CClusterInvoker::invoke_r(uint16_t nServiceID, const message_header* pData, const std::function<void(std::shared_ptr<T>, uint32_t)>& callback)
+	bool CClusterInvoker::invoke_r(uint16_t nNodeID, const message_header* pData, const std::function<void(std::shared_ptr<T>, uint32_t)>& callback)
 	{
 		DebugAstEx(pData != nullptr && callback != nullptr, false);
 
@@ -42,18 +42,18 @@ namespace core
 			callback(std::static_pointer_cast<T>(pMessage), nErrorCode);
 		};
 
-		return this->invokeImpl(nServiceID, pData, callback_);
+		return this->invokeImpl(nNodeID, pData, callback_);
 	}
 
 	template<class T>
-	bool CClusterInvoker::invoke_r(const std::string& szServiceName, const message_header* pData, const std::function<void(std::shared_ptr<T>, uint32_t)>& callback)
+	bool CClusterInvoker::invoke_r(const std::string& szNodeName, const message_header* pData, const std::function<void(std::shared_ptr<T>, uint32_t)>& callback)
 	{
 		DebugAstEx(pData != nullptr && callback != nullptr, false);
 
-		uint16_t nServiceID = CCoreServiceApp::Inst()->getServiceID(szServiceName);
-		if (nServiceID == 0)
+		uint16_t nNodeID = CCoreServiceApp::Inst()->getNodeID(szNodeName);
+		if (nNodeID == 0)
 			return false;
 
-		return invoke_r(nServiceID, pData, callback);
+		return invoke_r(nNodeID, pData, callback);
 	}
 }

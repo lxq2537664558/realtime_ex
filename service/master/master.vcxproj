@@ -89,17 +89,17 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="connection_from_service.h" />
-    <ClInclude Include="service_connection_factory.h" />
-    <ClInclude Include="service_mgr.h" />
+    <ClInclude Include="connection_from_node.h" />
+    <ClInclude Include="node_connection_factory.h" />
+    <ClInclude Include="node_mgr.h" />
     <ClInclude Include="master_app.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="connection_from_service.cpp" />
-    <ClCompile Include="service_connection_factory.cpp" />
-    <ClCompile Include="service_mgr.cpp" />
+    <ClCompile Include="connection_from_node.cpp" />
+    <ClCompile Include="node_connection_factory.cpp" />
+    <ClCompile Include="node_mgr.cpp" />
     <ClCompile Include="master_app.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

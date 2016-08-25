@@ -12,6 +12,8 @@
 #include "libBaseCommon/base_time.h"
 #include "libBaseCommon/memory_hook.h"
 #include "libCoreServiceKit/base_actor.h"
+#include "libCoreServiceKit/base_actor_factory.h"
+#include "libCoreServiceKit/actor_message_registry.h"
 
 CTestActorApp2::CTestActorApp2()
 {
@@ -26,7 +28,9 @@ CTestActorApp2* CTestActorApp2::Inst()
 	return static_cast<CTestActorApp2*>(core::CCoreServiceApp::Inst());
 }
 
-class CTestActor1 : public core::CBaseActor
+class CTestActor1
+	: public core::CBaseActor
+	, public core::CActorMessageRegistry<CTestActor1>
 {
 public:
 	CTestActor1()
@@ -39,7 +43,15 @@ public:
 
 	}
 
-	void onRequest(uint64_t nFrom, core::CMessage pMessage)
+	DEFEND_ACTOR_MESSAGE_FUNCTION(CTestActor1)
+
+	virtual bool onInit(void* pContext)
+	{
+		REGISTER_ACTOR_MESSAGE_HANDLER(CTestActor1, eServiceRequestActor4, &CTestActor1::onRequest3, true);
+		return true;
+	}
+
+	void onRequest3(CBaseActor* pBaseActor, uint64_t nFrom, std::shared_ptr<CServiceRequestActor3> pMessage)
 	{
 		CServiceResponseActor4 netMsg;
 		netMsg.nID = reinterpret_cast<const CServiceRequestActor4*>(pMessage.get())->nID;
@@ -47,14 +59,32 @@ public:
 		this->response(&netMsg);
 	}
 
-	virtual void		onForward(core::SClientSessionInfo sClientSessionInfo, uint8_t nMessageType, core::CMessage pMessage) { }
+	void onRequest4(CBaseActor* pBaseActor, uint64_t nFrom, std::shared_ptr<CServiceRequestActor4> pMessage)
+	{
+		CServiceResponseActor4 netMsg;
+		netMsg.nID = pMessage->nID;
+
+		this->response(&netMsg);
+	}
+};
+
+class CTestActorFactory1 :
+	public core::CBaseActorFactory
+{
+public:
+	core::CBaseActor* createBaseActor()
+	{
+		return new CTestActor1();
+	}
 };
 
 bool CTestActorApp2::onInit()
 {
 	CCoreServiceApp::onInit();
 
-	core::CActor* pActor1 = new CTestActor1();
+	CTestActorFactory1* pTestActorFactory1 = new CTestActorFactory1();
+	
+	core::CBaseActor* pActor1 = core::CBaseActor::createActor("", pTestActorFactory1);
 	
 	return true;
 }

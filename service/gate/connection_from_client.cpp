@@ -32,6 +32,7 @@ void CConnectionFromClient::release()
 
 void CConnectionFromClient::onConnect()
 {
+	this->setMessageParser(default_client_message_parser);
 	CGateApp::Inst()->getGateSessionMgr()->createSession(this->getID(), this->getID());
 }
 
@@ -40,11 +41,9 @@ void CConnectionFromClient::onDisconnect()
 	CGateApp::Inst()->getGateSessionMgr()->delSessionbySocketID(this->getID());
 }
 
-bool CConnectionFromClient::onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize)
+void CConnectionFromClient::onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize)
 {
-	DebugAstEx(nMessageType == eMT_CLIENT, true);
+	DebugAst(nMessageType == eMT_CLIENT);
 
 	CGateMessageDispatcher::Inst()->dispatch(this->getID(), nMessageType, pData, nSize);
-
-	return true;
 }

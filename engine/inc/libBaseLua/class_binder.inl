@@ -1,7 +1,7 @@
 
 namespace base
 {
-	template<typename T>
+	template<class T>
 	CClassBinder<T>::CClassBinder(CNamespaceBinder& sNamespaceBinder)
 		: m_sNamespaceBinder(sNamespaceBinder)
 		, m_nStackTop(-1)
@@ -14,12 +14,12 @@ namespace base
 			throw std::logic_error("invalid class stack");
 	}
 
-	template<typename T>
+	template<class T>
 	CClassBinder<T>::~CClassBinder()
 	{
 	}
 
-	template<typename T>
+	template<class T>
 	CNamespaceBinder& CClassBinder<T>::endClass()
 	{
 		lua_State* pL = this->m_sNamespaceBinder.getLuaFacade()->getState();
@@ -29,7 +29,7 @@ namespace base
 		return this->m_sNamespaceBinder;
 	}
 
-	template<typename T>
+	template<class T>
 	int32_t CClassBinder<T>::deleteObject(lua_State* pL)
 	{
 		SObjectWraper* pObjectWraper = reinterpret_cast<SObjectWraper*>(lua_touserdata(pL, 1));
@@ -53,8 +53,8 @@ namespace base
 		return 0;
 	}
 
-	template<typename T>
-	template<typename ...Args>
+	template<class T>
+	template<class ...Args>
 	int32_t CClassBinder<T>::createObject(lua_State* pL)
 	{
 		SFunctionBaseWrapper<void, Args...> sFunctionBaseWrapper;
@@ -112,8 +112,8 @@ namespace base
 		return 1;
 	}
 
-	template<typename T>
-	template<typename RT, typename ...Args>
+	template<class T>
+	template<class RT, class ...Args>
 	CClassBinder<T>& CClassBinder<T>::registerFunction(const char* szName, RT(T::*fn)(Args...))
 	{
 		if (fn == nullptr || szName == nullptr)
@@ -146,8 +146,8 @@ namespace base
 		return *this;
 	}
 
-	template<typename T>
-	template<typename RT, typename ...Args>
+	template<class T>
+	template<class RT, class ...Args>
 	CClassBinder<T>& CClassBinder<T>::registerFunction(const char* szName, RT(T::*fn)(Args...) const)
 	{
 		if (fn == nullptr || szName == nullptr)
@@ -180,8 +180,8 @@ namespace base
 		return *this;
 	}
 
-	template<typename T>
-	template<typename M>
+	template<class T>
+	template<class M>
 	CClassBinder<T>& CClassBinder<T>::registerMember(const char* szName, const M T::* pMember)
 	{
 		if (szName == nullptr || pMember == nullptr)
@@ -213,8 +213,8 @@ namespace base
 		return *this;
 	}
 
-	template<typename T>
-	template<typename M>
+	template<class T>
+	template<class M>
 	CClassBinder<T>& CClassBinder<T>::registerStaticMember(const char* szName, M* pMember)
 	{
 		if (szName == nullptr || pMember == nullptr)

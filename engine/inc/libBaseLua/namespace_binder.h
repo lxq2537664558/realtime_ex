@@ -6,7 +6,7 @@
 
 namespace base
 {
-	template<typename class>
+	template<class T>
 	class CClassBinder;
 
 	class __BASE_LUA_API__ CNamespaceBinder :
@@ -19,13 +19,13 @@ namespace base
 		void					begin(const char* szName);
 		void					end();
 
-		template<typename T, typename F>
+		template<class T, class F>
 		CClassBinder<T>			registerClass(const char* szClassName, F fn);
 
-		template<typename T, typename F>
+		template<class T, class F>
 		CClassBinder<T>			registerClass(const char* szClassName, const char* szSuperClassName, F fn);
 		
-		template<typename RT, typename ...Args>
+		template<class RT, class ...Args>
 		inline void				registerFunction(const char* szName, RT(*fn)(Args...));
 		
 		template<class T>
@@ -34,7 +34,7 @@ namespace base
 		CLuaFacade*				getLuaFacade() const;
 
 	private:
-		template<typename T, typename F>
+		template<class T, class F>
 		CClassBinder<T>			registerClassBase(const char* szClassName, const char* szSuperClassName, F fn);
 
 	private:

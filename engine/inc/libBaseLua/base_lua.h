@@ -507,7 +507,7 @@ namespace base
 		return 0;
 	}
 
-	template<typename RT, typename ...Args>
+	template<class RT, class ...Args>
 	struct SNormalFunctionWrapper
 	{
 		typedef RT(*FUN_TYPE)(Args...);
@@ -515,7 +515,7 @@ namespace base
 		FUN_TYPE	pf;
 	};
 
-	template<typename T, typename RT, typename ...Args>
+	template<class T, class RT, class ...Args>
 	struct SClassFunctionWrapper
 	{
 		typedef RT(T::*FUN_TYPE)(Args...);
@@ -523,7 +523,7 @@ namespace base
 		FUN_TYPE	pf;
 	};
 
-	template<typename RT, typename ...Args>
+	template<class RT, class ...Args>
 	struct SFunctionBaseWrapper
 	{
 		std::function<RT(Args...)>	invoke;
@@ -531,7 +531,7 @@ namespace base
 
 	struct SPushArgs
 	{
-		template<typename T, typename...NowArgs>
+		template<class T, class...NowArgs>
 		static bool push(lua_State* pL, T& t, NowArgs&... args)
 		{
 			push2Lua(pL, t);
@@ -545,13 +545,13 @@ namespace base
 		}
 	};
 
-	template<int32_t ARG_COUNT, typename RT, typename ...Args>
+	template<int32_t ARG_COUNT, class RT, class ...Args>
 	struct SParseArgs;
 	
-	template<typename RT, typename ...Args>
+	template<class RT, class ...Args>
 	struct SParseNowArg
 	{
-		template<typename T, typename ...RemainArgs, typename ...NowArgs>
+		template<class T, class ...RemainArgs, class ...NowArgs>
 		static int32_t parse(lua_State* pL, int32_t& nIndex, SFunctionBaseWrapper<RT, Args...>& sFunctionBaseWrapper, NowArgs&&... args)
 		{
 			bool bError = false;
@@ -562,20 +562,20 @@ namespace base
 		}
 	};
 
-	template<int32_t ARG_COUNT, typename RT, typename ...Args>
+	template<int32_t ARG_COUNT, class RT, class ...Args>
 	struct SParseArgs
 	{
-		template<typename ...RemainArgs, typename ...NowArgs>
+		template<class ...RemainArgs, class ...NowArgs>
 		static int32_t parse(lua_State* pL, int32_t& nIndex, SFunctionBaseWrapper<RT, Args...>& sFunctionBaseWrapper, NowArgs&&... args)
 		{
 			return SParseNowArg<RT, Args...>::template parse<RemainArgs...>(pL, nIndex, sFunctionBaseWrapper, args...);
 		}
 	};
 
-	template<typename RT, typename ...Args>
+	template<class RT, class ...Args>
 	struct SParseArgs<0, RT, Args...>
 	{
-		template<typename ...NowArgs>
+		template<class ...NowArgs>
 		static int32_t parse(lua_State* pL, int32_t& nIndex, SFunctionBaseWrapper<RT, Args...>& sFunctionBaseWrapper, NowArgs&&... args)
 		{
 			RT ret = sFunctionBaseWrapper.invoke(args...);
@@ -586,10 +586,10 @@ namespace base
 		}
 	};
 
-	template<typename ...Args>
+	template<class ...Args>
 	struct SParseArgs<0, void, Args...>
 	{
-		template<typename ...NowArgs>
+		template<class ...NowArgs>
 		static int32_t parse(lua_State* pL, int32_t& nIndex, SFunctionBaseWrapper<void, Args...>& sFunctionBaseWrapper, NowArgs&&... args)
 		{
 			sFunctionBaseWrapper.invoke(args...);
@@ -605,7 +605,7 @@ namespace base
 		mp_t mp;
 	};
 
-	template<typename RT, typename ...Args>
+	template<class RT, class ...Args>
 	int32_t __normal_invoke_proxy(lua_State* pL)
 	{
 		// 当lua调用C++函数给的参数不够时，在读取栈上的函数时会返回nil对象，BaseScript层会报错
@@ -634,7 +634,7 @@ namespace base
 		return nRet;
 	}
 	
-	template<typename T, typename RT, typename ...Args>
+	template<class T, class RT, class ...Args>
 	int32_t __class_invoke_proxy(lua_State* pL)
 	{
 		// 当lua调用C++函数给的参数不够时，在读取栈上的函数时会返回nil对象，libBaseLua会报错

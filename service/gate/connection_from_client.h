@@ -18,5 +18,5 @@ public:
 
 	virtual void		onConnect();
 	virtual void		onDisconnect();
-	virtual bool		onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize);
+	virtual void		onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize);
 };

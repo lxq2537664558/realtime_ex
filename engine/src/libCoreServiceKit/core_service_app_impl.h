@@ -6,20 +6,20 @@
 
 #include "core_service_kit_define.h"
 #include "transporter.h"
-#include "core_service_proxy.h"
-#include "core_service_invoker.h"
-#include "core_service_invoker.h"
+#include "core_other_node_proxy.h"
+#include "core_message_registry.h"
 #include "invoker_trace.h"
 #include "scheduler.h"
+#include "message_dispatcher.h"
 
 #include <map>
 
 namespace core
 {
 	class CCoreServiceConnection;
-	class CCoreConnectionFromService;
+	class CCoreConnectionFromOtherNode;
 	class CCoreConnectionToMaster;
-	class CServiceConnectionFactory;
+	class CNodeConnectionFactory;
 	class CCoreServiceAppImpl :
 		public base::CSingleton<CCoreServiceAppImpl>
 	{
@@ -32,22 +32,23 @@ namespace core
 		void						run();
 
 		CTransporter*				getTransporter() const;
-		CCoreServiceProxy*			getCoreServiceProxy() const;
-		CCoreServiceInvoker*		getCoreServiceInvoker() const;
+		CCoreOtherNodeProxy*		getCoreOtherNodeProxy() const;
+		CCoreMessageRegistry*		getCoreMessageRegistry() const;
 		CInvokerTrace*				getInvokerTrace() const;
 		CScheduler*					getScheduler() const;
+		CMessageDispatcher*			getMessageDispatcher() const;
 
 		CCoreConnectionToMaster*	getConnectionToMaster() const;
 		void						setCoreConnectionToMaster(CCoreConnectionToMaster* pCoreConnectionToMaster);
 
-		const SServiceBaseInfo&		getServiceBaseInfo() const;
+		const SNodeBaseInfo&		getNodeBaseInfo() const;
 
-		void						addGlobalBeforeFilter(const ServiceGlobalFilter& callback);
-		void						addGlobalAfterFilter(const ServiceGlobalFilter& callback);
+		void						addGlobalBeforeFilter(const GlobalBeforeFilter& callback);
+		void						addGlobalAfterFilter(const GlobalAfterFilter& callback);
 
-		const std::vector<ServiceGlobalFilter>&
+		const std::vector<GlobalBeforeFilter>&
 									getGlobalBeforeFilter();
-		const std::vector<ServiceGlobalFilter>&
+		const std::vector<GlobalAfterFilter>&
 									getGlobalAfterFilter();
 
 		base::CLuaFacade*			getLuaFacade() const;
@@ -56,39 +57,40 @@ namespace core
 
 		uint32_t					getThroughput() const;
 
-		void						setServiceConnectCallback(std::function<void(uint16_t)> funConnect);
-		void						setServiceDisconnectCallback(std::function<void(uint16_t)> funDisconnect);
+		void						setNodeConnectCallback(const std::function<void(uint16_t)>& callback);
+		void						setNodeDisconnectCallback(const std::function<void(uint16_t)>& callback);
 		std::function<void(uint16_t)>&
-									getServiceConnectCallback();
+									getNodeConnectCallback();
 		std::function<void(uint16_t)>&
-									getServiceDisconnectCallback();
+									getNodeDisconnectCallback();
 
 	private:
 		void						onConnectRefuse(const std::string& szContext);
 		void						onCheckConnectMaster(uint64_t nContext);
 
 	private:
-		CTicker								m_tickCheckConnectMaster;
-		CTransporter*						m_pTransporter;
-		CCoreServiceInvoker*				m_pCoreServiceInvoker;
-		CScheduler*							m_pScheduler;
-		CCoreServiceProxy*					m_pCoreServiceProxy;
-		CInvokerTrace*						m_pInvokerTrace;
-		CServiceConnectionFactory*			m_pServiceConnectionFactory;
-		CCoreConnectionToMaster*			m_pCoreConnectionToMaster;
-		SServiceBaseInfo					m_sServiceBaseInfo;
-		std::string							m_szMasterHost;
-		uint16_t							m_nMasterPort;
-		uint32_t							m_nInvokTimeout;
-		uint32_t							m_nThroughput;
+		CTicker									m_tickCheckConnectMaster;
+		CTransporter*					m_pTransporter;
+		CCoreMessageRegistry*			m_pCoreMessageRegistry;
+		CScheduler*						m_pScheduler;
+		CCoreOtherNodeProxy*			m_pCoreOtherNodeProxy;
+		CInvokerTrace*					m_pInvokerTrace;
+		CMessageDispatcher*				m_pMessageDispatcher;
+		CNodeConnectionFactory*			m_pNodeConnectionFactory;
+		CCoreConnectionToMaster*		m_pCoreConnectionToMaster;
+		SNodeBaseInfo					m_sNodeBaseInfo;
+		std::string						m_szMasterHost;
+		uint16_t						m_nMasterPort;
+		uint32_t						m_nInvokTimeout;
+		uint32_t						m_nThroughput;
 
-		base::CLuaFacade*					m_pLuaFacade;
+		base::CLuaFacade*				m_pLuaFacade;
 
-		std::vector<ServiceGlobalFilter>	m_vecGlobalBeforeFilter;
-		std::vector<ServiceGlobalFilter>	m_vecGlobalAfterFilter;
+		std::vector<GlobalBeforeFilter>	m_vecGlobalBeforeFilter;
+		std::vector<GlobalAfterFilter>	m_vecGlobalAfterFilter;
 
-		std::function<void(uint16_t)>		m_serviceConnectCallback;
-		std::function<void(uint16_t)>		m_serviceDisconnectCallback;
+		std::function<void(uint16_t)>	m_fnNodeConnectCallback;
+		std::function<void(uint16_t)>	m_fnNodeDisconnectCallback;
 	};
 
 }

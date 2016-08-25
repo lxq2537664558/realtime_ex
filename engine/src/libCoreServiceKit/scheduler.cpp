@@ -1,17 +1,18 @@
 #include "stdafx.h"
 #include "scheduler.h"
 #include "core_service_app_impl.h"
+#include "core_service_app.h"
 #include "message_dispatcher.h"
 #include "base_actor.h"
 
 #include "libCoreCommon/base_app.h"
 #include "libCoreCommon/coroutine.h"
 
-static bool actor_message_forward(uint16_t nFromServiceID, uint8_t nMessageType, const void* pData, uint16_t nSize)
+static void actor_message_forward(uint64_t nFromSocketID, uint16_t nFromNodeID, uint8_t nMessageType, const void* pData, uint16_t nSize)
 {
 	if ((nMessageType&eMT_TYPE_MASK) == eMT_REQUEST)
 	{
-		DebugAstEx(nSize > sizeof(core::request_cookice), true);
+		DebugAst(nSize > sizeof(core::request_cookice));
 
 		const core::request_cookice* pCookice = reinterpret_cast<const core::request_cookice*>(pData);
 
@@ -22,18 +23,20 @@ static bool actor_message_forward(uint16_t nFromServiceID, uint8_t nMessageType,
 		{
 			core::CBaseActorImpl* pActorBase = core::CCoreServiceAppImpl::Inst()->getScheduler()->getBaseActor(pCookice->nToActorID);
 			if (NULL == pActorBase)
-				return true;
+				return;
 			
+			char* pNewData = new char[nSize];
+			memcpy(pNewData, pData, nSize);
 			core::SMessagePacket sMessagePacket;
 			sMessagePacket.nID = pCookice->nFromActorID;
 			sMessagePacket.nType = eMT_REQUEST;
 			sMessagePacket.nDataSize = nSize;
-			sMessagePacket.pData = const_cast<void*>(pData);
+			sMessagePacket.pData = pNewData;
 			pActorBase->getChannel()->send(sMessagePacket);
 
 			core::CCoreServiceAppImpl::Inst()->getScheduler()->addWorkBaseActor(pActorBase);
 
-			return false;
+			return;
 		}
 	}
 	else if ((nMessageType&eMT_TYPE_MASK) == eMT_RESPONSE)
@@ -46,18 +49,20 @@ static bool actor_message_forward(uint16_t nFromServiceID, uint8_t nMessageType,
 		{
 			core::CBaseActorImpl* pActorBase = core::CCoreServiceAppImpl::Inst()->getScheduler()->getBaseActor(pCookice->nActorID);
 			if (NULL == pActorBase)
-				return true;
+				return;
 
+			char* pNewData = new char[nSize];
+			memcpy(pNewData, pData, nSize);
 			core::SMessagePacket sMessagePacket;
 			sMessagePacket.nID = 0;
 			sMessagePacket.nType = eMT_RESPONSE;
 			sMessagePacket.nDataSize = nSize;
-			sMessagePacket.pData = const_cast<void*>(pData);
+			sMessagePacket.pData = pNewData;
 			pActorBase->getChannel()->send(sMessagePacket);
 
 			core::CCoreServiceAppImpl::Inst()->getScheduler()->addWorkBaseActor(pActorBase);
 
-			return false;
+			return;
 		}
 	}
 	else if ((nMessageType&eMT_TYPE_MASK) == eMT_GATE_FORWARD)
@@ -70,22 +75,22 @@ static bool actor_message_forward(uint16_t nFromServiceID, uint8_t nMessageType,
 		{
 			core::CBaseActorImpl* pActorBase = core::CCoreServiceAppImpl::Inst()->getScheduler()->getBaseActor(pCookice->nActorID);
 			if (NULL == pActorBase)
-				return true;
+				return;
 
+			char* pNewData = new char[nSize];
+			memcpy(pNewData, pData, nSize);
 			core::SMessagePacket sMessagePacket;
-			sMessagePacket.nID = nFromServiceID;
+			sMessagePacket.nID = nFromNodeID;
 			sMessagePacket.nType = eMT_GATE_FORWARD;
 			sMessagePacket.nDataSize = nSize;
-			sMessagePacket.pData = const_cast<void*>(pData);
+			sMessagePacket.pData = pNewData;
 			pActorBase->getChannel()->send(sMessagePacket);
 			
 			core::CCoreServiceAppImpl::Inst()->getScheduler()->addWorkBaseActor(pActorBase);
 
-			return false;
+			return;
 		}
 	}
-
-	return true;
 }
 
 namespace core
@@ -103,7 +108,7 @@ namespace core
 
 	bool CScheduler::init()
 	{
-		CMessageDispatcher::Inst()->setForwardCallback(std::bind(&actor_message_forward, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
+		CCoreServiceApp::Inst()->addGlobalAfterFilter(std::bind(&actor_message_forward, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5));
 		return true;
 	}
 
@@ -125,8 +130,8 @@ namespace core
 		CBaseActorImpl* pFromBaseActorImpl = iter->second;
 		DebugAstEx(pFromBaseActorImpl != nullptr, false);
 
-		uint16_t nServiceID = CBaseActor::getServiceID(sRequestMessageInfo.nToActorID);
-		if (nServiceID == 0)
+		uint16_t nNodeID = CBaseActor::getNodeID(sRequestMessageInfo.nToActorID);
+		if (nNodeID == 0)
 		{
 			auto iter = this->m_mapBaseActor.find(sRequestMessageInfo.nToActorID);
 			if (iter == this->m_mapBaseActor.end())
@@ -160,15 +165,15 @@ namespace core
 		else
 		{
 			const_cast<SRequestMessageInfo&>(sRequestMessageInfo).nToActorID = CBaseActor::getLocalActorID(sRequestMessageInfo.nToActorID);
-			const_cast<SRequestMessageInfo&>(sRequestMessageInfo).nFromActorID = CBaseActor::makeRemoteActorID(CCoreServiceAppImpl::Inst()->getServiceBaseInfo().nID, sRequestMessageInfo.nFromActorID);
-			return CCoreServiceAppImpl::Inst()->getTransporter()->invoke(nServiceID, sRequestMessageInfo);
+			const_cast<SRequestMessageInfo&>(sRequestMessageInfo).nFromActorID = CBaseActor::makeRemoteActorID(CCoreServiceAppImpl::Inst()->getNodeBaseInfo().nID, sRequestMessageInfo.nFromActorID);
+			return CCoreServiceAppImpl::Inst()->getTransporter()->invoke(nNodeID, sRequestMessageInfo);
 		}
 	}
 
 	bool CScheduler::response(const SResponseMessageInfo& sResponseMessageInfo)
 	{
-		uint16_t nServiceID = CBaseActor::getServiceID(sResponseMessageInfo.nToActorID);
-		if (nServiceID == 0)
+		uint16_t nNodeID = CBaseActor::getNodeID(sResponseMessageInfo.nToActorID);
+		if (nNodeID == 0)
 		{
 			auto iter = this->m_mapBaseActor.find(sResponseMessageInfo.nToActorID);
 			if (iter == this->m_mapBaseActor.end())
@@ -180,7 +185,6 @@ namespace core
 			char* pData = new char[sizeof(response_cookice) + sResponseMessageInfo.pData->nMessageSize];
 
 			response_cookice* pCookice = reinterpret_cast<response_cookice*>(pData);
-			pCookice->nTraceID = 0;
 			pCookice->nSessionID = sResponseMessageInfo.nSessionID;
 			pCookice->nResult = sResponseMessageInfo.nResult;
 
@@ -201,7 +205,7 @@ namespace core
 		else
 		{
 			const_cast<SResponseMessageInfo&>(sResponseMessageInfo).nToActorID = CBaseActor::getLocalActorID(sResponseMessageInfo.nToActorID);
-			return CCoreServiceAppImpl::Inst()->getTransporter()->response(nServiceID, sResponseMessageInfo);
+			return CCoreServiceAppImpl::Inst()->getTransporter()->response(nNodeID, sResponseMessageInfo);
 		}
 	}
 

@@ -19,7 +19,7 @@ namespace base
 		return CLuaFunction(pLuaFacade, nRef);
 	}
 
-	template<typename ...Args>
+	template<class ...Args>
 	bool base::CLuaFunction::call(Args... args)
 	{
 		static_assert(sizeof...(Args) < 20, "not support 20 arg");
@@ -50,7 +50,7 @@ namespace base
 		return nRet == 0;
 	}
 
-	template<typename RT, typename ...Args>
+	template<class RT, class ...Args>
 	bool base::CLuaFunction::callR(RT& ret, Args... args)
 	{
 		static_assert(sizeof...(Args) < 20, "not support 20 arg");
@@ -93,7 +93,7 @@ namespace base
 		return ok;
 	}
 
-	template<typename ...Args>
+	template<class ...Args>
 	bool CLuaFunction::call(CLuaFacade* pLuaFacade, const char* szFunName, Args... args)
 	{
 		static_assert(sizeof...(Args) < 20, "not support 20 arg");
@@ -132,7 +132,7 @@ namespace base
 		return nRet == 0;
 	}
 
-	template<typename RT, typename ...Args>
+	template<class RT, class ...Args>
 	bool CLuaFunction::callR(CLuaFacade* pLuaFacade, const char* szFunName, RT& ret, Args... args)
 	{
 		static_assert(sizeof...(Args) < 20, "not support 20 arg");

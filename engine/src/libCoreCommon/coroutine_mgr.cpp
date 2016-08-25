@@ -12,6 +12,8 @@ namespace core
 	CCoroutineMgr::CCoroutineMgr()
 		: m_pCurrentCoroutine(nullptr)
 		, m_pRootCoroutine(nullptr)
+		, m_pMainStack(nullptr)
+		, m_nMainStackSize(0)
 		, m_nNextCoroutineID(1)
 	{
 

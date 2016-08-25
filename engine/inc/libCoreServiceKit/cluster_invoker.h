@@ -16,49 +16,49 @@ namespace core
 		bool				init();
 
 		/**
-		@brief: 调用指定远程服务的消息，远程服务不用返回消息
+		@brief: 调用指定远程节点的消息，远程节点不用返回消息
 		*/
-		bool				invoke(uint16_t nServiceID, const message_header* pData);
+		bool				invoke(uint16_t nNodeID, const message_header* pData);
 		/**
-		@brief: 调用指定远程服务的消息，远程服务不用返回消息
+		@brief: 调用指定远程节点的消息，远程节点不用返回消息
 		*/
-		bool				invoke(const std::string& szServiceName, const message_header* pData);
+		bool				invoke(const std::string& szNodeName, const message_header* pData);
 
 		/**
-		@brief: 调用指定远程服务的消息，需要提供远程服务消息返回的响应函数回调,以promise的形式提供
+		@brief: 调用指定远程节点的消息，需要提供远程节点消息返回的响应函数回调,以promise的形式提供
 		*/
 		template<class T>
-		inline bool			invoke_r(uint16_t nServiceID, const message_header* pData, CFuture<std::shared_ptr<T>>& sFuture);
+		inline bool			invoke_r(uint16_t nNodeID, const message_header* pData, CFuture<std::shared_ptr<T>>& sFuture);
 		/**
-		@brief: 调用指定远程服务的消息，需要提供远程服务消息返回的响应函数回调,以promise的形式提供
+		@brief: 调用指定远程节点的消息，需要提供远程节点消息返回的响应函数回调,以promise的形式提供
 		*/
 		template<class T>
-		inline bool			invoke_r(const std::string& szServiceName, const message_header* pData, CFuture<std::shared_ptr<T>>& sFuture);
+		inline bool			invoke_r(const std::string& szNodeName, const message_header* pData, CFuture<std::shared_ptr<T>>& sFuture);
 
 		/**
-		@brief: 调用指定远程服务的消息，需要提供远程服务消息返回的响应函数回调
+		@brief: 调用指定远程节点的消息，需要提供远程节点消息返回的响应函数回调
 		*/
 		template<class T>
-		inline bool			invoke_r(uint16_t nServiceID, const message_header* pData, const std::function<void(std::shared_ptr<T>, uint32_t)>& callback);
+		inline bool			invoke_r(uint16_t nNodeID, const message_header* pData, const std::function<void(std::shared_ptr<T>, uint32_t)>& callback);
 		/**
-		@brief: 调用指定远程服务的消息，需要提供远程服务消息返回的响应函数回调
+		@brief: 调用指定远程节点的消息，需要提供远程节点消息返回的响应函数回调
 		*/
 		template<class T>
-		inline bool			invoke_r(const std::string& szServiceName, const message_header* pData, const std::function<void(std::shared_ptr<T>, uint32_t)>& callback);
+		inline bool			invoke_r(const std::string& szNodeName, const message_header* pData, const std::function<void(std::shared_ptr<T>, uint32_t)>& callback);
 		
 		/**
-		@brief: 响应远程服务的调用，发送响应消息
+		@brief: 响应远程节点的调用，发送响应消息
 		*/
 		void				response(const message_header* pData);
 		/**
-		@brief: 响应远程服务的调用，发送响应消息，这个需要用户自己制定服务session，主要用于不能立即响应，需要等待其他信息的消息
+		@brief: 响应远程节点的调用，发送响应消息，这个需要用户自己制定节点session，主要用于不能立即响应，需要等待其他信息的消息
 		*/
-		void				response(const SServiceSessionInfo& sServiceSessionInfo, const message_header* pData);
+		void				response(const SNodeSessionInfo& sServiceSessionInfo, const message_header* pData);
 		/**
-		@brief: 获取当前服务session信息
+		@brief: 获取当前节点session信息
 		*/
-		SServiceSessionInfo	getServiceSessionInfo();
-		//=============================上面是对集群内部服务之间的消息发送函数=========================//
+		SNodeSessionInfo	getServiceSessionInfo();
+		//=============================上面是对集群内部节点之间的消息发送函数=========================//
 
 		//=================================下面是对客户端的消息处理函数==============================//
 		/**
@@ -70,24 +70,20 @@ namespace core
 		*/
 		bool				broadcast(const std::vector<SClientSessionInfo>& vecClientSessionInfo, const message_header* pData);
 		/**
-		@brief: 网关服务转发客户端消息
+		@brief: 网关节点转发客户端消息
 		*/
-		bool				forward(uint16_t nServiceID, uint64_t nSessionID, const message_header* pData);
+		bool				forward(uint16_t nNodeID, uint64_t nSessionID, const message_header* pData);
 		/**
-		@brief: 网关服务转发客户端消息
+		@brief: 网关节点转发客户端消息
 		*/
-		bool				forward(uint16_t nServiceID, uint64_t nActorID, uint64_t nSessionID, const message_header* pData);
+		bool				forward_a(uint64_t nActorID, uint64_t nSessionID, const message_header* pData);
 		/**
-		@brief: 网关服务转发客户端消息
+		@brief: 网关节点转发客户端消息
 		*/
-		bool				forward(const std::string& szServiceName, uint64_t nSessionID, const message_header* pData);
-		/**
-		@brief: 网关服务转发客户端消息
-		*/
-		bool				forward(const std::string& szServiceName, uint64_t nActorID, uint64_t nSessionID, const message_header* pData);
-
+		bool				forward(const std::string& szNodeName, uint64_t nSessionID, const message_header* pData);
+		
 	private:
-		bool				invokeImpl(uint16_t nServiceID, const message_header* pData, const std::function<void(std::shared_ptr<message_header>, uint32_t)>& callback);
+		bool				invokeImpl(uint16_t nNodeID, const message_header* pData, const std::function<void(std::shared_ptr<message_header>, uint32_t)>& callback);
 	};
 }
 

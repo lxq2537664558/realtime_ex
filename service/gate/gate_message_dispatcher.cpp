@@ -25,49 +25,27 @@ bool CGateMessageDispatcher::init()
 	return true;
 }
 
-void CGateMessageDispatcher::registerCallback(const std::string& szMessageName, core::ClientCallback callback)
+void CGateMessageDispatcher::registerCallback(uint16_t nMessageID, core::ClientCallback callback)
 {
 	DebugAst(callback != nullptr);
 
-	uint32_t nMessageID = base::hash(szMessageName.c_str());
 	auto iter = this->m_mapClientCallbackInfo.find(nMessageID);
 	if (iter != this->m_mapClientCallbackInfo.end())
 	{
-		PrintWarning("dup client message name message_name: %s", szMessageName.c_str());
+		PrintWarning("dup client message name message_id: %d", nMessageID);
 		return;
 	}
 
-	SClientCallbackInfo sClientCallbackInfo;
-	sClientCallbackInfo.szMessageName = szMessageName;
-	sClientCallbackInfo.callback = callback;
-	this->m_mapClientCallbackInfo[nMessageID] = sClientCallbackInfo;
+	this->m_mapClientCallbackInfo[nMessageID] = callback;
 }
 
-core::ClientCallback& CGateMessageDispatcher::getCallback(uint32_t nMessageID)
+core::ClientCallback CGateMessageDispatcher::getCallback(uint16_t nMessageID) const
 {
 	auto iter = this->m_mapClientCallbackInfo.find(nMessageID);
 	if (iter == this->m_mapClientCallbackInfo.end())
-	{
-		static core::ClientCallback s_callback;
+		return nullptr;
 
-		return s_callback;
-	}
-
-	return iter->second.callback;
-}
-
-core::ClientCallback& CGateMessageDispatcher::getCallback(const std::string& szMessageName)
-{
-	uint32_t nMessageID = base::hash(szMessageName.c_str());
-	auto iter = this->m_mapClientCallbackInfo.find(nMessageID);
-	if (iter == this->m_mapClientCallbackInfo.end())
-	{
-		static core::ClientCallback s_callback;
-
-		return s_callback;
-	}
-
-	return iter->second.callback;
+	return iter->second;
 }
 
 void CGateMessageDispatcher::dispatch(uint64_t nSocketID, uint8_t nMessageType, const void* pData, uint16_t nSize)
@@ -95,7 +73,7 @@ void CGateMessageDispatcher::dispatch(uint64_t nSocketID, uint8_t nMessageType, 
 			return;
 		}
 
-		core::ClientCallback& callback = iter->second.callback;
+		core::ClientCallback& callback = iter->second;
 		DebugAst(callback != nullptr);
 		
 		core::CMessage pMessage(const_cast<core::message_header*>(pHeader));
@@ -134,5 +112,5 @@ void CGateMessageDispatcher::forward(uint64_t nSessionID, const core::message_he
 {
 	DebugAst(pHeader != nullptr);
 
-	core::cluster_invoker::forward("test1-1", nSessionID, pHeader);
+	core::CClusterInvoker::Inst()->forward("test1-1", nSessionID, pHeader);
 }

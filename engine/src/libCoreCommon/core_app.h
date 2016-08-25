@@ -6,7 +6,6 @@
 #include "ticker_mgr.h"
 #include "coroutine_mgr.h"
 #include "core_connection_mgr.h"
-#include "logic_message_queue.h"
 
 namespace core
 {
@@ -43,6 +42,10 @@ namespace core
 		*/
 		CBaseConnectionMgr*	getBaseConnectionMgr() const;
 		/*
+		@brief: 获取连接管理器
+		*/
+		CCoreConnectionMgr*	getCoreConnectionMgr() const;
+		/*
 		@brief: 获取携程管理器
 		*/
 		CCoroutineMgr*		getCoroutineMgr() const;
@@ -71,10 +74,6 @@ namespace core
 		*/
 		uint32_t			getSamplingTime() const;
 		/*
-		@brief: 获取消息队列
-		*/
-		CLogicMessageQueue*	getMessageQueue() const;
-		/*
 		@brief: 获取QPS
 		*/
 		uint32_t			getQPS() const;
@@ -97,9 +96,8 @@ namespace core
 		std::string				m_szConfig;
 		std::string				m_szPID;
 		CTickerMgr*				m_pTickerMgr;
-		CBaseConnectionMgr*		m_pBaseConnectionMgr;
+		CCoreConnectionMgr*		m_pCoreConnectionMgr;
 		CCoroutineMgr*			m_pCoroutineMgr;
-		CLogicMessageQueue*		m_pMessageQueue;
 		base::CWriteBuf			m_writeBuf;
 		uint32_t				m_nCycleCount;
 		int64_t					m_nTotalSamplingTime;

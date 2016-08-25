@@ -8,7 +8,7 @@ namespace base
 		public IDbParamBinder
 	{
 	public:
-		CDbParamBinder(CDbStatement* pDbStatement);
+		explicit CDbParamBinder(CDbStatement* pDbStatement);
 		virtual ~CDbParamBinder();
 
 		virtual void setInt64(uint32_t nIndex, int64_t& nValue);

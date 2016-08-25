@@ -19,14 +19,14 @@ namespace core
 		return static_cast<CCoreServiceApp*>(CBaseApp::Inst());
 	}
 
-	const SServiceBaseInfo& CCoreServiceApp::getServiceBaseInfo() const
+	const SNodeBaseInfo& CCoreServiceApp::getNodeBaseInfo() const
 	{
-		return CCoreServiceAppImpl::Inst()->getServiceBaseInfo();
+		return CCoreServiceAppImpl::Inst()->getNodeBaseInfo();
 	}
 
-	uint16_t CCoreServiceApp::getServiceID(const std::string& szServiceName) const
+	uint16_t CCoreServiceApp::getNodeID(const std::string& szName) const
 	{
-		return CCoreServiceAppImpl::Inst()->getCoreServiceProxy()->getServiceID(szServiceName);
+		return CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getNodeID(szName);
 	}
 
 	void CCoreServiceApp::startNewTrace()
@@ -47,32 +47,32 @@ namespace core
 		return CCoreServiceAppImpl::Inst()->getLuaFacade();
 	}
 
-	void CCoreServiceApp::setServiceConnectCallback(std::function<void(uint16_t)> funConnect)
+	void CCoreServiceApp::setNodeConnectCallback(const std::function<void(uint16_t)>& callback)
 	{
-		CCoreServiceAppImpl::Inst()->setServiceConnectCallback(funConnect);
+		CCoreServiceAppImpl::Inst()->setNodeConnectCallback(callback);
 	}
 
-	void CCoreServiceApp::setServiceDisconnectCallback(std::function<void(uint16_t)> funDisconnect)
+	void CCoreServiceApp::setNodeDisconnectCallback(const std::function<void(uint16_t)>& callback)
 	{
-		CCoreServiceAppImpl::Inst()->setServiceDisconnectCallback(funDisconnect);
+		CCoreServiceAppImpl::Inst()->setNodeDisconnectCallback(callback);
 	}
 
-	void CCoreServiceApp::registerServiceCallback(uint16_t nMessageID, ServiceCallback callback)
+	void CCoreServiceApp::registerMessageHandler(uint16_t nMessageID, const std::function<bool(uint16_t, CMessage)>& callback)
 	{
-		CCoreServiceAppImpl::Inst()->getCoreServiceInvoker()->registerCallback(nMessageID, callback);
+		CCoreServiceAppImpl::Inst()->getCoreMessageRegistry()->registerCallback(nMessageID, callback);
 	}
 
-	void CCoreServiceApp::registerGateForwardCallback(uint16_t nMessageID, GateForwardCallback callback)
+	void CCoreServiceApp::registerForwardHandler(uint16_t nMessageID, const std::function<bool(SClientSessionInfo, CMessage)>& callback)
 	{
-		CCoreServiceAppImpl::Inst()->getCoreServiceInvoker()->registerCallback(nMessageID, callback);
+		CCoreServiceAppImpl::Inst()->getCoreMessageRegistry()->registerGateForwardCallback(nMessageID, callback);
 	}
 
-	void CCoreServiceApp::addGlobalBeforeFilter(ServiceGlobalFilter callback)
+	void CCoreServiceApp::addGlobalBeforeFilter(GlobalBeforeFilter callback)
 	{
 		CCoreServiceAppImpl::Inst()->addGlobalBeforeFilter(callback);
 	}
 
-	void CCoreServiceApp::addGlobalAfterFilter(ServiceGlobalFilter callback)
+	void CCoreServiceApp::addGlobalAfterFilter(GlobalAfterFilter callback)
 	{
 		CCoreServiceAppImpl::Inst()->addGlobalAfterFilter(callback);
 	}

@@ -1,6 +1,6 @@
 namespace base
 {
-	template<typename T, typename F>
+	template<class T, class F>
 	CClassBinder<T> CNamespaceBinder::registerClassBase(const char* szClassName, const char* szSuperClassName, F fn)
 	{
 		if (szClassName == nullptr || fn == nullptr)
@@ -138,7 +138,7 @@ namespace base
 		return CClassBinder<T>(*this);
 	}
 
-	template<typename T, typename F>
+	template<class T, class F>
 	CClassBinder<T> CNamespaceBinder::registerClass(const char* szClassName, F fn)
 	{
 		if (szClassName == nullptr)
@@ -147,7 +147,7 @@ namespace base
 		return this->registerClassBase<T, F>(szClassName, nullptr, fn);
 	}
 
-	template<typename T, typename F>
+	template<class T, class F>
 	CClassBinder<T> CNamespaceBinder::registerClass(const char* szClassName, const char* szSuperClassName, F fn)
 	{
 		if (szClassName == nullptr || szSuperClassName == nullptr)
@@ -156,7 +156,7 @@ namespace base
 		return this->registerClassBase<T, F>(szClassName, szSuperClassName, fn);
 	}
 
-	template<typename RT, typename ...Args>
+	template<class RT, class ...Args>
 	void CNamespaceBinder::registerFunction(const char* szName, RT(*fn)(Args...))
 	{
 		if (fn == nullptr || szName == nullptr)

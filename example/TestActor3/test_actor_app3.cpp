@@ -11,7 +11,8 @@
 #include "../common/test_message_define.h"
 #include "libBaseCommon/base_time.h"
 #include "libBaseCommon/memory_hook.h"
-#include "libCoreServiceKit/actor.h"
+#include "libCoreServiceKit/base_actor.h"
+#include "libCoreServiceKit/base_actor_factory.h"
 
 CTestActorApp3::CTestActorApp3()
 {
@@ -26,7 +27,8 @@ CTestActorApp3* CTestActorApp3::Inst()
 	return static_cast<CTestActorApp3*>(core::CCoreServiceApp::Inst());
 }
 
-class CTestActor1 : public core::CActor
+class CTestActor1 
+	: public core::CBaseActor
 {
 public:
 	CTestActor1()
@@ -39,20 +41,23 @@ public:
 
 	}
 
-	virtual void onDispatch(uint64_t nFrom, uint8_t nMessageType, core::CMessage pMessage)
+	virtual bool onInit(void* pContext)
 	{
-		if (nMessageType == eMT_REQUEST)
-		{
-			uint64_t nActorID = reinterpret_cast<const CServiceRequestActor1*>(pMessage.get())->nActorID;
+		this->registerMessageHandler(eServiceRequestActor3, std::bind(&CTestActor1::onRequest, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), false);
+		return true;
+	}
 
-			while (true)
-			{
-				CServiceRequestActor4 netMsg;
-				netMsg.nID = this->m_nID++;
-				core::CMessage pResultData;
-				this->invoke(nActorID, &netMsg, pResultData);
-				PrintInfo("Actor1 ID: %d", reinterpret_cast<const CServiceResponseActor4*>(pResultData.get())->nID);
-			}
+	void onRequest(CBaseActor* pBaseActor, uint64_t nFrom, core::CMessage pMessage)
+	{
+		uint64_t nActorID = std::static_pointer_cast<CServiceRequestActor3>(pMessage)->nActorID;
+
+		while (true)
+		{
+			CServiceRequestActor4 netMsg;
+			netMsg.nID = this->m_nID++;
+			core::CMessage pResultData;
+			this->invoke(nActorID, &netMsg, pResultData);
+			PrintInfo("Actor1 ID: %d", reinterpret_cast<const CServiceResponseActor4*>(pResultData.get())->nID);
 		}
 	}
 
@@ -60,12 +65,24 @@ private:
 	uint32_t	m_nID;
 };
 
-void onServiceConnect(uint16_t nServiceID)
+class CTestActorFactory1 :
+	public core::CBaseActorFactory
+{
+public:
+	core::CBaseActor* createBaseActor()
+	{
+		return new CTestActor1();
+	}
+};
+
+void onNodeConnect(uint16_t nServiceID)
 {
 	if (nServiceID != 7)
 		return;
 
-	core::CActor* pActor1 = new CTestActor1();
+	CTestActorFactory1* pTestActorFactory1 = new CTestActorFactory1();
+
+	core::CBaseActor* pActor1 = core::CBaseActor::createActor("", pTestActorFactory1);
 
 	for (size_t i = 0; i < 1; ++i)
 	{
@@ -79,7 +96,7 @@ bool CTestActorApp3::onInit()
 {
 	CCoreServiceApp::onInit();
 
-	this->setServiceConnectCallback(std::bind(&onServiceConnect, std::placeholders::_1));
+	this->setNodeConnectCallback(std::bind(&onNodeConnect, std::placeholders::_1));
 	
 	return true;
 }

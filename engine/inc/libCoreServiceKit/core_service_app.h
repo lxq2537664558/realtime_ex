@@ -17,37 +17,37 @@ namespace core
 		static CCoreServiceApp* Inst();
 
 		/**
-		@brief: 获取本服务基本信息
+		@brief: 获取本节点基本信息
 		*/
-		const SServiceBaseInfo&			getServiceBaseInfo() const;
+		const SNodeBaseInfo&			getNodeBaseInfo() const;
 		/**
-		@brief: 根据服务名字获取服务id
+		@brief: 根据节点名字获取节点id
 		*/
-		uint16_t						getServiceID(const std::string& szServiceName) const;
+		uint16_t						getNodeID(const std::string& szName) const;
 		/**
-		@brief: 设置全局的服务连接成功回调
+		@brief: 设置全局的节点连接成功回调
 		*/
-		void							setServiceConnectCallback(std::function<void(uint16_t)> funConnect);
+		void							setNodeConnectCallback(const std::function<void(uint16_t)>& callback);
 		/**
-		@brief: 设置全局的服务连接断开回调
+		@brief: 设置全局的节点连接断开回调
 		*/
-		void							setServiceDisconnectCallback(std::function<void(uint16_t)> funDisconnect);
+		void							setNodeDisconnectCallback(const std::function<void(uint16_t)>& callback);
 		/**
-		@brief: 注册普通服务消息
+		@brief: 注册普通节点消息
 		*/
-		void							registerServiceCallback(uint16_t nMessageID, ServiceCallback callback);
+		void							registerMessageHandler(uint16_t nMessageID, const std::function<bool(uint16_t, CMessage)>& callback);
 		/**
-		@brief: 注册经网关服务转发客户端的消息
+		@brief: 注册经网关节点转发客户端的消息
 		*/
-		void							registerGateForwardCallback(uint16_t nMessageID, GateForwardCallback callback);
+		void							registerForwardHandler(uint16_t nMessageID, const std::function<bool(SClientSessionInfo, CMessage)>& callback);
 		/**
-		@brief: 添加服务之间的前置过滤器
+		@brief: 添加节点之间的前置过滤器
 		*/
-		void							addGlobalBeforeFilter(ServiceGlobalFilter callback);
+		void							addGlobalBeforeFilter(GlobalBeforeFilter callback);
 		/**
-		@brief: 添加服务之间的后置过滤器
+		@brief: 添加节点之间的后置过滤器
 		*/
-		void							addGlobalAfterFilter(ServiceGlobalFilter callback);
+		void							addGlobalAfterFilter(GlobalAfterFilter callback);
 		/**
 		@brief: 开始一个新的trace
 		*/

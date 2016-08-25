@@ -25,19 +25,19 @@ namespace core
 		~CCoreConnectionMgr();
 
 		bool				init(uint32_t nMaxConnectionCount);
-		bool				connect(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser);
-		bool				listen(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser);
+		bool				connect(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize);
+		bool				listen(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize);
 		void				update(int64_t nTime);
 
 		void				broadcast(uint32_t nType, uint8_t nMessageType, const void* pData, uint16_t nSize, const std::vector<uint64_t>* vecExcludeID);
 		
-		void				destroyConnection(uint64_t nSocketID);
+		void				destroyCoreConnection(CCoreConnection* pCoreConnection);
+		std::vector<CBaseConnection*>
+							getBaseConnection(uint32_t nType) const;
 		CCoreConnection*	getCoreConnectionByID(uint64_t nID) const;
 		uint32_t			getCoreConnectionCount(uint32_t nType) const;
 
-		void				wakeup();
-
-		void				onTimer(int64_t nTime);
+		CBaseConnectionMgr*	getBaseConnectionMgr() const;
 
 	private:
 		struct SNetAccepterHandler :
@@ -46,7 +46,6 @@ namespace core
 			std::string			szContext;
 			uint32_t			nType;
 			CCoreConnectionMgr*	pCoreConnectionMgr;
-			MessageParser		messageParser;
 
 			virtual base::INetConnecterHandler* onAccept( base::INetConnecter* pNetConnecter );
 		};
@@ -61,7 +60,6 @@ namespace core
 			std::string			szContext;
 			uint32_t			nType;
 			CCoreConnectionMgr*	pCoreConnectionMgr;
-			MessageParser		messageParser;
 
 			virtual uint32_t	onRecv( const char* pData, uint32_t nDataSize ) { return 0; }
 			virtual void		onConnect();
@@ -82,6 +80,6 @@ namespace core
 		void						onConnect( SNetActiveWaitConnecterHandler* pNetActiveWaitConnecterHandler );
 		void						delActiveWaitConnecterHandler( SNetActiveWaitConnecterHandler* pWaitActiveConnecterHandler );
 
-		CCoreConnection*			createConnection(uint32_t nType, const std::string& szContext, const MessageParser& messageParser);
+		CCoreConnection*			createCoreConnection(uint32_t nType, const std::string& szContext);
 	};
 }

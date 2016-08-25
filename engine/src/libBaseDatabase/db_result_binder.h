@@ -8,7 +8,7 @@ namespace base
 		public IDbResultBinder
 	{
 	public:
-		CDbResultBinder(CDbStatement* pDbStatement);
+		explicit CDbResultBinder(CDbStatement* pDbStatement);
 		~CDbResultBinder();
 
 		virtual void bindInt64(uint32_t nIndex, int64_t& nValue, bool& bIsNull, bool& bError);

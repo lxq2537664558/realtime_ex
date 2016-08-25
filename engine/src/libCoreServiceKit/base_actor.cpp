@@ -6,6 +6,7 @@
 #include "base_actor_factory.h"
 
 #include "libCoreCommon/coroutine.h"
+#include "libBaseCommon/base_time.h"
 
 #define _REMOTE_BIT 48
 
@@ -38,31 +39,6 @@ namespace core
 		return CCoreServiceAppImpl::Inst()->getScheduler()->invoke(sRequestMessageInfo);
 	}
 
-// 	uint32_t CBaseActor::invoke(uint64_t nID, const message_header* pData, CMessage& pResultData)
-// 	{
-// 		SRequestMessageInfo sRequestMessageInfo;
-// 		sRequestMessageInfo.pData = const_cast<message_header*>(pData);
-// 		sRequestMessageInfo.nSessionID = CCoreServiceAppImpl::Inst()->getTransporter()->genSessionID();
-// 		sRequestMessageInfo.nCoroutineID = coroutine::getCurrentID();
-// 		sRequestMessageInfo.nFromActorID = this->getID();
-// 		sRequestMessageInfo.nToActorID = nID;
-// 
-// 		if (!CCoreServiceAppImpl::Inst()->getScheduler()->invoke(sRequestMessageInfo))
-// 			return eRRT_ERROR;
-// 
-// 		this->m_pBaseActorImpl->addResponseWaitInfo(sRequestMessageInfo.nSessionID, 0, coroutine::getCurrentID());
-// 
-// 		coroutine::yield();
-// 
-// 		CMessage* pMessage = reinterpret_cast<CMessage*>(coroutine::recvMessage(coroutine::getCurrentID()));
-// 		uint32_t nRet = (uint32_t)reinterpret_cast<uint64_t>(coroutine::recvMessage(coroutine::getCurrentID()));
-// 
-// 		pResultData = *pMessage;
-// 		SAFE_DELETE(pMessage);
-// 
-// 		return nRet;
-// 	}
-
 	SActorSessionInfo CBaseActor::getActorSessionInfo() const
 	{
 		return this->m_pBaseActorImpl->getActorSessionInfo();
@@ -85,7 +61,7 @@ namespace core
 		bool bRet = CCoreServiceAppImpl::Inst()->getScheduler()->response(sResponseMessageInfo);
 	}
 
-	uint16_t CBaseActor::getServiceID(uint64_t nActorID)
+	uint16_t CBaseActor::getNodeID(uint64_t nActorID)
 	{
 		return (uint16_t)(nActorID >> _REMOTE_ACTOR_BIT);
 	}
@@ -95,9 +71,9 @@ namespace core
 		return nActorID & 0x0000ffffffffffff;
 	}
 
-	uint64_t CBaseActor::makeRemoteActorID(uint16_t nServiceID, uint64_t nActorID)
+	uint64_t CBaseActor::makeRemoteActorID(uint16_t nNodeID, uint64_t nActorID)
 	{
-		return (uint64_t)nServiceID << _REMOTE_ACTOR_BIT | nActorID;
+		return (uint64_t)nNodeID << _REMOTE_ACTOR_BIT | nActorID;
 	}
 
 	CBaseActor* CBaseActor::createActor(void* pContext, CBaseActorFactory* pBaseActorFactory)
@@ -132,6 +108,16 @@ namespace core
 		delete this;
 	}
 
+	void CBaseActor::registerMessageHandler(uint16_t nMessageID, const std::function<void(CBaseActor*, uint64_t, CMessage)>& handler, bool bAsync)
+	{
+		CBaseActorImpl::registerMessageHandler(nMessageID, handler, bAsync);
+	}
+
+	void CBaseActor::registerForwardHandler(uint16_t nMessageID, const std::function<void(CBaseActor*, SClientSessionInfo, CMessage)>& handler, bool bAsync)
+	{
+		CBaseActorImpl::registerForwardHandler(nMessageID, handler, bAsync);
+	}
+
 	bool CBaseActor::invokeImpl(uint64_t nID, const message_header* pData, uint64_t nCoroutineID, const std::function<void(std::shared_ptr<message_header>, uint32_t)>& callback)
 	{
 		SRequestMessageInfo sRequestMessageInfo;
@@ -143,10 +129,14 @@ namespace core
 		if (!CCoreServiceAppImpl::Inst()->getScheduler()->invoke(sRequestMessageInfo))
 			return false;
 
-		SResponseWaitInfo* pResponseWaitInfo = this->m_pBaseActorImpl->addResponseWaitInfo(sRequestMessageInfo.nSessionID, 0, nCoroutineID);
+		SResponseWaitInfo* pResponseWaitInfo = this->m_pBaseActorImpl->addResponseWaitInfo(sRequestMessageInfo.nSessionID, nCoroutineID);
 		DebugAstEx(nullptr != pResponseWaitInfo, false);
 	
 		pResponseWaitInfo->callback = callback;
+		pResponseWaitInfo->nTraceID = CCoreServiceAppImpl::Inst()->getInvokerTrace()->getCurTraceID();
+		pResponseWaitInfo->nToID = nID;
+		pResponseWaitInfo->nMessageID = pData->nMessageID;
+		pResponseWaitInfo->nBeginTime = base::getGmtTime();
 
 		return true;
 	}

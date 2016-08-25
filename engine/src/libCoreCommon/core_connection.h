@@ -16,19 +16,10 @@ namespace core
 		friend class CBaseConnectionMgr;
 
 	public:
-		enum
-		{
-			eCCS_None,
-			eCCS_Connectting,
-			eCCS_Connected,
-			eCCS_Disconnectting,
-		};
-
-	public:
 		CCoreConnection();
 		~CCoreConnection();
 
-		bool				init(uint32_t nType, uint64_t nID, const std::string& szContext, const MessageParser& messageParser);
+		bool				init(CBaseConnection* pBaseConnection, uint64_t nID, uint32_t nType);
 		void				send(uint8_t nMessageType, const void* pData, uint16_t nSize);
 		void				send(uint8_t nMessageType, const void* pData, uint16_t nSize, const void* pExtraBuf, uint16_t nExtraSize);
 		
@@ -40,13 +31,14 @@ namespace core
 
 		void				shutdown(bool bForce, const std::string& szMsg);
 
+		CBaseConnection*	getBaseConnection() const;
+
 		uint32_t			getSendDataSize() const;
 		uint32_t			getRecvDataSize() const;
 
 		const SNetAddr&		getLocalAddr() const;
 		const SNetAddr&		getRemoteAddr() const;
 
-		void				onHeartbeat();
 		void				enableHeartbeat(bool bEnable);
 
 		void				setState(uint32_t nState);
@@ -59,14 +51,16 @@ namespace core
 
 		void				onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize);
 
+		void				onHeartbeat(uint64_t nContext);
+
 	private:
 		bool					m_bHeartbeat;
+		CTicker*				m_pHeartbeat;
 		uint32_t				m_nSendHeartbeatCount;
 
 		uint64_t				m_nID;
-		uint32_t				m_nState;
 		uint32_t				m_nType;
-		std::string				m_szContext;
+		CBaseConnection*		m_pBaseConnection;
 		MessageParser			m_messageParser;
 		CCoreConnectionMonitor	m_monitor;
 	};

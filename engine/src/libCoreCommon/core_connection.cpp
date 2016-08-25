@@ -9,8 +9,6 @@
 
 #include "libBaseCommon/debug_helper.h"
 #include "libBaseCommon/base_time.h"
-#include "logic_message_queue.h"
-#include "message_command.h"
 #include "libBaseCommon/profiling.h"
 
 namespace core
@@ -33,11 +31,12 @@ namespace core
 #pragma pack(pop)
 
 	CCoreConnection::CCoreConnection()
-		: m_bHeartbeat(false)
+		: m_pBaseConnection(nullptr)
+		, m_pHeartbeat(nullptr)
+		, m_bHeartbeat(false)
 		, m_nSendHeartbeatCount(0)
 		, m_nID(0)
 		, m_nType(0)
-		, m_nState(eCCS_None)
 	{
 	}
 	
@@ -46,13 +45,14 @@ namespace core
 		DebugAst(this->m_pNetConnecter == nullptr);
 	}
 
-	bool CCoreConnection::init(uint32_t nType, uint64_t nID, const std::string& szContext, const MessageParser& messageParser)
+	bool CCoreConnection::init(CBaseConnection* pBaseConnection, uint64_t nID, uint32_t nType)
 	{
+		DebugAstEx(pBaseConnection != nullptr, false);
+
 		this->m_nType = nType;
 		this->m_nID = nID;
-		this->m_szContext = szContext;
-		this->m_messageParser = messageParser;
-
+		this->m_pBaseConnection = pBaseConnection;
+		this->m_pBaseConnection->m_pCoreConnection = this;
 		return true;
 	}
 
@@ -124,25 +124,32 @@ namespace core
 
 	void CCoreConnection::onConnect()
 	{
-		PROFILING_GUARD(CCoreConnection::onConnect)
-
 		DebugAst(this->m_pNetConnecter != nullptr);
-		
-		SMCT_NOTIFY_SOCKET_CONNECT* pContext = new SMCT_NOTIFY_SOCKET_CONNECT();
-		pContext->szContext = this->m_szContext;
-		pContext->nType = this->getType();
-		pContext->sLocalAddr = this->m_pNetConnecter->getLocalAddr();
-		pContext->sRemoteAddr = this->m_pNetConnecter->getRemoteAddr();
-		pContext->nSocketID = this->getID();
+		DebugAst(this->m_pBaseConnection != nullptr);
 
-		SMessagePacket sMessagePacket;
-		sMessagePacket.nType = eMCT_NOTIFY_SOCKET_CONNECT;
-		sMessagePacket.pData = pContext;
-		sMessagePacket.nDataSize = sizeof(SMCT_NOTIFY_SOCKET_CONNECT);
+		this->m_pBaseConnection->onConnect();
+		CBaseApp::Inst()->getBaseConnectionMgr()->onDisconnect(this->m_pBaseConnection);
 
-		CCoreApp::Inst()->getMessageQueue()->send(sMessagePacket);
+		this->m_pHeartbeat = new CTicker();
+		this->m_pHeartbeat->setCallback(std::bind(&CCoreConnection::onHeartbeat, this, std::placeholders::_1));
 
-		this->m_nState = eCCS_Connectting;
+		CCoreApp::Inst()->registerTicker(this->m_pHeartbeat, CCoreApp::Inst()->getHeartbeatTime() * 1000, CCoreApp::Inst()->getHeartbeatTime() * 1000, 0);
+	}
+
+	void CCoreConnection::onDisconnect()
+	{
+		DebugAst(this->m_pBaseConnection != nullptr);
+
+		this->m_pBaseConnection->onDisconnect();
+
+		CBaseApp::Inst()->getBaseConnectionMgr()->onDisconnect(this->m_pBaseConnection);
+
+		SAFE_DELETE(this->m_pHeartbeat);
+
+		this->m_pNetConnecter = nullptr;
+
+		// Ïú»Ù¶ÔÏó
+		CCoreApp::Inst()->getCoreConnectionMgr()->destroyCoreConnection(this);
 	}
 
 	uint64_t CCoreConnection::getID() const
@@ -155,27 +162,8 @@ namespace core
 		return this->m_nType;
 	}
 
-	void CCoreConnection::onDisconnect()
-	{
-		PROFILING_GUARD(CCoreConnection::onDisconnect)
-
-		SMCT_NOTIFY_SOCKET_DISCONNECT* pContext = new SMCT_NOTIFY_SOCKET_DISCONNECT();
-		pContext->nSocketID = this->getID();
-
-		SMessagePacket sMessagePacket;
-		sMessagePacket.nType = eMCT_NOTIFY_SOCKET_DISCONNECT;
-		sMessagePacket.pData = pContext;
-		sMessagePacket.nDataSize = sizeof(SMCT_NOTIFY_SOCKET_DISCONNECT);
-
-		CCoreApp::Inst()->getMessageQueue()->send(sMessagePacket);
-
-		this->m_nState = eCCS_Disconnectting;
-		this->m_pNetConnecter = nullptr;
-	}
-
 	void CCoreConnection::onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize)
 	{
-		PROFILING_GUARD(CCoreConnection::onDispatch)
 		if (nMessageType == eMT_HEARTBEAT)
 			return;
 
@@ -183,22 +171,10 @@ namespace core
 
 		this->m_monitor.onRecv(nSize);
 
-		SMessagePacket sMessagePacket;
-		SMCT_RECV_SOCKET_DATA* pContext = new SMCT_RECV_SOCKET_DATA();
-		pContext->nSocketID = this->getID();
-		pContext->nMessageType = nMessageType;
-		pContext->nDataSize = nSize;
-		pContext->pData = new char[nSize];
-		memcpy(pContext->pData, pData, nSize);
-
-		sMessagePacket.nType = eMCT_RECV_SOCKET_DATA;
-		sMessagePacket.pData = pContext;
-		sMessagePacket.nDataSize = sizeof(SMCT_RECV_SOCKET_DATA);
-
-		CCoreApp::Inst()->getMessageQueue()->send(sMessagePacket);
+		this->m_pBaseConnection->onDispatch(nMessageType, pData, nSize);
 	}
 
-	void CCoreConnection::onHeartbeat()
+	void CCoreConnection::onHeartbeat(uint64_t nContext)
 	{
 		if (this->m_bHeartbeat)
 			return;
@@ -217,8 +193,6 @@ namespace core
 	void CCoreConnection::send(uint8_t nMessageType, const void* pData, uint16_t nSize)
 	{
 		PROFILING_GUARD(CCoreConnection::send)
-		if (this->m_nState == eCCS_Disconnectting)
-			return;
 
 		DebugAst(this->m_pNetConnecter != nullptr);
 		DebugAst(pData != nullptr && nSize > 0);
@@ -251,8 +225,6 @@ namespace core
 	void CCoreConnection::send(uint8_t nMessageType, const void* pData, uint16_t nSize, const void* pExtraBuf, uint16_t nExtraSize)
 	{
 		PROFILING_GUARD(CCoreConnection::send)
-		if (this->m_nState == eCCS_Disconnectting)
-			return;
 
 		DebugAst(this->m_pNetConnecter != nullptr);
 		DebugAst(pData != nullptr && nSize > 0 && pExtraBuf != nullptr && nExtraSize > 0);
@@ -342,14 +314,8 @@ namespace core
 		this->m_bHeartbeat = bEnable;
 	}
 
-	void CCoreConnection::setState(uint32_t nState)
+	CBaseConnection* CCoreConnection::getBaseConnection() const
 	{
-		this->m_nState = nState;
+		return this->m_pBaseConnection;
 	}
-
-	uint32_t CCoreConnection::getState() const
-	{
-		return this->m_nState;
-	}
-
 }

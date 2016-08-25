@@ -11,70 +11,85 @@
 #include "../common/test_message_define.h"
 #include "libBaseCommon/base_time.h"
 #include "libBaseCommon/memory_hook.h"
+#include "libCoreServiceKit/node_message_registry.h"
 
-void client_request_msg_callback(const core::SClientSessionInfo sClientSessionInfo, core::CMessage pMessage)
+class CTestMessageHandler :
+	public core::CNodeMessageRegistry<CTestMessageHandler>
 {
-	uint32_t nSync = reinterpret_cast<const SClientRequestMsg*>(pMessage.get())->nSync;
-	
-	SServiceRequestMsg1 service_msg1;
-	service_msg1.nClientID = reinterpret_cast<const SClientRequestMsg*>(pMessage.get())->nClientID;
-	service_msg1.nID = reinterpret_cast<const SClientRequestMsg*>(pMessage.get())->nID;
-	service_msg1.nClientTime = reinterpret_cast<const SClientRequestMsg*>(pMessage.get())->nClientTime;
-	core::CFuture<std::shared_ptr<SServiceResponseMsg1>> sResponseFuture;
-	bool bRet = core::CClusterInvoker::Inst()->invoke_r("test2-1", &service_msg1, sResponseFuture);
-	if (!bRet)
+	DEFEND_NODE_MESSAGE_FUNCTION(CTestMessageHandler)
+
+public:
+	void init()
 	{
-		PrintDebug("AAAAAAAA");
-		return;
+		REGISTER_NODE_FORWARD_HANDLER(CTestMessageHandler, eClientRequestMsg, &CTestMessageHandler::client_request_msg_callback);
 	}
 
-// 	if (service_msg1.nClientID == 1)
-// 		PrintInfo("time1: "UINT64FMT, base::getProcessPassTime());
-
-	sResponseFuture.then_r([sClientSessionInfo, nSync](std::shared_ptr<SServiceResponseMsg1> pResultData, uint32_t nErrorCode)
+	bool client_request_msg_callback(core::SClientSessionInfo sClientSessionInfo, std::shared_ptr<SClientRequestMsg> pMessage)
 	{
-		SServiceRequestMsg2 service_msg2;
-		service_msg2.nClientID = pResultData->nClientID;
-		service_msg2.nID = pResultData->nID;
-		service_msg2.nClientTime = pResultData->nClientTime;
+		uint32_t nSync = pMessage->nSync;
 
-// 		if (service_msg2.nClientID == 1)
-// 			PrintInfo("time2: "UINT64FMT, base::getProcessPassTime());
-		core::CFuture<std::shared_ptr<SServiceResponseMsg2>> sResponseFuture;
-		bool bRet = core::CClusterInvoker::Inst()->invoke_r("test2-1", &service_msg2, sResponseFuture);
+		SServiceRequestMsg1 service_msg1;
+		service_msg1.nClientID = pMessage->nClientID;
+		service_msg1.nID = pMessage->nID;
+		service_msg1.nClientTime = pMessage->nClientTime;
+		core::CFuture<std::shared_ptr<SServiceResponseMsg1>> sResponseFuture;
+		bool bRet = core::CClusterInvoker::Inst()->invoke_r("test2-1", &service_msg1, sResponseFuture);
 		if (!bRet)
-			PrintDebug("BBBBBBBBB");
+		{
+			PrintDebug("AAAAAAAA");
+			return true;
+		}
 
-		return sResponseFuture;
+		// 	if (service_msg1.nClientID == 1)
+		// 		PrintInfo("time1: "UINT64FMT, base::getProcessPassTime());
 
-	}).then_r([sClientSessionInfo, nSync](std::shared_ptr<SServiceResponseMsg2> pResultData, uint32_t nErrorCode)
-	{
-		SServiceRequestMsg3 service_msg3;
-		service_msg3.nClientID = pResultData->nClientID;
-		service_msg3.nID = pResultData->nID;
-		service_msg3.nClientTime = pResultData->nClientTime;
-		
-// 		if (service_msg3.nClientID == 1)
-// 			PrintInfo("time3: "UINT64FMT, base::getProcessPassTime());
-		core::CFuture<std::shared_ptr<SServiceResponseMsg3>> sResponseFuture;
-		bool bRet = core::CClusterInvoker::Inst()->invoke_r("test2-1", &service_msg3, sResponseFuture);
-		if (!bRet)
-			PrintDebug("CCCCCCCC");
+		sResponseFuture.then_r([sClientSessionInfo, nSync](std::shared_ptr<SServiceResponseMsg1> pResultData, uint32_t nErrorCode)
+		{
+			SServiceRequestMsg2 service_msg2;
+			service_msg2.nClientID = pResultData->nClientID;
+			service_msg2.nID = pResultData->nID;
+			service_msg2.nClientTime = pResultData->nClientTime;
 
-		return sResponseFuture;
+			// 		if (service_msg2.nClientID == 1)
+			// 			PrintInfo("time2: "UINT64FMT, base::getProcessPassTime());
+			core::CFuture<std::shared_ptr<SServiceResponseMsg2>> sResponseFuture;
+			bool bRet = core::CClusterInvoker::Inst()->invoke_r("test2-1", &service_msg2, sResponseFuture);
+			if (!bRet)
+				PrintDebug("BBBBBBBBB");
 
-	}).then([sClientSessionInfo, nSync](std::shared_ptr<SServiceResponseMsg3> pResultData, uint32_t nErrorCode)
-	{
-		SClientResponseMsg client_msg;
-		client_msg.nClientID = pResultData->nClientID;
-		client_msg.nID = pResultData->nID;
-		client_msg.nClientTime = pResultData->nClientTime;
-		client_msg.nSync = nSync;
-		core::CClusterInvoker::Inst()->send(sClientSessionInfo, &client_msg);
-// 		if (client_msg.nClientID == 1)
-// 			PrintInfo("time4: "UINT64FMT, base::getProcessPassTime());
-	});
-}
+			return sResponseFuture;
+
+		}).then_r([sClientSessionInfo, nSync](std::shared_ptr<SServiceResponseMsg2> pResultData, uint32_t nErrorCode)
+		{
+			SServiceRequestMsg3 service_msg3;
+			service_msg3.nClientID = pResultData->nClientID;
+			service_msg3.nID = pResultData->nID;
+			service_msg3.nClientTime = pResultData->nClientTime;
+
+			// 		if (service_msg3.nClientID == 1)
+			// 			PrintInfo("time3: "UINT64FMT, base::getProcessPassTime());
+			core::CFuture<std::shared_ptr<SServiceResponseMsg3>> sResponseFuture;
+			bool bRet = core::CClusterInvoker::Inst()->invoke_r("test2-1", &service_msg3, sResponseFuture);
+			if (!bRet)
+				PrintDebug("CCCCCCCC");
+
+			return sResponseFuture;
+
+		}).then([sClientSessionInfo, nSync](std::shared_ptr<SServiceResponseMsg3> pResultData, uint32_t nErrorCode)
+		{
+			SClientResponseMsg client_msg;
+			client_msg.nClientID = pResultData->nClientID;
+			client_msg.nID = pResultData->nID;
+			client_msg.nClientTime = pResultData->nClientTime;
+			client_msg.nSync = nSync;
+			core::CClusterInvoker::Inst()->send(sClientSessionInfo, &client_msg);
+			// 		if (client_msg.nClientID == 1)
+			// 			PrintInfo("time4: "UINT64FMT, base::getProcessPassTime());
+		});
+
+		return true;
+	}
+};
 
 CTestServiceApp1::CTestServiceApp1()
 {
@@ -110,7 +125,9 @@ bool CTestServiceApp1::onInit()
 {
 	CCoreServiceApp::onInit();
 
-	this->registerGateForwardCallback(eClientRequestMsg, &client_request_msg_callback);
+	CTestMessageHandler* pTestMessageHandler = new CTestMessageHandler();
+	pTestMessageHandler->init();
+
 	core::CTicker* pTicker = new core::CTicker();
 	pTicker->setCallback(std::bind(&tick_fun1, std::placeholders::_1));
 	this->registerTicker(pTicker, 10000, 0, 0);

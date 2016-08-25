@@ -97,7 +97,7 @@ namespace core
 
 	void CBaseApp::busy()
 	{
-
+		CCoreApp::Inst()->busy();
 	}
 
 }

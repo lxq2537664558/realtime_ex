@@ -4,14 +4,19 @@
 
 #include "libBaseCommon/base_time.h"
 
+#define _MAX_TRACE_NODE_COUNT 10000
+
 namespace core
 {
 	CInvokerTrace::CInvokerTrace()
-		: m_nCurTraceID(0)
-		, m_nNextGenTraceID(0)
+		: m_nNextGenTraceID(0)
 		, m_bEnable(true)
+		, m_nCurRecvTraceID(0)
+		, m_nCurRecvFromID(0)
+		, m_nCurRecvMessageID(0)
+		, m_nCurRecvBeginTime(0)
 	{
-		memset(this->m_szExtraInfo, 0, sizeof(this->m_szExtraInfo));
+		memset(this->m_szExtraBuf, 0, sizeof(this->m_szExtraBuf));
 	}
 
 	CInvokerTrace::~CInvokerTrace()
@@ -35,13 +40,13 @@ namespace core
 		if (!this->m_bEnable)
 			return;
 
-		if (base::crt::vsnprintf(this->m_szExtraInfo, sizeof(this->m_szExtraInfo), szFormat, arg) < 0)
+		if (base::crt::vsnprintf(this->m_szExtraBuf, sizeof(this->m_szExtraBuf), szFormat, arg) < 0)
 		{
 			PrintWarning("CInvokerTrace::addTraceExtraInfo trace_id: "UINT64FMT, nTraceID);
 			return;
 		}
 
-		base::saveLogEx("trace", false, "trace_id: "UINT64FMT" extra_info: %s time: "UINT64FMT, nTraceID, this->m_szExtraInfo, base::getGmtTime());
+		base::saveLogEx("trace", false, "trace_id: "UINT64FMT" extra_info: %s time: "UINT64FMT, nTraceID, this->m_szExtraBuf, base::getGmtTime());
 	}
 
 	void CInvokerTrace::addTraceExtraInfo(const char* szFormat, ...)
@@ -51,7 +56,7 @@ namespace core
 
 		va_list arg;
 		va_start(arg, szFormat);
-		this->addTraceExtraInfo(this->m_nCurTraceID, szFormat, arg);
+		this->addTraceExtraInfo(this->m_nCurRecvTraceID, szFormat, arg);
 		va_end(arg);
 	}
 
@@ -66,42 +71,59 @@ namespace core
 		va_end(arg);
 	}
 
-	void CInvokerTrace::beginRecv(uint64_t nTraceID, uint16_t nMessageID, uint16_t nFromServiceID)
+	void CInvokerTrace::traceBeginRecv(uint64_t nTraceID, uint16_t nMessageID, uint64_t nFromID)
 	{
 		if (!this->m_bEnable)
 			return;
-
-		base::saveLogEx("trace", false, "trace_id: "UINT64FMT" begin recv time: "UINT64FMT" message_id: %d service_name: %s from_service_id: %d",
-			nTraceID, base::getGmtTime(), nMessageID, CCoreServiceAppImpl::Inst()->getServiceBaseInfo().szName.c_str(), nFromServiceID);
 		
-		this->m_nCurTraceID = nTraceID;
+		if (nTraceID == 0)
+			return;
+
+		this->m_nCurRecvMessageID = nMessageID;
+		this->m_nCurRecvFromID = nFromID;
+		this->m_nCurRecvTraceID = nTraceID;
+		this->m_nCurRecvBeginTime = base::getGmtTime();
 	}
 
-	void CInvokerTrace::endRecv()
+	void CInvokerTrace::traceEndRecv()
 	{
 		if (!this->m_bEnable)
 			return;
 
-		base::saveLogEx("trace", false, "trace_id: "UINT64FMT" end recv time: "UINT64FMT, this->m_nCurTraceID, base::getGmtTime());
+		if (this->m_nCurRecvTraceID == 0)
+			return;
+
+		int64_t nEndTime = base::getGmtTime();
+		base::saveLogEx("trace", false, "trace_id: "UINT64FMT" trace_recv message_id: %d from_id: "UINT64FMT"begin_time: "UINT64FMT" end_time: "UINT64FMT" cost: "INT64FMT,
+			this->m_nCurRecvTraceID, this->m_nCurRecvMessageID, this->m_nCurRecvFromID, this->m_nCurRecvBeginTime, nEndTime, (nEndTime - this->m_nCurRecvBeginTime));
+
+		this->m_nCurRecvTraceID = 0;
+		this->m_nCurRecvFromID = 0;
+		this->m_nCurRecvMessageID = 0;
+		this->m_nCurRecvBeginTime = 0;
 	}
 
-	void CInvokerTrace::send(uint16_t nMessageID)
+	void CInvokerTrace::traceSend(uint64_t nTraceID, uint16_t nMessageID, uint64_t nToID, int64_t nBeginTime)
 	{
 		if (!this->m_bEnable)
 			return;
 
-		base::saveLogEx("trace", false, "trace_id: "UINT64FMT" send time: "UINT64FMT" message_id: %d service_name: %s",
-			this->m_nCurTraceID, base::getGmtTime(), nMessageID, CCoreServiceAppImpl::Inst()->getServiceBaseInfo().szName.c_str());
+		if (nTraceID == 0)
+			return;
+
+		int64_t nEndTime = base::getGmtTime();
+		base::saveLogEx("trace", false, "trace_id: "UINT64FMT" trace_send message_id: %d to_id: "UINT64FMT"begin_time: "UINT64FMT" end_time: "UINT64FMT" cost: "INT64FMT,
+			nTraceID, nMessageID, nToID, nBeginTime, nEndTime, (nEndTime - nBeginTime));
 	}
 
 	void CInvokerTrace::startNewTrace()
 	{
-		this->m_nCurTraceID = this->m_nNextGenTraceID++;
+		this->m_nCurRecvTraceID = this->m_nNextGenTraceID++;
 	}
 
 	uint64_t CInvokerTrace::getCurTraceID() const
 	{
-		return this->m_nCurTraceID;
+		return this->m_nCurRecvTraceID;
 	}
 
 }

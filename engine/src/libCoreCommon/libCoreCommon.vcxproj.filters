@@ -60,18 +60,6 @@
     <ClInclude Include="coroutine_impl.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="net_runnable.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="message_command.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="net_message_queue.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="logic_message_queue.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="core_app.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -122,16 +110,7 @@
     <ClCompile Include="coroutine_impl.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="net_runnable.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="memory_new.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="net_message_queue.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="logic_message_queue.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="core_app.cpp">

@@ -49,17 +49,22 @@ namespace core
 	{
 		CTicker		tickTimeout;
 		uint64_t	nSessionID;
-		uint64_t	nTraceID;
 		uint64_t	nCoroutineID;
+
+		uint64_t	nTraceID;	// traceid
+		uint64_t	nToID;		// 目标ID
+		int64_t		nBeginTime;	// 发送时间
+		uint16_t	nMessageID;	// 消息ID
+		
 		std::function<void(CMessage, uint32_t)>
 					callback;
 	};
 
 	enum EBaseConnectionType
 	{
-		eBCT_ConnectionToMaster		= 10,
-		eBCT_ConnectionFromService	= 11,
-		eBCT_ConnectionToService	= 12,
+		eBCT_ConnectionToMaster			= 10,
+		eBCT_ConnectionFromOtherNode	= 11,
+		eBCT_ConnectionToOtherNode		= 12,
 	};
 
 	struct STraceInfo

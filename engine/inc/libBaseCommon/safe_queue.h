@@ -10,7 +10,7 @@ namespace base
 	// 这个队列不足的地方是一旦队列满了，需要在别的地方暂存，
 	// 势必需要内存拷贝，但是一般来说这样的情况不会很多，除非
 	// 消费者实在是太慢了，并且内存拷贝相比于锁竞争开销要小很多
-	template<typename T, uint32_t nSize>
+	template<class T, uint32_t nSize>
 	class safe_queue
 	{
 	public:

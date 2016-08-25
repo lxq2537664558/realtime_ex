@@ -21,26 +21,16 @@ public:
 	/**
 	@brief: 注册经客户端消息响应函数
 	*/
-	void	registerCallback(const std::string& szMessageName, core::ClientCallback callback);
-	/**
-	@brief: 根据消息名字获取消息响应函数
-	*/
-	core::ClientCallback&
-			getCallback(const std::string& szMessageName);
+	void	registerCallback(uint16_t nMessageID, core::ClientCallback callback);
 	/**
 	@brief: 根据消息ID获取消息响应函数
 	*/
-	core::ClientCallback&
-			getCallback(uint32_t nMessageID);
+	core::ClientCallback
+			getCallback(uint16_t nMessageID) const;
 
 private:
 	void	forward(uint64_t nSessionID, const core::message_header* pHeader);
 
 private:
-	struct SClientCallbackInfo
-	{
-		std::string				szMessageName;
-		core::ClientCallback	callback;
-	};
-	std::map<uint32_t, SClientCallbackInfo>	m_mapClientCallbackInfo;
+	std::map<uint16_t, core::ClientCallback>	m_mapClientCallbackInfo;
 };

@@ -7,17 +7,16 @@
 #include "service_connection_factory.h"
 
 #include "libCoreCommon/base_connection_mgr.h"
-#include "libCoreServiceKit/message_dispatcher.h"
 
 #include <functional>
 
 #include "tinyxml2/tinyxml2.h"
 
-static void gate_before_filter(uint16_t nFromServiceID, uint8_t nMessageType, const void* pData, uint16_t nSize)
+static void gate_before_filter(uint64_t nFromSocketID, uint16_t nFromServiceID, uint8_t nMessageType, const void* pData, uint16_t nSize)
 {
 	DebugAst(pData != nullptr);
 
-	CGateMessageDispatcher::Inst()->dispatch(nFromServiceID, nMessageType, pData, nSize);
+	CGateMessageDispatcher::Inst()->dispatch(nFromSocketID, nMessageType, pData, nSize);
 }
 
 CGateApp::CGateApp()
@@ -42,10 +41,11 @@ bool CGateApp::onInit()
 		PrintWarning("CCoreServiceApp::onInit()");
 		return false;
 	}
+
 	this->m_pServiceConnectionFactory = new CServiceConnectionFactory();
 	this->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionFromClient, this->m_pServiceConnectionFactory);
 
-	this->addGlobalBeforeFilter(std::bind(gate_before_filter, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
+	this->addGlobalAfterFilter(std::bind(gate_before_filter, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5));
 	
 	if (!CGateMessageDispatcher::Inst()->init())
 	{
@@ -84,8 +84,7 @@ bool CGateApp::onInit()
 		pListenClientAddrXML->Attribute("host") != nullptr ? pListenClientAddrXML->Attribute("host") : "0.0.0.0", 
 		(uint16_t)pListenClientAddrXML->IntAttribute("port"), eBCT_ConnectionFromClient, "", 
 		pListenClientAddrXML->IntAttribute("send_buf_size"), 
-		pListenClientAddrXML->IntAttribute("recv_buf_size"), 
-		default_client_message_parser);
+		pListenClientAddrXML->IntAttribute("recv_buf_size"));
 
 	SAFE_DELETE(pConfigXML);
 

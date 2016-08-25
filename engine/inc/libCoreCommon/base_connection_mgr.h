@@ -10,7 +10,8 @@
 namespace core
 {
 	class CBaseConnection;
-	class CCoreApp;
+	class CCoreConnectionMgr;
+	class CCoreConnection;
 	class CBaseConnectionFactory;
 	/**
 	@brief: 基础连接管理类，主要管理基础连接以及发起连接跟发起监听
@@ -19,21 +20,21 @@ namespace core
 		public base::noncopyable
 	{
 		friend class CBaseConnection;
-		friend class CCoreApp;
+		friend class CCoreConnectionMgr;
+		friend class CCoreConnection;
 
 	public:
 		CBaseConnectionMgr();
 		~CBaseConnectionMgr();
 
-		bool							init();
 		/**
 		@brief: 主动发起一个连接（异步）
 		*/
-		void							connect(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser);
+		bool							connect(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize);
 		/**
 		@brief: 发起一个监听
 		*/
-		void							listen(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser);
+		bool							listen(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize);
 
 		/**
 		@brief: 设置某一个类型的连接创建工厂
@@ -77,16 +78,15 @@ namespace core
 		void							setConnectRefuseCallback(std::function<void(const std::string&)> funConnectRefuse);
 
 	private:
-		void							onConnect(uint64_t nSocketID, const std::string& szContext, uint32_t nType, const SNetAddr& sLocalAddr, const SNetAddr& sRemoteAddr);
-		void							onDisconnect(uint64_t nSocketID);
+		void							onConnect(CBaseConnection* pBaseConnection);
+		void							onDisconnect(CBaseConnection* pBaseConnection);
 		void							onConnectRefuse(const std::string& szContext);
 
 	private:
-		std::map<uint64_t, CBaseConnection*>						m_mapBaseConnectionByID;
-		std::map<uint32_t, std::map<uint64_t, CBaseConnection*>>	m_mapBaseConnectionByType;
-		std::map<uint32_t, CBaseConnectionFactory*>					m_mapBaseConnectionFactory;
-		std::function<void(CBaseConnection*)>						m_funConnect;
-		std::function<void(CBaseConnection*)>						m_funDisconnect;
-		std::function<void(const std::string&)>						m_funConnectRefuse;
+		CCoreConnectionMgr*							m_pCoreConnectionMgr;
+		std::map<uint32_t, CBaseConnectionFactory*>	m_mapBaseConnectionFactory;
+		std::function<void(CBaseConnection*)>		m_funConnect;
+		std::function<void(CBaseConnection*)>		m_funDisconnect;
+		std::function<void(const std::string&)>		m_funConnectRefuse;
 	};
 }

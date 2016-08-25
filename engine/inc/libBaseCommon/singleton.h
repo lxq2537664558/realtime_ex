@@ -4,7 +4,7 @@
 
 namespace base
 {
-	template <typename T>
+	template<class T>
 	class CSingleton :
 		public noncopyable
 	{
@@ -18,10 +18,10 @@ namespace base
 		static T* s_pInst;
 	};
 
-	template <typename T>
+	template<class T>
 	T* CSingleton<T>::s_pInst = nullptr;
 
-	template<typename T>
+	template<class T>
 	T* CSingleton<T>::Inst()
 	{
 		if (s_pInst == nullptr)
@@ -30,7 +30,7 @@ namespace base
 		return s_pInst;
 	}
 
-	template<typename T>
+	template<class T>
 	void CSingleton<T>::release()
 	{
 		SAFE_DELETE(s_pInst);

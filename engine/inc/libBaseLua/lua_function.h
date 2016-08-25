@@ -18,16 +18,16 @@ namespace base
 		CLuaFunction& operator = (const CLuaFunction& lhs);
 		CLuaFunction& operator = (CLuaFunction&& lhs);
 
-		template<typename ...Args>
+		template<class ...Args>
 		inline bool			call(Args... args);
 
-		template<typename RT, typename ...Args>
+		template<class RT, class ...Args>
 		inline bool			callR(RT& ret, Args... args);
 
-		template<typename ...Args>
+		template<class ...Args>
 		static inline bool	call(CLuaFacade* pLuaFacade, const char* szFunName, Args... args);
 
-		template<typename RT, typename ...Args>
+		template<class RT, class ...Args>
 		static inline bool	callR(CLuaFacade* pLuaFacade, const char* szFunName, RT& ret, Args... args);
 
 	private:
