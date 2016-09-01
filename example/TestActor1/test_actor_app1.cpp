@@ -16,6 +16,7 @@
 
 #include <memory>
 #include "libCoreServiceKit/actor_message_registry.h"
+#include "libCoreServiceKit/message_ptr.h"
 
 CTestActorApp1::CTestActorApp1()
 {
@@ -53,7 +54,7 @@ public:
 		return true;
 	}
 
-	void onRequest(CBaseActor* pBaseActor, uint64_t nFrom, std::shared_ptr<CServiceRequestActor1> pMessage)
+	void onRequest(CBaseActor* pBaseActor, uint64_t nFrom, core::CMessagePtr<CServiceRequestActor1> pMessage)
 	{
 		uint64_t nActorID = pMessage->nActorID;
 		//PrintInfo("Time2: "UINT64FMT, base::getProcessPassTime());
@@ -61,7 +62,7 @@ public:
 		{
 			CServiceRequestActor2 netMsg;
 			netMsg.nID = this->m_nID++;
-			std::shared_ptr<CServiceResponseActor2> pResultData;
+			core::CMessagePtr<CServiceResponseActor2> pResultData;
 			int64_t nBeginTime = base::getProcessPassTime();
 			this->invoke(nActorID, &netMsg, pResultData);
 			int64_t nEndTime = base::getProcessPassTime();
@@ -98,24 +99,24 @@ public:
 		return true;
 	}
 
-	void onRequest(CBaseActor* pBaseActor, uint64_t nFrom, std::shared_ptr<CServiceRequestActor2> pMessage)
+	void onRequest(CBaseActor* pBaseActor, uint64_t nFrom, core::CMessagePtr<CServiceRequestActor2> pMessage)
 	{
 		CServiceRequestActor3 request3;
 		request3.nID = pMessage->nID;
 		//PrintInfo("Time3: "UINT64FMT, base::getProcessPassTime());
-		core::CFuture<std::shared_ptr<CServiceRequestActor3>> sResponseFuture;
+		core::CFuture<core::CMessagePtr<CServiceRequestActor3>> sResponseFuture;
 		this->invoke_r(this->m_nDstActorID, &request3, sResponseFuture);
 		core::SActorSessionInfo sActorSessionInfo = this->getActorSessionInfo();
-		sResponseFuture.then_r([this](std::shared_ptr<CServiceRequestActor3> pMessage, uint32_t nErrorCode)
+		sResponseFuture.then_r([this](core::CMessagePtr<CServiceRequestActor3> pMessage, uint32_t nErrorCode)
 		{
 			//PrintInfo("Time6: "UINT64FMT, base::getProcessPassTime());
 			CServiceRequestActor4 request4;
 			request4.nID = pMessage->nID;
-			core::CFuture<std::shared_ptr<CServiceRequestActor4>> sResponseFuture;
+			core::CFuture<core::CMessagePtr<CServiceRequestActor4>> sResponseFuture;
 			this->invoke_r(this->m_nDstActorID, &request4, sResponseFuture);
 
 			return sResponseFuture;
-		}).then([this, sActorSessionInfo](std::shared_ptr<CServiceRequestActor4> pMessage, uint32_t nErrorCode)
+		}).then([this, sActorSessionInfo](core::CMessagePtr<CServiceRequestActor4> pMessage, uint32_t nErrorCode)
 		{
 			//PrintInfo("Time7: "UINT64FMT, base::getProcessPassTime());
 			CServiceResponseActor2 netMsg;
@@ -151,7 +152,7 @@ public:
 		return true;
 	}
 
-	void onRequest3(CBaseActor* pBaseActor, uint64_t nFrom, std::shared_ptr<CServiceRequestActor3> pMessage)
+	void onRequest3(CBaseActor* pBaseActor, uint64_t nFrom, core::CMessagePtr<CServiceRequestActor3> pMessage)
 	{
 		CServiceResponseActor3 netMsg;
 		netMsg.nID = pMessage->nID;
@@ -159,7 +160,7 @@ public:
 		this->response(&netMsg);
 	}
 
-	void onRequest4(CBaseActor* pBaseActor, uint64_t nFrom, std::shared_ptr<CServiceRequestActor4> pMessage)
+	void onRequest4(CBaseActor* pBaseActor, uint64_t nFrom, core::CMessagePtr<CServiceRequestActor4> pMessage)
 	{
 		CServiceResponseActor4 netMsg;
 		netMsg.nID = pMessage->nID;

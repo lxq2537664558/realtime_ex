@@ -92,6 +92,15 @@
     <ClInclude Include="..\..\inc\libCoreServiceKit\node_message_registry.h">
       <Filter>inc</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreServiceKit\serialize_adapter.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreServiceKit\native_serialize_adapter.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreServiceKit\message_ptr.h">
+      <Filter>inc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -145,6 +154,9 @@
     <ClCompile Include="core_message_registry.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="native_serialize_adapter.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\inc\libCoreServiceKit\future.inl">
@@ -163,6 +175,9 @@
       <Filter>inc</Filter>
     </None>
     <None Include="..\..\inc\libCoreServiceKit\node_message_registry.inl">
+      <Filter>inc</Filter>
+    </None>
+    <None Include="..\..\inc\libCoreServiceKit\message_ptr.inl">
       <Filter>inc</Filter>
     </None>
   </ItemGroup>

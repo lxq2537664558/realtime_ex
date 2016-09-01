@@ -7,7 +7,7 @@ namespace core
 	std::map<uint16_t, typename CActorMessageRegistry<T>::funForwardHandler> CActorMessageRegistry<T>::s_mapForwardHandler;
 
 	template<class T>
-	void CActorMessageRegistry<T>::registerMessageHandler(uint16_t nMessageID, void(T::*handler)(CBaseActor*, uint64_t, CMessage))
+	void CActorMessageRegistry<T>::registerMessageHandler(uint16_t nMessageID, void(T::*handler)(CBaseActor*, uint64_t, CMessagePtr<char>))
 	{
 		DebugAst(handler != nullptr);
 
@@ -15,7 +15,7 @@ namespace core
 	}
 
 	template<class T>
-	void CActorMessageRegistry<T>::registerForwardHandler(uint16_t nMessageID, void(T::*handler)(CBaseActor*, SClientSessionInfo, CMessage))
+	void CActorMessageRegistry<T>::registerForwardHandler(uint16_t nMessageID, void(T::*handler)(CBaseActor*, SClientSessionInfo, CMessagePtr<char>))
 	{
 		DebugAst(handler != nullptr);
 
@@ -23,9 +23,9 @@ namespace core
 	}
 
 	template<class T>
-	void CActorMessageRegistry<T>::dispatch(T* pObject, CBaseActor* pBaseActor, uint64_t nFrom, CMessage& pMessage)
+	void CActorMessageRegistry<T>::dispatch(T* pObject, CBaseActor* pBaseActor, uint64_t nFrom, CMessagePtr<char>& pMessage)
 	{
-		auto iter = s_mapMessageHandler.find(pMessage->nMessageID);
+		auto iter = s_mapMessageHandler.find(pMessage.getMessageID());
 		if (iter == s_mapMessageHandler.end())
 			return;
 
@@ -35,9 +35,9 @@ namespace core
 	}
 
 	template<class T>
-	void CActorMessageRegistry<T>::forward(T* pObject, CBaseActor* pBaseActor, SClientSessionInfo& sSession, CMessage& pMessage)
+	void CActorMessageRegistry<T>::forward(T* pObject, CBaseActor* pBaseActor, SClientSessionInfo& sSession, CMessagePtr<char>& pMessage)
 	{
-		auto iter = s_mapForwardHandler.find(pMessage->nMessageID);
+		auto iter = s_mapForwardHandler.find(pMessage.getMessageID());
 		if (iter == s_mapForwardHandler.end())
 			return;
 

@@ -2,6 +2,8 @@
 
 #include "libCoreCommon/core_common.h"
 
+#include "message_ptr.h"
+
 #include <memory>
 
 namespace core

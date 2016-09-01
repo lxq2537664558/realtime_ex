@@ -1,15 +1,15 @@
 namespace core
 {
 	template<class T>
-	bool CClusterInvoker::invoke_r(uint16_t nNodeID, const message_header* pData, CFuture<std::shared_ptr<T>>& sFuture)
+	bool CClusterInvoker::invoke_r(uint16_t nNodeID, const void* pData, CFuture<CMessagePtr<T>>& sFuture)
 	{
 		DebugAstEx(pData != nullptr, false);
 
-		std::shared_ptr<CPromise<std::shared_ptr<T>>> pPromise = std::make_shared<CPromise<std::shared_ptr<T>>>();
-
-		auto callback = [pPromise](CMessage pMessage, uint32_t nErrorCode)->void
+		auto pPromise = std::make_shared<CPromise<CMessagePtr<T>>>();
+		
+		auto callback = [pPromise](CMessagePtr<char> pMessage, uint32_t nErrorCode)->void
 		{
-			pPromise->setValue(std::static_pointer_cast<T>(pMessage), nErrorCode);
+			pPromise->setValue(CMessagePtr<T>::reinterpret_cast_message(pMessage), nErrorCode);
 		};
 
 		if (!this->invokeImpl(nNodeID, pData, callback))
@@ -21,39 +21,15 @@ namespace core
 	}
 
 	template<class T>
-	bool CClusterInvoker::invoke_r(const std::string& szNodeName, const message_header* pData, CFuture<std::shared_ptr<T>>& sFuture)
-	{
-		DebugAstEx(pData != nullptr, false);
-
-		uint16_t nNodeID = CCoreServiceApp::Inst()->getNodeID(szNodeName);
-		if (nNodeID == 0)
-			return false;
-
-		return invoke_r(nNodeID, pData, sFuture);
-	}
-
-	template<class T>
-	bool CClusterInvoker::invoke_r(uint16_t nNodeID, const message_header* pData, const std::function<void(std::shared_ptr<T>, uint32_t)>& callback)
+	bool CClusterInvoker::invoke_r(uint16_t nNodeID, const void* pData, const std::function<void(CMessagePtr<T>, uint32_t)>& callback)
 	{
 		DebugAstEx(pData != nullptr && callback != nullptr, false);
 
-		auto callback_ = [callback](CMessage pMessage, uint32_t nErrorCode)->void
+		auto callback_ = [callback](CMessagePtr<char> pMessage, uint32_t nErrorCode)->void
 		{
-			callback(std::static_pointer_cast<T>(pMessage), nErrorCode);
+			callback(CMessagePtr<T>::reinterpret_cast_message(pMessage), nErrorCode);
 		};
 
 		return this->invokeImpl(nNodeID, pData, callback_);
-	}
-
-	template<class T>
-	bool CClusterInvoker::invoke_r(const std::string& szNodeName, const message_header* pData, const std::function<void(std::shared_ptr<T>, uint32_t)>& callback)
-	{
-		DebugAstEx(pData != nullptr && callback != nullptr, false);
-
-		uint16_t nNodeID = CCoreServiceApp::Inst()->getNodeID(szNodeName);
-		if (nNodeID == 0)
-			return false;
-
-		return invoke_r(nNodeID, pData, callback);
 	}
 }

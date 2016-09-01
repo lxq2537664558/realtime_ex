@@ -303,5 +303,4 @@ namespace core
 	{
 		return this->m_fnNodeDisconnectCallback;
 	}
-
 }

@@ -47,9 +47,9 @@ public:
 		return true;
 	}
 
-	void onRequest(CBaseActor* pBaseActor, uint64_t nFrom, core::CMessage pMessage)
+	void onRequest(CBaseActor* pBaseActor, uint64_t nFrom, core::CMessagePtr<char> pMessage)
 	{
-		uint64_t nActorID = std::static_pointer_cast<CServiceRequestActor3>(pMessage)->nActorID;
+		uint64_t nActorID = core::CMessagePtr<CServiceRequestActor3>::reinterpret_cast_message(pMessage)->nActorID;
 
 		while (true)
 		{

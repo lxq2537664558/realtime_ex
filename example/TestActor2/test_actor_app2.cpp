@@ -51,7 +51,7 @@ public:
 		return true;
 	}
 
-	void onRequest3(CBaseActor* pBaseActor, uint64_t nFrom, std::shared_ptr<CServiceRequestActor3> pMessage)
+	void onRequest3(CBaseActor* pBaseActor, uint64_t nFrom, core::CMessagePtr<CServiceRequestActor3> pMessage)
 	{
 		CServiceResponseActor4 netMsg;
 		netMsg.nID = reinterpret_cast<const CServiceRequestActor4*>(pMessage.get())->nID;
@@ -59,7 +59,7 @@ public:
 		this->response(&netMsg);
 	}
 
-	void onRequest4(CBaseActor* pBaseActor, uint64_t nFrom, std::shared_ptr<CServiceRequestActor4> pMessage)
+	void onRequest4(CBaseActor* pBaseActor, uint64_t nFrom, core::CMessagePtr<CServiceRequestActor4> pMessage)
 	{
 		CServiceResponseActor4 netMsg;
 		netMsg.nID = pMessage->nID;

@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "core_other_node_proxy.h"
 #include "core_service_app_impl.h"
+#include "native_serialize_adapter.h"
 
 #include "libCoreCommon/base_app.h"
 #include "libCoreCommon/base_connection_mgr.h"
@@ -11,13 +12,14 @@ namespace core
 {
 
 	CCoreOtherNodeProxy::CCoreOtherNodeProxy()
+		: m_pDefaultSerializeAdapter(new CNativeSerializeAdapter())
 	{
 
 	}
 
 	CCoreOtherNodeProxy::~CCoreOtherNodeProxy()
 	{
-
+		SAFE_DELETE(this->m_pDefaultSerializeAdapter);
 	}
 
 	bool CCoreOtherNodeProxy::init()
@@ -158,4 +160,21 @@ namespace core
 
 		iter->second.pCoreConnectionFromOtherNode = nullptr;
 	}
+
+	void CCoreOtherNodeProxy::setSerializeAdapter(uint16_t nID, CSerializeAdapter* pSerializeAdapter)
+	{
+		DebugAst(pSerializeAdapter != nullptr);
+
+		this->m_mapSerializeAdapter[nID] = pSerializeAdapter;
+	}
+
+	CSerializeAdapter* CCoreOtherNodeProxy::getSerializeAdapter(uint16_t nID) const
+	{
+		auto iter = this->m_mapSerializeAdapter.find(nID);
+		if (iter == this->m_mapSerializeAdapter.end())
+			return this->m_pDefaultSerializeAdapter;
+
+		return iter->second;
+	}
+
 }

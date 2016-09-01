@@ -11,38 +11,38 @@ namespace core
 {
 	struct SRequestMessageInfo
 	{
-		uint64_t		nFromActorID;
-		uint64_t		nToActorID;
-		uint64_t		nSessionID;
-		message_header*	pData;
+		uint64_t	nFromActorID;
+		uint64_t	nToActorID;
+		uint64_t	nSessionID;
+		const void*	pData;
 	};
 
 	struct SResponseMessageInfo
 	{
-		uint64_t		nFromActorID;
-		uint64_t		nToActorID;
-		uint64_t		nSessionID;
-		uint8_t			nResult;
-		message_header*	pData;
+		uint64_t	nFromActorID;
+		uint64_t	nToActorID;
+		uint64_t	nSessionID;
+		uint8_t		nResult;
+		const void*	pData;
 	};
 
 	struct SGateForwardMessageInfo
 	{
-		uint64_t		nActorID;
-		uint64_t		nSessionID;
-		message_header*	pData;
+		uint64_t	nActorID;
+		uint64_t	nSessionID;
+		const void*	pData;
 	};
 
 	struct SGateMessageInfo
 	{
-		uint64_t		nSessionID;
-		message_header*	pData;
+		uint64_t	nSessionID;
+		const void*	pData;
 	};
 
 	struct SGateBroadcastMessageInfo
 	{
 		std::vector<uint64_t>	vecSessionID;
-		message_header*			pData;
+		const void*				pData;
 	};
 
 	struct SResponseWaitInfo
@@ -56,7 +56,7 @@ namespace core
 		int64_t		nBeginTime;	// 发送时间
 		uint16_t	nMessageID;	// 消息ID
 		
-		std::function<void(CMessage, uint32_t)>
+		std::function<void(CMessagePtr<char>, uint32_t)>
 					callback;
 	};
 

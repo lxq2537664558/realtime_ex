@@ -7,7 +7,7 @@ namespace core
 	std::map<uint16_t, typename CNodeMessageRegistry<T>::funForwardHandler> CNodeMessageRegistry<T>::s_mapForwardHandler;
 
 	template<class T>
-	void CNodeMessageRegistry<T>::registerMessageHandler(uint16_t nMessageID, bool(T::*handler)(uint16_t, CMessage))
+	void CNodeMessageRegistry<T>::registerMessageHandler(uint16_t nMessageID, bool(T::*handler)(uint16_t, CMessagePtr<char>))
 	{
 		DebugAst(handler != nullptr);
 
@@ -15,7 +15,7 @@ namespace core
 	}
 
 	template<class T>
-	void CNodeMessageRegistry<T>::registerForwardHandler(uint16_t nMessageID, bool(T::*handler)(SClientSessionInfo, CMessage))
+	void CNodeMessageRegistry<T>::registerForwardHandler(uint16_t nMessageID, bool(T::*handler)(SClientSessionInfo, CMessagePtr<char>))
 	{
 		DebugAst(handler != nullptr);
 
@@ -23,9 +23,9 @@ namespace core
 	}
 
 	template<class T>
-	bool CNodeMessageRegistry<T>::dispatch(T* pObject, uint16_t nFrom, CMessage& pMessage)
+	bool CNodeMessageRegistry<T>::dispatch(T* pObject, uint16_t nFrom, CMessagePtr<char>& pMessage)
 	{
-		auto iter = s_mapMessageHandler.find(pMessage->nMessageID);
+		auto iter = s_mapMessageHandler.find(pMessage.getMessageID());
 		if (iter == s_mapMessageHandler.end())
 			return false;
 
@@ -35,9 +35,9 @@ namespace core
 	}
 
 	template<class T>
-	bool CNodeMessageRegistry<T>::forward(T* pObject, SClientSessionInfo& sSession, CMessage& pMessage)
+	bool CNodeMessageRegistry<T>::forward(T* pObject, SClientSessionInfo& sSession, CMessagePtr<char>& pMessage)
 	{
-		auto iter = s_mapForwardHandler.find(pMessage->nMessageID);
+		auto iter = s_mapForwardHandler.find(pMessage.getMessageID());
 		if (iter == s_mapForwardHandler.end())
 			return false;
 

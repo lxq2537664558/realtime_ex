@@ -72,7 +72,7 @@ namespace core
 	{
 		DebugAstEx(this->m_pContext != nullptr, R());
 
-		std::shared_ptr<SFutureContext<R::ValueType>> pContext = std::make_shared<SFutureContext<R::ValueType>>();
+		auto pContext = std::make_shared<SFutureContext<R::ValueType>>();
 		pContext->bReady = false;
 		pContext->nErrorCode = 0;
 
@@ -126,7 +126,7 @@ namespace core
 	template<class F, class R>
 	R CFuture<T>::collect_r(std::vector<CFuture<T>>& vecFuture, F& fn)
 	{
-		std::shared_ptr<SFutureContext<R::ValueType>> pContext = std::make_shared<SFutureContext<R::ValueType>>();
+		auto pContext = std::make_shared<SFutureContext<R::ValueType>>();
 		pContext->bReady = false;
 		pContext->nErrorCode = 0;
 
@@ -168,7 +168,7 @@ namespace core
 	template<class T>
 	CFuture<T> core::CFuture<T>::createFuture(T val)
 	{
-		std::shared_ptr<SFutureContext<T>> pContext = std::make_shared<SFutureContext<T>>();
+		auto pContext = std::make_shared<SFutureContext<T>>();
 		pContext->bReady = true;
 		pContext->val = val;
 

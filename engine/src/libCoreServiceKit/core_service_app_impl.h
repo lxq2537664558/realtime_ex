@@ -4,13 +4,13 @@
 #include "libBaseLua/lua_facade.h"
 #include "libCoreCommon/core_common.h"
 
-#include "core_service_kit_define.h"
 #include "transporter.h"
 #include "core_other_node_proxy.h"
 #include "core_message_registry.h"
 #include "invoker_trace.h"
 #include "scheduler.h"
 #include "message_dispatcher.h"
+#include "core_service_app.h"
 
 #include <map>
 
@@ -69,7 +69,7 @@ namespace core
 		void						onCheckConnectMaster(uint64_t nContext);
 
 	private:
-		CTicker									m_tickCheckConnectMaster;
+		CTicker							m_tickCheckConnectMaster;
 		CTransporter*					m_pTransporter;
 		CCoreMessageRegistry*			m_pCoreMessageRegistry;
 		CScheduler*						m_pScheduler;

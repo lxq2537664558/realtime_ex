@@ -2,6 +2,8 @@
 #include "libCoreCommon/core_common.h"
 #include "libCoreServiceKit/promise.h"
 
+#include "message_ptr.h"
+
 #include <string>
 #include <vector>
 #include <map>
@@ -54,9 +56,9 @@ namespace core
 		uint64_t	nSessionID;
 	};
 
-	typedef std::shared_ptr<message_header>	CMessage;
+	typedef core::CMessagePtr<message_header>	CMessage;
 	
-	typedef std::function<void(uint64_t, CMessage)>									ClientCallback;				// 客户端消息处理函数类型
+	typedef std::function<void(uint64_t, const message_header*)>					ClientCallback;				// 客户端消息处理函数类型
 	typedef std::function<bool(uint64_t, uint16_t, uint8_t, const void*, uint16_t)>	GlobalBeforeFilter;			// 全局的消息过滤器类型
 	typedef std::function<void(uint64_t, uint16_t, uint8_t, const void*, uint16_t)>	GlobalAfterFilter;			// 全局的消息过滤器类型
 	

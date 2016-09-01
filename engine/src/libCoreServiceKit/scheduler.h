@@ -32,5 +32,6 @@ namespace core
 		uint64_t								m_nNextActorID;
 		std::map<uint64_t, CBaseActorImpl*>		m_mapBaseActor;
 		std::map<uint64_t, CBaseActorImpl*>		m_mapWorkBaseActor;
+		std::vector<char>						m_vecBuf;
 	};
 }

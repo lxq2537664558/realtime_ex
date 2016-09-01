@@ -76,8 +76,7 @@ void CGateMessageDispatcher::dispatch(uint64_t nSocketID, uint8_t nMessageType, 
 		core::ClientCallback& callback = iter->second;
 		DebugAst(callback != nullptr);
 		
-		core::CMessage pMessage(const_cast<core::message_header*>(pHeader));
-		callback(nSocketID, pMessage);
+		callback(nSocketID, pHeader);
 	}
 	else if ((nMessageType&eMT_TYPE_MASK) == eMT_TO_GATE)
 	{
@@ -112,5 +111,5 @@ void CGateMessageDispatcher::forward(uint64_t nSessionID, const core::message_he
 {
 	DebugAst(pHeader != nullptr);
 
-	core::CClusterInvoker::Inst()->forward("test1-1", nSessionID, pHeader);
+	core::CClusterInvoker::Inst()->forward(core::CCoreServiceApp::Inst()->getNodeID("test1-1"), nSessionID, pHeader);
 }

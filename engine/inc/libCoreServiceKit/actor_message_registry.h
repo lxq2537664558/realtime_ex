@@ -9,18 +9,18 @@ namespace core
 	class CActorMessageRegistry
 	{
 	public:
-		typedef void(T::*funMessageHandler)(CBaseActor*, uint64_t, CMessage);
-		typedef void(T::*funForwardHandler)(CBaseActor*, SClientSessionInfo, CMessage);
+		typedef void(T::*funMessageHandler)(CBaseActor*, uint64_t, CMessagePtr<char>);
+		typedef void(T::*funForwardHandler)(CBaseActor*, SClientSessionInfo, CMessagePtr<char>);
 
 	public:
-		static inline void	registerMessageHandler(uint16_t nMessageID, void(T::*handler)(CBaseActor*, uint64_t, CMessage));
+		static inline void	registerMessageHandler(uint16_t nMessageID, void(T::*handler)(CBaseActor*, uint64_t, CMessagePtr<char>));
 
-		static inline void	registerForwardHandler(uint16_t nMessageID, void(T::*handler)(CBaseActor*, SClientSessionInfo, CMessage));
+		static inline void	registerForwardHandler(uint16_t nMessageID, void(T::*handler)(CBaseActor*, SClientSessionInfo, CMessagePtr<char>));
 
 	protected:
-		static inline void	dispatch(T* pObject, CBaseActor* pBaseActor, uint64_t nFrom, CMessage& pMessage);
+		static inline void	dispatch(T* pObject, CBaseActor* pBaseActor, uint64_t nFrom, CMessagePtr<char>& pMessage);
 
-		static inline void	forward(T* pObject, CBaseActor* pBaseActor, SClientSessionInfo& sSession, CMessage& pMessage);
+		static inline void	forward(T* pObject, CBaseActor* pBaseActor, SClientSessionInfo& sSession, CMessagePtr<char>& pMessage);
 
 	private:
 		static std::map<uint16_t, funMessageHandler>	s_mapMessageHandler;
@@ -29,11 +29,11 @@ namespace core
 }
 
 #define DEFEND_ACTOR_MESSAGE_FUNCTION(Class) \
-		inline void	onDefaultActorMessageHandler(core::CBaseActor* pBaseActor, uint64_t nFrom, core::CMessage pMessage)\
+		inline void	onDefaultActorMessageHandler(core::CBaseActor* pBaseActor, uint64_t nFrom, core::CMessagePtr<char> pMessage)\
 		{\
 			core::CActorMessageRegistry<Class>::dispatch(this, pBaseActor, nFrom, pMessage);\
 		}\
-		inline void	onDefaultActorForwardHandler(core::CBaseActor* pBaseActor, core::SClientSessionInfo& sClientSessionInfo, core::CMessage pMessage)\
+		inline void	onDefaultActorForwardHandler(core::CBaseActor* pBaseActor, core::SClientSessionInfo& sClientSessionInfo, core::CMessagePtr<char> pMessage)\
 		{\
 			core::CActorMessageRegistry<Class>::forward(this, pBaseActor, sClientSessionInfo, pMessage);\
 		}

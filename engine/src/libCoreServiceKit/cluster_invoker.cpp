@@ -28,12 +28,12 @@ namespace core
 		return true;
 	}
 
-	bool CClusterInvoker::invoke(uint16_t nNodeID, const message_header* pData)
+	bool CClusterInvoker::invoke(uint16_t nNodeID, const void* pData)
 	{
 		DebugAstEx(pData != nullptr, false);
 
 		SRequestMessageInfo sRequestMessageInfo;
-		sRequestMessageInfo.pData = const_cast<message_header*>(pData);
+		sRequestMessageInfo.pData = pData;
 		sRequestMessageInfo.nSessionID = 0;
 		sRequestMessageInfo.nFromActorID = 0;
 		sRequestMessageInfo.nToActorID = 0;
@@ -41,34 +41,25 @@ namespace core
 		return CCoreServiceAppImpl::Inst()->getTransporter()->invoke(nNodeID, sRequestMessageInfo);
 	}
 
-	bool CClusterInvoker::invoke(const std::string& szNodeName, const message_header* pData)
-	{
-		uint16_t nNodeID = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getNodeID(szNodeName);
-		if (nNodeID == 0)
-			return false;
-
-		return invoke(nNodeID, pData);
-	}
-
-	void CClusterInvoker::response(const message_header* pData)
+	void CClusterInvoker::response(const void* pData)
 	{
 		DebugAst(pData != nullptr);
 
-		response(CCoreServiceAppImpl::Inst()->getTransporter()->getNodeSessionInfo(), pData);
+		this->response(CCoreServiceAppImpl::Inst()->getTransporter()->getNodeSessionInfo(), pData);
 	}
 
-	void CClusterInvoker::response(const SNodeSessionInfo& sServiceSessionInfo, const message_header* pData)
+	void CClusterInvoker::response(const SNodeSessionInfo& sNodeSessionInfo, const void* pData)
 	{
 		DebugAst(pData != nullptr);
 
 		SResponseMessageInfo sResponseMessageInfo;
-		sResponseMessageInfo.nSessionID = sServiceSessionInfo.nSessionID;
-		sResponseMessageInfo.pData = const_cast<message_header*>(pData);
+		sResponseMessageInfo.nSessionID = sNodeSessionInfo.nSessionID;
+		sResponseMessageInfo.pData = pData;
 		sResponseMessageInfo.nResult = eRRT_OK;
 		sResponseMessageInfo.nFromActorID = 0;
 		sResponseMessageInfo.nToActorID = 0;
 
-		bool bRet = CCoreServiceAppImpl::Inst()->getTransporter()->response(sServiceSessionInfo.nNodeID, sResponseMessageInfo);
+		bool bRet = CCoreServiceAppImpl::Inst()->getTransporter()->response(sNodeSessionInfo.nNodeID, sResponseMessageInfo);
 		DebugAst(bRet);
 	}
 
@@ -77,52 +68,43 @@ namespace core
 		return CCoreServiceAppImpl::Inst()->getTransporter()->getNodeSessionInfo();
 	}
 
-	bool CClusterInvoker::send(const SClientSessionInfo& sClientSessionInfo, const message_header* pData)
+	bool CClusterInvoker::send(const SClientSessionInfo& sClientSessionInfo, const void* pData)
 	{
 		DebugAstEx(pData != nullptr, false);
 
 		SGateMessageInfo sGateMessageInfo;
 		sGateMessageInfo.nSessionID = sClientSessionInfo.nSessionID;
-		sGateMessageInfo.pData = const_cast<message_header*>(pData);
+		sGateMessageInfo.pData = pData;
 
 		return CCoreServiceAppImpl::Inst()->getTransporter()->send(sClientSessionInfo.nGateNodeID, sGateMessageInfo);
 	}
 
-	bool CClusterInvoker::forward(uint16_t nNodeID, uint64_t nSessionID, const message_header* pData)
+	bool CClusterInvoker::forward(uint16_t nNodeID, uint64_t nSessionID, const void* pData)
 	{
 		DebugAstEx(pData != nullptr, false);
 
 		SGateForwardMessageInfo sGateMessageInfo;
 		sGateMessageInfo.nActorID = 0;
 		sGateMessageInfo.nSessionID = nSessionID;
-		sGateMessageInfo.pData = const_cast<message_header*>(pData);
+		sGateMessageInfo.pData = pData;
 
 		return CCoreServiceAppImpl::Inst()->getTransporter()->forward(nNodeID, sGateMessageInfo);
 	}
 
-	bool CClusterInvoker::forward_a(uint64_t nActorID, uint64_t nSessionID, const message_header* pData)
+	bool CClusterInvoker::forward_a(uint64_t nActorID, uint64_t nSessionID, const void* pData)
 	{
 		DebugAstEx(pData != nullptr, false);
 
 		SGateForwardMessageInfo sGateMessageInfo;
 		sGateMessageInfo.nActorID = nActorID;
 		sGateMessageInfo.nSessionID = nSessionID;
-		sGateMessageInfo.pData = const_cast<message_header*>(pData);
+		sGateMessageInfo.pData = pData;
 
 		uint16_t nNodeID = CBaseActor::getNodeID(nActorID);
 		return CCoreServiceAppImpl::Inst()->getTransporter()->forward(nNodeID, sGateMessageInfo);
 	}
 
-	bool CClusterInvoker::forward(const std::string& szNodeName, uint64_t nSessionID, const message_header* pData)
-	{
-		uint16_t nNodeID = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getNodeID(szNodeName);
-		if (nNodeID == 0)
-			return false;
-
-		return this->forward(nNodeID, nSessionID, pData);
-	}
-
-	bool CClusterInvoker::broadcast(const std::vector<SClientSessionInfo>& vecClientSessionInfo, const message_header* pData)
+	bool CClusterInvoker::broadcast(const std::vector<SClientSessionInfo>& vecClientSessionInfo, const void* pData)
 	{
 		DebugAstEx(pData != nullptr, false);
 
@@ -137,7 +119,7 @@ namespace core
 		{
 			SGateBroadcastMessageInfo sGateBroadcastMessageInfo;
 			sGateBroadcastMessageInfo.vecSessionID = iter->second;
-			sGateBroadcastMessageInfo.pData = const_cast<message_header*>(pData);
+			sGateBroadcastMessageInfo.pData = pData;
 			if (!CCoreServiceAppImpl::Inst()->getTransporter()->broadcast(iter->first, sGateBroadcastMessageInfo))
 				bRet = false;
 		}
@@ -145,10 +127,10 @@ namespace core
 		return bRet;
 	}
 
-	bool CClusterInvoker::invokeImpl(uint16_t nNodeID, const message_header* pData, const std::function<void(std::shared_ptr<message_header>, uint32_t)>& callback)
+	bool CClusterInvoker::invokeImpl(uint16_t nNodeID, const void* pData, const std::function<void(CMessagePtr<char>, uint32_t)>& callback)
 	{
 		SRequestMessageInfo sRequestMessageInfo;
-		sRequestMessageInfo.pData = const_cast<message_header*>(pData);
+		sRequestMessageInfo.pData = pData;
 		sRequestMessageInfo.nSessionID = CCoreServiceAppImpl::Inst()->getTransporter()->genSessionID();
 		sRequestMessageInfo.nFromActorID = 0;
 		sRequestMessageInfo.nToActorID = 0;
@@ -160,7 +142,7 @@ namespace core
 		DebugAstEx(pResponseWaitInfo != nullptr, false);
 		pResponseWaitInfo->nTraceID = CCoreServiceAppImpl::Inst()->getInvokerTrace()->getCurTraceID();
 		pResponseWaitInfo->nToID = nNodeID;
-		pResponseWaitInfo->nMessageID = pData->nMessageID;
+		//pResponseWaitInfo->nMessageID = pData->nMessageID;
 		pResponseWaitInfo->nBeginTime = base::getGmtTime();
 
 		pResponseWaitInfo->callback = callback;

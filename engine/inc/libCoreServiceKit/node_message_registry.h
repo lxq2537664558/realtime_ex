@@ -9,18 +9,18 @@ namespace core
 	class CNodeMessageRegistry
 	{
 	public:
-		typedef bool(T::*funMessageHandler)(uint16_t, CMessage);
-		typedef bool(T::*funForwardHandler)(SClientSessionInfo, CMessage);
+		typedef bool(T::*funMessageHandler)(uint16_t, CMessagePtr<char>);
+		typedef bool(T::*funForwardHandler)(SClientSessionInfo, CMessagePtr<char>);
 
 	public:
-		static inline void	registerMessageHandler(uint16_t nMessageID, bool(T::*handler)(uint16_t, CMessage));
+		static inline void	registerMessageHandler(uint16_t nMessageID, bool(T::*handler)(uint16_t, CMessagePtr<char>));
 
-		static inline void	registerForwardHandler(uint16_t nMessageID, bool(T::*handler)(SClientSessionInfo, CMessage));
+		static inline void	registerForwardHandler(uint16_t nMessageID, bool(T::*handler)(SClientSessionInfo, CMessagePtr<char>));
 
 	protected:
-		static inline bool	dispatch(T* pObject, uint16_t nFrom, CMessage& pMessage);
+		static inline bool	dispatch(T* pObject, uint16_t nFrom, CMessagePtr<char>& pMessage);
 
-		static inline bool	forward(T* pObject, SClientSessionInfo& sSession, CMessage& pMessage);
+		static inline bool	forward(T* pObject, SClientSessionInfo& sSession, CMessagePtr<char>& pMessage);
 
 	private:
 		static std::map<uint16_t, funMessageHandler>	s_mapMessageHandler;
@@ -29,11 +29,11 @@ namespace core
 }
 
 #define DEFEND_NODE_MESSAGE_FUNCTION(Class) \
-		inline bool	onDefaultNodeMessageHandler(uint16_t nFrom, core::CMessage pMessage)\
+		inline bool	onDefaultNodeMessageHandler(uint16_t nFrom, core::CMessagePtr<char> pMessage)\
 		{\
 			return core::CNodeMessageRegistry<Class>::dispatch(this, nFrom, pMessage);\
 		}\
-		inline bool	onDefaultNodeForwardHandler(core::SClientSessionInfo& sClientSessionInfo, core::CMessage pMessage)\
+		inline bool	onDefaultNodeForwardHandler(core::SClientSessionInfo& sClientSessionInfo, core::CMessagePtr<char> pMessage)\
 		{\
 			return core::CNodeMessageRegistry<Class>::forward(this, sClientSessionInfo, pMessage);\
 		}

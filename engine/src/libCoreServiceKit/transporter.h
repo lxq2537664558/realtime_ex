@@ -41,5 +41,6 @@ namespace core
 		uint64_t									m_nNextSessionID;
 		SNodeSessionInfo							m_sNodeSessionInfo;
 		std::map<uint64_t, SResponseWaitInfo*>		m_mapResponseWaitInfo;
+		std::vector<char>							m_szBuf;
 	};
 }

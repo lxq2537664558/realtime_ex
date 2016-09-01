@@ -29,8 +29,8 @@ namespace core
 		SResponseWaitInfo*	addResponseWaitInfo(uint64_t nSessionID, uint64_t nCoroutineID);
 		SResponseWaitInfo*	getResponseWaitInfo(uint64_t nSessionID, bool bErase);
 
-		static void			registerMessageHandler(uint16_t nMessageID, const std::function<void(CBaseActor*, uint64_t, CMessage)>& handler, bool bAsync);
-		static void			registerForwardHandler(uint16_t nMessageID, const std::function<void(CBaseActor*, SClientSessionInfo, CMessage)>& handler, bool bAsync);
+		static void			registerMessageHandler(uint16_t nMessageID, const std::function<void(CBaseActor*, uint64_t, CMessagePtr<char>)>& handler, bool bAsync);
+		static void			registerForwardHandler(uint16_t nMessageID, const std::function<void(CBaseActor*, SClientSessionInfo, CMessagePtr<char>)>& handler, bool bAsync);
 
 	private:
 		void				onRequestMessageTimeout(uint64_t nContext);
@@ -45,14 +45,14 @@ namespace core
 
 		struct SMessageHandlerInfo
 		{
-			std::function<void(CBaseActor*, uint64_t, CMessage)>
+			std::function<void(CBaseActor*, uint64_t, CMessagePtr<char>)>
 							handler;
 			bool			bAsync;
 		};
 
 		struct SForwardHandlerInfo
 		{
-			std::function<void(CBaseActor*, SClientSessionInfo, CMessage)>
+			std::function<void(CBaseActor*, SClientSessionInfo, CMessagePtr<char>)>
 							handler;
 			bool			bAsync;
 		};

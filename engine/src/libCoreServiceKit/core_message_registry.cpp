@@ -24,7 +24,7 @@ namespace core
 		return true;
 	}
 
-	void CCoreMessageRegistry::registerCallback(uint16_t nMessageID, const std::function<bool(uint16_t, CMessage)>& callback)
+	void CCoreMessageRegistry::registerCallback(uint16_t nMessageID, const std::function<bool(uint16_t, CMessagePtr<char>)>& callback)
 	{
 		auto iter = this->m_mapMessageName.find(nMessageID);
 		if (iter != this->m_mapMessageName.end())
@@ -35,7 +35,7 @@ namespace core
 		this->m_mapNodeCallback[nMessageID] = callback;
 	}
 
-	void CCoreMessageRegistry::registerGateForwardCallback(uint16_t nMessageID, const std::function<bool(SClientSessionInfo, CMessage)>& callback)
+	void CCoreMessageRegistry::registerGateForwardCallback(uint16_t nMessageID, const std::function<bool(SClientSessionInfo, CMessagePtr<char>)>& callback)
 	{
 		auto iter = this->m_mapMessageName.find(nMessageID);
 		if (iter != this->m_mapMessageName.end())
@@ -47,24 +47,24 @@ namespace core
 		this->m_mapGateForwardCallback[nMessageID] = callback;
 	}
 
-	std::function<bool(uint16_t, CMessage)>& CCoreMessageRegistry::getCallback(uint32_t nMessageID)
+	std::function<bool(uint16_t, CMessagePtr<char>)>& CCoreMessageRegistry::getCallback(uint32_t nMessageID)
 	{
 		auto iter = this->m_mapNodeCallback.find(nMessageID);
 		if (iter == this->m_mapNodeCallback.end())
 		{
-			static std::function<bool(uint16_t, CMessage)> callback;
+			static std::function<bool(uint16_t, CMessagePtr<char>)> callback;
 			return callback;
 		}
 
 		return iter->second;
 	}
 
-	std::function<bool(SClientSessionInfo, CMessage)>& CCoreMessageRegistry::getGateForwardCallback(uint32_t nMessageID)
+	std::function<bool(SClientSessionInfo, CMessagePtr<char>)>& CCoreMessageRegistry::getGateForwardCallback(uint32_t nMessageID)
 	{
 		auto iter = this->m_mapGateForwardCallback.find(nMessageID);
 		if (iter == this->m_mapGateForwardCallback.end())
 		{
-			static std::function<bool(SClientSessionInfo, CMessage)> callback;
+			static std::function<bool(SClientSessionInfo, CMessagePtr<char>)> callback;
 			return callback;
 		}
 

@@ -28,10 +28,10 @@ namespace core
 		return this->m_pBaseActorImpl->getID();
 	}
 
-	bool CBaseActor::invoke(uint64_t nID, const message_header* pData)
+	bool CBaseActor::invoke(uint64_t nID, const void* pData)
 	{
 		SRequestMessageInfo sRequestMessageInfo;
-		sRequestMessageInfo.pData = const_cast<message_header*>(pData);
+		sRequestMessageInfo.pData = pData;
 		sRequestMessageInfo.nSessionID = 0;
 		sRequestMessageInfo.nFromActorID = this->getID();
 		sRequestMessageInfo.nToActorID = nID;
@@ -44,16 +44,16 @@ namespace core
 		return this->m_pBaseActorImpl->getActorSessionInfo();
 	}
 
-	void CBaseActor::response(const message_header* pData)
+	void CBaseActor::response(const void* pData)
 	{
 		this->response(this->getActorSessionInfo(), pData);
 	}
 
-	void CBaseActor::response(const SActorSessionInfo& sActorSessionInfo, const message_header* pData)
+	void CBaseActor::response(const SActorSessionInfo& sActorSessionInfo, const void* pData)
 	{
 		SResponseMessageInfo sResponseMessageInfo;
 		sResponseMessageInfo.nSessionID = sActorSessionInfo.nSessionID;
-		sResponseMessageInfo.pData = const_cast<message_header*>(pData);
+		sResponseMessageInfo.pData = pData;
 		sResponseMessageInfo.nResult = eRRT_OK;
 		sResponseMessageInfo.nFromActorID = this->getID();
 		sResponseMessageInfo.nToActorID = sActorSessionInfo.nActorID;
@@ -108,20 +108,20 @@ namespace core
 		delete this;
 	}
 
-	void CBaseActor::registerMessageHandler(uint16_t nMessageID, const std::function<void(CBaseActor*, uint64_t, CMessage)>& handler, bool bAsync)
+	void CBaseActor::registerMessageHandler(uint16_t nMessageID, const std::function<void(CBaseActor*, uint64_t, CMessagePtr<char>)>& handler, bool bAsync)
 	{
 		CBaseActorImpl::registerMessageHandler(nMessageID, handler, bAsync);
 	}
 
-	void CBaseActor::registerForwardHandler(uint16_t nMessageID, const std::function<void(CBaseActor*, SClientSessionInfo, CMessage)>& handler, bool bAsync)
+	void CBaseActor::registerForwardHandler(uint16_t nMessageID, const std::function<void(CBaseActor*, SClientSessionInfo, CMessagePtr<char>)>& handler, bool bAsync)
 	{
 		CBaseActorImpl::registerForwardHandler(nMessageID, handler, bAsync);
 	}
 
-	bool CBaseActor::invokeImpl(uint64_t nID, const message_header* pData, uint64_t nCoroutineID, const std::function<void(std::shared_ptr<message_header>, uint32_t)>& callback)
+	bool CBaseActor::invokeImpl(uint64_t nID, const void* pData, uint64_t nCoroutineID, const std::function<void(CMessagePtr<char>, uint32_t)>& callback)
 	{
 		SRequestMessageInfo sRequestMessageInfo;
-		sRequestMessageInfo.pData = const_cast<message_header*>(pData);
+		sRequestMessageInfo.pData = pData;
 		sRequestMessageInfo.nSessionID = CCoreServiceAppImpl::Inst()->getTransporter()->genSessionID();
 		sRequestMessageInfo.nFromActorID = this->getID();
 		sRequestMessageInfo.nToActorID = nID;
@@ -135,7 +135,7 @@ namespace core
 		pResponseWaitInfo->callback = callback;
 		pResponseWaitInfo->nTraceID = CCoreServiceAppImpl::Inst()->getInvokerTrace()->getCurTraceID();
 		pResponseWaitInfo->nToID = nID;
-		pResponseWaitInfo->nMessageID = pData->nMessageID;
+		//pResponseWaitInfo->nMessageID = pData->nMessageID;
 		pResponseWaitInfo->nBeginTime = base::getGmtTime();
 
 		return true;

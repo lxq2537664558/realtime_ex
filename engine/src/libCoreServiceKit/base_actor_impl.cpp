@@ -41,7 +41,6 @@ namespace core
 			if (!this->m_channel.recv(sMessagePacket))
 				break;
 
-			std::shared_ptr<message_header> pMessage = nullptr;
 			if ((sMessagePacket.nType&eMT_TYPE_MASK) == eMT_REQUEST)
 			{
 				DebugAst(sMessagePacket.nDataSize > sizeof(request_cookice));
@@ -55,10 +54,12 @@ namespace core
 				this->m_sActorSessionInfo.nActorID = pCookice->nFromActorID;
 				this->m_sActorSessionInfo.nSessionID = pCookice->nSessionID;
 
-				void* pData = sMessagePacket.pData;
-				pMessage = std::shared_ptr<message_header>(const_cast<message_header*>(pHeader), [pData](const void*){ delete[] reinterpret_cast<const char*>(pData); });
+				CSerializeAdapter* pSerializeAdapter = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getSerializeAdapter(CBaseActor::getNodeID(pCookice->nFromActorID));
+				DebugAst(pSerializeAdapter != nullptr);
 
-				auto iter = s_mapMessageHandlerInfo.find(pMessage->nMessageID);
+				CMessagePtr<char> pMessage = pSerializeAdapter->deserialize(pHeader);
+				
+				auto iter = s_mapMessageHandlerInfo.find(pHeader->nMessageID);
 				if (iter != s_mapMessageHandlerInfo.end())
 				{
 					std::vector<CBaseActorImpl::SMessageHandlerInfo>& vecMessageHandlerInfo = iter->second;
@@ -99,8 +100,11 @@ namespace core
 					{
 						if (pCookice->nResult == eRRT_OK)
 						{
-							void* pData = sMessagePacket.pData;
-							pMessage = std::shared_ptr<message_header>(const_cast<message_header*>(pHeader), [pData](const void*){ delete[] reinterpret_cast<const char*>(pData); });
+							CSerializeAdapter* pSerializeAdapter = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getSerializeAdapter((uint16_t)sMessagePacket.nID);
+							DebugAst(pSerializeAdapter != nullptr);
+
+							CMessagePtr<char> pMessage = pSerializeAdapter->deserialize(pHeader);
+
 							pResponseWaitInfo->callback(pMessage, pCookice->nResult);
 						}
 						else if (pCookice->nResult != eRRT_OK)
@@ -110,10 +114,12 @@ namespace core
 					}
 					else if (pResponseWaitInfo->nCoroutineID != 0)
 					{
-						void* pData = sMessagePacket.pData;
-						pMessage = std::shared_ptr<message_header>(const_cast<message_header*>(pHeader), [pData](const void*){ delete[] reinterpret_cast<const char*>(pData); });
+						CSerializeAdapter* pSerializeAdapter = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getSerializeAdapter((uint16_t)sMessagePacket.nID);
+						DebugAst(pSerializeAdapter != nullptr);
 
-						CMessage* pNewMessage = new CMessage();
+						CMessagePtr<char> pMessage = pSerializeAdapter->deserialize(pHeader);
+
+						CMessagePtr<char>* pNewMessage = new CMessagePtr<char>();
 						*pNewMessage = pMessage;
 						coroutine::sendMessage(pResponseWaitInfo->nCoroutineID, pNewMessage);
 						coroutine::sendMessage(pResponseWaitInfo->nCoroutineID, reinterpret_cast<void*>(pCookice->nResult));
@@ -131,10 +137,13 @@ namespace core
 
 				CCoreServiceAppImpl::Inst()->getInvokerTrace()->traceBeginRecv(pCookice->nTraceID, pHeader->nMessageID, 0);
 				SClientSessionInfo session((uint16_t)sMessagePacket.nID, pCookice->nSessionID);
-				void* pData = sMessagePacket.pData;
-				pMessage = std::shared_ptr<message_header>(const_cast<message_header*>(pHeader), [pData](const void*){ delete[] reinterpret_cast<const char*>(pData); });
+				
+				CSerializeAdapter* pSerializeAdapter = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getSerializeAdapter(CBaseActor::getNodeID((uint16_t)sMessagePacket.nID));
+				DebugAst(pSerializeAdapter != nullptr);
 
-				auto iter = s_mapForwardHandlerInfo.find(pMessage->nMessageID);
+				CMessagePtr<char> pMessage = pSerializeAdapter->deserialize(pHeader);
+
+				auto iter = s_mapForwardHandlerInfo.find(pHeader->nMessageID);
 				if (iter != s_mapForwardHandlerInfo.end())
 				{
 					std::vector<SForwardHandlerInfo>& vecForwardHandlerInfo = iter->second;
@@ -156,6 +165,8 @@ namespace core
 
 				CCoreServiceAppImpl::Inst()->getInvokerTrace()->traceEndRecv();
 			}
+
+			SAFE_DELETE_ARRAY(sMessagePacket.pData);
 		}
 
 		if (!this->m_channel.empty())
@@ -235,7 +246,7 @@ namespace core
 		return pResponseWaitInfo;
 	}
 
-	void CBaseActorImpl::registerMessageHandler(uint16_t nMessageID, const std::function<void(CBaseActor*, uint64_t, CMessage)>& handler, bool bAsync)
+	void CBaseActorImpl::registerMessageHandler(uint16_t nMessageID, const std::function<void(CBaseActor*, uint64_t, CMessagePtr<char>)>& handler, bool bAsync)
 	{
 		SMessageHandlerInfo sMessageHandlerInfo;
 		sMessageHandlerInfo.handler = handler;
@@ -244,7 +255,7 @@ namespace core
 		s_mapMessageHandlerInfo[nMessageID].push_back(sMessageHandlerInfo);
 	}
 
-	void CBaseActorImpl::registerForwardHandler(uint16_t nMessageID, const std::function<void(CBaseActor*, SClientSessionInfo, CMessage)>& handler, bool bAsync)
+	void CBaseActorImpl::registerForwardHandler(uint16_t nMessageID, const std::function<void(CBaseActor*, SClientSessionInfo, CMessagePtr<char>)>& handler, bool bAsync)
 	{
 		SForwardHandlerInfo sForwardHandlerInfo;
 		sForwardHandlerInfo.handler = handler;

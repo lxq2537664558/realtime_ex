@@ -54,7 +54,7 @@ static void actor_message_forward(uint64_t nFromSocketID, uint16_t nFromNodeID, 
 			char* pNewData = new char[nSize];
 			memcpy(pNewData, pData, nSize);
 			core::SMessagePacket sMessagePacket;
-			sMessagePacket.nID = 0;
+			sMessagePacket.nID = nFromNodeID;
 			sMessagePacket.nType = eMT_RESPONSE;
 			sMessagePacket.nDataSize = nSize;
 			sMessagePacket.pData = pNewData;
@@ -98,7 +98,7 @@ namespace core
 	CScheduler::CScheduler()
 		: m_nNextActorID(1)
 	{
-
+		this->m_vecBuf.resize(UINT16_MAX);
 	}
 
 	CScheduler::~CScheduler()
@@ -140,21 +140,28 @@ namespace core
 			CBaseActorImpl* pToBaseActorImpl = iter->second;
 			DebugAstEx(pToBaseActorImpl != nullptr, false);
 
-			char* pData = new char[sizeof(request_cookice) + sRequestMessageInfo.pData->nMessageSize];
+			CSerializeAdapter* pSerializeAdapter = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getSerializeAdapter(0);
+			DebugAstEx(pSerializeAdapter != nullptr, false);
+
+			message_header* pData = pSerializeAdapter->serialize(sRequestMessageInfo.pData, &this->m_vecBuf[0], (uint16_t)this->m_vecBuf.size());
+			if (pData == nullptr)
+				return false;
+
+			char* pBuf = new char[sizeof(request_cookice) + pData->nMessageSize];
 			// Ìî³äcookice
-			request_cookice* pCookice = reinterpret_cast<request_cookice*>(pData);
+			request_cookice* pCookice = reinterpret_cast<request_cookice*>(pBuf);
 			pCookice->nSessionID = sRequestMessageInfo.nSessionID;
 			pCookice->nTraceID = 0;
 			pCookice->nFromActorID = sRequestMessageInfo.nFromActorID;
 			pCookice->nToActorID = sRequestMessageInfo.nToActorID;
 
-			memcpy(pCookice + 1, sRequestMessageInfo.pData, sRequestMessageInfo.pData->nMessageSize);
+			memcpy(pCookice + 1, pData, pData->nMessageSize);
 
 			SMessagePacket sMessagePacket;
 			sMessagePacket.nID = sRequestMessageInfo.nFromActorID;
 			sMessagePacket.nType = eMT_REQUEST;
-			sMessagePacket.nDataSize = sRequestMessageInfo.pData->nMessageSize + sizeof(request_cookice);
-			sMessagePacket.pData = pData;
+			sMessagePacket.nDataSize = pData->nMessageSize + sizeof(request_cookice);
+			sMessagePacket.pData = pBuf;
 
 			pToBaseActorImpl->getChannel()->send(sMessagePacket);
 
@@ -182,19 +189,26 @@ namespace core
 			CBaseActorImpl* pToBaseActorImpl = iter->second;
 			DebugAstEx(pToBaseActorImpl != nullptr, false);
 
-			char* pData = new char[sizeof(response_cookice) + sResponseMessageInfo.pData->nMessageSize];
+			CSerializeAdapter* pSerializeAdapter = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getSerializeAdapter(0);
+			DebugAstEx(pSerializeAdapter != nullptr, false);
 
-			response_cookice* pCookice = reinterpret_cast<response_cookice*>(pData);
+			message_header* pData = pSerializeAdapter->serialize(sResponseMessageInfo.pData, &this->m_vecBuf[0], (uint16_t)this->m_vecBuf.size());
+			if (pData == nullptr)
+				return false;
+
+			char* pBuf = new char[sizeof(response_cookice) + pData->nMessageSize];
+
+			response_cookice* pCookice = reinterpret_cast<response_cookice*>(pBuf);
 			pCookice->nSessionID = sResponseMessageInfo.nSessionID;
 			pCookice->nResult = sResponseMessageInfo.nResult;
 
-			memcpy(pCookice + 1, sResponseMessageInfo.pData, sResponseMessageInfo.pData->nMessageSize);
+			memcpy(pCookice + 1, pData, pData->nMessageSize);
 
 			SMessagePacket sMessagePacket;
 			sMessagePacket.nID = sResponseMessageInfo.nFromActorID;
 			sMessagePacket.nType = eMT_RESPONSE;
-			sMessagePacket.nDataSize = sResponseMessageInfo.pData->nMessageSize + sizeof(response_cookice);
-			sMessagePacket.pData = pData;
+			sMessagePacket.nDataSize = pData->nMessageSize + sizeof(response_cookice);
+			sMessagePacket.pData = pBuf;
 
 			pToBaseActorImpl->getChannel()->send(sMessagePacket);
 

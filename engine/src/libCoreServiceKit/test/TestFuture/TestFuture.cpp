@@ -171,6 +171,8 @@ TEST(FutureTest8, FutureTest)
 
 int _tmain(int argc, _TCHAR* argv[])
 {
+	std::shared_ptr<char> aa = std::shared_ptr<char>(nullptr);
+	std::shared_ptr<int> bb = std::static_pointer_cast<int>(aa);
 	testing::InitGoogleTest(&argc, argv);
 	return RUN_ALL_TESTS();
 }

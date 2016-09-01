@@ -57,12 +57,12 @@ namespace core
 		CCoreServiceAppImpl::Inst()->setNodeDisconnectCallback(callback);
 	}
 
-	void CCoreServiceApp::registerMessageHandler(uint16_t nMessageID, const std::function<bool(uint16_t, CMessage)>& callback)
+	void CCoreServiceApp::registerMessageHandler(uint16_t nMessageID, const std::function<bool(uint16_t, CMessagePtr<char>)>& callback)
 	{
 		CCoreServiceAppImpl::Inst()->getCoreMessageRegistry()->registerCallback(nMessageID, callback);
 	}
 
-	void CCoreServiceApp::registerForwardHandler(uint16_t nMessageID, const std::function<bool(SClientSessionInfo, CMessage)>& callback)
+	void CCoreServiceApp::registerForwardHandler(uint16_t nMessageID, const std::function<bool(SClientSessionInfo, CMessagePtr<char>)>& callback)
 	{
 		CCoreServiceAppImpl::Inst()->getCoreMessageRegistry()->registerGateForwardCallback(nMessageID, callback);
 	}
@@ -92,4 +92,8 @@ namespace core
 		CCoreServiceAppImpl::Inst()->run();
 	}
 
+	void CCoreServiceApp::setSerializeAdapter(uint16_t nNodeID, CSerializeAdapter* pSerializeAdapter)
+	{
+		CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->setSerializeAdapter(nNodeID, pSerializeAdapter);
+	}
 }

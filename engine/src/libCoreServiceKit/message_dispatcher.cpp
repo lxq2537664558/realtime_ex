@@ -42,7 +42,6 @@ namespace core
 		if (bFilter)
 			return;
 
-		CMessage pMessage = nullptr;
 		if ((nMessageType&eMT_TYPE_MASK) == eMT_REQUEST)
 		{
 			DebugAst(nSize > sizeof(request_cookice));
@@ -60,10 +59,13 @@ namespace core
 			if (callback != nullptr)
 			{
 				CCoreServiceAppImpl::Inst()->getInvokerTrace()->traceBeginRecv(pCookice->nTraceID, pHeader->nMessageID, nFromNodeID);
-				char* pNewData = new char[pHeader->nMessageSize];
-				memcpy(pNewData, pHeader, pHeader->nMessageSize);
-				pMessage = CMessage(reinterpret_cast<message_header*>(pNewData));
+				
+				CSerializeAdapter* pSerializeAdapter = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getSerializeAdapter(nFromNodeID);
+				DebugAst(pSerializeAdapter != nullptr);
+				
+				CMessagePtr<char> pMessage = pSerializeAdapter->deserialize(pHeader);
 				bFilter = !callback(nFromNodeID, pMessage);
+				
 				CCoreServiceAppImpl::Inst()->getInvokerTrace()->traceEndRecv();
 			}
 			sNodeSessionInfo.nNodeID = 0;
@@ -87,9 +89,10 @@ namespace core
 
 				if (pCookice->nResult == eRRT_OK)
 				{
-					char* pNewData = new char[pHeader->nMessageSize];
-					memcpy(pNewData, pHeader, pHeader->nMessageSize);
-					pMessage = CMessage(reinterpret_cast<message_header*>(pNewData));
+					CSerializeAdapter* pSerializeAdapter = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getSerializeAdapter(nFromNodeID);
+					DebugAst(pSerializeAdapter != nullptr);
+
+					CMessagePtr<char> pMessage = pSerializeAdapter->deserialize(pHeader);
 					pResponseWaitInfo->callback(pMessage, eRRT_OK);
 				}
 				else if (pCookice->nResult != eRRT_OK)
@@ -111,9 +114,11 @@ namespace core
 			if (callback != nullptr)
 			{
 				CCoreServiceAppImpl::Inst()->getInvokerTrace()->traceBeginRecv(pCookice->nTraceID, pHeader->nMessageID, nFromNodeID);
-				char* pNewData = new char[pHeader->nMessageSize];
-				memcpy(pNewData, pHeader, pHeader->nMessageSize);
-				pMessage = CMessage(reinterpret_cast<message_header*>(pNewData));
+				
+				CSerializeAdapter* pSerializeAdapter = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getSerializeAdapter(nFromNodeID);
+				DebugAst(pSerializeAdapter != nullptr);
+
+				CMessagePtr<char> pMessage = pSerializeAdapter->deserialize(pHeader);
 				bFilter = !callback(session, pMessage);
 				CCoreServiceAppImpl::Inst()->getInvokerTrace()->traceEndRecv();
 			}

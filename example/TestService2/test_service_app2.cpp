@@ -10,7 +10,7 @@
 
 #include "../common/test_message_define.h"
 
-bool service_request_msg_callback1(uint16_t nFromServiceID, core::CMessage pMessage)
+bool service_request_msg_callback1(uint16_t nFromServiceID, core::CMessagePtr<char> pMessage)
 {
 	SServiceResponseMsg1 service_msg;
 	service_msg.nClientID = reinterpret_cast<const SServiceRequestMsg1*>(pMessage.get())->nClientID;
@@ -22,7 +22,7 @@ bool service_request_msg_callback1(uint16_t nFromServiceID, core::CMessage pMess
 	return true;
 }
 
-bool service_request_msg_callback2(uint16_t nFromServiceID, core::CMessage pMessage)
+bool service_request_msg_callback2(uint16_t nFromServiceID, core::CMessagePtr<char> pMessage)
 {
 	SServiceResponseMsg2 service_msg;
 	service_msg.nClientID = reinterpret_cast<const SServiceRequestMsg2*>(pMessage.get())->nClientID;
@@ -34,7 +34,7 @@ bool service_request_msg_callback2(uint16_t nFromServiceID, core::CMessage pMess
 	return true;
 }
 
-bool service_request_msg_callback3(uint16_t nFromServiceID, core::CMessage pMessage)
+bool service_request_msg_callback3(uint16_t nFromServiceID, core::CMessagePtr<char> pMessage)
 {
 	SServiceResponseMsg3 service_msg;
 	service_msg.nClientID = reinterpret_cast<const SServiceRequestMsg3*>(pMessage.get())->nClientID;

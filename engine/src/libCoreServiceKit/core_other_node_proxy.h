@@ -8,6 +8,7 @@
 #include "core_service_kit_define.h"
 #include "core_connection_to_other_node.h"
 #include "core_connection_from_other_node.h"
+#include "serialize_adapter.h"
 
 #include <map>
 #include <string>
@@ -26,6 +27,9 @@ namespace core
 		
 		void							addNodeBaseInfo(const SNodeBaseInfo& sNodeBaseInfo);
 		void							delNodeBaseInfo(uint16_t nID);
+
+		void							setSerializeAdapter(uint16_t nID, CSerializeAdapter* pSerializeAdapter);
+		CSerializeAdapter*				getSerializeAdapter(uint16_t nID) const;
 
 		uint16_t						getNodeID(const std::string& szName) const;
 
@@ -48,7 +52,9 @@ namespace core
 			std::unique_ptr<CTicker>		pTicker;
 		};
 
-		std::map<uint16_t, SNodeInfo>		m_mapNodeInfo;
-		std::map<std::string, uint16_t>		m_mapNodeName;
+		std::map<uint16_t, SNodeInfo>			m_mapNodeInfo;
+		std::map<std::string, uint16_t>			m_mapNodeName;
+		CSerializeAdapter*						m_pDefaultSerializeAdapter;
+		std::map<uint16_t, CSerializeAdapter*>	m_mapSerializeAdapter;
 	};
 }
