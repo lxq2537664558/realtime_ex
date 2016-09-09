@@ -29,41 +29,15 @@ namespace core
 
 	void CCoreOtherNodeProxy::addNodeBaseInfo(const SNodeBaseInfo& sNodeBaseInfo)
 	{
-		DebugAst(this->m_mapNodeInfo.find(sNodeBaseInfo.nID) == this->m_mapNodeInfo.end());
+		if (this->m_mapNodeInfo.find(sNodeBaseInfo.nID) != this->m_mapNodeInfo.end())
+			return;
+
 		DebugAst(this->m_mapNodeName.find(sNodeBaseInfo.szName) == this->m_mapNodeName.end());
 
 		SNodeInfo& sNodeInfo = this->m_mapNodeInfo[sNodeBaseInfo.nID];
 		sNodeInfo.pCoreConnectionFromOtherNode = nullptr;
 		sNodeInfo.pCoreConnectionToOtherNode = nullptr;
 		sNodeInfo.sNodeBaseInfo = sNodeBaseInfo;
-
-		std::vector<CBaseConnection*> vecBaseConnection = CCoreServiceApp::Inst()->getBaseConnectionMgr()->getBaseConnection(eBCT_ConnectionToOtherNode);
-		for (size_t i = 0; i < vecBaseConnection.size(); ++i)
-		{
-			CCoreConnectionToOtherNode* pCoreConnectionToOtherNode = dynamic_cast<CCoreConnectionToOtherNode*>(vecBaseConnection[i]);
-			if (nullptr == pCoreConnectionToOtherNode)
-				continue;
-
-			if (pCoreConnectionToOtherNode->getNodeID() == sNodeBaseInfo.nID)
-			{
-				sNodeInfo.pCoreConnectionToOtherNode = pCoreConnectionToOtherNode;
-				break;
-			}
-		}
-		vecBaseConnection = CCoreServiceApp::Inst()->getBaseConnectionMgr()->getBaseConnection(eBCT_ConnectionFromOtherNode);
-		for (size_t i = 0; i < vecBaseConnection.size(); ++i)
-		{
-			CCoreConnectionFromOtherNode* pCoreConnectionFromOtherNode = dynamic_cast<CCoreConnectionFromOtherNode*>(vecBaseConnection[i]);
-			if (nullptr == pCoreConnectionFromOtherNode)
-				continue;
-
-			if (pCoreConnectionFromOtherNode->getNodeID() == sNodeBaseInfo.nID)
-			{
-				sNodeInfo.pCoreConnectionFromOtherNode = pCoreConnectionFromOtherNode;
-				break;
-			}
-		}
-
 		sNodeInfo.pTicker = std::make_unique<CTicker>();
 		sNodeInfo.pTicker->setCallback([&sNodeInfo](uint64_t nContext)
 		{
