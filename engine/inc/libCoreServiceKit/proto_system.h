@@ -112,12 +112,14 @@ message_end
 
 message_begin(smt_remove_node_base_info, eSMT_remove_node_base_info)
 	uint16_t nNodeID;
+	uint8_t	 nForce;
 
 	void pack(base::CWriteBuf& writeBuf)
 	{
 		pack_begin(writeBuf);
 
 		writeBuf.write(nNodeID);
+		writeBuf.write(nForce);
 
 		pack_end(writeBuf);
 	}
@@ -127,6 +129,7 @@ message_begin(smt_remove_node_base_info, eSMT_remove_node_base_info)
 		unpack_begin(pBuf, nSize);
 
 		readBuf.read(nNodeID);
+		readBuf.read(nForce);
 
 		unpack_end();
 	}

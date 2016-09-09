@@ -26,7 +26,7 @@ namespace core
 		bool							init();
 		
 		void							addNodeBaseInfo(const SNodeBaseInfo& sNodeBaseInfo);
-		void							delNodeBaseInfo(uint16_t nID);
+		void							delNodeBaseInfo(uint16_t nID, bool bForce);
 
 		void							setSerializeAdapter(uint16_t nID, CSerializeAdapter* pSerializeAdapter);
 		CSerializeAdapter*				getSerializeAdapter(uint16_t nID) const;

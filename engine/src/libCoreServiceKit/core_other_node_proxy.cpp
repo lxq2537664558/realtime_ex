@@ -36,6 +36,34 @@ namespace core
 		sNodeInfo.pCoreConnectionFromOtherNode = nullptr;
 		sNodeInfo.pCoreConnectionToOtherNode = nullptr;
 		sNodeInfo.sNodeBaseInfo = sNodeBaseInfo;
+
+		std::vector<CBaseConnection*> vecBaseConnection = CCoreServiceApp::Inst()->getBaseConnectionMgr()->getBaseConnection(eBCT_ConnectionToOtherNode);
+		for (size_t i = 0; i < vecBaseConnection.size(); ++i)
+		{
+			CCoreConnectionToOtherNode* pCoreConnectionToOtherNode = dynamic_cast<CCoreConnectionToOtherNode*>(vecBaseConnection[i]);
+			if (nullptr == pCoreConnectionToOtherNode)
+				continue;
+
+			if (pCoreConnectionToOtherNode->getNodeID() == sNodeBaseInfo.nID)
+			{
+				sNodeInfo.pCoreConnectionToOtherNode = pCoreConnectionToOtherNode;
+				break;
+			}
+		}
+		vecBaseConnection = CCoreServiceApp::Inst()->getBaseConnectionMgr()->getBaseConnection(eBCT_ConnectionFromOtherNode);
+		for (size_t i = 0; i < vecBaseConnection.size(); ++i)
+		{
+			CCoreConnectionFromOtherNode* pCoreConnectionFromOtherNode = dynamic_cast<CCoreConnectionFromOtherNode*>(vecBaseConnection[i]);
+			if (nullptr == pCoreConnectionFromOtherNode)
+				continue;
+
+			if (pCoreConnectionFromOtherNode->getNodeID() == sNodeBaseInfo.nID)
+			{
+				sNodeInfo.pCoreConnectionFromOtherNode = pCoreConnectionFromOtherNode;
+				break;
+			}
+		}
+
 		sNodeInfo.pTicker = std::make_unique<CTicker>();
 		sNodeInfo.pTicker->setCallback([&sNodeInfo](uint64_t nContext)
 		{
@@ -57,17 +85,27 @@ namespace core
 		PrintInfo("add proxy node node_id: %d node_name: %s", sNodeBaseInfo.nID, sNodeBaseInfo.szName.c_str());
 	}
 	
-	void CCoreOtherNodeProxy::delNodeBaseInfo(uint16_t nID)
+	void CCoreOtherNodeProxy::delNodeBaseInfo(uint16_t nID, bool bForce)
 	{
 		auto iter = this->m_mapNodeInfo.find(nID);
 		if (iter == this->m_mapNodeInfo.end())
 			return;
 
-		std::string szName = iter->second.sNodeBaseInfo.szName;
-		this->m_mapNodeName.erase(iter->second.sNodeBaseInfo.szName);
+		SNodeInfo& sNodeInfo = iter->second;
+
+		std::string szName = sNodeInfo.sNodeBaseInfo.szName;
+		// 考虑网络只是暂时不可用的情况
+		if (!bForce && sNodeInfo.pCoreConnectionToOtherNode != nullptr || sNodeInfo.pCoreConnectionFromOtherNode != nullptr)
+			return;
+		
+		if (sNodeInfo.pCoreConnectionToOtherNode != nullptr)
+			sNodeInfo.pCoreConnectionToOtherNode->shutdown(false, "del node");
+		if (sNodeInfo.pCoreConnectionFromOtherNode != nullptr)
+			sNodeInfo.pCoreConnectionFromOtherNode->shutdown(false, "del node");
+
+		this->m_mapNodeName.erase(szName);
 
 		this->m_mapNodeInfo.erase(iter);
-
 		PrintInfo("del proxy node node_id: %d node_name: %s", nID, szName.c_str());
 	}
 

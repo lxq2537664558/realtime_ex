@@ -80,7 +80,7 @@ namespace core
 			smt_remove_node_base_info netMsg;
 			netMsg.unpack(pData, nSize);
 
-			CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->delNodeBaseInfo(netMsg.nNodeID);
+			CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->delNodeBaseInfo(netMsg.nNodeID, !!netMsg.nForce);
 		}
 	}
 }
