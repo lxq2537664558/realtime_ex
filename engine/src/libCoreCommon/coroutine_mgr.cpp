@@ -63,7 +63,7 @@ namespace core
 		this->m_pCurrentCoroutine = pCoroutineImpl;
 	}
 
-	CCoroutineImpl* CCoroutineMgr::createCoroutine(std::function<void(uint64_t)> callback)
+	CCoroutineImpl* CCoroutineMgr::createCoroutine(const std::function<void(uint64_t)>& callback)
 	{
 		DebugAstEx(callback != nullptr, nullptr);
 

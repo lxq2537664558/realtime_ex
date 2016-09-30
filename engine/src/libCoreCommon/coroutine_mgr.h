@@ -21,7 +21,7 @@ namespace core
 		char*			getMainStack() const;
 		uint32_t		getMainStackSize() const;
 
-		CCoroutineImpl*	createCoroutine(std::function<void(uint64_t)> callback);
+		CCoroutineImpl*	createCoroutine(const std::function<void(uint64_t)>& callback);
 		CCoroutineImpl*	getCoroutine(uint64_t nID) const;
 		void			addRecycleCoroutine(CCoroutineImpl* pCoroutineImpl);
 

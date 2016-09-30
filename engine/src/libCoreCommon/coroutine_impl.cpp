@@ -82,7 +82,7 @@ namespace core
 #endif
 	}
 
-	bool CCoroutineImpl::init(uint64_t nID, std::function<void(uint64_t)> callback)
+	bool CCoroutineImpl::init(uint64_t nID, const std::function<void(uint64_t)>& callback)
 	{
 		DebugAstEx(this->m_eState == eCS_NONE, false);
 		
@@ -220,7 +220,7 @@ namespace core
 		return pData;
 	}
 
-	void CCoroutineImpl::setCallback(std::function<void(uint64_t)> callback)
+	void CCoroutineImpl::setCallback(const std::function<void(uint64_t)>& callback)
 	{
 		this->m_callback = callback;
 	}

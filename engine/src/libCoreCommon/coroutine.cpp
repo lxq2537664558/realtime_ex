@@ -42,7 +42,7 @@ namespace core
 			return CCoreApp::Inst()->getCoroutineMgr()->getCurrentCoroutine()->getCoroutineID();
 		}
 
-		uint64_t create(std::function<void(uint64_t)> fn)
+		uint64_t create(const std::function<void(uint64_t)>& fn)
 		{
 			CCoroutineImpl* pCoroutineImpl = CCoreApp::Inst()->getCoroutineMgr()->createCoroutine(fn);
 			if (nullptr == pCoroutineImpl)

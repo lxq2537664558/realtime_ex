@@ -21,7 +21,7 @@ namespace core
 		CCoroutineImpl();
 		~CCoroutineImpl();
 
-		bool		init(uint64_t nID, std::function<void(uint64_t)> callback);
+		bool		init(uint64_t nID, const std::function<void(uint64_t)>& callback);
 		uint64_t	yield(bool bNormal);
 		void		resume(uint64_t nContext);
 		uint32_t	getState() const;
@@ -30,7 +30,7 @@ namespace core
 		void		sendMessage(void* pData);
 		void*		recvMessage();
 
-		void		setCallback(std::function<void(uint64_t)> callback);
+		void		setCallback(const std::function<void(uint64_t)>& callback);
 		
 	private:
 		void		saveStack();

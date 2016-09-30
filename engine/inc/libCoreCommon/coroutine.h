@@ -19,7 +19,7 @@ namespace core
 		/**
 		@brief: 启动协程，传入协程入口函数
 		*/
-		uint64_t	create(std::function<void(uint64_t)> fn);
+		uint64_t	create(const std::function<void(uint64_t)>& fn);
 		/**
 		@brief: 关闭指定协程
 		*/
