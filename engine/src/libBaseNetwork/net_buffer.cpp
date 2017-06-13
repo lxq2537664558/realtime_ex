@@ -2,6 +2,8 @@
 #include "net_buffer.h"
 #include "net_event_loop.h"
 
+#include "libBaseCommon\debug_helper.h"
+
 namespace base
 {
 	CNetRecvBuffer::CNetRecvBuffer()

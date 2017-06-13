@@ -5,6 +5,8 @@
 #include <sys/eventfd.h>
 #endif
 
+#include "libBaseCommon/debug_helper.h"
+
 namespace base
 {
 	CNetWakeup::CNetWakeup()

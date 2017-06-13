@@ -27,9 +27,7 @@ namespace core
 
 	void CCoreConnectionMgr::SNetActiveWaitConnecterHandler::onDisconnect()
 	{
-		CBaseApp::Inst()->getBaseConnectionMgr()->onConnectRefuse(szContext);
-
-		pCoreConnectionMgr->delActiveWaitConnecterHandler(this);
+		DebugAst(!"SNetActiveWaitConnecterHandler::onDisconnect");
 	}
 
 	void CCoreConnectionMgr::SNetActiveWaitConnecterHandler::onConnectFail()

@@ -8,6 +8,9 @@
 #ifdef _WIN32
 #include <Windows.h>
 #endif
+
+#include "libBaseCommon\debug_helper.h"
+
 #ifndef _WIN32
 extern "C" int32_t	save_context(int64_t* reg);
 extern "C" void		restore_context(int64_t* reg, int32_t);
@@ -92,14 +95,12 @@ namespace core
 
 	bool CCoroutineImpl::init(uint64_t nID, uint32_t nStackSize, const std::function<void(uint64_t)>& callback)
 	{
-		if (this->m_eState != eCS_NONE)
-			return false;
-
-		if (callback == nullptr)
-			return false;
-
+		DebugAstEx(this->m_eState == eCS_NONE, false);
+		
+		DebugAstEx(callback != nullptr, false);
+		
 #ifdef _WIN32
-		assert(nStackSize != 0);
+		DebugAstEx(nStackSize != 0, false);
 		this->m_nStackSize = nStackSize;
 		this->m_pContext = ::CreateFiberEx(nStackSize, nStackSize, FIBER_FLAG_FLOAT_SWITCH, (LPFIBER_START_ROUTINE)CCoroutineImpl::onCallback, this);
 		if (this->m_pContext == nullptr)
@@ -110,7 +111,7 @@ namespace core
 			CCoroutineImpl::onCallback();
 
 			// 不可能执行到这里的
-			//assert(0);
+			DebugAstEx(!"", false);
 		}
 		if (nStackSize != 0)
 			this->m_bOwnerStack = true;
@@ -146,9 +147,8 @@ namespace core
 
 	uint64_t CCoroutineImpl::yield()
 	{
-		if (this->m_eState != eCS_RUNNING)
-			return 0;
-
+		DebugAstEx(this->m_eState == eCS_RUNNING, false);
+		
 		CCoroutineMgr* pCoroutineMgr = getCoroutineMgr();
 		pCoroutineMgr->setCurrentCoroutine(nullptr);
 
@@ -168,8 +168,7 @@ namespace core
 	
 	void CCoroutineImpl::resume(uint64_t nContext)
 	{
-		if (this->getState() != eCS_READY && this->getState() != eCS_SUSPEND)
-			return;
+		DebugAst(this->getState() == eCS_READY || this->getState() == eCS_SUSPEND);
 
 		this->m_eState = eCS_RUNNING;
 

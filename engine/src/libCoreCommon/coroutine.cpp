@@ -2,6 +2,8 @@
 #include "coroutine_impl.h"
 #include "coroutine_mgr.h"
 
+#include "libBaseCommon\debug_helper.h"
+
 namespace core
 {
 	void resume(uint64_t nID, uint64_t nContext)
@@ -52,8 +54,7 @@ namespace core
 		if (nullptr == pCoroutineImpl)
 			return;
 
-		if (pCoroutineImpl->getCoroutineID() == nID)
-			return;
+		DebugAst(pCoroutineImpl->getCoroutineID() != nID);
 
 		pCoroutineImpl = pCoroutineMgr->getCoroutine(nID);
 		if (nullptr == pCoroutineImpl)

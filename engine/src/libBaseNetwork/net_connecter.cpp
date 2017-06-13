@@ -3,6 +3,8 @@
 #include "net_event_loop.h"
 
 #include "libBaseCommon\logger.h"
+#include "libBaseCommon\base_function.h"
+#include "libBaseCommon\debug_helper.h"
 
 namespace base
 {
@@ -14,7 +16,7 @@ namespace base
 		char szBuf[1024] = { 0 };
 		va_list arg;
 		va_start(arg, szFormat);
-		vsnprintf(szBuf, _countof(szBuf), szFormat, arg);
+		base::crt::vsnprintf(szBuf, _countof(szBuf), szFormat, arg);
 		va_end(arg);
 
 		PrintInfo("%s connect state: %d flag£º%d local addr: %s %d remote addr: %s %d socket_id: %d error code[%d] send_index: %d send_count: %d", szBuf, this->m_eConnecterState, this->m_nFlag, this->getLocalAddr().szHost, this->getLocalAddr().nPort, this->getRemoteAddr().szHost, this->getRemoteAddr().nPort, this->GetSocketID(), getLastError(), this->m_nSendConnecterIndex, this->m_pNetEventLoop->getSendConnecterCount());
@@ -414,7 +416,7 @@ namespace base
 		char szBuf[1024] = { 0 };
 		va_list arg;
 		va_start(arg, szFormat);
-		vsnprintf(szBuf, _countof(szBuf), szFormat, arg);
+		base::crt::vsnprintf(szBuf, _countof(szBuf), szFormat, arg);
 		va_end(arg);
 
 		this->printInfo("request shutdown connection msg: %s", szBuf);

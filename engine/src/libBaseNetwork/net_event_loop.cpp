@@ -9,6 +9,7 @@
 #include <thread>
 
 #include "libBaseCommon\logger.h"
+#include "libBaseCommon\debug_helper.h"
 
 namespace base
 {

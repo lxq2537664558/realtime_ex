@@ -10,6 +10,8 @@
 #endif
 #endif
 
+#include "libBaseCommon/debug_helper.h"
+
 #define _MAX_CO_RECYCLE_COUNT	100
 
 namespace core
@@ -43,8 +45,7 @@ namespace core
 	{
 #ifdef _WIN32
 		this->m_pMainContext = ConvertThreadToFiberEx(nullptr, FIBER_FLAG_FLOAT_SWITCH);
-		if (this->m_pMainContext == nullptr)
-			return false;
+		DebugAstEx(this->m_pMainContext != nullptr, false);
 #else
 		this->m_pMainContext = new context();
 		uint32_t nValgrindID = 0;
@@ -73,8 +74,7 @@ namespace core
 
 	void CCoroutineMgr::setCurrentCoroutine(CCoroutineImpl* pCoroutineImpl)
 	{
-		if (pCoroutineImpl == nullptr)
-			return;
+		DebugAst(pCoroutineImpl != nullptr);
 
 		this->m_pCurrentCoroutine = pCoroutineImpl;
 	}
@@ -86,8 +86,7 @@ namespace core
 
 	CCoroutineImpl* CCoroutineMgr::createCoroutine(uint32_t nStackSize, const std::function<void(uint64_t)>& callback)
 	{
-		if (callback == nullptr)
-			return nullptr;
+		DebugAstEx(callback != nullptr, nullptr);
 
 #ifdef _WIN32
 		if (nStackSize == 0)
