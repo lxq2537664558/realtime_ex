@@ -27,7 +27,7 @@ namespace core
 		void				registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
 		void				unregisterTicker(CTicker* pTicker);
 		void				update();
-		inline uint64_t		getLogicTime() const { return this->m_nLogicTime; }
+		inline int64_t		getLogicTime() const { return this->m_nLogicTime; }
 		
 	private:
 		void				insertTicker(TickerNode_t* pTickerNode);
