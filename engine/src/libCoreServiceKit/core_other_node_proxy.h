@@ -47,6 +47,7 @@ namespace core
 		struct SNodeInfo
 		{
 			SNodeBaseInfo					sNodeBaseInfo;
+			bool							bMasterDelNode;	// master 服务是不是通知过删除节点
 			CCoreConnectionToOtherNode*		pCoreConnectionToOtherNode;
 			CCoreConnectionFromOtherNode*	pCoreConnectionFromOtherNode;
 			std::unique_ptr<CTicker>		pTicker;

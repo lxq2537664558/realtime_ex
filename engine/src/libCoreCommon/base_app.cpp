@@ -85,9 +85,9 @@ namespace core
 		CCoreApp::Inst()->doQuit();
 	}
 
-	void CBaseApp::enableProfiling(bool bProfiling)
+	void CBaseApp::profiling(bool bEnable)
 	{
-		base::enableProfiling(bProfiling);
+		base::enableProfiling(bEnable);
 	}
 
 	uint32_t CBaseApp::getQPS() const
@@ -100,4 +100,8 @@ namespace core
 		CCoreApp::Inst()->busy();
 	}
 
+	void CBaseApp::debugLog(bool bEnable)
+	{
+		base::debugLog(bEnable);
+	}
 }

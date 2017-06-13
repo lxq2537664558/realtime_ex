@@ -7,7 +7,7 @@
 #include "transporter.h"
 #include "core_other_node_proxy.h"
 #include "core_message_registry.h"
-#include "invoker_trace.h"
+#include "tracer.h"
 #include "scheduler.h"
 #include "message_dispatcher.h"
 #include "core_service_app.h"
@@ -34,7 +34,7 @@ namespace core
 		CTransporter*				getTransporter() const;
 		CCoreOtherNodeProxy*		getCoreOtherNodeProxy() const;
 		CCoreMessageRegistry*		getCoreMessageRegistry() const;
-		CInvokerTrace*				getInvokerTrace() const;
+		CTracer*				getInvokerTrace() const;
 		CScheduler*					getScheduler() const;
 		CMessageDispatcher*			getMessageDispatcher() const;
 
@@ -74,7 +74,7 @@ namespace core
 		CCoreMessageRegistry*			m_pCoreMessageRegistry;
 		CScheduler*						m_pScheduler;
 		CCoreOtherNodeProxy*			m_pCoreOtherNodeProxy;
-		CInvokerTrace*					m_pInvokerTrace;
+		CTracer*					m_pInvokerTrace;
 		CMessageDispatcher*				m_pMessageDispatcher;
 		CNodeConnectionFactory*			m_pNodeConnectionFactory;
 		CCoreConnectionToMaster*		m_pCoreConnectionToMaster;

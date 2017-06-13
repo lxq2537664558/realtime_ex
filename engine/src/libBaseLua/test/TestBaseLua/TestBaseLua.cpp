@@ -9,6 +9,7 @@
 #include "libBaseLua/namespace_binder.h"
 #include "libBaseLua/lua_function.h"
 #include "libBaseLua/class_binder.h"
+#include "libBaseLua/base_lua.h"
 
 #include "gtest/gtest.h"
 
@@ -139,7 +140,7 @@ class LuaEnvironment : public testing::Environment
 public:
 	virtual void SetUp()
 	{
-		base::initLog(false, "");
+		base::initLog(false, false, "");
 		base::initProfiling(true);
 		base::initProcessExceptionHander();
 		g_pLua = new base::CLuaFacade();

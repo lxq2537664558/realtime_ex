@@ -1,191 +1,190 @@
-#include "stdafx.h"
 #include "coroutine_impl.h"
 #include "coroutine_mgr.h"
-#include "core_app.h"
-
-#include "libBaseCommon/debug_helper.h"
 
 #include <algorithm>
+
+#include <string.h>
+#include <assert.h>
+#ifdef _WIN32
+#include <Windows.h>
+#endif
+#ifndef _WIN32
+extern "C" int32_t	save_context(int64_t* reg);
+extern "C" void		restore_context(int64_t* reg, int32_t);
+#endif
 
 namespace core
 {
 #ifdef _WIN32
 	void CCoroutineImpl::onCallback(void* pParm)
 #else
-	void CCoroutineImpl::onCallback(uint32_t nParm1, uint32_t nParm2)
+	void CCoroutineImpl::onCallback()
 #endif
 	{
-#ifdef _WIN32
-		CCoroutineImpl* pCoroutineImpl = reinterpret_cast<CCoroutineImpl*>(pParm);
-#else
-		CCoroutineImpl* pCoroutineImpl = reinterpret_cast<CCoroutineImpl*>((uintptr_t)nParm1 | ((uintptr_t)nParm2 << 32));
-#endif
 		while (true)
 		{
+			CCoroutineMgr* pCoroutineMgr = getCoroutineMgr();
+			CCoroutineImpl* pCoroutineImpl = pCoroutineMgr->getCurrentCoroutine();
 			pCoroutineImpl->m_callback(pCoroutineImpl->m_nContext);
+			pCoroutineMgr->addRecycleCoroutine(pCoroutineImpl);
 
-			CCoreApp::Inst()->getCoroutineMgr()->addRecycleCoroutine(pCoroutineImpl);
+			pCoroutineMgr->setCurrentCoroutine(nullptr);
 
-			pCoroutineImpl->setCallback(nullptr);
-			pCoroutineImpl->yield(false);
-		};
+			pCoroutineImpl->m_eState = eCS_DEAD;
+#ifdef _WIN32
+			SwitchToFiber(pCoroutineMgr->getMainContext());
+#else
+			if (!pCoroutineImpl->m_bOwnerStack)
+				pCoroutineImpl->m_nStackSize = 0;
+			if (save_context(reinterpret_cast<context*>(pCoroutineImpl->m_pContext)->regs) == 0)
+				restore_context(reinterpret_cast<context*>(pCoroutineMgr->getMainContext())->regs, 1);
+#endif
+		}
 	}
-
+	
+#ifndef _WIN32
 	void CCoroutineImpl::saveStack()
 	{
-#ifndef _WIN32
-		char* pStackTop = CCoreApp::Inst()->getCoroutineMgr()->getMainStack() + CCoreApp::Inst()->getCoroutineMgr()->getMainStackSize();
+		char* pStack = getCoroutineMgr()->getMainStack();
 		char nDummy = 0;
-		DebugAst(pStackTop - &nDummy <= CCoreApp::Inst()->getCoroutineMgr()->getMainStackSize());
 
-		if (this->m_nStackCap < pStackTop - &nDummy)
+		if (this->m_nStackCap < (uintptr_t)(pStack - &nDummy))
 		{
 			delete [] this->m_pStack;
-			this->m_nStackCap = pStackTop - &nDummy;
+			this->m_nStackCap = pStack - &nDummy;
 			this->m_pStack= new char[this->m_nStackCap];
 		}
-		this->m_nStackSize = pStackTop - &nDummy;
+		this->m_nStackSize = pStack - &nDummy;
 		memcpy(this->m_pStack, &nDummy, this->m_nStackSize);
-#endif
 	}
+#endif
 
 	CCoroutineImpl::CCoroutineImpl()
 		: m_nID(0)
-		, m_pParentCoroutine(nullptr)
 		, m_nContext(0)
 		, m_eState(eCS_NONE)
-#ifdef _WIN32
-		, m_hHandle(nullptr)
-#else
-		, m_nStackCap(0)
+		, m_pContext(nullptr)
 		, m_nStackSize(0)
+#ifndef _WIN32
+		, m_nStackCap(0)
 		, m_pStack(nullptr)
+		, m_bOwnerStack(false)
+		, m_nValgrindID(0)
 #endif
 	{
-
+#ifndef _WIN32
+		this->m_pContext = new context();
+#endif
 	}
 
 	CCoroutineImpl::~CCoroutineImpl()
 	{
-#ifdef _WIN32
-		if (this->m_hHandle != nullptr)
-		{
-			if (this->getCoroutineID() != 1)
-				DeleteFiber(this->m_hHandle);
-			else
-				ConvertFiberToThread();
-
-			this->m_hHandle = nullptr;
-		}
-#else
-		SAFE_DELETE_ARRAY(this->m_pStack);
+		uint32_t nValgrindID = 0;
+#ifndef _WIN32
+		delete reinterpret_cast<context*>(this->m_pContext);
+		nValgrindID = this->m_nValgrindID;
+		if (this->m_bOwnerStack)
+			CCoroutineMgr::freeStack(this->m_pStack, (uint32_t)this->m_nStackSize, nValgrindID);
+		else
+			delete[]this->m_pStack;
 #endif
 	}
 
-	bool CCoroutineImpl::init(uint64_t nID, const std::function<void(uint64_t)>& callback)
+	bool CCoroutineImpl::init(uint64_t nID, uint32_t nStackSize, const std::function<void(uint64_t)>& callback)
 	{
-		DebugAstEx(this->m_eState == eCS_NONE, false);
-		
-#ifdef _WIN32
+		if (this->m_eState != eCS_NONE)
+			return false;
 
-#define _WIN_CO_STACK_SIZE 64*1024
-		if (nID != 1)
+		if (callback == nullptr)
+			return false;
+
+#ifdef _WIN32
+		assert(nStackSize != 0);
+		this->m_nStackSize = nStackSize;
+		this->m_pContext = ::CreateFiberEx(nStackSize, nStackSize, FIBER_FLAG_FLOAT_SWITCH, (LPFIBER_START_ROUTINE)CCoroutineImpl::onCallback, this);
+		if (this->m_pContext == nullptr)
+			return false;
+#else
+		if (save_context(reinterpret_cast<context*>(this->m_pContext)->regs) != 0)
 		{
-			this->m_hHandle = CreateFiberEx(_WIN_CO_STACK_SIZE,
-				_WIN_CO_STACK_SIZE, FIBER_FLAG_FLOAT_SWITCH,
-				(LPFIBER_START_ROUTINE)CCoroutineImpl::onCallback, this);
-			if (this->m_hHandle == nullptr)
+			CCoroutineImpl::onCallback();
+
+			// 不可能执行到这里的
+			//assert(0);
+		}
+		if (nStackSize != 0)
+			this->m_bOwnerStack = true;
+		
+		CCoroutineMgr* pCoroutineMgr = getCoroutineMgr();
+		if (nStackSize != 0)
+		{
+			this->m_bOwnerStack = true;
+			uint32_t nValgrindID = 0;
+			char* pStack = CCoroutineMgr::allocStack(nStackSize, nValgrindID);
+			if (nullptr == pStack)
 				return false;
+			this->m_pStack = pStack + nStackSize;
+			this->m_nStackSize = nStackSize;
+
+			reinterpret_cast<context*>(this->m_pContext)->rsp = (uintptr_t)this->m_pStack;
+			this->m_nValgrindID = nValgrindID;
 		}
 		else
 		{
-			this->m_hHandle = ConvertThreadToFiberEx(nullptr, FIBER_FLAG_FLOAT_SWITCH);
-			if (this->m_hHandle == nullptr)
-				return false;
+			this->m_bOwnerStack = false;
+			reinterpret_cast<context*>(this->m_pContext)->rsp = (uintptr_t)pCoroutineMgr->getMainStack();
 		}
-#else
-		if (nID == 1)
-		{
-			this->m_eState = eCS_READY;
-			this->m_nID = nID;
-			return true;
-		}
-
-		DebugAstEx(callback != nullptr, false);
-
-		if (-1 == getcontext(&this->m_ctx))
-			return false;
-
-		this->m_ctx.uc_stack.ss_sp = CCoreApp::Inst()->getCoroutineMgr()->getMainStack();
-		this->m_ctx.uc_stack.ss_size = CCoreApp::Inst()->getCoroutineMgr()->getMainStackSize();
-		this->m_ctx.uc_link = nullptr;
-
-		uintptr_t nParm = (uintptr_t)this;
-		makecontext(&this->m_ctx, (void(*)(void))&CCoroutineImpl::onCallback, 2, (uint32_t)nParm, (uint32_t)(nParm >> 32));
-
-		this->m_nStackSize = 0;
 #endif
 
 		this->m_callback = callback;
+		this->m_nContext = 0;
 		this->m_eState = eCS_READY;
 		this->m_nID = nID;
-		this->m_nContext = 0;
-
+		
 		return true;
 	}
 
-	uint64_t CCoroutineImpl::yield(bool bNormal)
+	uint64_t CCoroutineImpl::yield()
 	{
-		DebugAstEx(this->m_eState == eCS_RUNNING, 0);
-
-		if (this->m_pParentCoroutine == nullptr)
-		{
-			PrintWarning("current corotine is root corotine don't yield");
+		if (this->m_eState != eCS_RUNNING)
 			return 0;
-		}
 
-		CCoreApp::Inst()->getCoroutineMgr()->setCurrentCoroutine(this->m_pParentCoroutine);
+		CCoroutineMgr* pCoroutineMgr = getCoroutineMgr();
+		pCoroutineMgr->setCurrentCoroutine(nullptr);
 
-		this->m_pParentCoroutine->m_eState = eCS_RUNNING;
-
-		ECoroutineState eNewState = (bNormal ? eCS_SUSPEND : eCS_DEAD);
-		this->setState(eNewState);
-
-		this->m_pParentCoroutine = nullptr;
-
-		CCoroutineImpl* pCurrentCoroutine = CCoreApp::Inst()->getCoroutineMgr()->getCurrentCoroutine();
+		this->m_eState = eCS_SUSPEND;
 
 #ifdef _WIN32
-		SwitchToFiber(pCurrentCoroutine->m_hHandle);
+		SwitchToFiber(pCoroutineMgr->getMainContext());
 #else
-		this->saveStack();
-		swapcontext(&this->m_ctx, &pCurrentCoroutine->m_ctx);
-#endif
+		if (!this->m_bOwnerStack)
+			this->saveStack();
 
+		if (save_context(reinterpret_cast<context*>(this->m_pContext)->regs) == 0)
+			restore_context(reinterpret_cast<context*>(pCoroutineMgr->getMainContext())->regs, 1);
+#endif	
 		return this->m_nContext;
 	}
 	
 	void CCoroutineImpl::resume(uint64_t nContext)
 	{
-		DebugAst(this->getState() == eCS_READY || this->getState() == eCS_SUSPEND);
+		if (this->getState() != eCS_READY && this->getState() != eCS_SUSPEND)
+			return;
 
-		CCoroutineImpl* pCurrentCoroutine = CCoreApp::Inst()->getCoroutineMgr()->getCurrentCoroutine();
-		DebugAst(pCurrentCoroutine != nullptr);
+		this->m_eState = eCS_RUNNING;
 
-		bool bRestoreStack = (this->getState() == eCS_SUSPEND);
-		this->setState(eCS_RUNNING);
-		pCurrentCoroutine->setState(eCS_SUSPEND);
-		CCoreApp::Inst()->getCoroutineMgr()->setCurrentCoroutine(this);
-		this->m_pParentCoroutine = pCurrentCoroutine;
+		CCoroutineMgr* pCoroutineMgr = getCoroutineMgr();
+		pCoroutineMgr->setCurrentCoroutine(this);
 		this->m_nContext = nContext;
 
 #ifdef _WIN32
-		SwitchToFiber(this->m_hHandle);
+		SwitchToFiber(this->m_pContext);
 #else
-		if (bRestoreStack)
-			memcpy(CCoreApp::Inst()->getCoroutineMgr()->getMainStack() + CCoreApp::Inst()->getCoroutineMgr()->getMainStackSize() - this->m_nStackSize, this->m_pStack, this->m_nStackSize);
-		
-		swapcontext(&this->m_pParentCoroutine->m_ctx, &this->m_ctx);
+		if (!this->m_bOwnerStack)
+			memcpy(pCoroutineMgr->getMainStack() - this->m_nStackSize, this->m_pStack, this->m_nStackSize);
+
+		if (save_context(reinterpret_cast<context*>(pCoroutineMgr->getMainContext())->regs) == 0)
+			restore_context(reinterpret_cast<context*>(this->m_pContext)->regs, 1);
 #endif
 	}
 
@@ -204,25 +203,49 @@ namespace core
 		return this->m_nID;
 	}
 
-	void CCoroutineImpl::sendMessage(void* pData)
+	void CCoroutineImpl::setLocalData(const char* szName, uint64_t nData)
 	{
-		this->m_listMessage.push_back(pData);
+		if (nullptr == szName)
+			return;
+
+		this->m_mapLocalData[szName] = nData;
 	}
 
-	void* CCoroutineImpl::recvMessage()
+	bool CCoroutineImpl::getLocalData(const char* szName, uint64_t& nData) const
 	{
-		if (this->m_listMessage.empty())
-			return nullptr;
+		if (szName == nullptr)
+			return false;
 
-		void* pData = this->m_listMessage.front();
-		this->m_listMessage.pop_front();
+		auto iter = this->m_mapLocalData.find(szName);
+		if (iter == this->m_mapLocalData.end())
+			return false;
 
-		return pData;
+		nData = iter->second;
+
+		return true;
+	}
+
+	void CCoroutineImpl::delLocalData(const char* szName)
+	{
+		if (szName == nullptr)
+			return;
+
+		this->m_mapLocalData.erase(szName);
 	}
 
 	void CCoroutineImpl::setCallback(const std::function<void(uint64_t)>& callback)
 	{
 		this->m_callback = callback;
+	}
+
+	uint32_t CCoroutineImpl::getStackSize() const
+	{
+#ifndef _WIN32
+		if (!this->m_bOwnerStack)
+			return 0;
+#endif
+
+		return (uint32_t)this->m_nStackSize;
 	}
 
 }

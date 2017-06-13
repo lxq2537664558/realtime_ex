@@ -6,8 +6,9 @@
 #include "net_buffer.h"
 #include "net_wakeup.h"
 
-#include "libBaseCommon/debug_helper.h"
-#include "libBaseCommon/profiling.h"
+#include <thread>
+
+#include "libBaseCommon\logger.h"
 
 namespace base
 {
@@ -32,9 +33,9 @@ namespace base
 			if (nullptr == pSocket)
 				continue;
 
-			pSocket->forceClose();
+			pSocket->release();
 		}
-		SAFE_DELETE(this->m_pWakeup);
+		delete this->m_pWakeup;
 		this->m_vecSocket.clear();
 		this->m_listCloseSocket.clear();
 #ifndef _WIN32
@@ -51,6 +52,11 @@ namespace base
 		this->m_nEpoll = epoll_create(nMaxSocketCount / 2);
 		if (this->m_nEpoll < 0)
 			return false;
+
+		// 在fork+execl后关闭父进程继承来的fd
+		int32_t val = fcntl(this->m_nEpoll, F_GETFD);
+		val |= FD_CLOEXEC;
+		fcntl(this->m_nEpoll, F_SETFD, val);
 		
 		this->m_nExtraSocketCount = 1;
 #endif
@@ -58,7 +64,7 @@ namespace base
 		this->m_pWakeup = new CNetWakeup();
 		if (!this->m_pWakeup->init(this))
 		{
-			SAFE_DELETE(this->m_pWakeup);
+			delete this->m_pWakeup;
 			return false;
 		}
 		return true;
@@ -69,12 +75,18 @@ namespace base
 		CNetAccepter* pNetAccepter = new CNetAccepter();
 		if (!pNetAccepter->init(nSendBufferSize, nRecvBufferSize, this))
 		{
-			SAFE_DELETE(pNetAccepter);
+			delete pNetAccepter;
 			return false;
 		}
 		pNetAccepter->setHandler(pHandler);
 
-		return pNetAccepter->listen(netAddr);
+		if (!pNetAccepter->listen(netAddr))
+		{
+			delete pNetAccepter;
+			return false;
+		}
+
+		return true;
 	}
 
 	bool CNetEventLoop::connect(const SNetAddr& netAddr, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, INetConnecterHandler* pHandler)
@@ -82,13 +94,15 @@ namespace base
 		CNetConnecter* pNetConnecter = new CNetConnecter();
 		if (!pNetConnecter->init(nSendBufferSize, nRecvBufferSize, this))
 		{
-			SAFE_DELETE(pNetConnecter);
+			delete pNetConnecter;
 			return false;
 		}
 		pNetConnecter->setHandler(pHandler);
 		if (!pNetConnecter->connect(netAddr))
+		{
+			delete pNetConnecter;
 			return false;
-
+		}
 		return true;
 	}
 
@@ -105,7 +119,7 @@ namespace base
 			if (nullptr == pSocket)
 				continue;
 
-			pSocket->forceClose();
+			pSocket->release();
 		}
 		this->m_listCloseSocket.clear();
 
@@ -116,20 +130,17 @@ namespace base
 			CNetConnecter* pNetConnecter = this->m_vecSendConnecter[i];
 			if (nullptr == pNetConnecter)
 				continue;
-			pNetConnecter->activeSend();
+
+			pNetConnecter->flushSend();
 			pNetConnecter->setSendConnecterIndex(_Invalid_SendConnecterIndex);
 		}
 		this->m_nSendConnecterCount = 0;
 		// 如果在经过上面的循环后Socket中还存在数据没有发送出去，那么在下面的代码中，就会触发写事件继续发送
-		// 下面的代码还是发送不完，下一帧中要不在上面的循环里面发送（应用层又发送了数据），要么在下面代码中发送
+		// 下面的代码还是发送不完，那么就会在下一帧的写事件触发时发送
 
 #ifdef _WIN32
 		if (this->m_nSocketCount == 0)
-		{
-			// 为了让windows洗没有任何socket时不死跑，这里sleep下
-			base::sleep((uint32_t)nTime);
 			return;
-		}
 
 		fd_set readfds;
 		fd_set writefds;
@@ -145,20 +156,17 @@ namespace base
 			if (nullptr == pNetSocket)
 				continue;
 
-			FD_SET(pNetSocket->GetSocketID(), &exceptfds);
-
-			if (0 != (pNetSocket->getEvent()&eNET_Recv))
-				FD_SET(pNetSocket->GetSocketID(), &readfds);
-			if (0 != (pNetSocket->getEvent()&eNET_Send))
+			if (pNetSocket->isWriteEvent())
 				FD_SET(pNetSocket->GetSocketID(), &writefds);
+			if (pNetSocket->isReadEvent())
+				FD_SET(pNetSocket->GetSocketID(), &readfds);
+			FD_SET(pNetSocket->GetSocketID(), &exceptfds);
 		}
 
 		struct timeval timeout;
 		timeout.tv_sec = (int32_t)((nTime * 1000) / 1000000);
 		timeout.tv_usec = (int32_t)((nTime * 1000) % 1000000);
-		PROFILING_BEGIN(select)
-		int32_t nRet = select(0, &readfds, &writefds, &exceptfds, &timeout);
-		PROFILING_END(select)
+		int32_t nRet = ::select(0, &readfds, &writefds, &exceptfds, &timeout);
 		if (SOCKET_ERROR == nRet)
 		{
 			PrintWarning("select error %d ", getLastError());
@@ -167,7 +175,7 @@ namespace base
 		if (0 == nRet)
 			return;
 
-		// 绝对不会在下面这个循环中去删除Socket的
+		// 绝对不会在下面这个循环中去删除Socket的，但是有可能会增加
 		for (int32_t i = 0; i < this->m_nSocketCount; ++i)
 		{
 			CNetSocket* pNetSocket = this->m_vecSocket[i];
@@ -182,7 +190,8 @@ namespace base
 			if (FD_ISSET(pNetSocket->GetSocketID(), &exceptfds))
 				nEvent |= eNET_Error;
 			
-			pNetSocket->onEvent(nEvent);
+			if (nEvent != 0)
+				pNetSocket->onEvent(nEvent);
 		}
 #else
 		do
@@ -190,18 +199,27 @@ namespace base
 			if (this->m_nSocketCount == 0)
 				return;
 
-			PROFILING_BEGIN(epoll_wait)
 			this->m_pWakeup->wait(true);
-			int32_t nActiveCount = epoll_wait(this->m_nEpoll, &this->m_vecEpollEvent[0], this->m_vecEpollEvent.size(), nTime);
+			int32_t nActiveCount = ::epoll_wait(this->m_nEpoll, &this->m_vecEpollEvent[0], this->m_vecEpollEvent.size(), nTime);
 			this->m_pWakeup->wait(false);
-			PROFILING_END(epoll_wait)
 			if (nActiveCount >= 0)
 			{
 				for (int32_t i = 0; i < nActiveCount; ++i)
 				{
 					INetBase* pNetBase = reinterpret_cast<INetBase*>(this->m_vecEpollEvent[i].data.ptr);
 					if (pNetBase != nullptr)
-						pNetBase->onEvent(this->m_vecEpollEvent[i].events);
+					{
+						uint32_t nRawEvent = this->m_vecEpollEvent[i].events;
+						uint32_t nEvent = 0;
+						if (nRawEvent & (EPOLLHUP | EPOLLERR))
+							nEvent = eNET_Error;
+						if (nRawEvent & (EPOLLIN | POLLPRI))
+							nEvent |= eNET_Recv;
+						if (nRawEvent & EPOLLOUT)
+							nEvent |= eNET_Send;
+						// 这里不处理EPOLLRDHUP事件
+						pNetBase->onEvent(nEvent);
+					}
 				}
 				break;
 			}
@@ -219,16 +237,6 @@ namespace base
 	}
 
 #ifndef _WIN32
-	void CNetEventLoop::updateEpollState(CNetSocket* pNetSocket, int32_t nOperator)
-	{
-		struct epoll_event event;
-		memset(&event, 0, sizeof(event));
-		event.data.ptr = pNetSocket;
-		event.events = pNetSocket->getEvent();
-		if (epoll_ctl(this->m_nEpoll, nOperator, pNetSocket->GetSocketID(), &event) < 0)
-			PrintWarning("epoll_ctl error operator = %d error %d", nOperator, getLastError());
-	}
-
 	int32_t CNetEventLoop::getEpoll() const
 	{
 		return this->m_nEpoll;
@@ -256,11 +264,19 @@ namespace base
 		pNetSocket->setSocketIndex(this->m_nSocketCount);
 		this->m_vecSocket[this->m_nSocketCount++] = pNetSocket;
 
-		PrintNW("addSocket socket_id %d socket_index %d", pNetSocket->GetSocketID(), pNetSocket->getSocketIndex());
+		PrintInfo("addSocket socket_id %d socket_index %d", pNetSocket->GetSocketID(), pNetSocket->getSocketIndex());
 
 #ifndef _WIN32
 		this->m_vecEpollEvent.resize(this->m_nSocketCount + this->m_nExtraSocketCount);
-		this->updateEpollState(pNetSocket, EPOLL_CTL_ADD);
+		struct epoll_event event;
+		memset(&event, 0, sizeof(event));
+		event.data.ptr = pNetSocket;
+		if (pNetSocket->getSocketType() == CNetSocket::eNST_Connector)
+			event.events = EPOLLIN|POLLPRI|EPOLLOUT|EPOLLET;
+		else
+			event.events = EPOLLIN|POLLPRI|EPOLLOUT;
+		if (::epoll_ctl(this->m_nEpoll, EPOLL_CTL_ADD, pNetSocket->GetSocketID(), &event) < 0)
+			PrintWarning("epoll_ctl error EPOLL_CTL_ADD error %d", getLastError());
 #endif
 		return true;
 	}
@@ -275,6 +291,8 @@ namespace base
 		if (pNetSocket->getSocketIndex() >= this->m_nSocketCount)
 			return;
 
+		PrintInfo("delSocket socket_id %d socket_index %d", pNetSocket->GetSocketID(), pNetSocket->getSocketIndex());
+
 		this->m_vecSocket[pNetSocket->getSocketIndex()] = this->m_vecSocket[this->m_nSocketCount - 1];
 		if (this->m_vecSocket[this->m_nSocketCount - 1] != nullptr)
 			this->m_vecSocket[this->m_nSocketCount - 1]->setSocketIndex(pNetSocket->getSocketIndex());
@@ -283,8 +301,12 @@ namespace base
 		pNetSocket->setSocketIndex(_Invalid_SocketIndex);
 
 #ifndef _WIN32
-		this->m_vecEpollEvent.resize(this->m_nSocketCount + this->m_nExtraSocketCount);
-		this->updateEpollState(pNetSocket, EPOLL_CTL_DEL);
+		struct epoll_event event;
+		memset(&event, 0, sizeof(event));
+		event.data.ptr = pNetSocket;
+		event.events = 0;
+		if (::epoll_ctl(this->m_nEpoll, EPOLL_CTL_DEL, pNetSocket->GetSocketID(), &event) < 0)
+			PrintWarning("epoll_ctl error EPOLL_CTL_DEL error %d", getLastError());
 #endif
 	}
 
@@ -337,9 +359,6 @@ namespace base
 		this->m_pWakeup->wakeup();
 	}
 
-
-	//=======================================================================
-
 	INetEventLoop* createNetEventLoop()
 	{
 		CNetEventLoop* pNetFacade = new CNetEventLoop();
@@ -358,9 +377,8 @@ namespace base
 			PrintWarning("WSAStartup error %d", getLastError());
 			return false;
 		}
-
 #endif
-
+		
 		return true;
 	}
 

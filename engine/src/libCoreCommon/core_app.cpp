@@ -11,6 +11,7 @@
 #include <iostream>
 #include <string>
 #include <memory>
+#include <algorithm>
 
 #include "libBaseCommon/base_function.h"
 #include "libBaseCommon/exception_handler.h"
@@ -315,13 +316,13 @@ namespace core
 			return false;
 		}
 
-		if (!base::initLog(pLogXML->IntAttribute("async") != 0, pLogXML->Attribute("path")))
+		if (!base::initLog(pLogXML->IntAttribute("async") != 0, false, pLogXML->Attribute("path")))
 		{
 			fprintf(stderr, "init log error\n");
 			return false;
 		}
 
-		base::enableDebugLog(pLogXML->IntAttribute("debug") != 0);
+		base::debugLog(pLogXML->IntAttribute("debug") != 0);
 
 		bool bProfiling = false;
 		tinyxml2::XMLElement* pProfilingXML = pBaseInfoXML->FirstChildElement("profiling");
@@ -353,7 +354,7 @@ namespace core
 			PrintWarning("this->m_pCoroutineMgr->init(_MAIN_CO_STACK_SIZE)");
 			return false;
 		}
-		PrintInfo("main coroutine id: "UINT64FMT, coroutine::getCurrentID());
+		PrintInfo("main coroutine id: "UINT64FMT, core::getCurrentID());
 
 		this->m_pTickerMgr = new core::CTickerMgr();
 		uint32_t nMaxConnectionCount = (uint32_t)pBaseInfoXML->IntAttribute("connections");
@@ -418,8 +419,8 @@ namespace core
 		int64_t nBeginTime = base::getProcessPassTime();
 
 		PROFILING_BEGIN(this->m_pCoreConnectionMgr->update)
-		int64_t nDeltaTime = max(0, _MAX_WAIT_NET_TIME - (base::getGmtTime() - this->m_pTickerMgr->getLogicTime()));
-		if (this->m_bBusy)
+		int64_t nDeltaTime = _MAX_WAIT_NET_TIME - (base::getGmtTime() - this->m_pTickerMgr->getLogicTime());
+		if (this->m_bBusy || nDeltaTime < 0)
 			nDeltaTime = 0;
 		this->m_pCoreConnectionMgr->update(nDeltaTime);
 		PROFILING_END(this->m_pCoreConnectionMgr->update)

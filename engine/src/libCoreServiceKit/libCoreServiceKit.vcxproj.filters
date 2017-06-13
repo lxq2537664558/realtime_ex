@@ -41,9 +41,6 @@
     <ClInclude Include="..\..\inc\libCoreServiceKit\core_service_kit_define.h">
       <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="invoker_trace.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="scheduler.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -101,6 +98,9 @@
     <ClInclude Include="..\..\inc\libCoreServiceKit\message_ptr.h">
       <Filter>inc</Filter>
     </ClInclude>
+    <ClInclude Include="tracer.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -119,9 +119,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="transporter.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="invoker_trace.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="scheduler.cpp">
@@ -155,6 +152,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="native_serialize_adapter.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="tracer.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

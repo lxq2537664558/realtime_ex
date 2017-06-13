@@ -29,8 +29,12 @@ namespace core
 
 	void CCoreOtherNodeProxy::addNodeBaseInfo(const SNodeBaseInfo& sNodeBaseInfo)
 	{
-		if (this->m_mapNodeInfo.find(sNodeBaseInfo.nID) != this->m_mapNodeInfo.end())
+		auto iter = this->m_mapNodeInfo.find(sNodeBaseInfo.nID);
+		if (iter != this->m_mapNodeInfo.end())
+		{
+			iter->second.bMasterDelNode = false;
 			return;
+		}
 
 		DebugAst(this->m_mapNodeName.find(sNodeBaseInfo.szName) == this->m_mapNodeName.end());
 
@@ -38,6 +42,7 @@ namespace core
 		sNodeInfo.pCoreConnectionFromOtherNode = nullptr;
 		sNodeInfo.pCoreConnectionToOtherNode = nullptr;
 		sNodeInfo.sNodeBaseInfo = sNodeBaseInfo;
+		sNodeInfo.bMasterDelNode = false;
 		sNodeInfo.pTicker = std::make_unique<CTicker>();
 		sNodeInfo.pTicker->setCallback([&sNodeInfo](uint64_t nContext)
 		{
@@ -46,6 +51,12 @@ namespace core
 
 			if (sNodeInfo.sNodeBaseInfo.nPort == 0 || sNodeInfo.sNodeBaseInfo.szHost.empty())
 				return;
+
+			if (sNodeInfo.bMasterDelNode)
+			{
+				CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->delNodeBaseInfo(sNodeInfo.sNodeBaseInfo.nID, true);
+				return;
+			}
 
 			char szBuf[64] = { 0 };
 			base::crt::snprintf(szBuf, _countof(szBuf), "%d", sNodeInfo.sNodeBaseInfo.nID);
@@ -70,8 +81,11 @@ namespace core
 		std::string szName = sNodeInfo.sNodeBaseInfo.szName;
 		// 考虑网络只是暂时不可用的情况
 		if (!bForce && sNodeInfo.pCoreConnectionToOtherNode != nullptr || sNodeInfo.pCoreConnectionFromOtherNode != nullptr)
+		{
+			sNodeInfo.bMasterDelNode = true;
 			return;
-		
+		}
+
 		if (sNodeInfo.pCoreConnectionToOtherNode != nullptr)
 			sNodeInfo.pCoreConnectionToOtherNode->shutdown(false, "del node");
 		if (sNodeInfo.pCoreConnectionFromOtherNode != nullptr)

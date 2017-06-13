@@ -3,7 +3,7 @@
 #include "thread_base.h"
 #include "base_time.h"
 #include "base_function.h"
-#include "spin_mutex.h"
+#include "spin_lock.h"
 
 #include <string>
 #include <map>
@@ -20,23 +20,37 @@
 #define _LOG_BUF_SIZE		1024
 #define _LOG_FILE_NAME_SIZE 32
 
-static uint32_t formatLog(char* szBuf, uint32_t nBufSize, const char* szPrefix, const char* szFormat, va_list arg, uint8_t* nDay)
+static uint32_t formatLog(char* szBuf, uint32_t nBufSize, const char* szPrefix, bool bGmtTime, const char* szFormat, va_list arg, uint8_t* nDay)
 {
 	if (nullptr == szFormat || szBuf == nullptr || szPrefix == nullptr)
 		return 0;
 
-	int64_t nCurTime = base::getLocalTime();
-	base::STime sTime = base::getLocalTimeTM(nCurTime);
+	int64_t nCurTime = 0;
+	base::STime sTime;
+	if (bGmtTime)
+	{
+		nCurTime = base::getGmtTime();
+		sTime = base::getGmtTimeTM(nCurTime);
+	}
+	else
+	{
+		nCurTime = base::getLocalTime();
+		sTime = base::getLocalTimeTM(nCurTime);
+	}
+
 	char szTime[30] = { 0 };
-	base::crt::snprintf(szTime, _countof(szTime), "[%04d-%02d-%02d %02d:%02d:%02d.%03d]",
+	base::crt::snprintf(szTime, _countof(szTime), "%04d-%02d-%02d %02d:%02d:%02d.%03d",
 		sTime.nYear, sTime.nMon, sTime.nDay, sTime.nHour, sTime.nMin, sTime.nSec, nCurTime % 1000);
 
 	if (nDay != nullptr)
 		*nDay = (uint8_t)sTime.nDay;
 
-	size_t nLen = base::crt::snprintf(szBuf, nBufSize, "%s ", szTime);
+	size_t nLen = 0;
 	if (szPrefix[0] != 0)
-		nLen += base::crt::snprintf(szBuf + nLen, nBufSize, "[%s] ", szPrefix);
+		nLen = base::crt::snprintf(szBuf, nBufSize, "[%s\t] %s ", szPrefix, szTime);
+	else
+		nLen = base::crt::snprintf(szBuf, nBufSize, "%s ", szTime);
+	
 	nLen += base::crt::vsnprintf(szBuf + nLen, nBufSize - nLen, szFormat, arg);
 
 	if (nLen >= _LOG_BUF_SIZE - 1)
@@ -89,12 +103,13 @@ public:
 	CLogger();
 	virtual ~CLogger();
 
-	bool				init(bool bAsync, const char* szPath);
+	bool				init(bool bAsync, bool bGmtTime, const char* szPath);
 	void				uninit();
 	void				pushLog(SLogInfo* pLogInfo);
 	const char*			getPath() const;
-	void				enableDebugLog(bool bEnable);
-	bool				isEnableDebugLog() const;
+	void				debug(bool bEnable);
+	bool				isDebug() const;
+	bool				isGmtTime() const;
 
 private:
 	virtual bool		onInit() { return true; }
@@ -117,16 +132,18 @@ private:
 	std::map<std::string, SLogFileInfo*>	m_mapLogFileInfo;
 	int64_t									m_nLastFlushTime;
 	std::list<SLogInfo*>					m_listLogInfo;
-	base::spin_mutex						m_lock;
+	base::spin_lock							m_lock;
 	base::CThreadBase*						m_pThreadBase;
 	bool									m_bAsync;
-	bool									m_bEnableDebuglog;
+	bool									m_bGmtTime;
+	bool									m_bDebug;
 };
 
 CLogger::CLogger()
 	: m_pThreadBase(nullptr)
 	, m_bAsync(false)
-	, m_bEnableDebuglog(true)
+	, m_bGmtTime(false)
+	, m_bDebug(true)
 {
 	memset(this->m_szPath, 0, _countof(this->m_szPath));
 	this->m_nLastFlushTime = base::getGmtTime() / 1000;
@@ -150,7 +167,7 @@ CLogger::~CLogger()
 	this->m_mapLogFileInfo.clear();
 }
 
-bool CLogger::init(bool bAsync, const char* szPath)
+bool CLogger::init(bool bAsync, bool bGmtTime, const char* szPath)
 {
 	if (szPath == nullptr)
 		return false;
@@ -198,6 +215,7 @@ bool CLogger::init(bool bAsync, const char* szPath)
 		return false;
 
 	this->m_bAsync = bAsync;
+	this->m_bGmtTime = bGmtTime;
 
 	return true;
 }
@@ -218,14 +236,19 @@ const char* CLogger::getPath() const
 	return this->m_szPath;
 }
 
-void CLogger::enableDebugLog(bool bEnable)
+void CLogger::debug(bool bEnable)
 {
-	this->m_bEnableDebuglog = bEnable;
+	this->m_bDebug = bEnable;
 }
 
-bool CLogger::isEnableDebugLog() const
+bool CLogger::isDebug() const
 {
-	return this->m_bEnableDebuglog;
+	return this->m_bDebug;
+}
+
+bool CLogger::isGmtTime() const
+{
+	return this->m_bGmtTime;
 }
 
 void CLogger::pushLog(SLogInfo* pLogInfo)
@@ -252,8 +275,7 @@ bool CLogger::onProcess()
 	std::list<SLogInfo*> listLogInfo;
 	
 	this->m_lock.lock();
-	listLogInfo = this->m_listLogInfo;
-	this->m_listLogInfo.clear();
+	listLogInfo.splice(listLogInfo.end(), this->m_listLogInfo);
 	this->m_lock.unlock();
 
 	for (auto iter = listLogInfo.begin(); iter != listLogInfo.end(); ++iter)
@@ -357,10 +379,10 @@ FILE*		g_pError;
 
 namespace base
 {
-	bool initLog(bool bAsync, const char* szPath)
+	bool initLog(bool bAsync, bool bGmtTime, const char* szPath)
 	{
 		g_pLogger = new CLogger();
-		if (!g_pLogger->init(bAsync, szPath))
+		if (!g_pLogger->init(bAsync, bGmtTime, szPath))
 			return false;
 
 		std::string szFileName = formatLogName(g_pLogger->getPath(), "ERROR.log");
@@ -396,7 +418,7 @@ namespace base
 		char szBuf[4096] = { 0 };
 		va_list arg;
 		va_start(arg, szFormat);
-		uint32_t nSize = formatLog(szBuf, _countof(szBuf), szPrefix, szFormat, arg, &nDay);
+		uint32_t nSize = formatLog(szBuf, _countof(szBuf), szPrefix, g_pLogger->isGmtTime(), szFormat, arg, &nDay);
 		va_end(arg);
 		if (nSize == 0)
 			return;
@@ -420,7 +442,7 @@ namespace base
 		char szBuf[4096] = { 0 };
 		va_list arg;
 		va_start(arg, szFormat);
-		uint32_t nSize = formatLog(szBuf, _countof(szBuf), "", szFormat, arg, &nDay);
+		uint32_t nSize = formatLog(szBuf, _countof(szBuf), "", g_pLogger->isGmtTime(), szFormat, arg, &nDay);
 		va_end(arg);
 		if (nSize == 0)
 			return;
@@ -445,7 +467,7 @@ namespace base
 
 		va_list arg;
 		va_start(arg, szFormat);
-		nSize += formatLog(szBuf + nSize, _countof(szBuf) - nSize, "", szFormat, arg, nullptr);
+		nSize += formatLog(szBuf + nSize, _countof(szBuf) - nSize, "", g_pLogger->isGmtTime(), szFormat, arg, nullptr);
 		va_end(arg);
 
 		fwrite(szBuf, 1, nSize, g_pError);
@@ -464,19 +486,19 @@ namespace base
 		g_pLogger->pushLog(pLogInfo);
 	}
 
-	void enableDebugLog(bool bEnable)
+	void debugLog(bool bEnable)
 	{
 		if (g_pLogger == nullptr)
 			return;
 
-		g_pLogger->enableDebugLog(bEnable);
+		g_pLogger->debug(bEnable);
 	}
 
-	bool isEnableDebugLog()
+	bool isDebugLog()
 	{
 		if (g_pLogger == nullptr)
 			return false;
 
-		return g_pLogger->isEnableDebugLog();
+		return g_pLogger->isDebug();
 	}
 }

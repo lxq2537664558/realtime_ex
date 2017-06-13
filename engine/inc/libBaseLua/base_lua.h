@@ -605,6 +605,7 @@ namespace base
 		mp_t mp;
 	};
 
+	class CLuaFacade;
 	template<class RT, class ...Args>
 	int32_t __normal_invoke_proxy(lua_State* pL)
 	{

@@ -24,10 +24,7 @@ void fun1(uint64_t nContext)
 	}
 }
 
-void fun2(uint64_t nContext)
-{
-	PrintDebug("fun2");
-}
+void fun2(uint64_t nContext);
 
 struct SComp
 {
@@ -84,14 +81,12 @@ public:
 		delete this;
 	}
 	
-	virtual bool	onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize)
+	virtual void onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize)
 	{
 		const STestMsg* pTestMsg = reinterpret_cast<const STestMsg*>(pData);
 		const_cast<STestMsg*>(pTestMsg)->nServerTime = base::getGmtTime();
 		//PrintDebug("delta time: %d", (uint32_t)(pTestMsg->nServerTime - pTestMsg->nClientTime));
 		this->send(eMT_CLIENT, pData, nSize);
-
-		return true;
 	}
 };
 
@@ -119,13 +114,35 @@ class CTestApp :
 {
 public:
 	virtual bool onInit()
-	{	
+	{
+		{
+			base::STime sGmtTime = base::getGmtTimeTM();
+			char szGmtTime[30] = { 0 };
+			base::crt::snprintf(szGmtTime, _countof(szGmtTime), "%04d-%02d-%02d %02d:%02d:%02d",
+				sGmtTime.nYear, sGmtTime.nMon, sGmtTime.nDay, sGmtTime.nHour, sGmtTime.nMin, sGmtTime.nSec);
+			base::STime sLogicTime = base::getGmtTimeTM(g_pApp->getLogicTime());
+			char szLogicTime[30] = { 0 };
+			base::crt::snprintf(szLogicTime, _countof(szLogicTime), "%04d-%02d-%02d %02d:%02d:%02d",
+				sLogicTime.nYear, sLogicTime.nMon, sLogicTime.nDay, sLogicTime.nHour, sLogicTime.nMin, sLogicTime.nSec);
+			PrintDebug("onInit11111111111 %s %s", szGmtTime, szLogicTime);
+		}
+		Sleep(10000);
 		core::CTicker* pTicker = new core::CTicker();
 		pTicker->setCallback(std::bind(&fun2, std::placeholders::_1));
-
-		this->registerTicker(pTicker, 1000, 1000, 0);
+		{
+			base::STime sGmtTime = base::getGmtTimeTM();
+			char szGmtTime[30] = { 0 };
+			base::crt::snprintf(szGmtTime, _countof(szGmtTime), "%04d-%02d-%02d %02d:%02d:%02d",
+				sGmtTime.nYear, sGmtTime.nMon, sGmtTime.nDay, sGmtTime.nHour, sGmtTime.nMin, sGmtTime.nSec);
+			base::STime sLogicTime = base::getGmtTimeTM(g_pApp->getLogicTime());
+			char szLogicTime[30] = { 0 };
+			base::crt::snprintf(szLogicTime, _countof(szLogicTime), "%04d-%02d-%02d %02d:%02d:%02d",
+				sLogicTime.nYear, sLogicTime.nMon, sLogicTime.nDay, sLogicTime.nHour, sLogicTime.nMin, sLogicTime.nSec);
+			PrintDebug("onInit2222222222 %s %s", szGmtTime, szLogicTime);
+		}
+		this->registerTicker(pTicker, 20000, 0, 0);
 		this->getBaseConnectionMgr()->setBaseConnectionFactory(_TEST_CONNECTION, new CTestBaseConnectionFactory());
-		this->getBaseConnectionMgr()->listen("0.0.0.0", 8000, 1, "", 1024, 1024, default_client_message_parser);
+		this->getBaseConnectionMgr()->listen("0.0.0.0", 8000, 1, "", 1024, 1024);
 		return true;
 	}
 
@@ -135,8 +152,35 @@ public:
 	}
 };
 
+void fun2(uint64_t nContext)
+{
+	base::STime sGmtTime = base::getGmtTimeTM();
+	char szGmtTime[30] = { 0 };
+	base::crt::snprintf(szGmtTime, _countof(szGmtTime), "%04d-%02d-%02d %02d:%02d:%02d",
+		sGmtTime.nYear, sGmtTime.nMon, sGmtTime.nDay, sGmtTime.nHour, sGmtTime.nMin, sGmtTime.nSec);
+	base::STime sLogicTime = base::getGmtTimeTM(g_pApp->getLogicTime());
+	char szLogicTime[30] = { 0 };
+	base::crt::snprintf(szLogicTime, _countof(szLogicTime), "%04d-%02d-%02d %02d:%02d:%02d",
+		sLogicTime.nYear, sLogicTime.nMon, sLogicTime.nDay, sLogicTime.nHour, sLogicTime.nMin, sLogicTime.nSec);
+	PrintDebug("aaaaaaaaaafun2 %s %s", szGmtTime, szLogicTime);
+}
+
+std::string fun(int a)
+{
+	static char* s_szValue = "aaa";
+	string aa = "aa";
+	string bb = "bb";
+
+	if (a == 0)
+		return aa;
+	else
+		return bb;
+}
+
 int32_t main(int32_t argc, char* argv[])
 {
+	std::string szValue = fun(0);
+
 	g_pApp = new CTestApp();
 	g_pApp->run(argc, argv, "gate_config.xml");
 

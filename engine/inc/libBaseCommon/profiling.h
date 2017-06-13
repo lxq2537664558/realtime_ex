@@ -5,8 +5,8 @@
 
 namespace base
 {
-	__BASE_COMMON_API__ bool initProfiling(bool bProfiling);
-	__BASE_COMMON_API__ void enableProfiling(bool bProfiling);
+	__BASE_COMMON_API__ bool initProfiling(bool bEnableProfiling);
+	__BASE_COMMON_API__ void enableProfiling(bool bEnable);
 	__BASE_COMMON_API__ void uninitProfiling();
 	__BASE_COMMON_API__ void profilingBeginByLabel(const char* szLabel, uint32_t nContext);
 	__BASE_COMMON_API__ void profilingEndByLabel(const char* szLabel, uint32_t nContext);

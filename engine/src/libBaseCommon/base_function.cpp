@@ -23,7 +23,7 @@
 #include "debug_helper.h"
 #include "base_function.h"
 #include "base_time.h"
-#include "spin_mutex.h"
+#include "spin_lock.h"
 
 #ifdef _WIN32
 #pragma comment( lib, "psapi.lib" )

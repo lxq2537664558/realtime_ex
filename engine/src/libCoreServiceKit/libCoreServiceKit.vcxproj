@@ -160,7 +160,7 @@
     <ClInclude Include="scheduler.h" />
     <ClInclude Include="core_connection_from_other_node.h" />
     <ClInclude Include="core_connection_to_other_node.h" />
-    <ClInclude Include="invoker_trace.h" />
+    <ClInclude Include="tracer.h" />
     <ClInclude Include="service_base.h" />
     <ClInclude Include="core_connection_to_master.h" />
     <ClInclude Include="core_message_registry.h" />
@@ -181,7 +181,7 @@
     <ClCompile Include="core_connection_to_master.cpp" />
     <ClCompile Include="core_connection_to_other_node.cpp" />
     <ClCompile Include="core_service_app.cpp" />
-    <ClCompile Include="invoker_trace.cpp" />
+    <ClCompile Include="tracer.cpp" />
     <ClCompile Include="core_message_registry.cpp" />
     <ClCompile Include="message_dispatcher.cpp" />
     <ClCompile Include="protobuf_helper.cpp" />

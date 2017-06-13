@@ -21,7 +21,7 @@ namespace core
 	bool CCoreConnectionToMaster::init(const std::string& szContext)
 	{
 		return true;
-	}
+	}	
 
 	uint32_t CCoreConnectionToMaster::getType() const
 	{

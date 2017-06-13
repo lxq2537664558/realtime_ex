@@ -8,7 +8,7 @@
 
 #include <unordered_map>
 
-static bool g_bProfiling = true;
+static bool g_bEnableProfiling = true;
 
 class CProfilingMgr :
 	public base::noncopyable
@@ -50,7 +50,7 @@ CProfilingMgr::~CProfilingMgr()
 
 void CProfilingMgr::profilingBeginByLabel(const char* szLabel, uint32_t nContext)
 {
-	if (nullptr == szLabel || !g_bProfiling)
+	if (nullptr == szLabel || !g_bEnableProfiling)
 		return;
 
 	int64_t nBeginTime = base::getProcessPassTime();
@@ -91,7 +91,7 @@ void CProfilingMgr::profilingBeginByLabel(const char* szLabel, uint32_t nContext
 
 void CProfilingMgr::endProfilingByLabel(const char* szLabel, uint32_t nContext)
 {
-	if (nullptr == szLabel || !g_bProfiling)
+	if (nullptr == szLabel || !g_bEnableProfiling)
 		return;
 
 	int64_t nBeginTime = base::getProcessPassTime();
@@ -133,7 +133,7 @@ void CProfilingMgr::endProfilingByLabel(const char* szLabel, uint32_t nContext)
 
 void CProfilingMgr::profilingBeginByAddr(const void* pAddr)
 {
-	if (nullptr == pAddr || !g_bProfiling)
+	if (nullptr == pAddr || !g_bEnableProfiling)
 		return;
 
 	int64_t nBeginTime = base::getProcessPassTime();
@@ -159,7 +159,7 @@ void CProfilingMgr::profilingBeginByAddr(const void* pAddr)
 
 void CProfilingMgr::endProfilingByAddr(const void* pAddr)
 {
-	if (nullptr == pAddr || !g_bProfiling)
+	if (nullptr == pAddr || !g_bEnableProfiling)
 		return;
 
 	int64_t nBeginTime = base::getProcessPassTime();
@@ -190,7 +190,7 @@ void CProfilingMgr::endProfilingByAddr(const void* pAddr)
 
 void CProfilingMgr::profiling(int64_t nTotalTime)
 {
-	if (nTotalTime <= 0 || !g_bProfiling)
+	if (nTotalTime <= 0 || !g_bEnableProfiling)
 		return;
 
 	base::saveLogEx("Profiling", false, "thread_id: %d", base::CThreadBase::getCurrentID());
@@ -255,15 +255,15 @@ static CProfilingMgr* getProfilingMgr()
 
 namespace base
 {
-	bool initProfiling(bool bProfiling)
+	bool initProfiling(bool bEnableProfiling)
 	{
-		g_bProfiling = bProfiling;
+		g_bEnableProfiling = bEnableProfiling;
 		return true;
 	}
 
-	void enableProfiling(bool bProfiling)
+	void enableProfiling(bool bEnable)
 	{
-		g_bProfiling = bProfiling;
+		g_bEnableProfiling = bEnable;
 	}
 
 	void uninitProfiling()

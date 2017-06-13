@@ -29,7 +29,7 @@ namespace core
 
 		uint32_t			getType() const;
 
-		void				shutdown(bool bForce, const std::string& szMsg);
+		void				shutdown(base::ENetConnecterCloseType eType, const std::string& szMsg);
 
 		CBaseConnection*	getBaseConnection() const;
 
@@ -46,8 +46,10 @@ namespace core
 
 	private:
 		uint32_t			onRecv(const char* pData, uint32_t nDataSize);
+		virtual void		onSendComplete(uint32_t nSize);
 		void				onConnect();
 		void				onDisconnect();
+		virtual void		onConnectFail();
 
 		void				onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize);
 
@@ -55,7 +57,7 @@ namespace core
 
 	private:
 		bool					m_bHeartbeat;
-		CTicker*				m_pHeartbeat;
+		CTicker					m_heartbeat;
 		uint32_t				m_nSendHeartbeatCount;
 
 		uint64_t				m_nID;

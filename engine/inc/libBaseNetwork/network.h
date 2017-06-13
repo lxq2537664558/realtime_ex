@@ -1,6 +1,6 @@
 #pragma once
-
-#include "libBaseCommon/base_function.h"
+#include <stdint.h>
+#include <string.h>
 
 #ifdef _WIN32
 #ifndef INET_ADDRSTRLEN
@@ -8,6 +8,11 @@
 #endif
 #else
 #include <netinet/in.h>
+#endif
+
+#ifdef _WIN32
+#pragma warning(push)
+#pragma warning(disable:4996)
 #endif
 
 struct SNetAddr
@@ -18,13 +23,13 @@ struct SNetAddr
 	SNetAddr(const char* szIP, uint16_t nPort)
 		: nPort(nPort)
 	{
-		base::crt::strcpy(this->szHost, _countof(this->szHost), szIP);
+		strncpy(this->szHost, szIP, INET_ADDRSTRLEN);
 	}
 
 	SNetAddr()
 		: nPort(0)
 	{
-		base::crt::strcpy(this->szHost, _countof(this->szHost), "0.0.0.0");
+		strncpy(this->szHost, "0.0.0.0", INET_ADDRSTRLEN);
 	}
 
 	bool operator == (const SNetAddr& rhs) const
@@ -41,16 +46,37 @@ struct SNetAddr
 	}
 };
 
+#ifdef _WIN32
+#pragma warning(pop)
+#endif
+
 namespace base
 {
+
 #ifdef _WIN32
-#	ifdef __BUILD_BASE_NETWORK_DLL__
-#		define __BASE_NETWORK_API__ __declspec(dllexport)
-#	else
-#		define __BASE_NETWORK_API__ __declspec(dllimport)
-#	endif
+
+#ifdef __BUILD_NETWORK_AS_DLL__
+#ifdef __BUILD_NETWORK__
+#	define __NETWORK_API__ __declspec(dllexport)
 #else
-#	define __BASE_NETWORK_API__
+#	define __NETWORK_API__ __declspec(dllimport)
+#endif
+#else
+#ifdef __BUILD_NETWORK__
+#	define __NETWORK_API__
+#else
+#	define __NETWORK_API__ extern
+#endif
+#endif
+
+#else
+
+#ifdef __BUILD_NETWORK__
+#	define __NETWORK_API__
+#else
+#	define __NETWORK_API__ extern
+#endif
+
 #endif
 
 	enum ENetConnecterState
@@ -69,6 +95,13 @@ namespace base
 		eNCT_Passive,		// 被动连接
 
 		eNCT_Unknown
+	};
+
+	enum ENetConnecterCloseType
+	{
+		eNCCT_Grace,	// 只是关闭本端发送，并且会保证已经在发送缓存中的数据发送完关闭，对端关闭由对端控制，本端会一直等待对端关闭
+		eNCCT_Normal,	// 保证本端已经在发送缓存中的数据发送，然后关闭，即使没有收到对端关闭
+		eNCCT_Force,	// 强制关闭，不等待发送缓存中国的数据被发送。
 	};
 
 	class INetConnecter;
@@ -94,9 +127,17 @@ namespace base
 		*/
 		INetConnecter*		getNetConnecter() const { return this->m_pNetConnecter; }
 		/**
-		@brief: 数据到达回调
+		@brief: 发送数据，对于后端基于帧的服务器可以考虑cache的方式，对于网关服务器，上行包可以考虑cache，下行包直接发送比较好，并且网关服务器最好采用基于事件驱动的方式
+		*/
+		inline void			send(const void* pData, uint32_t nSize, bool bCache);
+		/**
+		@brief: 数据到达回调，这个pData必须在回调中消费掉，这个回调结束后pData的有效性不保证
 		*/
 		virtual uint32_t	onRecv(const char* pData, uint32_t nDataSize) = 0;
+		/**
+		@brief: 数据发送完成回调（仅仅是发送到了socket缓存中，并不代表发送到对端，更别说被对方应用层处理，所以要准确的反馈数据被对方接收的事情需要应用层取处理）
+		*/
+		virtual void		onSendComplete(uint32_t nSize) = 0;
 		/**
 		@brief: 连接完成回调
 		*/
@@ -105,6 +146,10 @@ namespace base
 		@brief: 连接断开回调
 		*/
 		virtual void		onDisconnect() = 0;
+		/**
+		@brief: 主动连接失败
+		*/
+		virtual void		onConnectFail() = 0;
 	};
 
 	class INetAccepter;
@@ -167,17 +212,13 @@ namespace base
 		virtual ~INetConnecter() { }
 
 		/**
-		@brief: 发送数据, 数据是拷贝到发送缓冲区的
+		@brief: 发送数据, 如果是缓存发送的模式，就直接把数据拷贝到网络层的缓存中，不然就是试着发送，发送不了才缓存
 		*/
-		virtual void				send(const void* pData, uint32_t nSize) = 0;
+		virtual bool				send(const void* pData, uint32_t nSize, bool bCache) = 0;
 		/**
-		@brief: 发送数据, 数据只整块内存挂载到发送缓冲区的，由网络层负责释放内存
+		@brief: 关闭连接
 		*/
-		virtual void				sendp(const void* pData, uint32_t nDataSize) = 0;
-		/**
-		@brief: 关闭连接，如果连接当前没有建立最好设置下setHandler( nullptr ) 不然还是会调用INetConnecterHandler的onDisconnect
-		*/
-		virtual void				shutdown(bool bForce, const char* szMsg) = 0;
+		virtual void				shutdown(ENetConnecterCloseType eType, const char* szFormat, ...) = 0;
 		/**
 		@brief: 设置连接处理器
 		*/
@@ -206,6 +247,10 @@ namespace base
 		@brief: 获取接收缓存区大小
 		*/
 		virtual	uint32_t			getRecvDataSize() const = 0;
+		/**
+		@brief: 设置是否启动tcp协议栈的nodelay算法
+		*/
+		virtual bool				setNoDelay(bool bEnable) = 0;
 	};
 
 	/**
@@ -243,8 +288,16 @@ namespace base
 		virtual void	release() = 0;
 	};
 
-	__BASE_NETWORK_API__ bool			startupNetwork();
-	__BASE_NETWORK_API__ void			cleanupNetwork();
+	void INetConnecterHandler::send(const void* pData, uint32_t nSize, bool bCache)
+	{
+		if (this->m_pNetConnecter == nullptr)
+			return;
+		
+		this->m_pNetConnecter->send(pData, nSize, bCache);
+	}
 
-	__BASE_NETWORK_API__ INetEventLoop*	createNetEventLoop();
+	__NETWORK_API__ bool			startupNetwork();
+	__NETWORK_API__ void			cleanupNetwork();
+
+	__NETWORK_API__ INetEventLoop*	createNetEventLoop();
 }

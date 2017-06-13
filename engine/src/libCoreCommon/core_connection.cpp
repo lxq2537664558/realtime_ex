@@ -32,7 +32,6 @@ namespace core
 
 	CCoreConnection::CCoreConnection()
 		: m_pBaseConnection(nullptr)
-		, m_pHeartbeat(nullptr)
 		, m_bHeartbeat(false)
 		, m_nSendHeartbeatCount(0)
 		, m_nID(0)
@@ -77,7 +76,7 @@ namespace core
 					{
 						char szBuf[256] = { 0 };
 						base::crt::snprintf(szBuf, _countof(szBuf), "parser message error %d", nParserSize);
-						this->shutdown(true, szBuf);
+						this->shutdown(base::eNCCT_Force, szBuf);
 						break;
 					}
 
@@ -95,7 +94,7 @@ namespace core
 					{
 						char szBuf[256] = { 0 };
 						base::crt::snprintf(szBuf, _countof(szBuf), "message size error message_type[%d]", pHeader->nMessageSize);
-						this->shutdown(true, szBuf);
+						this->shutdown(base::eNCCT_Force, szBuf);
 						break;
 					}
 
@@ -114,12 +113,20 @@ namespace core
 
 			} while (true);
 		}
-		catch (...)
+		catch (base::CBaseException& exp)
 		{
-			this->shutdown(true, "dispatch data error");
+			char szBuf[1024] = { 0 };
+			base::crt::snprintf(szBuf, _countof(szBuf), "dispatch data error %s", exp.getInfo());
+			this->shutdown(base::eNCCT_Force, szBuf);
 		}
+		// 这里不能catch ... 因为一旦这里捕获的如果逻辑代码中有存在不是异常安全的代码 轻则资源泄露，重则服务器没有在第一现场崩溃，等下跑了一段时间崩溃了
 
 		return nRecvSize;
+	}
+
+	void CCoreConnection::onSendComplete(uint32_t nSize)
+	{
+
 	}
 
 	void CCoreConnection::onConnect()
@@ -130,10 +137,9 @@ namespace core
 		this->m_pBaseConnection->onConnect();
 		CBaseApp::Inst()->getBaseConnectionMgr()->onDisconnect(this->m_pBaseConnection);
 
-		this->m_pHeartbeat = new CTicker();
-		this->m_pHeartbeat->setCallback(std::bind(&CCoreConnection::onHeartbeat, this, std::placeholders::_1));
+		this->m_heartbeat.setCallback(std::bind(&CCoreConnection::onHeartbeat, this, std::placeholders::_1));
 
-		CCoreApp::Inst()->registerTicker(this->m_pHeartbeat, CCoreApp::Inst()->getHeartbeatTime() * 1000, CCoreApp::Inst()->getHeartbeatTime() * 1000, 0);
+		CCoreApp::Inst()->registerTicker(&this->m_heartbeat, CCoreApp::Inst()->getHeartbeatTime() * 1000, CCoreApp::Inst()->getHeartbeatTime() * 1000, 0);
 	}
 
 	void CCoreConnection::onDisconnect()
@@ -144,12 +150,17 @@ namespace core
 
 		CBaseApp::Inst()->getBaseConnectionMgr()->onDisconnect(this->m_pBaseConnection);
 
-		SAFE_DELETE(this->m_pHeartbeat);
+		CCoreApp::Inst()->unregisterTicker(&this->m_heartbeat);
 
 		this->m_pNetConnecter = nullptr;
 
 		// 销毁对象
 		CCoreApp::Inst()->getCoreConnectionMgr()->destroyCoreConnection(this);
+	}
+
+	void CCoreConnection::onConnectFail()
+	{
+
 	}
 
 	uint64_t CCoreConnection::getID() const
@@ -181,7 +192,7 @@ namespace core
 		
 		if (this->m_nSendHeartbeatCount > CCoreApp::Inst()->getHeartbeatLimit())
 		{
-			this->shutdown(true, "heart beat time out");
+			this->shutdown(base::eNCCT_Force, "heart beat time out");
 			return;
 		}
 		
@@ -203,7 +214,7 @@ namespace core
 		{
 		case eMT_CLIENT:
 		case eMT_HEARTBEAT:
-			this->m_pNetConnecter->send(pData, nSize);
+			this->m_pNetConnecter->send(pData, nSize, true);
 			break;
 
 		case eMT_REQUEST:
@@ -215,8 +226,8 @@ namespace core
 				core_message_header header;
 				header.nMessageSize = sizeof(header) + nSize;
 				header.nMessageType = nMessageType;
-				this->m_pNetConnecter->send(&header, sizeof(header));
-				this->m_pNetConnecter->send(pData, nSize);
+				this->m_pNetConnecter->send(&header, sizeof(header), true);
+				this->m_pNetConnecter->send(pData, nSize, true);
 			}
 			break;
 		}
@@ -227,7 +238,7 @@ namespace core
 		PROFILING_GUARD(CCoreConnection::send)
 
 		DebugAst(this->m_pNetConnecter != nullptr);
-		DebugAst(pData != nullptr && nSize > 0 && pExtraBuf != nullptr && nExtraSize > 0);
+		DebugAst(pData != nullptr && pExtraBuf != nullptr && nSize + nExtraSize < UINT16_MAX);
 
 		this->m_monitor.onSend(nSize + nExtraSize);
 
@@ -236,8 +247,8 @@ namespace core
 		case eMT_CLIENT:
 		case eMT_HEARTBEAT:
 			{
-				this->m_pNetConnecter->send(pData, nSize);
-				this->m_pNetConnecter->send(pExtraBuf, nExtraSize);
+				this->m_pNetConnecter->send(pData, nSize, true);
+				this->m_pNetConnecter->send(pExtraBuf, nExtraSize, true);
 			}
 			break;
 
@@ -250,21 +261,21 @@ namespace core
 				core_message_header header;
 				header.nMessageSize = sizeof(header) + nSize + nExtraSize;
 				header.nMessageType = nMessageType;
-				this->m_pNetConnecter->send(&header, sizeof(header));
-				this->m_pNetConnecter->send(pData, nSize);
-				this->m_pNetConnecter->send(pExtraBuf, nExtraSize);
+				this->m_pNetConnecter->send(&header, sizeof(header), true);
+				this->m_pNetConnecter->send(pData, nSize, true);
+				this->m_pNetConnecter->send(pExtraBuf, nExtraSize, true);
 			}
 			break;
 		}
 	}
 
-	void CCoreConnection::shutdown(bool bForce, const std::string& szMsg)
+	void CCoreConnection::shutdown(base::ENetConnecterCloseType eType, const std::string& szMsg)
 	{
 		if (this->m_pNetConnecter)
 			return;
 
 		if (this->m_pNetConnecter != nullptr)
-			this->m_pNetConnecter->shutdown(bForce, szMsg.c_str());
+			this->m_pNetConnecter->shutdown(eType, szMsg.c_str());
 	}
 
 	uint32_t CCoreConnection::getSendDataSize() const

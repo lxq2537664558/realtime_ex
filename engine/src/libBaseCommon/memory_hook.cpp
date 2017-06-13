@@ -3,7 +3,7 @@
 #include "memory_hook.h"
 #include "link.h"
 #include "base_time.h"
-#include "spin_mutex.h"
+#include "spin_lock.h"
 
 #include <stdio.h>
 
@@ -48,7 +48,7 @@ namespace base
 		TLink<SMemoryHookInfoNode>	m_listMemoryHookInfo;
 		bool						m_bCheck;
 		bool						m_bDetail;
-		spin_mutex					m_lock;
+		spin_lock					m_lock;
 		int64_t						m_nMemorySize;
 	};
 

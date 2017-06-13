@@ -3,99 +3,125 @@
 #include "net_accepter.h"
 #include "net_connecter.h"
 
-#include "libBaseCommon/debug_helper.h"
+#include "libBaseCommon\logger.h"
 
 namespace base
 {
 	void CNetAccepter::onEvent(uint32_t nEvent)
 	{
-		if (nEvent&eNET_Error)
-			PrintNW("CNetAccepter eNET_Error");
-
-		if (eNET_Recv&nEvent)
+		if ((eNET_Recv&nEvent) == 0)
 		{
-			for (uint32_t i = 0; i < 10; ++i)
+			PrintInfo("event type error socket_id: %d error code[%d]", this->GetSocketID(), getLastError());
+			return;
+		}
+
+		for (uint32_t i = 0; i < 10; ++i)
+		{
+			int32_t nSocketID = (int32_t)::accept(this->GetSocketID(), nullptr, nullptr);
+
+			if (_Invalid_SocketID == nSocketID)
 			{
-				int32_t nSocketID = (int32_t)::accept(this->m_nSocketID, nullptr, nullptr);
-
-				if (_Invalid_SocketID == nSocketID)
-				{
-					if (getLastError() == NW_EINTR)
-						continue;
-
-					if (getLastError() != NW_EWOULDBLOCK
-						&& getLastError() != NW_ECONNABORTED
-						&& getLastError() != NW_EPROTO)
-					{
-						PrintWarning("NetAccepter::onEvent Error: %d", getLastError());
-					}
-					break;
-				}
-
-				if (this->m_pNetEventLoop->getSocketCount() >= this->m_pNetEventLoop->getMaxSocketCount())
-				{
-					PrintNW("out of max connection[%d]", this->m_pNetEventLoop->getMaxSocketCount());
-					closesocket(nSocketID);
-					break;
-				}
-
-				PrintNW("new connection accept listen addr: %s %d cur connection[%d]", this->getListenAddr().szHost, this->getListenAddr().nPort, this->m_pNetEventLoop->getSocketCount());
-
-				CNetConnecter* pNetConnecter = new CNetConnecter();
-				if (!pNetConnecter->init(this->m_nSendBufferSize, this->m_nRecvBufferSize, this->m_pNetEventLoop))
-				{
-					SAFE_DELETE(pNetConnecter);
-					closesocket(nSocketID);
+				if (getLastError() == NW_EINTR)
 					continue;
-				}
-				pNetConnecter->setSocketID(nSocketID);
-				pNetConnecter->setLocalAddr();
-				pNetConnecter->setRemoteAddr();
-				pNetConnecter->setConnecterType(eNCT_Passive);
-				pNetConnecter->setConnecterState(eNCS_Connecting);
-				if (!pNetConnecter->nonBlock())
+#ifndef _WIN32
+				if (getLastError() == NW_EMFILE)
 				{
-					pNetConnecter->shutdown(true, "set non block error");
-					continue;
+					// 这么做主要是为了解决在fd数量不足时，有丢弃这个新的连接机会
+					::close(this->m_nIdleID);
+					nSocketID = (int32_t)::accept(this->GetSocketID(), nullptr, nullptr);
+					::close(nSocketID);
+					nSocketID = _Invalid_SocketID;
+					this->m_nIdleID = ::open("/dev/null", O_RDONLY | O_CLOEXEC);
 				}
-				INetConnecterHandler* pHandler = this->m_pHandler->onAccept(pNetConnecter);
-				if (nullptr == pHandler)
+#endif
+				if (getLastError() != NW_EWOULDBLOCK
+					&& getLastError() != NW_ECONNABORTED
+					&& getLastError() != NW_EPROTO)
 				{
-					pNetConnecter->shutdown(true, "create hander error");
-					continue;
+					PrintWarning("CNetAccepter::onEvent Error: %d", getLastError());
 				}
-				if (!this->m_pNetEventLoop->addSocket(pNetConnecter))
-				{
-					pNetConnecter->shutdown(true, "add socket error");
-					continue;
-				}
-				pNetConnecter->setHandler(pHandler);
-
-				// 模拟底层发一个可写事件
-				pNetConnecter->onEvent(eNET_Send);
+				break;
 			}
+
+			if (this->m_pNetEventLoop->getSocketCount() >= this->m_pNetEventLoop->getMaxSocketCount())
+			{
+				PrintWarning("out of max connection[%d]", this->m_pNetEventLoop->getMaxSocketCount());
+				::closesocket(nSocketID);
+				break;
+			}
+
+			PrintInfo("new connection accept listen addr: %s %d cur connection[%d]", this->getListenAddr().szHost, this->getListenAddr().nPort, this->m_pNetEventLoop->getSocketCount());
+
+			CNetConnecter* pNetConnecter = new CNetConnecter();
+			if (!pNetConnecter->init(this->getSendBufferSize(), this->getRecvBufferSize(), this->m_pNetEventLoop))
+			{
+				delete pNetConnecter;
+				::closesocket(nSocketID);
+				continue;
+			}
+			pNetConnecter->setSocketID(nSocketID);
+			pNetConnecter->setLocalAddr();
+			pNetConnecter->setRemoteAddr();
+			pNetConnecter->setConnecterType(eNCT_Passive);
+			pNetConnecter->setConnecterState(eNCS_Connecting);
+			if (!pNetConnecter->nonblock())
+			{
+				delete pNetConnecter;
+				::closesocket(nSocketID);
+				continue;
+			}
+			INetConnecterHandler* pHandler = this->m_pHandler->onAccept(pNetConnecter);
+			if (nullptr == pHandler)
+			{
+				delete pNetConnecter;
+				::closesocket(nSocketID);
+				continue;
+			}
+			if (!this->m_pNetEventLoop->addSocket(pNetConnecter))
+			{
+				delete pNetConnecter;
+				delete pHandler;
+				::closesocket(nSocketID);
+				continue;
+			}
+			pNetConnecter->setHandler(pHandler);
 		}
 	}
 
-	void CNetAccepter::forceClose()
+	void CNetAccepter::release()
 	{
-		CNetSocket::forceClose();
+		CNetSocket::release();
 		delete this;
 	}
 
 	bool CNetAccepter::init(uint32_t nSendBufferSize, uint32_t nRecvBufferSize, CNetEventLoop* pNetEventLoop)
 	{
-		return CNetSocket::init(nSendBufferSize, nRecvBufferSize, pNetEventLoop);
+		if (!CNetSocket::init(nSendBufferSize, nRecvBufferSize, pNetEventLoop))
+			return false;
+
+#ifndef _WIN32
+		this->m_nIdleID = ::open("/dev/null", O_RDONLY | O_CLOEXEC);
+		if (this->m_nIdleID == 0)
+			return false;
+#endif
+
+		return true;
 	}
 
 	CNetAccepter::CNetAccepter()
 		: m_pHandler(nullptr)
+#ifndef _WIN32
+		, m_nIdleID(0)
+#endif
 	{
 	}
 
 	CNetAccepter::~CNetAccepter()
 	{
-		DebugAst(this->m_nSocketID == _Invalid_SocketID);
+		DebugAst(this->GetSocketID() == _Invalid_SocketID);
+#ifndef _WIN32
+		::close(this->m_nIdleID);
+#endif
 	}
 
 	bool CNetAccepter::listen(const SNetAddr& netAddr)
@@ -105,19 +131,21 @@ namespace base
 		
 		if (!this->reuseAddr())
 		{
-			this->forceClose();
+			::closesocket(this->GetSocketID());
 			return false;
 		}
-
-		if (!this->nonBlock())
+		
+		this->reusePort();
+		
+		if (!this->nonblock())
 		{
-			this->forceClose();
+			::closesocket(this->GetSocketID());
 			return false;
 		}
 		// 监听到的连接会继承缓冲区大小
 		if (!this->setBufferSize())
 		{
-			this->forceClose();
+			::closesocket(this->GetSocketID());
 			return false;
 		}
 
@@ -128,20 +156,20 @@ namespace base
 		listenAddr.sin_port = htons(this->m_sLocalAddr.nPort);
 		listenAddr.sin_addr.s_addr = this->m_sLocalAddr.isAnyIP() ? htonl(INADDR_ANY) : inet_addr(this->m_sLocalAddr.szHost);
 		memset(listenAddr.sin_zero, 0, sizeof(listenAddr.sin_zero));
-		if (0 != ::bind(this->m_nSocketID, (sockaddr*)&listenAddr, sizeof(listenAddr)))
+		if (0 != ::bind(this->GetSocketID(), (sockaddr*)&listenAddr, sizeof(listenAddr)))
 		{
 			PrintWarning("bind socket to %s %d error %d", this->m_sLocalAddr.szHost, this->m_sLocalAddr.nPort, getLastError());
-			this->forceClose();
+			::closesocket(this->GetSocketID());
 			return false;
 		}
 
-		if (0 != ::listen(this->m_nSocketID, SOMAXCONN))
+		if (0 != ::listen(this->GetSocketID(), SOMAXCONN))
 		{
 			PrintWarning("listen socket to %s %d error %d", this->m_sLocalAddr.szHost, this->m_sLocalAddr.nPort, getLastError());
-			this->forceClose();
+			::closesocket(this->GetSocketID());
 			return false;
 		}
-		PrintNW("start listen %s %d socket_id: %d ", this->m_sLocalAddr.szHost, this->m_sLocalAddr.nPort, this->GetSocketID());
+		PrintInfo("start listen %s %d socket_id: %d ", this->m_sLocalAddr.szHost, this->m_sLocalAddr.nPort, this->GetSocketID());
 
 		this->m_pNetEventLoop->addSocket(this);
 
@@ -163,6 +191,6 @@ namespace base
 
 	void CNetAccepter::shutdown()
 	{
-		this->close(false);
+		this->close(true, false);
 	}
 }

@@ -2,84 +2,82 @@
 #include "net_connecter.h"
 #include "net_event_loop.h"
 
-#include "libBaseCommon/debug_helper.h"
-#include "libBaseCommon/profiling.h"
+#include "libBaseCommon\logger.h"
 
 namespace base
 {
-	void CNetConnecter::printInfo(const char* szMsg)
+	void CNetConnecter::printInfo(const char* szFormat, ...)
 	{
-		if (nullptr == szMsg)
+		if (nullptr == szFormat)
 			return;
 
-		PrintNW("%s connect state: %d close type：%d local addr: %s %d remote addr: %s %d socket_id: %d error code[%d] send_index: %d send_count: %d", szMsg, this->m_eConnecterState, this->m_nCloseType, this->getLocalAddr().szHost, this->getLocalAddr().nPort, this->getRemoteAddr().szHost, this->getRemoteAddr().nPort, this->GetSocketID(), getLastError(), this->m_nSendConnecterIndex, this->m_pNetEventLoop->getSendConnecterCount());
+		char szBuf[1024] = { 0 };
+		va_list arg;
+		va_start(arg, szFormat);
+		vsnprintf(szBuf, _countof(szBuf), szFormat, arg);
+		va_end(arg);
+
+		PrintInfo("%s connect state: %d flag：%d local addr: %s %d remote addr: %s %d socket_id: %d error code[%d] send_index: %d send_count: %d", szBuf, this->m_eConnecterState, this->m_nFlag, this->getLocalAddr().szHost, this->getLocalAddr().nPort, this->getRemoteAddr().szHost, this->getRemoteAddr().nPort, this->GetSocketID(), getLastError(), this->m_nSendConnecterIndex, this->m_pNetEventLoop->getSendConnecterCount());
 	}
 
 	void CNetConnecter::onEvent(uint32_t nEvent)
 	{
-		if (nEvent&eNET_Error)
+		switch (this->m_eConnecterState)
 		{
-#ifdef _WIN32
-			if (getLastError() != NW_EWOULDBLOCK && getLastError() != 0)
-#else
-			if (getLastError() != NW_EINPROGRESS && getLastError() != NW_EAGAIN && getLastError() != NW_EWOULDBLOCK)
-#endif
+		case eNCS_Connecting:
+			if (nEvent&(eNET_Send|eNET_Error))
 			{
-				this->shutdown(true, "socket eNET_Error");
+				this->onConnect();
+			}
+			break;
+
+		case eNCS_Connected:
+		case eNCS_Disconnecting:
+			if (nEvent&eNET_Error)
+			{
+				// 这里可以大胆的强制关闭连接
+				this->shutdown(eNCCT_Force, "socket eNET_Error");
 				return;
 			}
 
-			int32_t err;
-			socklen_t len = sizeof(err);
-#ifdef _WIN32
-			int32_t code = getsockopt(this->GetSocketID(), SOL_SOCKET, SO_ERROR, reinterpret_cast<char*>(&err), (socklen_t*)&len);
-#else
-			int32_t code = getsockopt(this->GetSocketID(), SOL_SOCKET, SO_ERROR, reinterpret_cast<void*>(&err), (socklen_t*)&len);
-#endif
-			if (code < 0 || err != 0)
-			{
-				this->shutdown(true, "eNET_Error and SO_ERROR");
-				return;
-			}
-		}
-		if (eNCS_Connecting == this->m_eConnecterState)
-		{
-			if (eNET_Send&nEvent)
-				this->onConnect();
-		}
-		else if (eNCS_Connected == this->m_eConnecterState
-			|| eNCS_Disconnecting == this->m_eConnecterState)
-		{
 			if (nEvent&eNET_Recv)
 			{
-				if (this->m_nCloseType == eCT_None || (this->m_nCloseType&eCT_Recv) == 0)
+				if ((this->m_nFlag&eNCF_CloseRecv) == 0)
 					this->onRecv();
 				else
 					this->printInfo("socket is close recv data");
 			}
 
 			if (nEvent&eNET_Send)
-				this->eventSend();
-		}
-		else
-		{
-			char szMsg[256] = { 0 };
-			base::crt::snprintf(szMsg, _countof(szMsg), "state error，event：%d", nEvent);
-			this->printInfo(szMsg);
+			{
+				this->onSend();
+			}
+			break;
+
+		default:
+			this->printInfo("state error，event：%d", nEvent);
 		}
 	}
 
-	void CNetConnecter::forceClose()
+	void CNetConnecter::release()
 	{
 		this->m_eConnecterState = eNCS_Disconnected;
 		if (this->m_pHandler != nullptr)
 		{
-			PrintNW("disconnect local addr: %s %d remote addr: %s %d socket_id: %d send_index: %d send_count: %d", this->getLocalAddr().szHost, this->getLocalAddr().nPort, this->getRemoteAddr().szHost, this->getRemoteAddr().nPort, this->GetSocketID(), this->m_nSendConnecterIndex, this->m_pNetEventLoop->getSendConnecterCount());
-			this->m_pHandler->onDisconnect();
+			if ((this->m_nFlag&eNCF_ConnectFail) == 0) 
+			{
+				PrintInfo("disconnect local addr: %s %d remote addr: %s %d socket_id: %d send_index: %d send_count: %d", this->getLocalAddr().szHost, this->getLocalAddr().nPort, this->getRemoteAddr().szHost, this->getRemoteAddr().nPort, this->GetSocketID(), this->m_nSendConnecterIndex, this->m_pNetEventLoop->getSendConnecterCount());
+				this->m_pHandler->onDisconnect();
+			}
+			else
+			{
+				PrintInfo("connect fail local addr: %s %d remote addr: %s %d socket_id: %d send_index: %d send_count: %d", this->getLocalAddr().szHost, this->getLocalAddr().nPort, this->getRemoteAddr().szHost, this->getRemoteAddr().nPort, this->GetSocketID(), this->m_nSendConnecterIndex, this->m_pNetEventLoop->getSendConnecterCount());
+				this->m_pHandler->onConnectFail();
+			}
 			this->m_pHandler = nullptr;
 		}
 		this->m_pNetEventLoop->delSendConnecter(this);
-		CNetSocket::forceClose();
+		CNetSocket::release();
 
 		delete this;
 	}
@@ -102,75 +100,76 @@ namespace base
 
 	void CNetConnecter::onConnect()
 	{
-		if (eNCS_Connecting == this->m_eConnecterState)
+		if (eNCS_Connecting != this->m_eConnecterState)
 		{
-			/*
-			如果只可写，说明连接成功，可以进行下面的操作。
-			如果描述符既可读又可写，分为两种情况，
-			第一种情况是socket连接出现错误（不要问为什么，这是系统规定的，可读可写时候有可能是connect连接成功后远程主机断开了连接close(socket)），
-			第二种情况是connect连接成功，socket读缓冲区得到了远程主机发送的数据。需要通过connect连接后返回给errno的值来进行判定，或者通过调用 getsockopt(sockfd,SOL_SOCKET,SO_ERROR,&error,&len); 函数返回值来判断是否发生错误
-			*/
-			if (this->m_eConnecterType == eNCT_Initiative)
+			this->printInfo("connection state error");
+			return;
+		}
+		
+		this->m_nFlag &= ~eNCF_DisableWrite;
+		/*
+		如果只可写，说明连接成功，可以进行下面的操作。
+		如果描述符既可读又可写，分为两种情况，
+		第一种情况是socket连接出现错误（不要问为什么，这是系统规定的，可读可写时候有可能是connect连接成功后远程主机断开了连接close(socket)），
+		第二种情况是connect连接成功，socket读缓冲区得到了远程主机发送的数据。需要通过connect连接后返回给errno的值来进行判定，或者通过调用 getsockopt(sockfd,SOL_SOCKET,SO_ERROR,&error,&len); 函数返回值来判断是否发生错误
+		*/
+		if (this->m_eConnecterType == eNCT_Initiative)
+		{
+			int32_t err;
+			socklen_t len = sizeof(err);
+			if (getsockopt(this->GetSocketID(), SOL_SOCKET, SO_ERROR, reinterpret_cast<char*>(&err), (socklen_t*)&len) < 0)
 			{
-				int32_t err;
-				socklen_t len = sizeof(err);
-#ifdef _WIN32
-				int32_t code = getsockopt(this->GetSocketID(), SOL_SOCKET, SO_ERROR, reinterpret_cast<char*>(&err), (socklen_t*)&len);
-#else
-				int32_t code = getsockopt(this->GetSocketID(), SOL_SOCKET, SO_ERROR, reinterpret_cast<void*>(&err), (socklen_t*)&len);
-#endif
-				if (code < 0 || err != 0)
-				{
-					this->shutdown(true, "SO_ERROR");
-					return;
-				}
-			}
-			this->m_eConnecterState = eNCS_Connected;
-			this->setLocalAddr();
-			// 防止自己连自己的情况出现
-			if (this->getRemoteAddr() == this->getLocalAddr())
-			{
-				this->shutdown(true, "connect owner");
+				this->m_nFlag |= eNCF_ConnectFail;
+				this->shutdown(eNCCT_Force, "SO_ERROR getsockopt error %d", getLastError());
 				return;
 			}
-			PrintNW("connect local addr: %s %d remote addr: %s %d socket_id: %d", this->getLocalAddr().szHost, this->getLocalAddr().nPort, this->getRemoteAddr().szHost, this->getRemoteAddr().nPort, this->GetSocketID());
-			// 开始时为了获得连接成功的消息而监听的写事件，现在把他注销掉
-			this->disableSend();
-			if (nullptr != this->m_pHandler)
-				this->m_pHandler->onConnect();
+			if (err != 0)
+			{
+				this->m_nFlag |= eNCF_ConnectFail;
+				this->shutdown(eNCCT_Force, "SO_ERROR error %d", err);
+				return;
+			}
 		}
-		else
-			this->shutdown(true, "connection state error");
+		this->setLocalAddr();
+		// 防止自己连自己的情况出现
+		if (this->getRemoteAddr() == this->getLocalAddr())
+		{
+			this->m_nFlag |= eNCF_ConnectFail;
+			this->shutdown(eNCCT_Force, "connect owner");
+			return;
+		}
+		this->m_eConnecterState = eNCS_Connected;
+		PrintInfo("connect local addr: %s %d remote addr: %s %d socket_id: %d", this->getLocalAddr().szHost, this->getLocalAddr().nPort, this->getRemoteAddr().szHost, this->getRemoteAddr().nPort, this->GetSocketID());
+
+		if (nullptr != this->m_pHandler)
+			this->m_pHandler->onConnect();
 	}
 
 	void CNetConnecter::onRecv()
 	{
-		PROFILING_GUARD(CNetConnecter::onRecv)
 		while (true)
 		{
-			uint32_t nBufSize = this->m_pRecvBuffer->getFreeSize();
+			uint32_t nBufSize = this->m_pRecvBuffer->getWritableSize();
 			if (0 == nBufSize)
 			{
 				this->m_pRecvBuffer->resize(this->m_pRecvBuffer->getBufferSize() * 2);
-				nBufSize = this->m_pRecvBuffer->getFreeSize();
-				PrintNW("not have enought recv buffer append size to: %d", this->m_pRecvBuffer->getBufferSize());
+				nBufSize = this->m_pRecvBuffer->getWritableSize();
+				PrintInfo("not have enought recv buffer append size to: %d", this->m_pRecvBuffer->getBufferSize());
 			}
-			char* pBuf = this->m_pRecvBuffer->getFreeBuffer();
+			char* pBuf = this->m_pRecvBuffer->getWritableBuffer();
 #ifdef _WIN32
-			int32_t nRet = ::recv(this->m_nSocketID, pBuf, (int32_t)nBufSize, MSG_NOSIGNAL);
+			int32_t nRet = ::recv(this->GetSocketID(), pBuf, (int32_t)nBufSize, MSG_NOSIGNAL);
 #else
-			int32_t nRet = ::read(this->m_nSocketID, pBuf, nBufSize);
+			int32_t nRet = ::read(this->GetSocketID(), pBuf, nBufSize);
 #endif
 			// 对端已经关闭
 			if (0 == nRet)
 			{
 				this->printInfo("remote connection is close");
-				this->m_nCloseType |= eCT_Recv;
-				// 为了防止出现连接一边关闭了，但是尚有数据未发送完，一直触发可读事件
-				this->disableRecv();
-				if (this->m_eConnecterState == eNCS_Connected)
-					this->shutdown(false, "remote connection is close");
-				
+				this->m_nFlag |= eNCF_CloseRecv;
+				this->m_eConnecterState = eNCS_Disconnecting;
+				this->close((this->m_nFlag&eNCF_CloseSend) != 0, false);
+
 				break;
 			}
 			else if (nRet < 0)
@@ -181,90 +180,83 @@ namespace base
 				if (getLastError() == NW_EINTR)
 					continue;
 
-				this->shutdown(true, "recv data error");
+				this->shutdown(eNCCT_Force, "recv data error");
 				break;
 			}
 			this->m_pRecvBuffer->push(nRet);
 			if (nullptr != this->m_pHandler)
-				this->m_pRecvBuffer->pop(this->m_pHandler->onRecv(this->m_pRecvBuffer->getDataBuffer(), this->m_pRecvBuffer->getDataSize()));
-
-			// epoll水平触发模式下，即使此时恰好对端关闭了，等下还是会触发recv事件的，不会导致关闭事件丢失
-			if (nRet != (int32_t)nBufSize)
-				break;
+			{
+				uint32_t nSize = this->m_pHandler->onRecv(this->m_pRecvBuffer->getReadableBuffer(), this->m_pRecvBuffer->getReadableSize());
+				this->m_pRecvBuffer->pop(nSize);
+			}
 		}
 	}
 
 	void CNetConnecter::onSend()
 	{
-		PROFILING_GUARD(CNetConnecter::onSend)
+		uint32_t nTotalDataSize = this->m_pSendBuffer->getTotalReadableSize();
 		while (true)
 		{
-			uint32_t nBufSize = 0;
-			char* pData = this->m_pSendBuffer->getDataBuffer(nBufSize);
-			if (0 == nBufSize)
+			uint32_t nDataSize = this->m_pSendBuffer->getTailDataSize();
+			char* pData = this->m_pSendBuffer->getTailData();
+			if (0 == nDataSize)
 				break;
+
+			this->m_nFlag &= ~eNCF_DisableWrite;
 #ifdef _WIN32
-			int32_t nRet = ::send(this->m_nSocketID, pData, (int32_t)nBufSize, MSG_NOSIGNAL);
+			int32_t nRet = ::send(this->GetSocketID(), pData, (int32_t)nDataSize, MSG_NOSIGNAL);
 #else
-			int32_t nRet = ::write(this->m_nSocketID, pData, nBufSize);
+			int32_t nRet = ::write(this->GetSocketID(), pData, nDataSize);
 #endif
 			if (SOCKET_ERROR == nRet)
 			{
 				if (getLastError() == NW_EAGAIN || getLastError() == NW_EWOULDBLOCK)
+				{
+					this->m_nFlag |= eNCF_DisableWrite;
 					break;
-
+				}
 				if (getLastError() == NW_EINTR)
 					continue;
 
-				this->shutdown(true, "send data error");
+				this->shutdown(eNCCT_Force, "send data error");
 				break;
 			}
 			this->m_pSendBuffer->pop(nRet);
-			if (nRet != (int32_t)nBufSize)
+
+			if (nRet != (int32_t)nDataSize)
 				break;
 		}
-		uint32_t nBufSize = 0;
-		this->m_pSendBuffer->getDataBuffer(nBufSize);
-		if (0 == nBufSize)
-		{
-			if (eNCS_Disconnecting == this->m_eConnecterState)
-				this->close();
-		}
+
+		if (nTotalDataSize != 0 && this->m_pSendBuffer->getTailDataSize() == 0 && this->m_pHandler != nullptr)
+			this->m_pHandler->onSendComplete(nTotalDataSize);
+		
+		if (this->m_nFlag&eNCF_CloseSend && this->m_pSendBuffer->getTailDataSize() == 0)
+			this->close((this->m_nFlag&(eNCF_CloseRecv|eNCCT_Force)) != 0, true);
 	}
 
-	// 主动调用的
-	void CNetConnecter::activeSend()
+	void CNetConnecter::flushSend()
 	{
 		this->onSend();
-		// 必须要加上正在断开的情况，不然有可能有些链接正在断开，但是这个时候发送缓存区中的数据比较大一次发送不完，那么留下的数据可能再也发送不了了，这个情况发送在服务器主动踢人的情况，很有可能这个时候后面的几个消息到达不了客户端了
-		if ((this->m_eConnecterState == eNCS_Connected || this->m_eConnecterState == eNCS_Disconnecting) && !this->m_pSendBuffer->isEmpty())
-			this->enableSend();
-	}
-
-	// 由模型驱动的
-	void CNetConnecter::eventSend()
-	{
-		this->onSend();
-		if ((this->m_eConnecterState == eNCS_Connected || this->m_eConnecterState == eNCS_Disconnecting) && this->m_pSendBuffer->isEmpty())
-			this->disableSend();
 	}
 
 	CNetConnecter::CNetConnecter()
 		: m_eConnecterType(eNCT_Unknown)
 		, m_eConnecterState(eNCS_Disconnected)
-		, m_nCloseType(eCT_None)
-		, m_pHandler(nullptr)
 		, m_nSendConnecterIndex(_Invalid_SendConnecterIndex)
+		, m_nFlag(0)
+		, m_pHandler(nullptr)
 		, m_pRecvBuffer(nullptr)
 		, m_pSendBuffer(nullptr)
 	{
+		this->m_nFlag |= eNCF_DisableWrite;
 	}
 
 	CNetConnecter::~CNetConnecter()
 	{
+		delete this->m_pSendBuffer;
+		delete this->m_pRecvBuffer;
+
 		DebugAst(this->getConnecterState() == eNCS_Disconnected);
-		SAFE_DELETE(this->m_pSendBuffer);
-		SAFE_DELETE(this->m_pRecvBuffer);
 	}
 
 	int32_t CNetConnecter::getSendConnecterIndex() const
@@ -282,12 +274,16 @@ namespace base
 		if (!this->open())
 			return false;
 
-		if (!this->nonBlock())
+		if (!this->nonblock())
+		{
+			::closesocket(this->GetSocketID());
 			return false;
-		
+		}
 		if (!this->setBufferSize())
+		{
+			::closesocket(this->GetSocketID());
 			return false;
-
+		}
 		this->m_sRemoteAddr = sNetAddr;
 
 		struct sockaddr_in romateAddr;
@@ -296,30 +292,31 @@ namespace base
 		romateAddr.sin_port = htons(this->m_sRemoteAddr.nPort);
 		romateAddr.sin_addr.s_addr = inet_addr(this->m_sRemoteAddr.szHost);
 		memset(romateAddr.sin_zero, 0, sizeof(romateAddr.sin_zero));
-		int32_t nRet = 0;
-		do
-		{
-			nRet = ::connect(this->m_nSocketID, (sockaddr*)&romateAddr, sizeof(romateAddr));
-		} while (nRet != 0 && getLastError() == NW_EINTR);
+
+		// connect在信号中断的时候不重启
+		int32_t nRet = ::connect(this->GetSocketID(), (sockaddr*)&romateAddr, sizeof(romateAddr));
 
 		if (0 != nRet)
 		{
-#ifdef _WIN32
-			if (getLastError() == NW_EWOULDBLOCK)
-#else
-			if (getLastError() == NW_EINPROGRESS)
-#endif
+			switch (getLastError())
 			{
+#ifdef _WIN32
+			case NW_EWOULDBLOCK:
+#else
+			case NW_EINPROGRESS:
+#endif
+			case NW_EINTR:
+			case NW_EISCONN:
 				// 这个由事件循环回调可写事件通知连接建立
 				this->m_eConnecterType = eNCT_Initiative;
 				this->m_eConnecterState = eNCS_Connecting;
 
 				this->m_pNetEventLoop->addSocket(this);
-				this->enableSend();
-			}
-			else
-			{
-				this->shutdown(true, "connect socket error");
+				break;
+
+			default:
+				PrintInfo("connect error socket_id: %d remote addr: %s %d err: %d", this->GetSocketID(), this->m_sRemoteAddr.szHost, this->m_sRemoteAddr.nPort, getLastError());
+				::closesocket(this->GetSocketID());
 				return false;
 			}
 		}
@@ -334,27 +331,70 @@ namespace base
 		return true;
 	}
 
-	void CNetConnecter::send(const void* pData, uint32_t nDataSize)
+	bool CNetConnecter::send(const void* pData, uint32_t nDataSize, bool bCache)
 	{
 		if (eNCS_Connecting == this->m_eConnecterState
-		|| eNCS_Disconnected == this->m_eConnecterState
-		|| (eNCS_Disconnecting == this->m_eConnecterState && (eCT_Send&this->m_nCloseType) != 0))
-			return;
+			|| eNCS_Disconnected == this->m_eConnecterState
+			|| (eNCS_Disconnecting == this->m_eConnecterState && (this->m_nFlag&eNCF_CloseSend) != 0))
+			return false;
 
-		PROFILING_GUARD(CNetConnecter::send)
+		if (!bCache)
+		{
+			if (this->m_pSendBuffer->getTailDataSize() == 0)
+			{
+				int32_t nRet = 0;
+				do
+				{
+#ifdef _WIN32
+					nRet = ::send(this->GetSocketID(), reinterpret_cast<const char*>(pData), (int32_t)nDataSize, MSG_NOSIGNAL);
+#else
+					nRet = ::write(this->GetSocketID(), pData, (int32_t)nDataSize);
+#endif
+				} while (nRet == SOCKET_ERROR && getLastError() == NW_EINTR);
 
-		this->m_pSendBuffer->push(reinterpret_cast<const char*>(pData), nDataSize);
-		uint32_t nSendDataSize = this->m_pSendBuffer->getDataSize();
+				if (SOCKET_ERROR == nRet)
+				{
+					if (getLastError() != NW_EAGAIN && getLastError() != NW_EWOULDBLOCK)
+					{
+						this->shutdown(eNCCT_Force, "send data error");
+						return false;
+					}
 
-		if (nSendDataSize >= this->m_nSendBufferSize)
-			this->onEvent(eNET_Send);
+					this->m_nFlag |= eNCF_DisableWrite;
+					nRet = 0;
+				}
+
+				DebugAstEx(nRet <= (int32_t)nDataSize, false);
+
+				if (nRet != (int32_t)nDataSize)
+					this->m_pSendBuffer->push(reinterpret_cast<const char*>(pData)+nRet, nDataSize - nRet);
+				else if (this->m_pHandler != nullptr)
+					this->m_pHandler->onSendComplete(nDataSize);
+			}
+			else
+			{
+				this->m_pSendBuffer->push(reinterpret_cast<const char*>(pData), nDataSize);
+				// 如果没有做小包优化的话下面语句是没有必要的，因为肯定 != 0
+				if ((this->m_nFlag&eNCF_DisableWrite) == 0)
+					this->onSend();
+			}
+		}
 		else
-			this->m_pNetEventLoop->addSendConnecter(this);
-	}
+		{
+			// 大包并且缓存中没有数据试着直接发送
+			if (this->m_pSendBuffer->getTailDataSize() == 0 && nDataSize >= this->getSendBufferSize())
+				return this->send(pData, nDataSize, false);
+			
+			this->m_pSendBuffer->push(reinterpret_cast<const char*>(pData), nDataSize);
+			uint32_t nSendDataSize = this->m_pSendBuffer->getTotalReadableSize();
 
-	void CNetConnecter::sendp(const void* pData, uint32_t nDataSize)
-	{
+			if (nSendDataSize >= this->getSendBufferSize() && (this->m_nFlag&eNCF_DisableWrite) == 0)
+				this->onSend(); // 这里如果发送不完就会在下一次写事件触发的时候继续发送
+			else
+				this->m_pNetEventLoop->addSendConnecter(this);
+		}
 
+		return true;
 	}
 
 	/*	关于连接关闭:
@@ -364,23 +404,27 @@ namespace base
 	直接closesocket时，此时发送跟接受都不行，对端会触发recv事件，数据大小为0
 	showdown时,此时发送不行，接收是可以的，对端会触发recv事件，数据大小为0
 	*/
-	void CNetConnecter::shutdown(bool bForce, const char* szMsg)
+	void CNetConnecter::shutdown(ENetConnecterCloseType eType, const char* szFormat, ...)
 	{
+		DebugAst(szFormat != nullptr);
+
 		if (this->m_eConnecterState == eNCS_Disconnected)
 			return;
 
-		char szBuf[256] = { 0 };
-		if (szMsg != NULL)
-			base::crt::snprintf(szBuf, _countof(szBuf), "request shutdown connection msg: %s", szMsg);
-		else
-			base::crt::snprintf(szBuf, _countof(szBuf), "request shutdown connection");
+		char szBuf[1024] = { 0 };
+		va_list arg;
+		va_start(arg, szFormat);
+		vsnprintf(szBuf, _countof(szBuf), szFormat, arg);
+		va_end(arg);
 
-		this->printInfo(szBuf);
+		this->printInfo("request shutdown connection msg: %s", szBuf);
 
 		this->m_eConnecterState = eNCS_Disconnecting;
-		this->m_nCloseType |= eCT_Send;
-		if (bForce || this->m_pSendBuffer->isEmpty())
-			this->close();
+		this->m_nFlag |= eNCF_CloseSend;
+		if (eType == eNCCT_Grace)
+			this->m_nFlag |= eNCF_GraceClose;
+		if (eType == eNCCT_Force || this->m_pSendBuffer->getTailDataSize() == 0)
+			this->close(eType == eNCCT_Force || (this->m_nFlag&eNCF_CloseRecv), true);
 	}
 
 	void CNetConnecter::setHandler(INetConnecterHandler* pHandler)
@@ -412,12 +456,17 @@ namespace base
 
 	uint32_t CNetConnecter::getSendDataSize() const
 	{
-		return this->m_pSendBuffer->getDataSize();
+		return this->m_pSendBuffer->getTotalReadableSize();
 	}
 
 	uint32_t CNetConnecter::getRecvDataSize() const
 	{
-		return this->m_pRecvBuffer->getDataSize();
+		return this->m_pRecvBuffer->getReadableSize();
+	}
+
+	bool CNetConnecter::setNoDelay(bool bEnable)
+	{
+		return CNetSocket::setNoDelay(bEnable);
 	}
 
 	void CNetConnecter::setConnecterType(ENetConnecterType eConnecterType)
@@ -428,5 +477,15 @@ namespace base
 	void CNetConnecter::setConnecterState(ENetConnecterState eConnecterState)
 	{
 		this->m_eConnecterState = eConnecterState;
+	}
+
+	bool CNetConnecter::isWriteEvent() const
+	{
+		return (this->m_nFlag&eNCF_DisableWrite) != 0;
+	}
+
+	bool CNetConnecter::isReadEvent() const
+	{
+		return (this->m_nFlag&eNCF_CloseRecv) == 0;
 	}
 }

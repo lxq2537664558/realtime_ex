@@ -1,12 +1,11 @@
 #pragma once
 
-#include "libBaseCommon/base_common.h"
-#include "libBaseCommon/noncopyable.h"
+#include <stdint.h>
+#include <utility>
 
 namespace base
 {
-	class CNetRecvBuffer :
-		public noncopyable
+	class CNetRecvBuffer
 	{
 	public:
 		CNetRecvBuffer();
@@ -16,21 +15,21 @@ namespace base
 		void		push(uint32_t nSize);
 		void		pop(uint32_t nSize);
 		void		resize(uint32_t nSize);
-		char*		getFreeBuffer() const;
-		char*		getDataBuffer() const;
+		char*		getWritableBuffer() const;
+		char*		getReadableBuffer() const;
 		uint32_t	getBufferSize() const;
-		uint32_t	getDataSize() const;
-		uint32_t	getFreeSize() const;
+		uint32_t	getReadableSize() const;
+		uint32_t	getWritableSize() const;
 
 	private:
 		char*		m_pBuf;
-		uint32_t	m_nBufPos;
+		uint32_t	m_nReadPos;
+		uint32_t	m_nWritePos;
 		uint32_t	m_nBufSize;
 	};
 
 	class CNetSendBuffer;
-	class CNetSendBufferBlock :
-		public noncopyable
+	class CNetSendBufferBlock
 	{
 		friend class CNetSendBuffer;
 
@@ -42,21 +41,20 @@ namespace base
 		void		reset();
 		void		push(const char* pBuf, uint32_t nSize);
 		void		pop(uint32_t nSize);
-		char*		getDataBuffer() const;
+		char*		getReadableBuffer() const;
+		uint32_t	getReadableSize() const;
+		uint32_t	getWritableSize() const;
 		uint32_t	getBufferSize() const;
-		uint32_t	getDataSize() const;
-		uint32_t	getFreeSize() const;
 
 	private:
 		char*					m_pBuf;
-		uint32_t				m_nDataBegin;
-		uint32_t				m_nDataEnd;
+		uint32_t				m_nReadPos;
+		uint32_t				m_nWritePos;
 		uint32_t				m_pBufSize;
 		CNetSendBufferBlock*	m_pNext;
 	};
 
-	class CNetSendBuffer :
-		public noncopyable
+	class CNetSendBuffer
 	{
 	private:
 		uint32_t				m_nBuffBlockSize;
@@ -76,8 +74,8 @@ namespace base
 		bool					init(uint32_t nBufSize);
 		void					push(const char* pBuf, uint32_t nSize);
 		void					pop(uint32_t nSize);
-		char*					getDataBuffer(uint32_t& nSize) const;
-		uint32_t				getDataSize() const;
-		bool					isEmpty() const;
+		char*					getTailData() const;
+		uint32_t				getTailDataSize() const;
+		uint32_t				getTotalReadableSize() const;
 	};
 }

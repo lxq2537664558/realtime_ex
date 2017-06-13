@@ -1,59 +1,69 @@
 #pragma once
 
-#include "libBaseCommon/noncopyable.h"
-
 #include "coroutine.h"
 
-#include <functional>
-#include <list>
-
-#ifndef _WIN32
-#include <ucontext.h>
-#endif
+#include <map>
 
 namespace core
 {
+	union context
+	{
+		struct
+		{
+			int64_t rbx;
+			int64_t rsp;
+			int64_t rbp;
+			int64_t r12;
+			int64_t r13;
+			int64_t r14;
+			int64_t r15;
+			int64_t rip;
+		};
+		int64_t regs[8];
+	};
+
 	class CCoroutineMgr;
-	class CCoroutineImpl :
-		public base::noncopyable
+	class CCoroutineImpl
 	{
 	public:
 		CCoroutineImpl();
 		~CCoroutineImpl();
 
-		bool		init(uint64_t nID, const std::function<void(uint64_t)>& callback);
-		uint64_t	yield(bool bNormal);
-		void		resume(uint64_t nContext);
-		uint32_t	getState() const;
-		void		setState(uint32_t nState);
-		uint64_t	getCoroutineID() const;
-		void		sendMessage(void* pData);
-		void*		recvMessage();
+		bool			init(uint64_t nID, uint32_t nStackSize, const std::function<void(uint64_t)>& callback);
+		uint64_t		yield();
+		void			resume(uint64_t nContext);
+		uint32_t		getState() const;
+		void			setState(uint32_t nState);
+		uint64_t		getCoroutineID() const;
+		void			setLocalData(const char* szName, uint64_t nData);
+		bool			getLocalData(const char* szName, uint64_t& nData) const;
+		void			delLocalData(const char* szName);
 
-		void		setCallback(const std::function<void(uint64_t)>& callback);
-		
+		uint32_t		getStackSize() const;
+
+		void			setCallback(const std::function<void(uint64_t)>& callback);
+
 	private:
-		void		saveStack();
-
-#ifdef _WIN32
-		static void	onCallback(void* pParm);
-#else
-		static void	onCallback(uint32_t nParm1, uint32_t nParm2);
+#ifndef _WIN32
+		void			saveStack();
+		static void		onCallback();
 #endif
+		static void		onCallback(void* pParm);
+
 	private:
 		uint64_t						m_nID;
 		std::function<void(uint64_t)>	m_callback;
 		uint64_t						m_nContext;
-#ifdef _WIN32
-		void*							m_hHandle;
-#else
-		ucontext_t						m_ctx;
-		char*							m_pStack;
-		uint32_t						m_nStackSize;
-		uint32_t						m_nStackCap;
-#endif
 		ECoroutineState					m_eState;
-		CCoroutineImpl*					m_pParentCoroutine;
-		std::list<void*>				m_listMessage;
+		std::map<std::string, uint64_t>	m_mapLocalData;
+		void*							m_pContext;
+		uintptr_t						m_nStackSize;
+
+#ifndef _WIN32
+		bool							m_bOwnerStack;
+		char*							m_pStack;
+		uintptr_t						m_nStackCap;
+		int32_t							m_nValgrindID;
+#endif
 	};
 }

@@ -63,9 +63,6 @@
     <ClInclude Include="..\..\inc\libBaseCommon\base_common.h">
       <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\inc\libBaseCommon\spin_mutex.h">
-      <Filter>inc</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\inc\libBaseCommon\logger.h">
       <Filter>inc</Filter>
     </ClInclude>
@@ -94,6 +91,9 @@
       <Filter>inc</Filter>
     </ClInclude>
     <ClInclude Include="..\..\inc\libBaseCommon\memory_hook.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libBaseCommon\spin_lock.h">
       <Filter>inc</Filter>
     </ClInclude>
   </ItemGroup>

@@ -56,7 +56,6 @@ namespace core
 
 	void CTickerMgr::insertTicker(TickerNode_t* pTickerNode)
 	{
-		DebugAst(pTickerNode != nullptr && pTickerNode->Value.pTicker != nullptr);
 		if ((pTickerNode->Value.pTicker->m_nNextTickTime | __TIME_NEAR_MASK) == (this->m_nLogicTime | __TIME_NEAR_MASK))
 		{
 			// 最近的定时器

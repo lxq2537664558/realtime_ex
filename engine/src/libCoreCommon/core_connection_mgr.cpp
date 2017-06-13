@@ -32,6 +32,13 @@ namespace core
 		pCoreConnectionMgr->delActiveWaitConnecterHandler(this);
 	}
 
+	void CCoreConnectionMgr::SNetActiveWaitConnecterHandler::onConnectFail()
+	{
+		CBaseApp::Inst()->getBaseConnectionMgr()->onConnectRefuse(szContext);
+
+		pCoreConnectionMgr->delActiveWaitConnecterHandler(this);
+	}
+
 	CCoreConnectionMgr::CCoreConnectionMgr()
 		: m_pNetEventLoop(nullptr)
 		, m_pBaseConnectionMgr(nullptr)

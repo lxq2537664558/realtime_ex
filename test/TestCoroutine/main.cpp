@@ -13,6 +13,9 @@ CTestApp* g_pApp;
 void fun1(uint64_t nContext)
 {
 	PrintDebug("AAAAA");
+	uint64_t nCoroutineID = core::coroutine::create([](uint64_t) {});
+	core::coroutine::resume(nCoroutineID, 0);
+
  	core::coroutine::yield();
  	PrintDebug("BBBBB");
 }
@@ -40,9 +43,6 @@ public:
 // 		}
 		uint64_t nCoroutineID = core::coroutine::create(std::bind(&fun1, std::placeholders::_1));
 		core::coroutine::resume(nCoroutineID, 0);
-		core::coroutine::resume(nCoroutineID, 0);
-
-		nCoroutineID = core::coroutine::create([](uint64_t) { } );
 		core::coroutine::resume(nCoroutineID, 0);
 
 		return true;

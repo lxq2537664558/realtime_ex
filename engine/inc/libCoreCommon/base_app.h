@@ -50,10 +50,6 @@ namespace core
 		*/
 		void						unregisterTicker(CTicker* pTicker);
 		/**
-		@brief: 设置性能分析器开关
-		*/
-		void						enableProfiling(bool bProfiling);
-		/**
 		@brief: 获取当前逻辑时间
 		*/
 		int64_t						getLogicTime() const;
@@ -77,7 +73,14 @@ namespace core
 		@brief: 标记繁忙，这样逻辑线程可以不等待消息队列的数据
 		*/
 		void						busy();
-
+		/*
+		@brief: 设置是否输出调试信息
+		*/
+		void						debugLog(bool bEnable);
+		/**
+		@brief: 设置是否打开性能分析
+		*/
+		void						profiling(bool bEnable);
 		
 	protected:
 		virtual bool				onInit() { return true; }

@@ -2,7 +2,11 @@
 #include "net_socket.h"
 #include "net_event_loop.h"
 
-#include "libBaseCommon/debug_helper.h"
+#ifndef _WIN32
+#include <netinet/tcp.h>
+#endif
+
+#include "libBaseCommon/logger.h"
 
 namespace base
 {
@@ -10,7 +14,6 @@ namespace base
 		: m_pNetEventLoop(nullptr)
 		, m_nSocketID(_Invalid_SocketID)
 		, m_nSocketIndex(_Invalid_SocketIndex)
-		, m_nEvent(eNET_Recv)
 		, m_nSendBufferSize(0)
 		, m_nRecvBufferSize(0)
 		, m_bWaitClose(false)
@@ -32,14 +35,14 @@ namespace base
 		return true;
 	}
 
-	void CNetSocket::forceClose()
+	void CNetSocket::release()
 	{
 		if (this->m_nSocketIndex != _Invalid_SocketIndex)
 			this->m_pNetEventLoop->delSocket(this);
 
 		if (this->m_nSocketID != _Invalid_SocketID)
 		{
-			PrintNW("closesocket socket_id %d", this->m_nSocketID);
+			PrintInfo("closesocket socket_id %d", this->m_nSocketID);
 			::closesocket(this->m_nSocketID);
 			this->m_nSocketID = _Invalid_SocketID;
 		}
@@ -59,7 +62,7 @@ namespace base
 	{
 		if (this->m_pNetEventLoop->getSocketCount() >= this->m_pNetEventLoop->getMaxSocketCount())
 		{
-			PrintWarning("not have enought socket solt");
+			PrintWarning("out of max socket count %d", this->m_pNetEventLoop->getMaxSocketCount());
 			return false;
 		}
 
@@ -73,21 +76,24 @@ namespace base
 		return true;
 	}
 
-	void CNetSocket::close(bool bCloseSend /* = true */)
+	void CNetSocket::close(bool bRelease, bool bCloseSend)
 	{
+		PrintInfo("CNetSocket::close socketid %d release: %d close_send: %d, wait_close", this->m_nSocketID, bRelease, bCloseSend, this->m_bWaitClose);
+
 		if (this->m_bWaitClose)
 			return;
-
-		PrintNW("CNetSocket::close socketid %d", this->m_nSocketID);
 
 		if (bCloseSend)
 			::shutdown(this->m_nSocketID, SD_SEND);
 
-		this->m_pNetEventLoop->addCloseSocket(this);
-		this->m_bWaitClose = true;
+		if (bRelease)
+		{
+			this->m_pNetEventLoop->addCloseSocket(this);
+			this->m_bWaitClose = true;
+		}
 	}
 
-	bool CNetSocket::nonBlock()
+	bool CNetSocket::nonblock()
 	{
 		DebugAstEx(this->m_nSocketID != _Invalid_SocketID, false);
 
@@ -98,8 +104,6 @@ namespace base
 		if (0 != nRet)
 		{
 			PrintWarning("set socket nonblock error %d", getLastError());
-			closesocket(this->m_nSocketID);
-			this->m_nSocketID = _Invalid_SocketID;
 			return false;
 		}
 #else
@@ -107,8 +111,6 @@ namespace base
 		if (-1 == nFlag)
 		{
 			PrintWarning("set socket nonblock error %d", getLastError());
-			::closesocket(this->m_nSocketID);
-			this->m_nSocketID = _Invalid_SocketID;
 			return false;
 		}
 
@@ -117,8 +119,6 @@ namespace base
 		if (-1 == nFlag)
 		{
 			PrintWarning("set socket nonblock error %d", getLastError());
-			closesocket(this->m_nSocketID);
-			this->m_nSocketID = _Invalid_SocketID;
 			return false;
 		}
 #endif
@@ -130,14 +130,26 @@ namespace base
 	{
 		DebugAstEx(this->m_nSocketID != _Invalid_SocketID, false);
 
-		uint32_t nFlag = 1;
-		if (0 != ::setsockopt(this->m_nSocketID, SOL_SOCKET, SO_REUSEADDR, (char*)&nFlag, sizeof(nFlag)))
+		int32_t nFlag = 1;
+		if (0 != ::setsockopt(this->m_nSocketID, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<char*>(&nFlag), sizeof(nFlag)))
 		{
 			PrintWarning("set socket to reuse addr mode error %d", getLastError());
-			closesocket(this->m_nSocketID);
-			this->m_nSocketID = _Invalid_SocketID;
 			return false;
 		}
+
+		return true;
+	}
+
+	bool CNetSocket::reusePort()
+	{
+#ifdef SO_REUSEPORT
+		int32_t nFlag = 1;
+		if (0 != ::setsockopt(this->m_nSocketID, SOL_SOCKET, SO_REUSEPORT, reinterpret_cast<char*>(&nFlag), sizeof(nFlag)))
+		{
+			PrintWarning("set socket to reuse port mode error %d", getLastError());
+			return false;
+		}
+#endif
 
 		return true;
 	}
@@ -146,23 +158,25 @@ namespace base
 	{
 		DebugAstEx(this->m_nSocketID != _Invalid_SocketID, false);
 
-		if (this->m_nRecvBufferSize != 0 && 0 != ::setsockopt(this->m_nSocketID, SOL_SOCKET, SO_RCVBUF, (char*)&this->m_nRecvBufferSize, sizeof(this->m_nRecvBufferSize)))
+		if (this->m_nRecvBufferSize != 0 && 0 != ::setsockopt(this->m_nSocketID, SOL_SOCKET, SO_RCVBUF, reinterpret_cast<char*>(&this->m_nRecvBufferSize), sizeof(this->m_nRecvBufferSize)))
 		{
 			PrintWarning("set socket recvbuf error %d", getLastError());
-			closesocket(this->m_nSocketID);
-			this->m_nSocketID = _Invalid_SocketID;
 			return false;
 		}
 
-		if (this->m_nSendBufferSize != 0 && 0 != ::setsockopt(this->m_nSocketID, SOL_SOCKET, SO_SNDBUF, (char*)&this->m_nSendBufferSize, sizeof(this->m_nSendBufferSize)))
+		if (this->m_nSendBufferSize != 0 && 0 != ::setsockopt(this->m_nSocketID, SOL_SOCKET, SO_SNDBUF, reinterpret_cast<char*>(&this->m_nSendBufferSize), sizeof(this->m_nSendBufferSize)))
 		{
 			PrintWarning("set socket sendbuf error %d", getLastError());
-			closesocket(this->m_nSocketID);
-			this->m_nSocketID = _Invalid_SocketID;
 			return false;
 		}
 
 		return true;
+	}
+
+	bool CNetSocket::setNoDelay(bool bEnable)
+	{
+		int32_t nFlag = bEnable ? 1 : 0;
+		return ::setsockopt(this->m_nSocketID, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<char*>(&nFlag), sizeof(nFlag)) == 0;
 	}
 
 	void CNetSocket::setRemoteAddr()
@@ -172,7 +186,7 @@ namespace base
 		::getpeername(this->m_nSocketID, &remoteAddr, &nPeerAddrLen);
 		// 不能用::htons https://bbs.archlinux.org/viewtopic.php?id=53751
 		this->m_sRemoteAddr.nPort = ntohs((reinterpret_cast<sockaddr_in*>(&remoteAddr))->sin_port);
-		base::crt::strcpy(this->m_sRemoteAddr.szHost, _countof(this->m_sRemoteAddr.szHost), inet_ntoa((reinterpret_cast<sockaddr_in*>(&remoteAddr))->sin_addr));
+		strncpy(this->m_sRemoteAddr.szHost, inet_ntoa((reinterpret_cast<sockaddr_in*>(&remoteAddr))->sin_addr), _countof(this->m_sRemoteAddr.szHost));
 	}
 
 	void CNetSocket::setLocalAddr()
@@ -182,7 +196,7 @@ namespace base
 		::getsockname(this->m_nSocketID, &localAddr, &nLocalAddrLen);
 		// 不能用::htons https://bbs.archlinux.org/viewtopic.php?id=53751
 		this->m_sLocalAddr.nPort = ntohs((reinterpret_cast<sockaddr_in*>(&localAddr))->sin_port);
-		base::crt::strcpy(this->m_sLocalAddr.szHost, _countof(this->m_sLocalAddr.szHost), inet_ntoa((reinterpret_cast<sockaddr_in*>(&localAddr))->sin_addr));
+		strncpy(this->m_sLocalAddr.szHost, inet_ntoa((reinterpret_cast<sockaddr_in*>(&localAddr))->sin_addr), _countof(this->m_sRemoteAddr.szHost));
 	}
 
 	void CNetSocket::setSocketID(int32_t nSocketID)
@@ -195,44 +209,14 @@ namespace base
 		return this->m_nSocketID;
 	}
 
-	void CNetSocket::enableSend()
+	uint32_t CNetSocket::getSendBufferSize() const
 	{
-		if ((this->m_nEvent&eNET_Send) != 0)
-			return;
-
-		this->m_nEvent |= eNET_Send;
-
-#ifndef _WIN32
-		this->m_pNetEventLoop->updateEpollState(this, EPOLL_CTL_MOD);
-#endif
+		return this->m_nSendBufferSize;
 	}
 
-	void CNetSocket::disableSend()
+	uint32_t CNetSocket::getRecvBufferSize() const
 	{
-		if ((this->m_nEvent&eNET_Send) == 0)
-			return;
-
-		this->m_nEvent &= ~eNET_Send;
-
-#ifndef _WIN32
-		this->m_pNetEventLoop->updateEpollState(this, EPOLL_CTL_MOD);
-#endif
+		return this->m_nRecvBufferSize;
 	}
 
-	void CNetSocket::disableRecv()
-	{
-		if ((this->m_nEvent&eNET_Recv) == 0)
-			return;
-
-		this->m_nEvent &= ~eNET_Recv;
-
-#ifndef _WIN32
-		this->m_pNetEventLoop->updateEpollState(this, EPOLL_CTL_MOD);
-#endif
-	}
-
-	uint32_t CNetSocket::getEvent() const
-	{
-		return this->m_nEvent;
-	}
 }

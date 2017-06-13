@@ -1,9 +1,6 @@
 #include "stdafx.h"
 #include "net_wakeup.h"
 
-#include "libBaseCommon/debug_helper.h"
-#include "libBaseCommon/profiling.h"
-
 #ifndef _WIN32
 #include <sys/eventfd.h>
 #endif
@@ -37,7 +34,7 @@ namespace base
 		memset(&event, 0, sizeof(event));
 		event.data.ptr = this;
 		event.events = EPOLLIN;
-		if (epoll_ctl(pNetEventLoop->getEpoll(), EPOLL_CTL_ADD, this->m_nWakeup, &event) < 0)
+		if (::epoll_ctl(pNetEventLoop->getEpoll(), EPOLL_CTL_ADD, this->m_nWakeup, &event) < 0)
 			return false;
 #endif
 
@@ -55,7 +52,7 @@ namespace base
 			int32_t nRet = ::read(this->m_nWakeup, &nData, sizeof(nData));
 			if (nRet != sizeof(nData))
 			{
-				PrintWarning("read event fd err ret: %d", nRet);
+				g_pLog->printWarning("read event fd err ret: %d", nRet);
 			}
 		}
 #endif
@@ -67,12 +64,11 @@ namespace base
 		if (!this->m_flag.load(std::memory_order_acquire))
 			return;
 
-		PROFILING_GUARD(CNetWakeup::wakeup);
 		uint64_t nData = 1;
 		int32_t nRet = ::write(this->m_nWakeup, &nData, sizeof(nData));
 		if (nRet != sizeof(nData))
 		{
-			PrintWarning("write event fd err ret: %d", nRet);
+			g_pLog->printWarning("write event fd err ret: %d", nRet);
 		}
 
 		this->wait(false);
@@ -83,5 +79,4 @@ namespace base
 	{
 		this->m_flag.store(flag, std::memory_order_release);
 	}
-
 }

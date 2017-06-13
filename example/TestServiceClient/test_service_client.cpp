@@ -134,6 +134,7 @@ void fun(uint64_t nContext)
 
 bool CTestServiceClientApp::onInit()
 {
+	PrintDebug("aaaa");
 	CServiceConnectionFactory* pServiceConnectionFactory = new CServiceConnectionFactory();
 	this->getBaseConnectionMgr()->setBaseConnectionFactory(_BASE_CONNECTION_TYPE_BEGIN, pServiceConnectionFactory);
 	for (size_t i = 0; i < 100; ++i)

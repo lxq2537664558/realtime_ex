@@ -62,8 +62,10 @@ namespace core
 			CCoreConnectionMgr*	pCoreConnectionMgr;
 
 			virtual uint32_t	onRecv( const char* pData, uint32_t nDataSize ) { return 0; }
+			virtual void		onSendComplete(uint32_t nSize) { }
 			virtual void		onConnect();
 			virtual void		onDisconnect();
+			virtual void		onConnectFail();
 		};
 
 		base::INetEventLoop*							m_pNetEventLoop;

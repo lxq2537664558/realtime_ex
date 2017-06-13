@@ -114,7 +114,7 @@ namespace core
 			nMasterPort = (uint16_t)pMasterAddrXML->IntAttribute("port");
 		}
 
-		this->m_pInvokerTrace = new CInvokerTrace();
+		this->m_pInvokerTrace = new CTracer();
 		if (!this->m_pInvokerTrace->init())
 		{
 			PrintWarning("this->m_pInvokerTrace->init()");
@@ -254,7 +254,7 @@ namespace core
 		return this->m_pCoreMessageRegistry;
 	}
 
-	CInvokerTrace* CCoreServiceAppImpl::getInvokerTrace() const
+	CTracer* CCoreServiceAppImpl::getInvokerTrace() const
 	{
 		return this->m_pInvokerTrace;
 	}

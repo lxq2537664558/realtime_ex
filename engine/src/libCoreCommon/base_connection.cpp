@@ -42,11 +42,11 @@ namespace core
 		return this->m_pCoreConnection->send(nMessageType, pData, nSize, pExtraBuf, nExtraSize);
 	}
 
-	void CBaseConnection::shutdown(bool bForce, const std::string& szMsg)
+	void CBaseConnection::shutdown(base::ENetConnecterCloseType eType, const std::string& szMsg)
 	{
 		DebugAst(this->m_pCoreConnection != nullptr);
 
-		this->m_pCoreConnection->shutdown(bForce, szMsg);
+		this->m_pCoreConnection->shutdown(eType, szMsg);
 	}
 
 	void CBaseConnection::enableHeartbeat(bool bEnable)
