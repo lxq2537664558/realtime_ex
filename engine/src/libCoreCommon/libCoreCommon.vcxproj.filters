@@ -51,15 +51,6 @@
     <ClInclude Include="..\..\inc\libCoreCommon\base_connection_factory.h">
       <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreCommon\coroutine.h">
-      <Filter>inc</Filter>
-    </ClInclude>
-    <ClInclude Include="coroutine_mgr.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="coroutine_impl.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="core_app.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -99,15 +90,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="core_connection_monitor.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="coroutine_mgr.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="coroutine.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="coroutine_impl.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="memory_new.cpp">

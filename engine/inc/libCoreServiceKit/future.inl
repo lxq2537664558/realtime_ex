@@ -1,4 +1,7 @@
-namespace core
+#include "coroutine.h"
+#include <tuple>
+
+namespace rpc
 {
 	template<class T>
 	CFuture<T>::CFuture()
@@ -8,7 +11,7 @@ namespace core
 	}
 
 	template<class T>
-	CFuture<T>::CFuture(std::shared_ptr<SFutureContext<T>> pContext)
+	CFuture<T>::CFuture(std::shared_ptr<SFutureContext<T>>& pContext)
 		: m_pContext(pContext)
 	{
 
@@ -21,7 +24,7 @@ namespace core
 	}
 
 	template<class T>
-	bool core::CFuture<T>::isReady() const
+	bool CFuture<T>::isReady() const
 	{
 		if (!this->isVaild())
 			return false;
@@ -30,24 +33,19 @@ namespace core
 	}
 
 	template<class T>
-	bool core::CFuture<T>::isVaild() const
+	bool CFuture<T>::isVaild() const
 	{
 		return this->m_pContext != nullptr;
 	}
 
 	template<class T>
-	bool core::CFuture<T>::getValue(T& val) const
+	std::shared_ptr<T> CFuture<T>::getValue()
 	{
-		if (!this->isReady())
-			return false;
-
-		val = this->m_pContext->val;
-
-		return true;
+		return this->m_pContext->val;
 	}
 
 	template<class T>
-	uint32_t core::CFuture<T>::getErrorCode() const
+	uint32_t CFuture<T>::getErrorCode() const
 	{
 		if (!this->isReady())
 			return 0;
@@ -56,29 +54,51 @@ namespace core
 	}
 
 	template<class T>
-	void CFuture<T>::then(const std::function<void(T, uint32_t)>& fn)
+	std::shared_ptr<SFutureContext<T>> CFuture<T>::getContext()
 	{
-		DebugAst(this->m_pContext != nullptr && fn != nullptr);
+		return this->m_pContext;
+	}
+
+	template<class T>
+	bool CFuture<T>::wait()
+	{
+		if (this->m_pContext == nullptr)
+			return false;
+		if (this->m_pContext->nCoroutineID != 0)
+			return false;
+
+		this->m_pContext->nCoroutineID = coroutine::getCurrentID();
+		coroutine::yield();
+		return true;
+	}
+
+	template<class T>
+	void CFuture<T>::then(const std::function<void(T*, uint32_t)>& fn)
+	{
+		if (this->m_pContext == nullptr || fn == nullptr)
+			return;
 
 		this->m_pContext->callback = fn;
 
 		if (this->m_pContext->bReady && this->m_pContext->nErrorCode == 0)
-			this->m_pContext->callback(this->m_pContext->val, this->m_pContext->nErrorCode);
+			this->m_pContext->callback(this->m_pContext->val.get(), this->m_pContext->nErrorCode);
 	}
 
 	template<class T>
 	template<class F, class R>
-	R CFuture<T>::then_r(F& fn)
+	R CFuture<T>::then_r(const F& fn)
 	{
-		DebugAstEx(this->m_pContext != nullptr, R());
+		if (this->m_pContext == nullptr)
+			return R();
 
-		auto pContext = std::make_shared<SFutureContext<R::ValueType>>();
+		using ValueType = typename R::ValueType;
+		auto pContext = std::make_shared<SFutureContext<ValueType>>();
 		pContext->bReady = false;
 		pContext->nErrorCode = 0;
 
-		this->m_pContext->callback = [fn, pContext](T val, uint32_t nErrorCode)->void
+		this->m_pContext->callback = [fn, pContext](T* val, uint32_t nErrorCode)->void
 		{
-			CFuture<R::ValueType> sNewFuture = fn(val, nErrorCode);
+			CFuture<ValueType> sNewFuture = fn(val, nErrorCode);
 			if (sNewFuture.m_pContext == nullptr)
 				return;
 			
@@ -89,84 +109,18 @@ namespace core
 			sNewFuture.m_pContext->callback = pContext->callback;
 			// 在回调完成后如果返回的future已经准备好，并且回调函数也已经设置好了，就回调他，不然就没有机会回调了
 			if (sNewFuture.m_pContext->bReady && sNewFuture.m_pContext->callback != nullptr)
-				sNewFuture.m_pContext->callback(sNewFuture.m_pContext->val, sNewFuture.m_pContext->nErrorCode);
+				sNewFuture.m_pContext->callback(sNewFuture.m_pContext->val.get(), sNewFuture.m_pContext->nErrorCode);
 		};
 
 		// 在调用then时future已经可用了
 		if (this->m_pContext->bReady)
-			this->m_pContext->callback(this->m_pContext->val, this->m_pContext->nErrorCode);
+			this->m_pContext->callback(this->m_pContext->val.get(), this->m_pContext->nErrorCode);
 		
-		return CFuture<R::ValueType>(pContext);
+		return CFuture<ValueType>(pContext);
 	}
 
 	template<class T>
-	void core::CFuture<T>::collect(std::vector<CFuture<T>>& vecFuture, const std::function<void(const std::vector<CFuture<T>>&)>& fn)
-	{
-		for (size_t i = 0; i < vecFuture.size(); ++i)
-		{
-			vecFuture[i].then([fn, vecFuture](T val, uint32_t)
-			{
-				bool bReady = true;
-				for (size_t j = 0; j < vecFuture.size(); ++j)
-				{
-					if (!vecFuture[j].isReady())
-					{
-						bReady = false;
-						break;
-					}
-				}
-
-				if (bReady)
-					fn(vecFuture);
-			});
-		}
-	}
-
-	template<class T>
-	template<class F, class R>
-	R CFuture<T>::collect_r(std::vector<CFuture<T>>& vecFuture, F& fn)
-	{
-		auto pContext = std::make_shared<SFutureContext<R::ValueType>>();
-		pContext->bReady = false;
-		pContext->nErrorCode = 0;
-
-		for (size_t i = 0; i < vecFuture.size(); ++i)
-		{
-			vecFuture[i].then([fn, vecFuture, pContext](T val, uint32_t)
-			{
-				bool bReady = true;
-				for (size_t j = 0; j < vecFuture.size(); ++j)
-				{
-					if (!vecFuture[j].isReady())
-					{
-						bReady = false;
-						break;
-					}
-				}
-
-				if (bReady)
-				{
-					CFuture<R::ValueType> sNewFuture = fn(vecFuture);
-					if (sNewFuture.m_pContext == nullptr)
-						return;
-
-					// 有可能返回的future已经是一个准备好的future，所以需要拷贝到pContext中
-					pContext->bReady = sNewFuture.m_pContext->bReady;
-					pContext->val = sNewFuture.m_pContext->val;
-					pContext->nErrorCode = sNewFuture.m_pContext->nErrorCode;
-					sNewFuture.m_pContext->callback = pContext->callback;
-					// 在回调完成后如果返回的future已经准备好，并且回调函数也已经设置好了，就回调他，不然就没有机会回调了
-					if (sNewFuture.m_pContext->bReady && sNewFuture.m_pContext->callback != nullptr)
-						sNewFuture.m_pContext->callback(sNewFuture.m_pContext->val, sNewFuture.m_pContext->nErrorCode);
-				}
-			});
-		}
-
-		return CFuture<R::ValueType>(pContext);
-	}
-
-	template<class T>
-	CFuture<T> core::CFuture<T>::createFuture(T val)
+	CFuture<T> createFuture(T val)
 	{
 		auto pContext = std::make_shared<SFutureContext<T>>();
 		pContext->bReady = true;

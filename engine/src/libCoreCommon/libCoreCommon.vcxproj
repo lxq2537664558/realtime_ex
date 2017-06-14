@@ -17,14 +17,11 @@
     <ClInclude Include="..\..\inc\libCoreCommon\base_app.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\base_object.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\core_common.h" />
-    <ClInclude Include="..\..\inc\libCoreCommon\coroutine.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\ticker.h" />
     <ClInclude Include="core_app.h" />
     <ClInclude Include="core_connection.h" />
     <ClInclude Include="core_connection_mgr.h" />
     <ClInclude Include="core_connection_monitor.h" />
-    <ClInclude Include="coroutine_impl.h" />
-    <ClInclude Include="coroutine_mgr.h" />
     <ClInclude Include="fix_memory_pool.h" />
     <ClInclude Include="monitor.h" />
     <ClInclude Include="stdafx.h" />
@@ -39,9 +36,6 @@
     <ClCompile Include="core_connection.cpp" />
     <ClCompile Include="core_connection_mgr.cpp" />
     <ClCompile Include="core_connection_monitor.cpp" />
-    <ClCompile Include="coroutine.cpp" />
-    <ClCompile Include="coroutine_impl.cpp" />
-    <ClCompile Include="coroutine_mgr.cpp" />
     <ClCompile Include="fix_memory_pool.cpp" />
     <ClCompile Include="memory_new.cpp" />
     <ClCompile Include="monitor.cpp" />

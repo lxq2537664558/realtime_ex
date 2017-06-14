@@ -1,24 +1,22 @@
 #pragma once
-
-#include "libCoreCommon/core_common.h"
-
-#include "message_ptr.h"
-
 #include <memory>
+#include <functional>
+#include <stdint.h>
 
-namespace core
+namespace rpc
 {
 	template<class T>
 	struct SFutureContext
 	{
-		std::function<void(T, uint32_t)>
+		std::function<void(T*, uint32_t)>
 					callback;
 		bool		bReady;
+		uint64_t	nCoroutineID;
 		uint32_t	nErrorCode;
-		T			val;
+		std::shared_ptr<T>
+					val;
 	};
 
-	// 支持串联并联的future
 	template<class T>
 	class CFuture
 	{
@@ -32,30 +30,30 @@ namespace core
 
 	public:
 		CFuture();
-		CFuture(std::shared_ptr<SFutureContext<T>> pContext);
+		CFuture(std::shared_ptr<SFutureContext<T>>& pContext);
 		~CFuture();
 
 		bool		isReady() const;
 		bool		isVaild() const;
-		bool		getValue(T& val) const;
+		std::shared_ptr<T>
+					getValue();
 		uint32_t	getErrorCode() const;
+		// 一旦调用了wait, then中设置的回调将不会被执行
+		bool		wait();
+		std::shared_ptr<SFutureContext<T>>
+					getContext();
 
-		void		then(const std::function<void(T, uint32_t)>& fn);
+		void		then(const std::function<void(T*, uint32_t)>& fn);
 		
-		template<class F, class R = typename std::result_of<F(T, uint32_t)>::type>
-		R			then_r(F& fn);
-
-		static void	collect(std::vector<CFuture<T>>& vecFuture, const std::function<void(const std::vector<CFuture<T>>&)>& fn);
-
-		template<class F, class R = typename std::result_of<F(const std::vector<CFuture<T>>&)>::type>
-		static R	collect_r(std::vector<CFuture<T>>& vecFuture, F& fn);
-
-		static CFuture<T>
-					createFuture(T val);
+		template<class F, class R = typename std::result_of<F(T*, uint32_t)>::type>
+		R			then_r(const F& fn);
 
 	private:
 		std::shared_ptr<SFutureContext<T>>	m_pContext;
 	};
+
+	template<class T>
+	static CFuture<T> createFuture(T val);
 }
 
 #include "future.inl"

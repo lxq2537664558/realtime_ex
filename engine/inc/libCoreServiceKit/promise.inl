@@ -1,4 +1,4 @@
-namespace core
+namespace rpc
 {
 	template<class T>
 	CPromise<T>::CPromise()
@@ -7,6 +7,7 @@ namespace core
 		this->m_pFutureContext = std::make_shared<SFutureContext<T>>();
 		this->m_pFutureContext->bReady = false;
 		this->m_pFutureContext->nErrorCode = 0;
+		this->m_pFutureContext->nCoroutineID = 0;
 	}
 
 	template<class T>
@@ -16,7 +17,7 @@ namespace core
 	}
 
 	template<class T>
-	core::CPromise<T>::CPromise(CPromise<T>&& lhs)
+	CPromise<T>::CPromise(CPromise<T>&& lhs)
 	{
 		this->m_bFuture = lhs.m_bFuture;
 		this->m_pFutureContext = lhs.m_pFutureContext;
@@ -26,7 +27,7 @@ namespace core
 	}
 
 	template<class T>
-	CPromise<T>& core::CPromise<T>::operator = (CPromise<T>&& lhs)
+	CPromise<T>& CPromise<T>::operator = (CPromise<T>&& lhs)
 	{
 		if (this == &lhs)
 			return *this;
@@ -53,23 +54,34 @@ namespace core
 	}
 
 	template<class T>
-	void CPromise<T>::setValue(T val, uint32_t nErrorCode /* = 0 */)
+	uint64_t CPromise<T>::getWaitCoroutineID() const
 	{
-		DebugAst(this->m_pFutureContext != nullptr);
+		if (this->m_pFutureContext == nullptr)
+			return 0;
+
+		return this->m_pFutureContext->nCoroutineID;
+	}
+
+	template<class T>
+	void CPromise<T>::setValue(std::shared_ptr<T> val, uint32_t nErrorCode /* = 0 */)
+	{
+		if (this->m_pFutureContext == nullptr)
+			return;
 
 		if (this->m_pFutureContext->bReady)
-		{
-			PrintWarning("double set promise value");
 			return;
-		}
-
+		
 		this->m_pFutureContext->val = val;
 		this->m_pFutureContext->nErrorCode = nErrorCode;
 		this->m_pFutureContext->bReady = true;
 
+		// 一旦调用了wait，callback就不会执行了
+		if (this->m_pFutureContext->nCoroutineID != 0)
+			return;
+
 		if (this->m_pFutureContext->callback == nullptr)
 			return;
 
-		this->m_pFutureContext->callback(val, nErrorCode);
+		this->m_pFutureContext->callback(val.get(), nErrorCode);
 	}
 }

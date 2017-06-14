@@ -4,7 +4,6 @@
 
 #include "base_app.h"
 #include "ticker_mgr.h"
-#include "coroutine_mgr.h"
 #include "core_connection_mgr.h"
 
 namespace core
@@ -45,10 +44,6 @@ namespace core
 		@brief: 获取连接管理器
 		*/
 		CCoreConnectionMgr*	getCoreConnectionMgr() const;
-		/*
-		@brief: 获取携程管理器
-		*/
-		CCoroutineMgr*		getCoroutineMgr() const;
 		/*
 		@brief: 获取配置文件名
 		*/
@@ -97,7 +92,6 @@ namespace core
 		std::string				m_szPID;
 		CTickerMgr*				m_pTickerMgr;
 		CCoreConnectionMgr*		m_pCoreConnectionMgr;
-		CCoroutineMgr*			m_pCoroutineMgr;
 		base::CWriteBuf			m_writeBuf;
 		uint32_t				m_nCycleCount;
 		int64_t					m_nTotalSamplingTime;

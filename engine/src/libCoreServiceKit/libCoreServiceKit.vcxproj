@@ -145,6 +145,7 @@
     <ClInclude Include="..\..\inc\libCoreServiceKit\base_actor.h" />
     <ClInclude Include="..\..\inc\libCoreServiceKit\base_actor_factory.h" />
     <ClInclude Include="..\..\inc\libCoreServiceKit\cluster_invoker.h" />
+    <ClInclude Include="..\..\inc\libCoreServiceKit\coroutine.h" />
     <ClInclude Include="..\..\inc\libCoreServiceKit\message_ptr.h" />
     <ClInclude Include="..\..\inc\libCoreServiceKit\native_serialize_adapter.h" />
     <ClInclude Include="..\..\inc\libCoreServiceKit\serialize_adapter.h" />
@@ -156,6 +157,8 @@
     <ClInclude Include="..\..\inc\libCoreServiceKit\proto_system.h" />
     <ClInclude Include="..\..\inc\libCoreServiceKit\core_service_kit_define.h" />
     <ClInclude Include="base_actor_impl.h" />
+    <ClInclude Include="coroutine_impl.h" />
+    <ClInclude Include="coroutine_mgr.h" />
     <ClInclude Include="message_dispatcher.h" />
     <ClInclude Include="scheduler.h" />
     <ClInclude Include="core_connection_from_other_node.h" />
@@ -174,6 +177,9 @@
   <ItemGroup>
     <ClCompile Include="base_actor.cpp" />
     <ClCompile Include="base_actor_impl.cpp" />
+    <ClCompile Include="coroutine.cpp" />
+    <ClCompile Include="coroutine_impl.cpp" />
+    <ClCompile Include="coroutine_mgr.cpp" />
     <ClCompile Include="native_serialize_adapter.cpp" />
     <ClCompile Include="scheduler.cpp" />
     <ClCompile Include="cluster_invoker.cpp" />
@@ -212,6 +218,7 @@
     <None Include="..\..\inc\libCoreServiceKit\message_ptr.inl" />
     <None Include="..\..\inc\libCoreServiceKit\node_message_registry.inl" />
     <None Include="..\..\inc\libCoreServiceKit\promise.inl" />
+    <None Include="context_linux.S" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

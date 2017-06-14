@@ -93,7 +93,6 @@ namespace core
 	CCoreApp::CCoreApp()
 		: m_pTickerMgr(nullptr)
 		, m_pCoreConnectionMgr(nullptr)
-		, m_pCoroutineMgr(nullptr)
 		, m_nRunState(eARS_Start)
 		, m_writeBuf(UINT16_MAX)
 		, m_bMarkQuit(false)
@@ -166,11 +165,6 @@ namespace core
 	CCoreConnectionMgr* CCoreApp::getCoreConnectionMgr() const
 	{
 		return this->m_pCoreConnectionMgr;
-	}
-
-	CCoroutineMgr* CCoreApp::getCoroutineMgr() const
-	{
-		return this->m_pCoroutineMgr;
 	}
 
 	const std::string& CCoreApp::getConfigFileName() const
@@ -348,14 +342,6 @@ namespace core
 			return false;
 		}
 
-		this->m_pCoroutineMgr = new CCoroutineMgr();
-		if (!this->m_pCoroutineMgr->init(_MAIN_CO_STACK_SIZE))
-		{
-			PrintWarning("this->m_pCoroutineMgr->init(_MAIN_CO_STACK_SIZE)");
-			return false;
-		}
-		PrintInfo("main coroutine id: "UINT64FMT, core::getCurrentID());
-
 		this->m_pTickerMgr = new core::CTickerMgr();
 		uint32_t nMaxConnectionCount = (uint32_t)pBaseInfoXML->IntAttribute("connections");
 		this->m_pCoreConnectionMgr = new CCoreConnectionMgr();
@@ -398,7 +384,6 @@ namespace core
 
 		SAFE_DELETE(this->m_pCoreConnectionMgr);
 		SAFE_DELETE(this->m_pTickerMgr);
-		SAFE_DELETE(this->m_pCoroutineMgr);
 
 		CBaseObject::unRegistClassInfo();
 

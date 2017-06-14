@@ -1,17 +1,16 @@
 #pragma once
 
-#include "libCoreCommon/core_common.h"
-
 #include "future.h"
 
-#include <memory>
-
-namespace core
+namespace rpc
 {
 	template<class T>
-	class CPromise :
-		public base::noncopyable
+	class CPromise
 	{
+	private:
+		CPromise(const CPromise&) = delete;
+		const CPromise& operator = (const CPromise&) = delete;
+
 	public:
 		CPromise();
 		~CPromise();
@@ -22,7 +21,8 @@ namespace core
 
 		CFuture<T>	getFuture();
 
-		void		setValue(T val, uint32_t nErrorCode = 0);
+		uint64_t	getWaitCoroutineID() const;
+		void		setValue(std::shared_ptr<T> val, uint32_t nErrorCode = 0);
 
 	private:
 		std::shared_ptr<SFutureContext<T>>	m_pFutureContext;

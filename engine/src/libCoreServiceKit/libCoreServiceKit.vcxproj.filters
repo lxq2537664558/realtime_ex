@@ -101,6 +101,15 @@
     <ClInclude Include="tracer.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreServiceKit\coroutine.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="coroutine_impl.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="coroutine_mgr.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -157,6 +166,15 @@
     <ClCompile Include="tracer.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="coroutine.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="coroutine_impl.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="coroutine_mgr.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\inc\libCoreServiceKit\future.inl">
@@ -179,6 +197,9 @@
     </None>
     <None Include="..\..\inc\libCoreServiceKit\message_ptr.inl">
       <Filter>inc</Filter>
+    </None>
+    <None Include="context_linux.S">
+      <Filter>src</Filter>
     </None>
   </ItemGroup>
 </Project>
