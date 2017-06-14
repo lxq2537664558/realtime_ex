@@ -19,27 +19,14 @@ namespace core
 		return static_cast<CCoreServiceApp*>(CBaseApp::Inst());
 	}
 
-	const SNodeBaseInfo& CCoreServiceApp::getNodeBaseInfo() const
+	const SServiceBaseInfo& CCoreServiceApp::getNodeBaseInfo() const
 	{
 		return CCoreServiceAppImpl::Inst()->getNodeBaseInfo();
 	}
 
-	uint16_t CCoreServiceApp::getNodeID(const std::string& szName) const
+	uint16_t CCoreServiceApp::getServiceID(const std::string& szName) const
 	{
-		return CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getNodeID(szName);
-	}
-
-	void CCoreServiceApp::startNewTrace()
-	{
-		CCoreServiceAppImpl::Inst()->getInvokerTrace()->startNewTrace();
-	}
-
-	void CCoreServiceApp::addTraceExtraInfo(const char* szFormat, ...)
-	{
-		va_list arg;
-		va_start(arg, szFormat);
-		CCoreServiceAppImpl::Inst()->getInvokerTrace()->addTraceExtraInfo(szFormat, arg);
-		va_end(arg);
+		return CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getServiceID(szName);
 	}
 
 	base::CLuaFacade* CCoreServiceApp::getLuaFacade() const

@@ -30,9 +30,9 @@ namespace core
 		this->m_funDisconnect = funDisconnect;
 	}
 
-	void CBaseConnectionMgr::setConnectRefuseCallback(std::function<void(const std::string&)> funConnectRefuse)
+	void CBaseConnectionMgr::setConnectFailCallback(std::function<void(const std::string&)> funConnectFail)
 	{
-		this->m_funConnectRefuse = funConnectRefuse;
+		this->m_funConnectFail = funConnectFail;
 	}
 
 	void CBaseConnectionMgr::onConnect(CBaseConnection* pBaseConnection)
@@ -51,10 +51,10 @@ namespace core
 			this->m_funDisconnect(pBaseConnection);
 	}
 
-	void CBaseConnectionMgr::onConnectRefuse(const std::string& szContext)
+	void CBaseConnectionMgr::onConnectFail(const std::string& szContext)
 	{
-		if (this->m_funConnectRefuse != nullptr)
-			this->m_funConnectRefuse(szContext);
+		if (this->m_funConnectFail != nullptr)
+			this->m_funConnectFail(szContext);
 	}
 
 	bool CBaseConnectionMgr::connect(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize)

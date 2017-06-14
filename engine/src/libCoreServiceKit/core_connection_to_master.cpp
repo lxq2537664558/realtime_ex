@@ -18,14 +18,9 @@ namespace core
 
 	}
 
-	bool CCoreConnectionToMaster::init(const std::string& szContext)
+	bool CCoreConnectionToMaster::init(uint32_t nType, const std::string& szContext)
 	{
-		return true;
-	}	
-
-	uint32_t CCoreConnectionToMaster::getType() const
-	{
-		return eBCT_ConnectionToMaster;
+		return CBaseConnection::init(nType, szContext);
 	}
 
 	void CCoreConnectionToMaster::release()
@@ -43,7 +38,7 @@ namespace core
 			return;
 		}
 
-		smt_register_node_base_info netMsg;
+		smt_register_service_base_info netMsg;
 		netMsg.sNodeBaseInfo = CCoreServiceAppImpl::Inst()->getNodeBaseInfo();
 
 		base::CWriteBuf& writeBuf = CBaseApp::Inst()->getWriteBuf();

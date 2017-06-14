@@ -27,7 +27,7 @@ namespace core
 
 		bool					broadcast(uint16_t nNodeID, const SGateBroadcastMessageInfo& sGateBroadcastMessageInfo);
 
-		SNodeSessionInfo&		getNodeSessionInfo();
+		SServiceSessionInfo&	getServiceSessionInfo();
 
 		SResponseWaitInfo*		getResponseWaitInfo(uint64_t nSessionID, bool bErase);
 		SResponseWaitInfo*		addResponseWaitInfo(uint64_t nSessionID);
@@ -39,7 +39,7 @@ namespace core
 		
 	private:
 		uint64_t									m_nNextSessionID;
-		SNodeSessionInfo							m_sNodeSessionInfo;
+		SServiceSessionInfo							m_sServiceSessionInfo;
 		std::map<uint64_t, SResponseWaitInfo*>		m_mapResponseWaitInfo;
 		std::vector<char>							m_szBuf;
 	};

@@ -20,15 +20,27 @@ namespace core
 		CBaseConnection();
 		virtual ~CBaseConnection();
 
-		virtual bool			init(const std::string& szContext) { return true; }
-		/**
-		@brief: 获取连接类型
-		*/
-		virtual uint32_t		getType() const = 0;
+		virtual bool			init(uint32_t nType, const std::string& szContext);
 		/**
 		@brief: 释放对象
 		*/
 		virtual void			release() = 0;
+		/**
+		@brief: 连接成功回调
+		*/
+		virtual void			onConnect() = 0;
+		/**
+		@brief: 连接断开回调
+		*/
+		virtual void			onDisconnect() = 0;
+		/**
+		@brief: 消息回调
+		*/
+		virtual void			onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize) = 0;
+		/**
+		@brief: 获取连接类型
+		*/
+		uint32_t				getType() const;
 		/**
 		@brief: 发送消息
 		*/
@@ -61,23 +73,12 @@ namespace core
 		@brief: 获取远程地址
 		*/
 		const SNetAddr&			getRemoteAddr() const;
-		/**
-		@brief: 连接成功回调
-		*/
-		virtual void			onConnect() = 0;
-		/**
-		@brief: 连接断开回调
-		*/
-		virtual void			onDisconnect() = 0;
-		/**
-		@brief: 消息回调
-		*/
-		virtual void			onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize) = 0;
 
 	private:
 		void					onHeartbeat(uint64_t nContext);
 
 	private:
+		uint32_t			m_nType;
 		CCoreConnection*	m_pCoreConnection;
 	};
 }

@@ -43,9 +43,9 @@ namespace core
 
 		static CBaseActor*	createActor(void* pContext, CBaseActorFactory* pBaseActorFactory);
 
-		static uint16_t		getNodeID(uint64_t nActorID);
+		static uint16_t		getServiceID(uint64_t nActorID);
 		static uint64_t		getLocalActorID(uint64_t nActorID);
-		static uint64_t		makeRemoteActorID(uint16_t nNodeID, uint64_t nActorID);
+		static uint64_t		makeRemoteActorID(uint16_t nServiceID, uint64_t nActorID);
 
 	private:
 		bool				invokeImpl(uint64_t nID, const void* pData, uint64_t nCoroutineID, const std::function<void(CMessagePtr<char>, uint32_t)>& callback);

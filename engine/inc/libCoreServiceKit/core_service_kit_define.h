@@ -23,12 +23,12 @@ enum EResponseResultType
 namespace core
 {
 
-	struct SNodeBaseInfo
+	struct SServiceBaseInfo
 	{
 		uint16_t	nID;
-		std::string	szName;			// 节点名字
-		std::string	szGroup;		// 节点所属的组
-		std::string	szHost;			// 节点器IP
+		std::string	szName;			// 服务名字
+		std::string	szType;			// 服务类型（比如gate, gas）
+		std::string	szHost;			// 服务器IP
 		uint16_t	nPort;			// 0表示该节点没有监听地址
 		uint32_t	nRecvBufSize;	// 接收缓冲区大小
 		uint32_t	nSendBufSize;	// 发送缓存区大小
@@ -44,9 +44,9 @@ namespace core
 		{}
 	};
 
-	struct SNodeSessionInfo
+	struct SServiceSessionInfo
 	{
-		uint16_t	nNodeID;
+		uint16_t	nServiceID;
 		uint64_t	nSessionID;
 	};
 
@@ -67,13 +67,11 @@ namespace core
 	{
 		uint64_t nActorID;
 		uint64_t nSessionID;
-		uint64_t nTraceID;
 	};
 
 	struct gate_send_cookice
 	{
 		uint64_t nSessionID;
-		uint64_t nTraceID;
 	};
 	
 	struct gate_broadcast_cookice :
@@ -87,7 +85,6 @@ namespace core
 		uint64_t nSessionID;
 		uint64_t nFromActorID;
 		uint64_t nToActorID;
-		uint64_t nTraceID;
 	};
 
 	struct response_cookice

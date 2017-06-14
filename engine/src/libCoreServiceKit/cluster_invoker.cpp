@@ -5,14 +5,13 @@
 #include "core_service_kit_define.h"
 #include "service_base.h"
 #include "base_actor.h"
+#include "coroutine.h"
 
 #include "libBaseCommon/debug_helper.h"
-#include "libCoreCommon/coroutine.h"
 #include "libBaseCommon/base_time.h"
 
 namespace core
 {
-
 	CClusterInvoker::CClusterInvoker()
 	{
 
@@ -28,7 +27,7 @@ namespace core
 		return true;
 	}
 
-	bool CClusterInvoker::invoke(uint16_t nNodeID, const void* pData)
+	bool CClusterInvoker::invoke(uint16_t nServiceID, const void* pData)
 	{
 		DebugAstEx(pData != nullptr, false);
 
@@ -38,34 +37,34 @@ namespace core
 		sRequestMessageInfo.nFromActorID = 0;
 		sRequestMessageInfo.nToActorID = 0;
 
-		return CCoreServiceAppImpl::Inst()->getTransporter()->invoke(nNodeID, sRequestMessageInfo);
+		return CCoreServiceAppImpl::Inst()->getTransporter()->invoke(nServiceID, sRequestMessageInfo);
 	}
 
 	void CClusterInvoker::response(const void* pData)
 	{
 		DebugAst(pData != nullptr);
 
-		this->response(CCoreServiceAppImpl::Inst()->getTransporter()->getNodeSessionInfo(), pData);
+		this->response(CCoreServiceAppImpl::Inst()->getTransporter()->getServiceSessionInfo(), pData);
 	}
 
-	void CClusterInvoker::response(const SNodeSessionInfo& sNodeSessionInfo, const void* pData)
+	void CClusterInvoker::response(const SServiceSessionInfo& sServiceSessionInfo, const void* pData)
 	{
 		DebugAst(pData != nullptr);
 
 		SResponseMessageInfo sResponseMessageInfo;
-		sResponseMessageInfo.nSessionID = sNodeSessionInfo.nSessionID;
+		sResponseMessageInfo.nSessionID = sServiceSessionInfo.nSessionID;
 		sResponseMessageInfo.pData = pData;
 		sResponseMessageInfo.nResult = eRRT_OK;
 		sResponseMessageInfo.nFromActorID = 0;
 		sResponseMessageInfo.nToActorID = 0;
 
-		bool bRet = CCoreServiceAppImpl::Inst()->getTransporter()->response(sNodeSessionInfo.nNodeID, sResponseMessageInfo);
+		bool bRet = CCoreServiceAppImpl::Inst()->getTransporter()->response(sServiceSessionInfo.nServiceID, sResponseMessageInfo);
 		DebugAst(bRet);
 	}
 
-	SNodeSessionInfo CClusterInvoker::getServiceSessionInfo()
+	SServiceSessionInfo CClusterInvoker::getServiceSessionInfo()
 	{
-		return CCoreServiceAppImpl::Inst()->getTransporter()->getNodeSessionInfo();
+		return CCoreServiceAppImpl::Inst()->getTransporter()->getServiceSessionInfo();
 	}
 
 	bool CClusterInvoker::send(const SClientSessionInfo& sClientSessionInfo, const void* pData)
@@ -79,7 +78,7 @@ namespace core
 		return CCoreServiceAppImpl::Inst()->getTransporter()->send(sClientSessionInfo.nGateNodeID, sGateMessageInfo);
 	}
 
-	bool CClusterInvoker::forward(uint16_t nNodeID, uint64_t nSessionID, const void* pData)
+	bool CClusterInvoker::forward(uint16_t nServiceID, uint64_t nSessionID, const void* pData)
 	{
 		DebugAstEx(pData != nullptr, false);
 
@@ -88,7 +87,7 @@ namespace core
 		sGateMessageInfo.nSessionID = nSessionID;
 		sGateMessageInfo.pData = pData;
 
-		return CCoreServiceAppImpl::Inst()->getTransporter()->forward(nNodeID, sGateMessageInfo);
+		return CCoreServiceAppImpl::Inst()->getTransporter()->forward(nServiceID, sGateMessageInfo);
 	}
 
 	bool CClusterInvoker::forward_a(uint64_t nActorID, uint64_t nSessionID, const void* pData)
@@ -100,7 +99,7 @@ namespace core
 		sGateMessageInfo.nSessionID = nSessionID;
 		sGateMessageInfo.pData = pData;
 
-		uint16_t nNodeID = CBaseActor::getNodeID(nActorID);
+		uint16_t nNodeID = CBaseActor::getServiceID(nActorID);
 		return CCoreServiceAppImpl::Inst()->getTransporter()->forward(nNodeID, sGateMessageInfo);
 	}
 
@@ -127,7 +126,7 @@ namespace core
 		return bRet;
 	}
 
-	bool CClusterInvoker::invokeImpl(uint16_t nNodeID, const void* pData, const std::function<void(CMessagePtr<char>, uint32_t)>& callback)
+	bool CClusterInvoker::invokeImpl(uint16_t nServiceID, const void* pData, const std::function<void(CMessagePtr<char>, uint32_t)>& callback)
 	{
 		SRequestMessageInfo sRequestMessageInfo;
 		sRequestMessageInfo.pData = pData;
@@ -135,13 +134,12 @@ namespace core
 		sRequestMessageInfo.nFromActorID = 0;
 		sRequestMessageInfo.nToActorID = 0;
 
-		if (!CCoreServiceAppImpl::Inst()->getTransporter()->invoke(nNodeID, sRequestMessageInfo))
+		if (!CCoreServiceAppImpl::Inst()->getTransporter()->invoke(nServiceID, sRequestMessageInfo))
 			return false;
 
 		SResponseWaitInfo* pResponseWaitInfo = CCoreServiceAppImpl::Inst()->getTransporter()->addResponseWaitInfo(sRequestMessageInfo.nSessionID);
 		DebugAstEx(pResponseWaitInfo != nullptr, false);
-		pResponseWaitInfo->nTraceID = CCoreServiceAppImpl::Inst()->getInvokerTrace()->getCurTraceID();
-		pResponseWaitInfo->nToID = nNodeID;
+		pResponseWaitInfo->nToID = nServiceID;
 		//pResponseWaitInfo->nMessageID = pData->nMessageID;
 		pResponseWaitInfo->nBeginTime = base::getGmtTime();
 

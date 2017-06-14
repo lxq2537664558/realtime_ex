@@ -32,7 +32,7 @@ namespace core
 
 	void CCoreConnectionMgr::SNetActiveWaitConnecterHandler::onConnectFail()
 	{
-		CBaseApp::Inst()->getBaseConnectionMgr()->onConnectRefuse(szContext);
+		CBaseApp::Inst()->getBaseConnectionMgr()->onConnectFail(szContext);
 
 		pCoreConnectionMgr->delActiveWaitConnecterHandler(this);
 	}

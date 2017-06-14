@@ -61,7 +61,7 @@ namespace core
 		bool bRet = CCoreServiceAppImpl::Inst()->getScheduler()->response(sResponseMessageInfo);
 	}
 
-	uint16_t CBaseActor::getNodeID(uint64_t nActorID)
+	uint16_t CBaseActor::getServiceID(uint64_t nActorID)
 	{
 		return (uint16_t)(nActorID >> _REMOTE_ACTOR_BIT);
 	}
@@ -71,9 +71,9 @@ namespace core
 		return nActorID & 0x0000ffffffffffff;
 	}
 
-	uint64_t CBaseActor::makeRemoteActorID(uint16_t nNodeID, uint64_t nActorID)
+	uint64_t CBaseActor::makeRemoteActorID(uint16_t nServiceID, uint64_t nActorID)
 	{
-		return (uint64_t)nNodeID << _REMOTE_ACTOR_BIT | nActorID;
+		return (uint64_t)nServiceID << _REMOTE_ACTOR_BIT | nActorID;
 	}
 
 	CBaseActor* CBaseActor::createActor(void* pContext, CBaseActorFactory* pBaseActorFactory)
@@ -133,7 +133,6 @@ namespace core
 		DebugAstEx(nullptr != pResponseWaitInfo, false);
 	
 		pResponseWaitInfo->callback = callback;
-		pResponseWaitInfo->nTraceID = CCoreServiceAppImpl::Inst()->getInvokerTrace()->getCurTraceID();
 		pResponseWaitInfo->nToID = nID;
 		//pResponseWaitInfo->nMessageID = pData->nMessageID;
 		pResponseWaitInfo->nBeginTime = base::getGmtTime();

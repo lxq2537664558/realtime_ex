@@ -75,18 +75,18 @@ namespace core
 		/**
 		@brief: 设置全局的主动发起连接被失败回调
 		*/
-		void							setConnectRefuseCallback(std::function<void(const std::string&)> funConnectRefuse);
+		void							setConnectFailCallback(std::function<void(const std::string&)> funConnectFail);
 
 	private:
 		void							onConnect(CBaseConnection* pBaseConnection);
 		void							onDisconnect(CBaseConnection* pBaseConnection);
-		void							onConnectRefuse(const std::string& szContext);
+		void							onConnectFail(const std::string& szContext);
 
 	private:
 		CCoreConnectionMgr*							m_pCoreConnectionMgr;
 		std::map<uint32_t, CBaseConnectionFactory*>	m_mapBaseConnectionFactory;
 		std::function<void(CBaseConnection*)>		m_funConnect;
 		std::function<void(CBaseConnection*)>		m_funDisconnect;
-		std::function<void(const std::string&)>		m_funConnectRefuse;
+		std::function<void(const std::string&)>		m_funConnectFail;
 	};
 }

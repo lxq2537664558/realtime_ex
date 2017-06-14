@@ -49,12 +49,10 @@ namespace core
 				// °þµôcookice
 				const message_header* pHeader = reinterpret_cast<const message_header*>(pCookice + 1);
 
-				CCoreServiceAppImpl::Inst()->getInvokerTrace()->traceBeginRecv(pCookice->nTraceID, pHeader->nMessageID, pCookice->nFromActorID);
-
 				this->m_sActorSessionInfo.nActorID = pCookice->nFromActorID;
 				this->m_sActorSessionInfo.nSessionID = pCookice->nSessionID;
 
-				CSerializeAdapter* pSerializeAdapter = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getSerializeAdapter(CBaseActor::getNodeID(pCookice->nFromActorID));
+				CSerializeAdapter* pSerializeAdapter = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getSerializeAdapter(CBaseActor::getServiceID(pCookice->nFromActorID));
 				DebugAst(pSerializeAdapter != nullptr);
 
 				CMessagePtr<char> pMessage = pSerializeAdapter->deserialize(pHeader);
@@ -81,7 +79,6 @@ namespace core
 				
 				this->m_sActorSessionInfo.nActorID = 0;
 				this->m_sActorSessionInfo.nSessionID = 0;
-				CCoreServiceAppImpl::Inst()->getInvokerTrace()->traceEndRecv();
 			}
 			else if ((sMessagePacket.nType&eMT_TYPE_MASK) == eMT_RESPONSE)
 			{
@@ -94,8 +91,6 @@ namespace core
 				{
 					Defer(delete pResponseWaitInfo);
 
-					CCoreServiceAppImpl::Inst()->getInvokerTrace()->traceSend(pResponseWaitInfo->nTraceID, pResponseWaitInfo->nMessageID, pResponseWaitInfo->nToID, pResponseWaitInfo->nBeginTime);
-					CCoreServiceAppImpl::Inst()->getInvokerTrace()->traceBeginRecv(pResponseWaitInfo->nTraceID, pHeader->nMessageID, pResponseWaitInfo->nToID);
 					if (pResponseWaitInfo->callback != nullptr)
 					{
 						if (pCookice->nResult == eRRT_OK)
@@ -121,12 +116,11 @@ namespace core
 
 						CMessagePtr<char>* pNewMessage = new CMessagePtr<char>();
 						*pNewMessage = pMessage;
-						coroutine::sendMessage(pResponseWaitInfo->nCoroutineID, pNewMessage);
-						coroutine::sendMessage(pResponseWaitInfo->nCoroutineID, reinterpret_cast<void*>(pCookice->nResult));
+						coroutine::setLocalData(pResponseWaitInfo->nCoroutineID, "message", reinterpret_cast<uint64_t>(pNewMessage));
+						coroutine::setLocalData(pResponseWaitInfo->nCoroutineID, "result", pCookice->nResult);
 
 						coroutine::resume(pResponseWaitInfo->nCoroutineID, 0);
 					}
-					CCoreServiceAppImpl::Inst()->getInvokerTrace()->traceEndRecv();
 				}
 			}
 			else if ((sMessagePacket.nType&eMT_TYPE_MASK) == eMT_GATE_FORWARD)
@@ -135,10 +129,9 @@ namespace core
 				// °þµôcookice
 				const message_header* pHeader = reinterpret_cast<const message_header*>(pCookice + 1);
 
-				CCoreServiceAppImpl::Inst()->getInvokerTrace()->traceBeginRecv(pCookice->nTraceID, pHeader->nMessageID, 0);
 				SClientSessionInfo session((uint16_t)sMessagePacket.nID, pCookice->nSessionID);
 				
-				CSerializeAdapter* pSerializeAdapter = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getSerializeAdapter(CBaseActor::getNodeID((uint16_t)sMessagePacket.nID));
+				CSerializeAdapter* pSerializeAdapter = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getSerializeAdapter(CBaseActor::getServiceID((uint16_t)sMessagePacket.nID));
 				DebugAst(pSerializeAdapter != nullptr);
 
 				CMessagePtr<char> pMessage = pSerializeAdapter->deserialize(pHeader);
@@ -162,8 +155,6 @@ namespace core
 						}
 					}
 				}
-
-				CCoreServiceAppImpl::Inst()->getInvokerTrace()->traceEndRecv();
 			}
 
 			SAFE_DELETE_ARRAY(sMessagePacket.pData);

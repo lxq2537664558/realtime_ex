@@ -4,12 +4,12 @@
 
 namespace core
 {
-	class CNodeConnectionFactory :
+	class CServiceConnectionFactory :
 		public CBaseConnectionFactory
 	{
 	public:
-		CNodeConnectionFactory() { }
-		virtual ~CNodeConnectionFactory() { }
+		CServiceConnectionFactory() { }
+		virtual ~CServiceConnectionFactory() { }
 
 		virtual CBaseConnection*	createBaseConnection(uint32_t nType, const std::string& szContext);
 	};

@@ -3,10 +3,11 @@
 #include "protobuf_helper.h"
 #include "core_service_app_impl.h"
 #include "core_service_kit_define.h"
+#include "coroutine.h"
 
 #include "libBaseCommon/debug_helper.h"
 #include "libBaseCommon/defer.h"
-#include "libCoreCommon/coroutine.h"
+
 
 namespace core
 {
@@ -25,7 +26,7 @@ namespace core
 		return true;
 	}
 
-	void CMessageDispatcher::dispatch(uint64_t nFromSocketID, uint16_t nFromNodeID, uint8_t nMessageType, const void* pData, uint16_t nSize)
+	void CMessageDispatcher::dispatch(uint64_t nFromSocketID, uint16_t nFromServiceID, uint8_t nMessageType, const void* pData, uint16_t nSize)
 	{
 		DebugAst(pData != nullptr);
 
@@ -33,7 +34,7 @@ namespace core
 		const std::vector<GlobalBeforeFilter>& vecGlobalBeforeFilter = CCoreServiceAppImpl::Inst()->getGlobalBeforeFilter();
 		for (size_t i = 0; i < vecGlobalBeforeFilter.size(); ++i)
 		{
-			if (!vecGlobalBeforeFilter[i](nFromSocketID, nFromNodeID, nMessageType, pData, nSize))
+			if (!vecGlobalBeforeFilter[i](nFromSocketID, nFromServiceID, nMessageType, pData, nSize))
 			{
 				bFilter = true;
 				break;
@@ -48,9 +49,9 @@ namespace core
 
 			const request_cookice* pCookice = reinterpret_cast<const request_cookice*>(pData);
 
-			SNodeSessionInfo& sNodeSessionInfo = CCoreServiceAppImpl::Inst()->getTransporter()->getNodeSessionInfo();
-			sNodeSessionInfo.nNodeID = nFromNodeID;
-			sNodeSessionInfo.nSessionID = pCookice->nSessionID;
+			SServiceSessionInfo& sServiceSessionInfo = CCoreServiceAppImpl::Inst()->getTransporter()->getServiceSessionInfo();
+			sServiceSessionInfo.nServiceID = nFromServiceID;
+			sServiceSessionInfo.nSessionID = pCookice->nSessionID;
 
 			// °þµôcookice
 			const message_header* pHeader = reinterpret_cast<const message_header*>(pCookice + 1);
@@ -58,18 +59,14 @@ namespace core
 			auto& callback = CCoreServiceAppImpl::Inst()->getCoreMessageRegistry()->getCallback(pHeader->nMessageID);
 			if (callback != nullptr)
 			{
-				CCoreServiceAppImpl::Inst()->getInvokerTrace()->traceBeginRecv(pCookice->nTraceID, pHeader->nMessageID, nFromNodeID);
-				
-				CSerializeAdapter* pSerializeAdapter = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getSerializeAdapter(nFromNodeID);
+				CSerializeAdapter* pSerializeAdapter = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getSerializeAdapter(nFromServiceID);
 				DebugAst(pSerializeAdapter != nullptr);
 				
 				CMessagePtr<char> pMessage = pSerializeAdapter->deserialize(pHeader);
-				bFilter = !callback(nFromNodeID, pMessage);
-				
-				CCoreServiceAppImpl::Inst()->getInvokerTrace()->traceEndRecv();
+				bFilter = !callback(nFromServiceID, pMessage);
 			}
-			sNodeSessionInfo.nNodeID = 0;
-			sNodeSessionInfo.nSessionID = 0;
+			sServiceSessionInfo.nServiceID = 0;
+			sServiceSessionInfo.nSessionID = 0;
 		}
 		else if ((nMessageType&eMT_TYPE_MASK) == eMT_RESPONSE)
 		{
@@ -83,13 +80,11 @@ namespace core
 				if (nullptr == pResponseWaitInfo)
 					return;
 
-				CCoreServiceAppImpl::Inst()->getInvokerTrace()->traceSend(pResponseWaitInfo->nTraceID, pResponseWaitInfo->nMessageID, pResponseWaitInfo->nToID, pResponseWaitInfo->nBeginTime);
-				CCoreServiceAppImpl::Inst()->getInvokerTrace()->traceBeginRecv(pResponseWaitInfo->nTraceID, pHeader->nMessageID, nFromNodeID);
 				Defer(delete pResponseWaitInfo);
 
 				if (pCookice->nResult == eRRT_OK)
 				{
-					CSerializeAdapter* pSerializeAdapter = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getSerializeAdapter(nFromNodeID);
+					CSerializeAdapter* pSerializeAdapter = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getSerializeAdapter(nFromServiceID);
 					DebugAst(pSerializeAdapter != nullptr);
 
 					CMessagePtr<char> pMessage = pSerializeAdapter->deserialize(pHeader);
@@ -99,7 +94,6 @@ namespace core
 				{
 					pResponseWaitInfo->callback(nullptr, (EResponseResultType)pCookice->nResult);
 				}
-				CCoreServiceAppImpl::Inst()->getInvokerTrace()->traceEndRecv();
 			}
 		}
 		else if ((nMessageType&eMT_TYPE_MASK) == eMT_GATE_FORWARD)
@@ -108,19 +102,16 @@ namespace core
 			// °þµôcookice
 			const message_header* pHeader = reinterpret_cast<const message_header*>(pCookice + 1);
 			
-			SClientSessionInfo session(nFromNodeID, pCookice->nSessionID);
+			SClientSessionInfo session(nFromServiceID, pCookice->nSessionID);
 
 			auto& callback = CCoreServiceAppImpl::Inst()->getCoreMessageRegistry()->getGateForwardCallback(pHeader->nMessageID);
 			if (callback != nullptr)
 			{
-				CCoreServiceAppImpl::Inst()->getInvokerTrace()->traceBeginRecv(pCookice->nTraceID, pHeader->nMessageID, nFromNodeID);
-				
-				CSerializeAdapter* pSerializeAdapter = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getSerializeAdapter(nFromNodeID);
+				CSerializeAdapter* pSerializeAdapter = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getSerializeAdapter(nFromServiceID);
 				DebugAst(pSerializeAdapter != nullptr);
 
 				CMessagePtr<char> pMessage = pSerializeAdapter->deserialize(pHeader);
 				bFilter = !callback(session, pMessage);
-				CCoreServiceAppImpl::Inst()->getInvokerTrace()->traceEndRecv();
 			}
 		}
 
@@ -130,7 +121,7 @@ namespace core
 		const std::vector<GlobalAfterFilter>& vecGlobalAfterFilter = CCoreServiceAppImpl::Inst()->getGlobalAfterFilter();
 		for (size_t i = 0; i < vecGlobalAfterFilter.size(); ++i)
 		{
-			vecGlobalAfterFilter[i](nFromSocketID, nFromNodeID, nMessageType, pData, nSize);
+			vecGlobalAfterFilter[i](nFromSocketID, nFromServiceID, nMessageType, pData, nSize);
 		}
 	}
 }

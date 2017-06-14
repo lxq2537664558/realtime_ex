@@ -28,7 +28,6 @@ namespace core
 		, m_pCoreOtherNodeProxy(nullptr)
 		, m_pNodeConnectionFactory(nullptr)
 		, m_pCoreConnectionToMaster(nullptr)
-		, m_pInvokerTrace(nullptr)
 		, m_pMessageDispatcher(nullptr)
 		, m_pLuaFacade(nullptr)
 	{
@@ -75,7 +74,7 @@ namespace core
 		// 加载节点基本信息
 		this->m_sNodeBaseInfo.nID = (uint16_t)nID;
 		this->m_sNodeBaseInfo.szName = pNodeInfoXML->Attribute("node_name");
-		this->m_sNodeBaseInfo.szGroup = pNodeInfoXML->Attribute("node_group");
+		this->m_sNodeBaseInfo.szType = pNodeInfoXML->Attribute("node_group");
 		this->m_nInvokTimeout = (uint32_t)(pNodeInfoXML->UnsignedAttribute("invoke_timeout"));
 		tinyxml2::XMLElement* pHostInfoXML = pNodeInfoXML->FirstChildElement("host_info");
 		if (pHostInfoXML != nullptr)
@@ -86,12 +85,12 @@ namespace core
 			this->m_sNodeBaseInfo.nSendBufSize = pHostInfoXML->UnsignedAttribute("send_buf_size");
 		}
 
-		this->m_pNodeConnectionFactory = new CNodeConnectionFactory();
+		this->m_pNodeConnectionFactory = new CServiceConnectionFactory();
 		CBaseApp::Inst()->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionFromOtherNode, this->m_pNodeConnectionFactory);
 		CBaseApp::Inst()->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionToOtherNode, this->m_pNodeConnectionFactory);
 		CBaseApp::Inst()->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionToMaster, this->m_pNodeConnectionFactory);
 
-		this->m_pCoreOtherNodeProxy = new CCoreOtherNodeProxy();
+		this->m_pCoreOtherNodeProxy = new CCoreOtherServiceProxy();
 		if (!this->m_pCoreOtherNodeProxy->init())
 		{
 			PrintWarning("this->m_pCoreOtherNodeProxy->init()");
@@ -112,13 +111,6 @@ namespace core
 		{
 			szMasterHost = pMasterAddrXML->Attribute("host");
 			nMasterPort = (uint16_t)pMasterAddrXML->IntAttribute("port");
-		}
-
-		this->m_pInvokerTrace = new CTracer();
-		if (!this->m_pInvokerTrace->init())
-		{
-			PrintWarning("this->m_pInvokerTrace->init()");
-			return false;
 		}
 
 		this->m_pMessageDispatcher = new CMessageDispatcher();
@@ -180,7 +172,6 @@ namespace core
 		SAFE_DELETE(this->m_pCoreMessageRegistry);
 		SAFE_DELETE(this->m_pCoreOtherNodeProxy);
 		SAFE_DELETE(this->m_pNodeConnectionFactory);
-		SAFE_DELETE(this->m_pInvokerTrace);
 		SAFE_DELETE(this->m_pMessageDispatcher);
 		SAFE_DELETE(this->m_pScheduler);
 		SAFE_DELETE(this->m_pLuaFacade);
@@ -214,7 +205,7 @@ namespace core
 		this->m_pCoreConnectionToMaster = pCoreConnectionToMaster;
 	}
 
-	const SNodeBaseInfo& CCoreServiceAppImpl::getNodeBaseInfo() const
+	const SServiceBaseInfo& CCoreServiceAppImpl::getNodeBaseInfo() const
 	{
 		return this->m_sNodeBaseInfo;
 	}
@@ -244,7 +235,7 @@ namespace core
 		return this->m_pTransporter;
 	}
 
-	CCoreOtherNodeProxy* CCoreServiceAppImpl::getCoreOtherNodeProxy() const
+	CCoreOtherServiceProxy* CCoreServiceAppImpl::getCoreOtherNodeProxy() const
 	{
 		return this->m_pCoreOtherNodeProxy;
 	}
@@ -252,11 +243,6 @@ namespace core
 	CCoreMessageRegistry* CCoreServiceAppImpl::getCoreMessageRegistry() const
 	{
 		return this->m_pCoreMessageRegistry;
-	}
-
-	CTracer* CCoreServiceAppImpl::getInvokerTrace() const
-	{
-		return this->m_pInvokerTrace;
 	}
 
 	CMessageDispatcher* CCoreServiceAppImpl::getMessageDispatcher() const
@@ -294,12 +280,12 @@ namespace core
 		this->m_fnNodeDisconnectCallback = callback;
 	}
 
-	std::function<void(uint16_t)>& CCoreServiceAppImpl::getNodeConnectCallback()
+	std::function<void(uint16_t)>& CCoreServiceAppImpl::getServiceConnectCallback()
 	{
 		return this->m_fnNodeConnectCallback;
 	}
 
-	std::function<void(uint16_t)>& CCoreServiceAppImpl::getNodeDisconnectCallback()
+	std::function<void(uint16_t)>& CCoreServiceAppImpl::getServiceDisconnectCallback()
 	{
 		return this->m_fnNodeDisconnectCallback;
 	}

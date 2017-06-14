@@ -16,11 +16,24 @@ namespace core
 
 	CBaseConnection::CBaseConnection()
 		: m_pCoreConnection(nullptr)
+		, m_nType(0)
 	{
 	}
 
 	CBaseConnection::~CBaseConnection()
 	{
+	}
+
+	bool CBaseConnection::init(uint32_t nType, const std::string& szContext)
+	{
+		this->m_nType = nType;
+
+		return true;
+	}
+
+	uint32_t CBaseConnection::getType() const
+	{
+		return this->m_nType;
 	}
 
 	void CBaseConnection::send(uint8_t nMessageType, const void* pData, uint16_t nSize)

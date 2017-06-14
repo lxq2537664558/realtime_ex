@@ -130,8 +130,8 @@ namespace core
 		CBaseActorImpl* pFromBaseActorImpl = iter->second;
 		DebugAstEx(pFromBaseActorImpl != nullptr, false);
 
-		uint16_t nNodeID = CBaseActor::getNodeID(sRequestMessageInfo.nToActorID);
-		if (nNodeID == 0)
+		uint16_t nServiceID = CBaseActor::getServiceID(sRequestMessageInfo.nToActorID);
+		if (nServiceID == 0)
 		{
 			auto iter = this->m_mapBaseActor.find(sRequestMessageInfo.nToActorID);
 			if (iter == this->m_mapBaseActor.end())
@@ -151,7 +151,6 @@ namespace core
 			// Ìî³äcookice
 			request_cookice* pCookice = reinterpret_cast<request_cookice*>(pBuf);
 			pCookice->nSessionID = sRequestMessageInfo.nSessionID;
-			pCookice->nTraceID = 0;
 			pCookice->nFromActorID = sRequestMessageInfo.nFromActorID;
 			pCookice->nToActorID = sRequestMessageInfo.nToActorID;
 
@@ -173,13 +172,13 @@ namespace core
 		{
 			const_cast<SRequestMessageInfo&>(sRequestMessageInfo).nToActorID = CBaseActor::getLocalActorID(sRequestMessageInfo.nToActorID);
 			const_cast<SRequestMessageInfo&>(sRequestMessageInfo).nFromActorID = CBaseActor::makeRemoteActorID(CCoreServiceAppImpl::Inst()->getNodeBaseInfo().nID, sRequestMessageInfo.nFromActorID);
-			return CCoreServiceAppImpl::Inst()->getTransporter()->invoke(nNodeID, sRequestMessageInfo);
+			return CCoreServiceAppImpl::Inst()->getTransporter()->invoke(nServiceID, sRequestMessageInfo);
 		}
 	}
 
 	bool CScheduler::response(const SResponseMessageInfo& sResponseMessageInfo)
 	{
-		uint16_t nNodeID = CBaseActor::getNodeID(sResponseMessageInfo.nToActorID);
+		uint16_t nNodeID = CBaseActor::getServiceID(sResponseMessageInfo.nToActorID);
 		if (nNodeID == 0)
 		{
 			auto iter = this->m_mapBaseActor.find(sResponseMessageInfo.nToActorID);

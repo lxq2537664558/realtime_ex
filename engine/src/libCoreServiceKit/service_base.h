@@ -51,7 +51,6 @@ namespace core
 		uint64_t	nSessionID;
 		uint64_t	nCoroutineID;
 
-		uint64_t	nTraceID;	// traceid
 		uint64_t	nToID;		// 目标ID
 		int64_t		nBeginTime;	// 发送时间
 		uint16_t	nMessageID;	// 消息ID

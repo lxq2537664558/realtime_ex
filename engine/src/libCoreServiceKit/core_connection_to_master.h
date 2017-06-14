@@ -11,8 +11,7 @@ namespace core
 		CCoreConnectionToMaster();
 		virtual ~CCoreConnectionToMaster();
 
-		virtual bool		init(const std::string& szContext);
-		virtual uint32_t	getType() const;
+		virtual bool		init(uint32_t nType, const std::string& szContext);
 		virtual void		release();
 
 		virtual void		onConnect();

@@ -1,13 +1,13 @@
 namespace core
 {
 	template<class T>
-	std::map<uint16_t, typename CNodeMessageRegistry<T>::funMessageHandler> CNodeMessageRegistry<T>::s_mapMessageHandler;
+	std::map<uint16_t, typename CServiceMessageRegistry<T>::funMessageHandler> CServiceMessageRegistry<T>::s_mapMessageHandler;
 
 	template<class T>
-	std::map<uint16_t, typename CNodeMessageRegistry<T>::funForwardHandler> CNodeMessageRegistry<T>::s_mapForwardHandler;
+	std::map<uint16_t, typename CServiceMessageRegistry<T>::funForwardHandler> CServiceMessageRegistry<T>::s_mapForwardHandler;
 
 	template<class T>
-	void CNodeMessageRegistry<T>::registerMessageHandler(uint16_t nMessageID, bool(T::*handler)(uint16_t, CMessagePtr<char>))
+	void CServiceMessageRegistry<T>::registerMessageHandler(uint16_t nMessageID, bool(T::*handler)(uint16_t, CMessagePtr<char>))
 	{
 		DebugAst(handler != nullptr);
 
@@ -15,7 +15,7 @@ namespace core
 	}
 
 	template<class T>
-	void CNodeMessageRegistry<T>::registerForwardHandler(uint16_t nMessageID, bool(T::*handler)(SClientSessionInfo, CMessagePtr<char>))
+	void CServiceMessageRegistry<T>::registerForwardHandler(uint16_t nMessageID, bool(T::*handler)(SClientSessionInfo, CMessagePtr<char>))
 	{
 		DebugAst(handler != nullptr);
 
@@ -23,7 +23,7 @@ namespace core
 	}
 
 	template<class T>
-	bool CNodeMessageRegistry<T>::dispatch(T* pObject, uint16_t nFrom, CMessagePtr<char>& pMessage)
+	bool CServiceMessageRegistry<T>::dispatch(T* pObject, uint16_t nFrom, CMessagePtr<char>& pMessage)
 	{
 		auto iter = s_mapMessageHandler.find(pMessage.getMessageID());
 		if (iter == s_mapMessageHandler.end())
@@ -35,7 +35,7 @@ namespace core
 	}
 
 	template<class T>
-	bool CNodeMessageRegistry<T>::forward(T* pObject, SClientSessionInfo& sSession, CMessagePtr<char>& pMessage)
+	bool CServiceMessageRegistry<T>::forward(T* pObject, SClientSessionInfo& sSession, CMessagePtr<char>& pMessage)
 	{
 		auto iter = s_mapForwardHandler.find(pMessage.getMessageID());
 		if (iter == s_mapForwardHandler.end())

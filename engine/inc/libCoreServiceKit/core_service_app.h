@@ -20,11 +20,11 @@ namespace core
 		/**
 		@brief: 获取本节点基本信息
 		*/
-		const SNodeBaseInfo&	getNodeBaseInfo() const;
+		const SServiceBaseInfo&	getNodeBaseInfo() const;
 		/**
 		@brief: 根据节点名字获取节点id
 		*/
-		uint16_t				getNodeID(const std::string& szName) const;
+		uint16_t				getServiceID(const std::string& szName) const;
 		/**
 		@brief: 设置全局的节点连接成功回调
 		*/
@@ -53,14 +53,6 @@ namespace core
 		@brief: 设置消息序列化适配器
 		*/
 		void					setSerializeAdapter(uint16_t nNodeID, CSerializeAdapter* pSerializeAdapter);
-		/**
-		@brief: 开始一个新的trace
-		*/
-		void					startNewTrace();
-		/**
-		@brief: 添加trace额外信息
-		*/
-		void					addTraceExtraInfo(const char* szFormat, ...);
 		/**
 		@brief: 获取lua包装对象
 		*/

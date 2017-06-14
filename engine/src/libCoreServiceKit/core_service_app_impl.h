@@ -4,11 +4,10 @@
 #include "libBaseLua/lua_facade.h"
 #include "libCoreCommon/core_common.h"
 
-#include "transporter.h"
-#include "core_other_node_proxy.h"
-#include "core_message_registry.h"
-#include "tracer.h"
 #include "scheduler.h"
+#include "transporter.h"
+#include "core_other_service_proxy.h"
+#include "core_message_registry.h"
 #include "message_dispatcher.h"
 #include "core_service_app.h"
 
@@ -17,9 +16,9 @@
 namespace core
 {
 	class CCoreServiceConnection;
-	class CCoreConnectionFromOtherNode;
+	class CCoreConnectionOtherService;
 	class CCoreConnectionToMaster;
-	class CNodeConnectionFactory;
+	class CServiceConnectionFactory;
 	class CCoreServiceAppImpl :
 		public base::CSingleton<CCoreServiceAppImpl>
 	{
@@ -32,16 +31,15 @@ namespace core
 		void						run();
 
 		CTransporter*				getTransporter() const;
-		CCoreOtherNodeProxy*		getCoreOtherNodeProxy() const;
+		CCoreOtherServiceProxy*		getCoreOtherNodeProxy() const;
 		CCoreMessageRegistry*		getCoreMessageRegistry() const;
-		CTracer*				getInvokerTrace() const;
 		CScheduler*					getScheduler() const;
 		CMessageDispatcher*			getMessageDispatcher() const;
 
 		CCoreConnectionToMaster*	getConnectionToMaster() const;
 		void						setCoreConnectionToMaster(CCoreConnectionToMaster* pCoreConnectionToMaster);
 
-		const SNodeBaseInfo&		getNodeBaseInfo() const;
+		const SServiceBaseInfo&		getNodeBaseInfo() const;
 
 		void						addGlobalBeforeFilter(const GlobalBeforeFilter& callback);
 		void						addGlobalAfterFilter(const GlobalAfterFilter& callback);
@@ -60,9 +58,9 @@ namespace core
 		void						setNodeConnectCallback(const std::function<void(uint16_t)>& callback);
 		void						setNodeDisconnectCallback(const std::function<void(uint16_t)>& callback);
 		std::function<void(uint16_t)>&
-									getNodeConnectCallback();
+									getServiceConnectCallback();
 		std::function<void(uint16_t)>&
-									getNodeDisconnectCallback();
+									getServiceDisconnectCallback();
 
 	private:
 		void						onConnectRefuse(const std::string& szContext);
@@ -73,12 +71,11 @@ namespace core
 		CTransporter*					m_pTransporter;
 		CCoreMessageRegistry*			m_pCoreMessageRegistry;
 		CScheduler*						m_pScheduler;
-		CCoreOtherNodeProxy*			m_pCoreOtherNodeProxy;
-		CTracer*					m_pInvokerTrace;
+		CCoreOtherServiceProxy*			m_pCoreOtherNodeProxy;
 		CMessageDispatcher*				m_pMessageDispatcher;
-		CNodeConnectionFactory*			m_pNodeConnectionFactory;
+		CServiceConnectionFactory*			m_pNodeConnectionFactory;
 		CCoreConnectionToMaster*		m_pCoreConnectionToMaster;
-		SNodeBaseInfo					m_sNodeBaseInfo;
+		SServiceBaseInfo					m_sNodeBaseInfo;
 		std::string						m_szMasterHost;
 		uint16_t						m_nMasterPort;
 		uint32_t						m_nInvokTimeout;

@@ -18,20 +18,25 @@ enum ESystemMessageType
 
 namespace core
 {
-message_begin(smt_register_node_base_info, eSMT_register_node_base_info)
-	SNodeBaseInfo	sNodeBaseInfo;
+message_begin(smt_register_service_base_info, eSMT_register_node_base_info)
+	std::vector<SServiceBaseInfo>	vecServiceBaseInfo;
 
 	void pack(base::CWriteBuf& writeBuf)
 	{
 		pack_begin(writeBuf);
 
-		writeBuf.write(sNodeBaseInfo.nID);
-		writeBuf.write(sNodeBaseInfo.szName);
-		writeBuf.write(sNodeBaseInfo.szGroup);
-		writeBuf.write(sNodeBaseInfo.szHost);
-		writeBuf.write(sNodeBaseInfo.nPort);
-		writeBuf.write(sNodeBaseInfo.nRecvBufSize);
-		writeBuf.write(sNodeBaseInfo.nSendBufSize);
+		uint16_t nServiceCount = (uint16_t)vecServiceBaseInfo.size();
+		writeBuf.write(nServiceCount);
+		for (uint16_t i = 0; i < nServiceCount; ++i)
+		{
+			writeBuf.write(vecServiceBaseInfo[i].nID);
+			writeBuf.write(vecServiceBaseInfo[i].szName);
+			writeBuf.write(vecServiceBaseInfo[i].szType);
+			writeBuf.write(vecServiceBaseInfo[i].szHost);
+			writeBuf.write(vecServiceBaseInfo[i].nPort);
+			writeBuf.write(vecServiceBaseInfo[i].nRecvBufSize);
+			writeBuf.write(vecServiceBaseInfo[i].nSendBufSize);
+		}
 
 		pack_end(writeBuf);
 	}
@@ -40,14 +45,19 @@ message_begin(smt_register_node_base_info, eSMT_register_node_base_info)
 	{
 		unpack_begin(pBuf, nSize);
 
-		readBuf.read(sNodeBaseInfo.nID);
-		readBuf.read(sNodeBaseInfo.szName);
-		readBuf.read(sNodeBaseInfo.szGroup);
-		readBuf.read(sNodeBaseInfo.szHost);
-		readBuf.read(sNodeBaseInfo.nPort);
-		readBuf.read(sNodeBaseInfo.nRecvBufSize);
-		readBuf.read(sNodeBaseInfo.nSendBufSize);
-
+		uint16_t nServiceCount = 0;
+		readBuf.read(nServiceCount);
+		vecServiceBaseInfo.resize(nServiceCount);
+		for (uint16_t i = 0; i < nServiceCount; ++i)
+		{
+			readBuf.read(vecServiceBaseInfo[i].nID);
+			readBuf.read(vecServiceBaseInfo[i].szName);
+			readBuf.read(vecServiceBaseInfo[i].szType);
+			readBuf.read(vecServiceBaseInfo[i].szHost);
+			readBuf.read(vecServiceBaseInfo[i].nPort);
+			readBuf.read(vecServiceBaseInfo[i].nRecvBufSize);
+			readBuf.read(vecServiceBaseInfo[i].nSendBufSize);
+		}
 		unpack_end();
 	}
 
@@ -76,7 +86,7 @@ message_begin(smt_unregister_node_base_info, eSMT_unregister_node_base_info)
 message_end
 
 message_begin(smt_sync_node_base_info, eSMT_sync_node_base_info)
-	SNodeBaseInfo	sNodeBaseInfo;
+	SServiceBaseInfo	sNodeBaseInfo;
 
 	void pack(base::CWriteBuf& writeBuf)
 	{
@@ -84,7 +94,7 @@ message_begin(smt_sync_node_base_info, eSMT_sync_node_base_info)
 
 		writeBuf.write(sNodeBaseInfo.nID);
 		writeBuf.write(sNodeBaseInfo.szName);
-		writeBuf.write(sNodeBaseInfo.szGroup);
+		writeBuf.write(sNodeBaseInfo.szType);
 		writeBuf.write(sNodeBaseInfo.szHost);
 		writeBuf.write(sNodeBaseInfo.nPort);
 		writeBuf.write(sNodeBaseInfo.nRecvBufSize);
@@ -99,7 +109,7 @@ message_begin(smt_sync_node_base_info, eSMT_sync_node_base_info)
 
 		readBuf.read(sNodeBaseInfo.nID);
 		readBuf.read(sNodeBaseInfo.szName);
-		readBuf.read(sNodeBaseInfo.szGroup);
+		readBuf.read(sNodeBaseInfo.szType);
 		readBuf.read(sNodeBaseInfo.szHost);
 		readBuf.read(sNodeBaseInfo.nPort);
 		readBuf.read(sNodeBaseInfo.nRecvBufSize);
@@ -136,13 +146,13 @@ message_begin(smt_remove_node_base_info, eSMT_remove_node_base_info)
 message_end
 
 message_begin(smt_notify_node_base_info, eSMT_notify_node_base_info)
-	uint16_t nFromNodeID;
+	uint16_t nFromServiceID;
 	
 	void pack(base::CWriteBuf& writeBuf)
 	{
 		pack_begin(writeBuf);
 
-		writeBuf.write(nFromNodeID);
+		writeBuf.write(nFromServiceID);
 		
 		pack_end(writeBuf);
 	}
@@ -151,7 +161,7 @@ message_begin(smt_notify_node_base_info, eSMT_notify_node_base_info)
 	{
 		unpack_begin(pBuf, nSize);
 
-		readBuf.read(nFromNodeID);
+		readBuf.read(nFromServiceID);
 		
 		unpack_end();
 	}

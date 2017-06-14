@@ -151,7 +151,7 @@
     <ClInclude Include="..\..\inc\libCoreServiceKit\serialize_adapter.h" />
     <ClInclude Include="..\..\inc\libCoreServiceKit\core_service_app.h" />
     <ClInclude Include="..\..\inc\libCoreServiceKit\future.h" />
-    <ClInclude Include="..\..\inc\libCoreServiceKit\node_message_registry.h" />
+    <ClInclude Include="..\..\inc\libCoreServiceKit\service_message_registry.h" />
     <ClInclude Include="..\..\inc\libCoreServiceKit\promise.h" />
     <ClInclude Include="..\..\inc\libCoreServiceKit\protobuf_helper.h" />
     <ClInclude Include="..\..\inc\libCoreServiceKit\proto_system.h" />
@@ -161,15 +161,13 @@
     <ClInclude Include="coroutine_mgr.h" />
     <ClInclude Include="message_dispatcher.h" />
     <ClInclude Include="scheduler.h" />
-    <ClInclude Include="core_connection_from_other_node.h" />
-    <ClInclude Include="core_connection_to_other_node.h" />
-    <ClInclude Include="tracer.h" />
+    <ClInclude Include="core_connection_other_service.h" />
     <ClInclude Include="service_base.h" />
     <ClInclude Include="core_connection_to_master.h" />
     <ClInclude Include="core_message_registry.h" />
     <ClInclude Include="core_service_app_impl.h" />
-    <ClInclude Include="core_other_node_proxy.h" />
-    <ClInclude Include="node_connection_factory.h" />
+    <ClInclude Include="core_other_service_proxy.h" />
+    <ClInclude Include="service_connection_factory.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="transporter.h" />
@@ -183,16 +181,14 @@
     <ClCompile Include="native_serialize_adapter.cpp" />
     <ClCompile Include="scheduler.cpp" />
     <ClCompile Include="cluster_invoker.cpp" />
-    <ClCompile Include="core_connection_from_other_node.cpp" />
+    <ClCompile Include="core_connection_other_service.cpp" />
     <ClCompile Include="core_connection_to_master.cpp" />
-    <ClCompile Include="core_connection_to_other_node.cpp" />
     <ClCompile Include="core_service_app.cpp" />
-    <ClCompile Include="tracer.cpp" />
     <ClCompile Include="core_message_registry.cpp" />
     <ClCompile Include="message_dispatcher.cpp" />
     <ClCompile Include="protobuf_helper.cpp" />
     <ClCompile Include="core_service_app_impl.cpp" />
-    <ClCompile Include="node_connection_factory.cpp" />
+    <ClCompile Include="service_connection_factory.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -200,7 +196,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="transporter.cpp" />
-    <ClCompile Include="core_other_node_proxy.cpp" />
+    <ClCompile Include="core_other_service_proxy.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\libBaseLua\libBaseLua.vcxproj">
@@ -216,7 +212,7 @@
     <None Include="..\..\inc\libCoreServiceKit\cluster_invoker.inl" />
     <None Include="..\..\inc\libCoreServiceKit\future.inl" />
     <None Include="..\..\inc\libCoreServiceKit\message_ptr.inl" />
-    <None Include="..\..\inc\libCoreServiceKit\node_message_registry.inl" />
+    <None Include="..\..\inc\libCoreServiceKit\service_message_registry.inl" />
     <None Include="..\..\inc\libCoreServiceKit\promise.inl" />
     <None Include="context_linux.S" />
   </ItemGroup>
