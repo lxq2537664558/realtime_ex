@@ -44,7 +44,7 @@ namespace core
 	{
 		DebugAstEx(sRequestMessageInfo.pData != nullptr, false);
 
-		CCoreConnectionOtherService* pCoreConnectionOtherService = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getCoreConnectionOtherService(nServiceID);
+		CCoreConnectionOtherNode* pCoreConnectionOtherService = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getCoreConnectionOtherNode(nServiceID);
 		if (nullptr == pCoreConnectionOtherService)
 			return false;
 		
@@ -70,7 +70,7 @@ namespace core
 	{
 		DebugAstEx(sResponseMessageInfo.pData != nullptr, false);
 		
-		CCoreConnectionOtherService* pCoreConnectionFromOtherNode = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getCoreConnectionFromOtherNode(nNodeID);
+		CCoreConnectionOtherNode* pCoreConnectionFromOtherNode = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getCoreConnectionFromOtherNode(nNodeID);
 		if (pCoreConnectionFromOtherNode == nullptr)
 			return false;
 		
@@ -95,7 +95,7 @@ namespace core
 	{
 		DebugAstEx(sGateForwardMessageInfo.pData != nullptr, false);
 
-		CCoreConnectionOtherService* pCoreConnectionOtherService = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getCoreConnectionOtherService(nServiceID);
+		CCoreConnectionOtherNode* pCoreConnectionOtherService = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getCoreConnectionOtherNode(nServiceID);
 		if (nullptr == pCoreConnectionOtherService)
 			return false;
 		
@@ -119,7 +119,7 @@ namespace core
 	{
 		DebugAstEx(sGateMessageInfo.pData != nullptr, false);
 
-		CCoreConnectionOtherService* pCoreConnectionOtherService = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getCoreConnectionOtherService(nServiceID);
+		CCoreConnectionOtherNode* pCoreConnectionOtherService = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getCoreConnectionOtherNode(nServiceID);
 		if (nullptr == pCoreConnectionOtherService)
 			return false;
 		
@@ -143,7 +143,7 @@ namespace core
 	{
 		DebugAstEx(sGateBroadcastMessageInfo.pData != nullptr && !sGateBroadcastMessageInfo.vecSessionID.empty(), false);
 
-		CCoreConnectionOtherService* pCoreConnectionOtherService = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getCoreConnectionOtherService(nServiceID);
+		CCoreConnectionOtherNode* pCoreConnectionOtherService = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getCoreConnectionOtherNode(nServiceID);
 		if (pCoreConnectionOtherService == nullptr)
 			return false;
 		

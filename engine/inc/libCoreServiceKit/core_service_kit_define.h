@@ -27,6 +27,10 @@ namespace core
 	{
 		uint16_t	nID;
 		std::string	szName;			// 节点名字
+		std::string	szHost;			// 服务器IP
+		uint16_t	nPort;			// 0表示该节点没有监听地址
+		uint32_t	nRecvBufSize;	// 接收缓冲区大小
+		uint32_t	nSendBufSize;	// 发送缓存区大小
 	};
 
 	struct SServiceBaseInfo
@@ -34,10 +38,6 @@ namespace core
 		uint16_t	nID;
 		std::string	szName;			// 服务名字
 		std::string	szType;			// 服务类型（比如gate, gas）
-		std::string	szHost;			// 服务器IP
-		uint16_t	nPort;			// 0表示该节点没有监听地址
-		uint32_t	nRecvBufSize;	// 接收缓冲区大小
-		uint32_t	nSendBufSize;	// 发送缓存区大小
 	};
 
 	struct SClientSessionInfo

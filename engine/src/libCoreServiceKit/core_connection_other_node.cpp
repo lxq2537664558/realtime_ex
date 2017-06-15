@@ -1,23 +1,23 @@
 #include "stdafx.h"
-#include "core_connection_other_service.h"
+#include "core_connection_other_node.h"
 #include "proto_system.h"
 #include "message_dispatcher.h"
 #include "core_service_app_impl.h"
 
 namespace core
 {
-	CCoreConnectionOtherService::CCoreConnectionOtherService()
-		: m_nServiceID(0)
+	CCoreConnectionOtherNode::CCoreConnectionOtherNode()
+		: m_nNodeID(0)
 	{
 
 	}
 
-	CCoreConnectionOtherService::~CCoreConnectionOtherService()
+	CCoreConnectionOtherNode::~CCoreConnectionOtherNode()
 	{
 
 	}
 
-	bool CCoreConnectionOtherService::init(uint32_t nType, const std::string& szContext)
+	bool CCoreConnectionOtherNode::init(uint32_t nType, const std::string& szContext)
 	{
 		if (nType == eBCT_ConnectionToOtherNode)
 		{
@@ -25,18 +25,18 @@ namespace core
 			if (!base::crt::atoui(szContext.c_str(), nServiceID))
 				return false;
 
-			this->m_nServiceID = (uint16_t)nServiceID;
+			this->m_nNodeID = (uint16_t)nServiceID;
 		}
 
 		return CBaseConnection::init(nType, szContext);
 	}
 
-	void CCoreConnectionOtherService::release()
+	void CCoreConnectionOtherNode::release()
 	{
 		delete this;
 	}
 
-	void CCoreConnectionOtherService::onConnect()
+	void CCoreConnectionOtherNode::onConnect()
 	{
 		if (this->getType() == eBCT_ConnectionToOtherNode)
 		{
@@ -56,22 +56,22 @@ namespace core
 
 			auto& callback = CCoreServiceAppImpl::Inst()->getServiceConnectCallback();
 			if (callback != nullptr)
-				callback(this->getServiceID());
+				callback(this->getNodeID());
 		}
 	}
 
-	void CCoreConnectionOtherService::onDisconnect()
+	void CCoreConnectionOtherNode::onDisconnect()
 	{
-		if (!this->getServiceID() != 0)
+		if (!this->getNodeID() != 0)
 		{
-			CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->delCoreConnectionToOtherNode(this->getServiceID());
+			CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->delCoreConnectionToOtherNode(this->getNodeID());
 			auto& callback = CCoreServiceAppImpl::Inst()->getServiceDisconnectCallback();
 			if (callback != nullptr)
-				callback(this->getServiceID());
+				callback(this->getNodeID());
 		}
 	}
 
-	void CCoreConnectionOtherService::onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize)
+	void CCoreConnectionOtherNode::onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize)
 	{
 		if (nMessageType == eMT_SYSTEM)
 		{
@@ -80,7 +80,7 @@ namespace core
 
 			if (pHeader->nMessageID == eSMT_notify_node_base_info)
 			{
-				DebugAst(this->getServiceID() == 0);
+				DebugAst(this->getNodeID() == 0);
 
 				smt_notify_node_base_info netMsg;
 				netMsg.unpack(pData, nSize);
@@ -97,10 +97,10 @@ namespace core
 					return;
 				}
 
-				this->m_nServiceID = netMsg.nFromServiceID;
+				this->m_nNodeID = netMsg.nFromServiceID;
 				auto& callback = CCoreServiceAppImpl::Inst()->getServiceConnectCallback();
 				if (callback != nullptr)
-					callback(this->getServiceID());
+					callback(this->getNodeID());
 			}
 
 			return;
@@ -108,19 +108,19 @@ namespace core
 		else
 		{
 			// 如果连节点名字都没有上报就发送其他包过来了，肯定非法，直接踢掉
-			if (this->getServiceID() == 0)
+			if (this->getNodeID() == 0)
 			{
 				this->shutdown(base::eNCCT_Force, "invalid connection");
 				return;
 			}
 
-			CCoreServiceAppImpl::Inst()->getMessageDispatcher()->dispatch(this->getID(), this->getServiceID(), nMessageType, pData, nSize);
+			CCoreServiceAppImpl::Inst()->getMessageDispatcher()->dispatch(this->getID(), this->getNodeID(), nMessageType, pData, nSize);
 		}
 	}
 
-	uint16_t CCoreConnectionOtherService::getServiceID() const
+	uint16_t CCoreConnectionOtherNode::getNodeID() const
 	{
-		return this->m_nServiceID;
+		return this->m_nNodeID;
 	}
 
 }

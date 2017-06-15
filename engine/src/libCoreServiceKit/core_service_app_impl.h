@@ -16,7 +16,7 @@
 namespace core
 {
 	class CCoreServiceConnection;
-	class CCoreConnectionOtherService;
+	class CCoreConnectionOtherNode;
 	class CCoreConnectionToMaster;
 	class CServiceConnectionFactory;
 	class CCoreServiceAppImpl :
@@ -31,7 +31,7 @@ namespace core
 		void						run();
 
 		CTransporter*				getTransporter() const;
-		CCoreOtherServiceProxy*		getCoreOtherNodeProxy() const;
+		CCoreOtherNodeProxy*		getCoreOtherNodeProxy() const;
 		CCoreMessageRegistry*		getCoreMessageRegistry() const;
 		CScheduler*					getScheduler() const;
 		CMessageDispatcher*			getMessageDispatcher() const;
@@ -71,7 +71,7 @@ namespace core
 		CTransporter*					m_pTransporter;
 		CCoreMessageRegistry*			m_pCoreMessageRegistry;
 		CScheduler*						m_pScheduler;
-		CCoreOtherServiceProxy*			m_pCoreOtherNodeProxy;
+		CCoreOtherNodeProxy*			m_pCoreOtherNodeProxy;
 		CMessageDispatcher*				m_pMessageDispatcher;
 		CServiceConnectionFactory*			m_pNodeConnectionFactory;
 		CCoreConnectionToMaster*		m_pCoreConnectionToMaster;

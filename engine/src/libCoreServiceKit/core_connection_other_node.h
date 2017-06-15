@@ -4,12 +4,12 @@
 
 namespace core
 {
-	class CCoreConnectionOtherService
+	class CCoreConnectionOtherNode
 		: public core::CBaseConnection
 	{
 	public:
-		CCoreConnectionOtherService();
-		virtual ~CCoreConnectionOtherService();
+		CCoreConnectionOtherNode();
+		virtual ~CCoreConnectionOtherNode();
 
 		virtual bool		init(uint32_t nType, const std::string& szContext);
 		virtual void		release();
@@ -18,9 +18,9 @@ namespace core
 		virtual void		onDisconnect();
 		virtual void		onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize);
 
-		uint16_t			getServiceID() const;
+		uint16_t			getNodeID() const;
 
 	private:
-		uint16_t	m_nServiceID;
+		uint16_t	m_nNodeID;
 	};
 }

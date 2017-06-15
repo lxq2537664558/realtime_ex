@@ -161,12 +161,12 @@
     <ClInclude Include="coroutine_mgr.h" />
     <ClInclude Include="message_dispatcher.h" />
     <ClInclude Include="scheduler.h" />
-    <ClInclude Include="core_connection_other_service.h" />
+    <ClInclude Include="core_connection_other_node.h" />
     <ClInclude Include="service_base.h" />
     <ClInclude Include="core_connection_to_master.h" />
     <ClInclude Include="core_message_registry.h" />
     <ClInclude Include="core_service_app_impl.h" />
-    <ClInclude Include="core_other_service_proxy.h" />
+    <ClInclude Include="core_other_node_proxy.h" />
     <ClInclude Include="service_connection_factory.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -181,7 +181,7 @@
     <ClCompile Include="native_serialize_adapter.cpp" />
     <ClCompile Include="scheduler.cpp" />
     <ClCompile Include="cluster_invoker.cpp" />
-    <ClCompile Include="core_connection_other_service.cpp" />
+    <ClCompile Include="core_connection_other_node.cpp" />
     <ClCompile Include="core_connection_to_master.cpp" />
     <ClCompile Include="core_service_app.cpp" />
     <ClCompile Include="core_message_registry.cpp" />
@@ -196,7 +196,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="transporter.cpp" />
-    <ClCompile Include="core_other_service_proxy.cpp" />
+    <ClCompile Include="core_other_node_proxy.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\libBaseLua\libBaseLua.vcxproj">

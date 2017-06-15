@@ -25,7 +25,7 @@ namespace core
 		case eBCT_ConnectionFromOtherNode:
 		case eBCT_ConnectionToOtherNode:
 			{
-				CCoreConnectionOtherService* pCoreConnectionOtherService = new CCoreConnectionOtherService();
+				CCoreConnectionOtherNode* pCoreConnectionOtherService = new CCoreConnectionOtherNode();
 				if (!pCoreConnectionOtherService->init(nType, szContext))
 				{
 					SAFE_RELEASE(pCoreConnectionOtherService);

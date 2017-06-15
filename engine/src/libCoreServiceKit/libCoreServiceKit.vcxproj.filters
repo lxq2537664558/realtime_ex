@@ -9,6 +9,9 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
+    <Filter Include="inc\actor">
+      <UniqueIdentifier>{0163f23a-b172-429b-b6e6-611a19251cfa}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -50,9 +53,6 @@
     <ClInclude Include="core_service_app_impl.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreServiceKit\base_actor.h">
-      <Filter>inc</Filter>
-    </ClInclude>
     <ClInclude Include="base_actor_impl.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -70,9 +70,6 @@
     </ClInclude>
     <ClInclude Include="core_message_registry.h">
       <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreServiceKit\actor_message_registry.h">
-      <Filter>inc</Filter>
     </ClInclude>
     <ClInclude Include="..\..\inc\libCoreServiceKit\serialize_adapter.h">
       <Filter>inc</Filter>
@@ -92,17 +89,23 @@
     <ClInclude Include="coroutine_mgr.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="core_connection_other_service.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="service_connection_factory.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="core_other_service_proxy.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\inc\libCoreServiceKit\service_message_registry.h">
       <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreServiceKit\actor_message_registry.h">
+      <Filter>inc\actor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreServiceKit\base_actor.h">
+      <Filter>inc\actor</Filter>
+    </ClInclude>
+    <ClInclude Include="core_connection_other_node.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="core_other_node_proxy.h">
+      <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -154,13 +157,13 @@
     <ClCompile Include="coroutine_mgr.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="core_connection_other_service.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="service_connection_factory.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="core_other_service_proxy.cpp">
+    <ClCompile Include="core_connection_other_node.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="core_other_node_proxy.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
@@ -171,13 +174,7 @@
     <None Include="..\..\inc\libCoreServiceKit\promise.inl">
       <Filter>inc</Filter>
     </None>
-    <None Include="..\..\inc\libCoreServiceKit\base_actor.inl">
-      <Filter>inc</Filter>
-    </None>
     <None Include="..\..\inc\libCoreServiceKit\cluster_invoker.inl">
-      <Filter>inc</Filter>
-    </None>
-    <None Include="..\..\inc\libCoreServiceKit\actor_message_registry.inl">
       <Filter>inc</Filter>
     </None>
     <None Include="..\..\inc\libCoreServiceKit\message_ptr.inl">
@@ -188,6 +185,12 @@
     </None>
     <None Include="..\..\inc\libCoreServiceKit\service_message_registry.inl">
       <Filter>inc</Filter>
+    </None>
+    <None Include="..\..\inc\libCoreServiceKit\actor_message_registry.inl">
+      <Filter>inc\actor</Filter>
+    </None>
+    <None Include="..\..\inc\libCoreServiceKit\base_actor.inl">
+      <Filter>inc\actor</Filter>
     </None>
   </ItemGroup>
 </Project>

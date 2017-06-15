@@ -90,7 +90,7 @@ namespace core
 		CBaseApp::Inst()->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionToOtherNode, this->m_pNodeConnectionFactory);
 		CBaseApp::Inst()->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionToMaster, this->m_pNodeConnectionFactory);
 
-		this->m_pCoreOtherNodeProxy = new CCoreOtherServiceProxy();
+		this->m_pCoreOtherNodeProxy = new CCoreOtherNodeProxy();
 		if (!this->m_pCoreOtherNodeProxy->init())
 		{
 			PrintWarning("this->m_pCoreOtherNodeProxy->init()");
@@ -235,7 +235,7 @@ namespace core
 		return this->m_pTransporter;
 	}
 
-	CCoreOtherServiceProxy* CCoreServiceAppImpl::getCoreOtherNodeProxy() const
+	CCoreOtherNodeProxy* CCoreServiceAppImpl::getCoreOtherNodeProxy() const
 	{
 		return this->m_pCoreOtherNodeProxy;
 	}
