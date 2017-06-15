@@ -23,6 +23,12 @@ enum EResponseResultType
 namespace core
 {
 
+	struct SNodeBaseInfo
+	{
+		uint16_t	nID;
+		std::string	szName;			// ½ÚµãÃû×Ö
+	};
+
 	struct SServiceBaseInfo
 	{
 		uint16_t	nID;

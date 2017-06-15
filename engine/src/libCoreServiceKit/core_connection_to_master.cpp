@@ -39,7 +39,7 @@ namespace core
 		}
 
 		smt_register_service_base_info netMsg;
-		netMsg.sNodeBaseInfo = CCoreServiceAppImpl::Inst()->getNodeBaseInfo();
+		netMsg.vecServiceBaseInfo = CCoreServiceAppImpl::Inst()->getNodeBaseInfo();
 
 		base::CWriteBuf& writeBuf = CBaseApp::Inst()->getWriteBuf();
 		netMsg.pack(writeBuf);
