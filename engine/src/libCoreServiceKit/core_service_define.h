@@ -2,7 +2,7 @@
 
 #include "libCoreCommon/core_common.h"
 
-#include "core_service_kit_define.h"
+#include "core_service_kit_common.h"
 
 #include <functional>
 #include <vector>
@@ -64,11 +64,5 @@ namespace core
 		eBCT_ConnectionToMaster			= 10,
 		eBCT_ConnectionFromOtherNode	= 11,
 		eBCT_ConnectionToOtherNode		= 12,
-	};
-
-	struct STraceInfo
-	{
-		uint64_t	nTraceID;
-		std::string	szParentServiceName;
 	};
 }

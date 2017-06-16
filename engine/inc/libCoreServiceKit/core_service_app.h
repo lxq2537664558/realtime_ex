@@ -3,7 +3,7 @@
 
 #include "libBaseLua/lua_facade.h"
 
-#include "core_service_kit_define.h"
+#include "core_service_kit_common.h"
 #include "serialize_adapter.h"
 
 namespace core

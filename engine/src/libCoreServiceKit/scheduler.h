@@ -16,22 +16,22 @@ namespace core
 
 		bool				init();
 
-		CBaseActorImpl*		createBaseActor(CBaseActor* pActor);
-		void				destroyBaseActor(CBaseActorImpl* pActorBase);
+		CActorBaseImpl*		createBaseActor(CActorBase* pActor);
+		void				destroyBaseActor(CActorBaseImpl* pActorBase);
 
 		bool				invoke(const SRequestMessageInfo& sRequestMessageInfo);
 		bool				response(const SResponseMessageInfo& sResponseMessageInfo);
 
-		CBaseActorImpl*		getBaseActor(uint64_t nID) const;
+		CActorBaseImpl*		getBaseActor(uint64_t nID) const;
 
-		void				addWorkBaseActor(CBaseActorImpl* pActorBase);
+		void				addWorkBaseActor(CActorBaseImpl* pActorBase);
 
 		void				run();
 	
 	private:
 		uint64_t								m_nNextActorID;
-		std::map<uint64_t, CBaseActorImpl*>		m_mapBaseActor;
-		std::map<uint64_t, CBaseActorImpl*>		m_mapWorkBaseActor;
+		std::map<uint64_t, CActorBaseImpl*>		m_mapBaseActor;
+		std::map<uint64_t, CActorBaseImpl*>		m_mapWorkBaseActor;
 		std::vector<char>						m_vecBuf;
 	};
 }

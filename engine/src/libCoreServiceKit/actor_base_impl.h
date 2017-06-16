@@ -3,10 +3,10 @@
 
 #include "libCoreCommon/core_common.h"
 
-#include "core_service_kit_define.h"
+#include "core_service_kit_common.h"
 
 #include "service_base.h"
-#include "base_actor.h"
+#include "actor_base.h"
 
 #include <map>
 
@@ -14,13 +14,13 @@ namespace core
 {
 	typedef base::CCircleQueue<SMessagePacket, false> CChannel;
 
-	class CBaseActor;
-	class CBaseActorImpl :
+	class CActorBase;
+	class CActorBaseImpl :
 		public base::noncopyable
 	{
 	public:
-		CBaseActorImpl(uint64_t nID, CBaseActor* pActor);
-		~CBaseActorImpl();
+		CActorBaseImpl(uint64_t nID, CActorBase* pActor);
+		~CActorBaseImpl();
 
 		uint64_t			getID() const;
 		void				process();
@@ -29,15 +29,15 @@ namespace core
 		SResponseWaitInfo*	addResponseWaitInfo(uint64_t nSessionID, uint64_t nCoroutineID);
 		SResponseWaitInfo*	getResponseWaitInfo(uint64_t nSessionID, bool bErase);
 
-		static void			registerMessageHandler(uint16_t nMessageID, const std::function<void(CBaseActor*, uint64_t, CMessagePtr<char>)>& handler, bool bAsync);
-		static void			registerForwardHandler(uint16_t nMessageID, const std::function<void(CBaseActor*, SClientSessionInfo, CMessagePtr<char>)>& handler, bool bAsync);
+		static void			registerMessageHandler(uint16_t nMessageID, const std::function<void(CActorBase*, uint64_t, CMessagePtr<char>)>& handler, bool bAsync);
+		static void			registerForwardHandler(uint16_t nMessageID, const std::function<void(CActorBase*, SClientSessionInfo, CMessagePtr<char>)>& handler, bool bAsync);
 
 	private:
 		void				onRequestMessageTimeout(uint64_t nContext);
 
 	private:
 		uint64_t			m_nID;
-		CBaseActor*			m_pBaseActor;
+		CActorBase*			m_pBaseActor;
 		SActorSessionInfo	m_sActorSessionInfo;
 		CChannel			m_channel;
 		std::map<uint64_t, SResponseWaitInfo*>
@@ -45,14 +45,14 @@ namespace core
 
 		struct SMessageHandlerInfo
 		{
-			std::function<void(CBaseActor*, uint64_t, CMessagePtr<char>)>
+			std::function<void(CActorBase*, uint64_t, CMessagePtr<char>)>
 							handler;
 			bool			bAsync;
 		};
 
 		struct SForwardHandlerInfo
 		{
-			std::function<void(CBaseActor*, SClientSessionInfo, CMessagePtr<char>)>
+			std::function<void(CActorBase*, SClientSessionInfo, CMessagePtr<char>)>
 							handler;
 			bool			bAsync;
 		};

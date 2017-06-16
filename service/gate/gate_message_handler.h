@@ -3,7 +3,7 @@
 
 #include "libCoreCommon/core_common.h"
 
-#include "libCoreServiceKit/core_service_kit_define.h"
+#include "libCoreServiceKit/core_service_kit_common.h"
 
 class CGateMessageHandler
 	: public base::CSingleton<CGateMessageHandler>

@@ -2,7 +2,7 @@
 #include "core_message_registry.h"
 #include "proto_system.h"
 #include "core_connection_to_master.h"
-#include "core_service_kit_define.h"
+#include "core_service_kit_common.h"
 #include "core_service_app_impl.h"
 
 #include "libCoreCommon/base_app.h"

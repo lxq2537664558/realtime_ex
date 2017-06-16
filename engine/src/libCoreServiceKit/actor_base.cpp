@@ -12,23 +12,23 @@
 
 namespace core
 {
-	CBaseActor::CBaseActor()
+	CActorBase::CActorBase()
 		: m_pBaseActorImpl(nullptr)
 	{
 	}
 
-	CBaseActor::~CBaseActor()
+	CActorBase::~CActorBase()
 	{
 		if (this->m_pBaseActorImpl != nullptr)
 			CCoreServiceAppImpl::Inst()->getScheduler()->destroyBaseActor(this->m_pBaseActorImpl);
 	}
 
-	uint64_t CBaseActor::getID() const
+	uint64_t CActorBase::getID() const
 	{
 		return this->m_pBaseActorImpl->getID();
 	}
 
-	bool CBaseActor::invoke(uint64_t nID, const void* pData)
+	bool CActorBase::invoke(uint64_t nID, const void* pData)
 	{
 		SRequestMessageInfo sRequestMessageInfo;
 		sRequestMessageInfo.pData = pData;
@@ -39,17 +39,17 @@ namespace core
 		return CCoreServiceAppImpl::Inst()->getScheduler()->invoke(sRequestMessageInfo);
 	}
 
-	SActorSessionInfo CBaseActor::getActorSessionInfo() const
+	SActorSessionInfo CActorBase::getActorSessionInfo() const
 	{
 		return this->m_pBaseActorImpl->getActorSessionInfo();
 	}
 
-	void CBaseActor::response(const void* pData)
+	void CActorBase::response(const void* pData)
 	{
 		this->response(this->getActorSessionInfo(), pData);
 	}
 
-	void CBaseActor::response(const SActorSessionInfo& sActorSessionInfo, const void* pData)
+	void CActorBase::response(const SActorSessionInfo& sActorSessionInfo, const void* pData)
 	{
 		SResponseMessageInfo sResponseMessageInfo;
 		sResponseMessageInfo.nSessionID = sActorSessionInfo.nSessionID;
@@ -61,26 +61,26 @@ namespace core
 		bool bRet = CCoreServiceAppImpl::Inst()->getScheduler()->response(sResponseMessageInfo);
 	}
 
-	uint16_t CBaseActor::getServiceID(uint64_t nActorID)
+	uint16_t CActorBase::getServiceID(uint64_t nActorID)
 	{
 		return (uint16_t)(nActorID >> _REMOTE_ACTOR_BIT);
 	}
 
-	uint64_t CBaseActor::getLocalActorID(uint64_t nActorID)
+	uint64_t CActorBase::getLocalActorID(uint64_t nActorID)
 	{
 		return nActorID & 0x0000ffffffffffff;
 	}
 
-	uint64_t CBaseActor::makeRemoteActorID(uint16_t nServiceID, uint64_t nActorID)
+	uint64_t CActorBase::makeRemoteActorID(uint16_t nServiceID, uint64_t nActorID)
 	{
 		return (uint64_t)nServiceID << _REMOTE_ACTOR_BIT | nActorID;
 	}
 
-	CBaseActor* CBaseActor::createActor(void* pContext, CBaseActorFactory* pBaseActorFactory)
+	CActorBase* CActorBase::createActor(void* pContext, CActorBaseFactory* pBaseActorFactory)
 	{
 		DebugAstEx(pBaseActorFactory != nullptr, nullptr);
 
-		CBaseActor* pBaseActor = pBaseActorFactory->createBaseActor();
+		CActorBase* pBaseActor = pBaseActorFactory->createActorBase();
 		pBaseActor->m_pBaseActorImpl = CCoreServiceAppImpl::Inst()->getScheduler()->createBaseActor(pBaseActor);
 		if (pBaseActor->m_pBaseActorImpl == nullptr)
 		{
@@ -99,7 +99,7 @@ namespace core
 		return pBaseActor;
 	}
 
-	void CBaseActor::release()
+	void CActorBase::release()
 	{
 		this->onDestroy();
 
@@ -108,17 +108,17 @@ namespace core
 		delete this;
 	}
 
-	void CBaseActor::registerMessageHandler(uint16_t nMessageID, const std::function<void(CBaseActor*, uint64_t, CMessagePtr<char>)>& handler, bool bAsync)
+	void CActorBase::registerMessageHandler(uint16_t nMessageID, const std::function<void(CActorBase*, uint64_t, CMessagePtr<char>)>& handler, bool bAsync)
 	{
-		CBaseActorImpl::registerMessageHandler(nMessageID, handler, bAsync);
+		CActorBaseImpl::registerMessageHandler(nMessageID, handler, bAsync);
 	}
 
-	void CBaseActor::registerForwardHandler(uint16_t nMessageID, const std::function<void(CBaseActor*, SClientSessionInfo, CMessagePtr<char>)>& handler, bool bAsync)
+	void CActorBase::registerForwardHandler(uint16_t nMessageID, const std::function<void(CActorBase*, SClientSessionInfo, CMessagePtr<char>)>& handler, bool bAsync)
 	{
-		CBaseActorImpl::registerForwardHandler(nMessageID, handler, bAsync);
+		CActorBaseImpl::registerForwardHandler(nMessageID, handler, bAsync);
 	}
 
-	bool CBaseActor::invokeImpl(uint64_t nID, const void* pData, uint64_t nCoroutineID, const std::function<void(CMessagePtr<char>, uint32_t)>& callback)
+	bool CActorBase::invokeImpl(uint64_t nID, const void* pData, uint64_t nCoroutineID, const std::function<void(CMessagePtr<char>, uint32_t)>& callback)
 	{
 		SRequestMessageInfo sRequestMessageInfo;
 		sRequestMessageInfo.pData = pData;

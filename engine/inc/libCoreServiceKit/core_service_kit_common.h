@@ -89,8 +89,8 @@ namespace core
 	struct request_cookice
 	{
 		uint64_t nSessionID;
-		uint64_t nFromActorID;
-		uint64_t nToActorID;
+		uint64_t nFromID;
+		uint64_t nToID;
 	};
 
 	struct response_cookice

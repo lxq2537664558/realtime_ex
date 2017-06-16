@@ -1,7 +1,7 @@
 #pragma once
 #include "libBaseCommon/singleton.h"
 #include "libCoreCommon/core_common.h"
-#include "libCoreServiceKit/core_service_kit_define.h"
+#include "libCoreServiceKit/core_service_kit_common.h"
 
 #include <map>
 

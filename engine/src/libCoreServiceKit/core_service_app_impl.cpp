@@ -3,7 +3,7 @@
 #include "core_connection_to_master.h"
 #include "message_dispatcher.h"
 #include "cluster_invoker.h"
-#include "core_service_kit_define.h"
+#include "core_service_kit_common.h"
 #include "core_other_node_proxy.h"
 #include "node_connection_factory.h"
 

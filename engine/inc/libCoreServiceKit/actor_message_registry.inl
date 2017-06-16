@@ -7,7 +7,7 @@ namespace core
 	std::map<uint16_t, typename CActorMessageRegistry<T>::funForwardHandler> CActorMessageRegistry<T>::s_mapForwardHandler;
 
 	template<class T>
-	void CActorMessageRegistry<T>::registerMessageHandler(uint16_t nMessageID, void(T::*handler)(CBaseActor*, uint64_t, CMessagePtr<char>))
+	void CActorMessageRegistry<T>::registerMessageHandler(uint16_t nMessageID, void(T::*handler)(CActorBase*, uint64_t, CMessagePtr<char>))
 	{
 		DebugAst(handler != nullptr);
 
@@ -15,7 +15,7 @@ namespace core
 	}
 
 	template<class T>
-	void CActorMessageRegistry<T>::registerForwardHandler(uint16_t nMessageID, void(T::*handler)(CBaseActor*, SClientSessionInfo, CMessagePtr<char>))
+	void CActorMessageRegistry<T>::registerForwardHandler(uint16_t nMessageID, void(T::*handler)(CActorBase*, SClientSessionInfo, CMessagePtr<char>))
 	{
 		DebugAst(handler != nullptr);
 
@@ -23,7 +23,7 @@ namespace core
 	}
 
 	template<class T>
-	void CActorMessageRegistry<T>::dispatch(T* pObject, CBaseActor* pBaseActor, uint64_t nFrom, CMessagePtr<char>& pMessage)
+	void CActorMessageRegistry<T>::dispatch(T* pObject, CActorBase* pActorBase, uint64_t nFrom, CMessagePtr<char>& pMessage)
 	{
 		auto iter = s_mapMessageHandler.find(pMessage.getMessageID());
 		if (iter == s_mapMessageHandler.end())
@@ -31,11 +31,11 @@ namespace core
 
 		funMessageHandler handler = iter->second;
 
-		(pObject->*handler)(pBaseActor, nFrom, pMessage);
+		(pObject->*handler)(pActorBase, nFrom, pMessage);
 	}
 
 	template<class T>
-	void CActorMessageRegistry<T>::forward(T* pObject, CBaseActor* pBaseActor, SClientSessionInfo& sSession, CMessagePtr<char>& pMessage)
+	void CActorMessageRegistry<T>::forward(T* pObject, CActorBase* pActorBase, SClientSessionInfo& sSession, CMessagePtr<char>& pMessage)
 	{
 		auto iter = s_mapForwardHandler.find(pMessage.getMessageID());
 		if (iter == s_mapForwardHandler.end())
@@ -43,6 +43,6 @@ namespace core
 
 		funForwardHandler handler = iter->second;
 
-		(pObject->*handler)(pBaseActor, sSession, pMessage);
+		(pObject->*handler)(pActorBase, sSession, pMessage);
 	}
 }

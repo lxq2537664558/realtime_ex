@@ -2,7 +2,7 @@
 #include "libBaseCommon/singleton.h"
 #include "libCoreCommon/core_common.h"
 
-#include "core_service_kit_define.h"
+#include "core_service_kit_common.h"
 
 namespace core
 {

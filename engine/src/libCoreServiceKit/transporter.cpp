@@ -2,7 +2,7 @@
 #include "transporter.h"
 #include "message_dispatcher.h"
 #include "protobuf_helper.h"
-#include "core_service_kit_define.h"
+#include "core_service_kit_common.h"
 #include "core_service_app_impl.h"
 #include "coroutine.h"
 
@@ -51,8 +51,8 @@ namespace core
 		// Ìî³äcookice
 		request_cookice cookice;
 		cookice.nSessionID = sRequestMessageInfo.nSessionID;
-		cookice.nFromActorID = sRequestMessageInfo.nFromActorID;
-		cookice.nToActorID = sRequestMessageInfo.nToActorID;
+		cookice.nFromID = sRequestMessageInfo.nFromActorID;
+		cookice.nToID = sRequestMessageInfo.nToActorID;
 
 		CSerializeAdapter* pSerializeAdapter = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getSerializeAdapter(nServiceID);
 		DebugAstEx(pSerializeAdapter != nullptr, false);

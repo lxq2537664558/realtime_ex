@@ -12,6 +12,9 @@
     <Filter Include="inc\actor">
       <UniqueIdentifier>{0163f23a-b172-429b-b6e6-611a19251cfa}</UniqueIdentifier>
     </Filter>
+    <Filter Include="inc\service">
+      <UniqueIdentifier>{a0d07831-45d6-4699-81b4-56a19ef37989}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -53,12 +56,6 @@
     <ClInclude Include="core_service_app_impl.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="base_actor_impl.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreServiceKit\base_actor_factory.h">
-      <Filter>inc</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\inc\libCoreServiceKit\future.h">
       <Filter>inc</Filter>
     </ClInclude>
@@ -95,9 +92,6 @@
     <ClInclude Include="..\..\inc\libCoreServiceKit\actor_message_registry.h">
       <Filter>inc\actor</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreServiceKit\base_actor.h">
-      <Filter>inc\actor</Filter>
-    </ClInclude>
     <ClInclude Include="core_connection_other_node.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -105,6 +99,18 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="node_connection_factory.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreServiceKit\service_base.h">
+      <Filter>inc\service</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreServiceKit\actor_base.h">
+      <Filter>inc\actor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreServiceKit\actor_base_factory.h">
+      <Filter>inc\actor</Filter>
+    </ClInclude>
+    <ClInclude Include="actor_base_impl.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
@@ -136,12 +142,6 @@
     <ClCompile Include="core_service_app_impl.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="base_actor_impl.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="base_actor.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="core_message_registry.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -164,6 +164,12 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="node_connection_factory.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="actor_base.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="actor_base_impl.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
@@ -189,7 +195,7 @@
     <None Include="..\..\inc\libCoreServiceKit\actor_message_registry.inl">
       <Filter>inc\actor</Filter>
     </None>
-    <None Include="..\..\inc\libCoreServiceKit\base_actor.inl">
+    <None Include="..\..\inc\libCoreServiceKit\actor_base.inl">
       <Filter>inc\actor</Filter>
     </None>
   </ItemGroup>

@@ -2,9 +2,9 @@
 #include "cluster_invoker.h"
 #include "core_service_app.h"
 #include "core_service_app_impl.h"
-#include "core_service_kit_define.h"
-#include "service_base.h"
-#include "base_actor.h"
+#include "core_service_kit_common.h"
+#include "core_service_define.h"
+#include "actor_base.h"
 #include "coroutine.h"
 
 #include "libBaseCommon/debug_helper.h"
@@ -99,7 +99,7 @@ namespace core
 		sGateMessageInfo.nSessionID = nSessionID;
 		sGateMessageInfo.pData = pData;
 
-		uint16_t nNodeID = CBaseActor::getServiceID(nActorID);
+		uint16_t nNodeID = CActorBase::getServiceID(nActorID);
 		return CCoreServiceAppImpl::Inst()->getTransporter()->forward(nNodeID, sGateMessageInfo);
 	}
 

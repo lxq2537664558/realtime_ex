@@ -6,7 +6,7 @@
 #include "libCoreCommon/base_connection_mgr.h"
 #include "libBaseCommon/base_function.h"
 #include "libCoreServiceKit/proto_system.h"
-#include "libCoreServiceKit/core_service_kit_define.h"
+#include "libCoreServiceKit/core_service_kit_common.h"
 
 CServiceMgr::CServiceMgr()
 {

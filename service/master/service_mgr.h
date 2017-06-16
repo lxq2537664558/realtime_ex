@@ -2,7 +2,7 @@
 
 #include "libCoreCommon/base_connection.h"
 
-#include "libCoreServiceKit/core_service_kit_define.h"
+#include "libCoreServiceKit/core_service_kit_common.h"
 
 #include <vector>
 #include <map>

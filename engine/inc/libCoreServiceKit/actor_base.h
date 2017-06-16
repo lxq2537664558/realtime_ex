@@ -1,19 +1,19 @@
 #pragma once
 #include "libBaseCommon/noncopyable.h"
-#include "libCoreCommon/coroutine.h"
 
-#include "core_service_kit_define.h"
+#include "coroutine.h"
+#include "core_service_kit_common.h"
 
 namespace core
 {
-	class CBaseActorImpl;
-	class CBaseActorFactory;
-	class CBaseActor :
+	class CActorBaseImpl;
+	class CActorBaseFactory;
+	class CActorBase :
 		public base::noncopyable
 	{
 	protected:
-		CBaseActor();
-		virtual ~CBaseActor();
+		CActorBase();
+		virtual ~CActorBase();
 
 	public:
 		virtual bool		onInit(void* pContext) { return true; }
@@ -38,10 +38,10 @@ namespace core
 
 		void				release();
 
-		static void			registerMessageHandler(uint16_t nMessageID, const std::function<void(CBaseActor*, uint64_t, CMessagePtr<char>)>& handler, bool bAsync);
-		static void			registerForwardHandler(uint16_t nMessageID, const std::function<void(CBaseActor*, SClientSessionInfo, CMessagePtr<char>)>& handler, bool bAsync);
+		static void			registerMessageHandler(uint16_t nMessageID, const std::function<void(CActorBase*, uint64_t, CMessagePtr<char>)>& handler, bool bAsync);
+		static void			registerForwardHandler(uint16_t nMessageID, const std::function<void(CActorBase*, SClientSessionInfo, CMessagePtr<char>)>& handler, bool bAsync);
 
-		static CBaseActor*	createActor(void* pContext, CBaseActorFactory* pBaseActorFactory);
+		static CActorBase*	createActor(void* pContext, CActorBaseFactory* pBaseActorFactory);
 
 		static uint16_t		getServiceID(uint64_t nActorID);
 		static uint64_t		getLocalActorID(uint64_t nActorID);
@@ -51,8 +51,8 @@ namespace core
 		bool				invokeImpl(uint64_t nID, const void* pData, uint64_t nCoroutineID, const std::function<void(CMessagePtr<char>, uint32_t)>& callback);
 
 	private:
-		CBaseActorImpl*	m_pBaseActorImpl;
+		CActorBaseImpl*	m_pBaseActorImpl;
 	};
 }
 
-#include "base_actor.inl"
+#include "actor_actor.inl"

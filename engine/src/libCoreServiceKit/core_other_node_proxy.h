@@ -5,7 +5,7 @@
 
 #include "tinyxml2/tinyxml2.h"
 
-#include "core_service_kit_define.h"
+#include "core_service_kit_common.h"
 #include "core_connection_other_node.h"
 #include "serialize_adapter.h"
 

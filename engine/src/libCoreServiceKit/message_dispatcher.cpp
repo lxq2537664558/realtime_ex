@@ -2,7 +2,7 @@
 #include "message_dispatcher.h"
 #include "protobuf_helper.h"
 #include "core_service_app_impl.h"
-#include "core_service_kit_define.h"
+#include "core_service_kit_common.h"
 #include "coroutine.h"
 
 #include "libBaseCommon/debug_helper.h"
@@ -26,7 +26,7 @@ namespace core
 		return true;
 	}
 
-	void CMessageDispatcher::dispatch(uint64_t nFromSocketID, uint16_t nFromServiceID, uint8_t nMessageType, const void* pData, uint16_t nSize)
+	void CMessageDispatcher::dispatch(uint64_t nFromSocketID, uint16_t nFromNodeID, uint8_t nMessageType, const void* pData, uint16_t nSize)
 	{
 		DebugAst(pData != nullptr);
 
@@ -34,7 +34,7 @@ namespace core
 		const std::vector<GlobalBeforeFilter>& vecGlobalBeforeFilter = CCoreServiceAppImpl::Inst()->getGlobalBeforeFilter();
 		for (size_t i = 0; i < vecGlobalBeforeFilter.size(); ++i)
 		{
-			if (!vecGlobalBeforeFilter[i](nFromSocketID, nFromServiceID, nMessageType, pData, nSize))
+			if (!vecGlobalBeforeFilter[i](nFromSocketID, nFromNodeID, nMessageType, pData, nSize))
 			{
 				bFilter = true;
 				break;
@@ -50,7 +50,7 @@ namespace core
 			const request_cookice* pCookice = reinterpret_cast<const request_cookice*>(pData);
 
 			SServiceSessionInfo& sServiceSessionInfo = CCoreServiceAppImpl::Inst()->getTransporter()->getServiceSessionInfo();
-			sServiceSessionInfo.nServiceID = nFromServiceID;
+			sServiceSessionInfo.nServiceID = pCookice->nFromID;
 			sServiceSessionInfo.nSessionID = pCookice->nSessionID;
 
 			// °þµôcookice
@@ -59,11 +59,11 @@ namespace core
 			auto& callback = CCoreServiceAppImpl::Inst()->getCoreMessageRegistry()->getCallback(pHeader->nMessageID);
 			if (callback != nullptr)
 			{
-				CSerializeAdapter* pSerializeAdapter = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getSerializeAdapter(nFromServiceID);
+				CSerializeAdapter* pSerializeAdapter = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getSerializeAdapter(nFromNodeID);
 				DebugAst(pSerializeAdapter != nullptr);
 				
 				CMessagePtr<char> pMessage = pSerializeAdapter->deserialize(pHeader);
-				bFilter = !callback(nFromServiceID, pMessage);
+				bFilter = !callback(nFromNodeID, pMessage);
 			}
 			sServiceSessionInfo.nServiceID = 0;
 			sServiceSessionInfo.nSessionID = 0;
@@ -84,7 +84,7 @@ namespace core
 
 				if (pCookice->nResult == eRRT_OK)
 				{
-					CSerializeAdapter* pSerializeAdapter = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getSerializeAdapter(nFromServiceID);
+					CSerializeAdapter* pSerializeAdapter = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getSerializeAdapter(nFromNodeID);
 					DebugAst(pSerializeAdapter != nullptr);
 
 					CMessagePtr<char> pMessage = pSerializeAdapter->deserialize(pHeader);
@@ -102,12 +102,12 @@ namespace core
 			// °þµôcookice
 			const message_header* pHeader = reinterpret_cast<const message_header*>(pCookice + 1);
 			
-			SClientSessionInfo session(nFromServiceID, pCookice->nSessionID);
+			SClientSessionInfo session(nFromNodeID, pCookice->nSessionID);
 
 			auto& callback = CCoreServiceAppImpl::Inst()->getCoreMessageRegistry()->getGateForwardCallback(pHeader->nMessageID);
 			if (callback != nullptr)
 			{
-				CSerializeAdapter* pSerializeAdapter = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getSerializeAdapter(nFromServiceID);
+				CSerializeAdapter* pSerializeAdapter = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getSerializeAdapter(nFromNodeID);
 				DebugAst(pSerializeAdapter != nullptr);
 
 				CMessagePtr<char> pMessage = pSerializeAdapter->deserialize(pHeader);
@@ -121,7 +121,7 @@ namespace core
 		const std::vector<GlobalAfterFilter>& vecGlobalAfterFilter = CCoreServiceAppImpl::Inst()->getGlobalAfterFilter();
 		for (size_t i = 0; i < vecGlobalAfterFilter.size(); ++i)
 		{
-			vecGlobalAfterFilter[i](nFromSocketID, nFromServiceID, nMessageType, pData, nSize);
+			vecGlobalAfterFilter[i](nFromSocketID, nFromNodeID, nMessageType, pData, nSize);
 		}
 	}
 }
