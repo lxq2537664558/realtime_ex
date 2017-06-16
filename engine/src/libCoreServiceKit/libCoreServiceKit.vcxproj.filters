@@ -38,14 +38,8 @@
     <ClInclude Include="core_connection_to_master.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="service_base.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="transporter.h">
       <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreServiceKit\core_service_kit_define.h">
-      <Filter>inc</Filter>
     </ClInclude>
     <ClInclude Include="scheduler.h">
       <Filter>src</Filter>
@@ -112,6 +106,12 @@
     </ClInclude>
     <ClInclude Include="actor_base_impl.h">
       <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="core_service_define.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreServiceKit\core_service_kit_common.h">
+      <Filter>inc</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
