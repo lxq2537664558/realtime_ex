@@ -8,7 +8,7 @@
 #include "tinyxml2/tinyxml2.h"
 
 CMasterApp::CMasterApp()
-	: m_pNodeMgr(nullptr)
+	: m_pServiceMgr(nullptr)
 	, m_pNodeConnectionFactory(nullptr)
 {
 
@@ -26,13 +26,6 @@ CMasterApp* CMasterApp::Inst()
 
 bool CMasterApp::onInit()
 {
-	this->m_pNodeMgr = new CNodeMgr();
-	if (!this->m_pNodeMgr->init())
-	{
-		PrintWarning("this->m_pNodeMgr->init");
-		return false;
-	}
-
 	tinyxml2::XMLDocument* pConfigXML = new tinyxml2::XMLDocument();
 	if (pConfigXML->LoadFile(CBaseApp::Inst()->getConfigFileName().c_str()) != tinyxml2::XML_SUCCESS)
 	{
@@ -53,6 +46,13 @@ bool CMasterApp::onInit()
 		return false;
 	}
 
+	this->m_pServiceMgr = new CServiceMgr();
+	if (!this->m_pServiceMgr->init())
+	{
+		PrintWarning("this->m_pServiceMgr->init()");
+		return false;
+	}
+
 	this->m_pNodeConnectionFactory = new CNodeConnectionFactory();
 	this->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionFromNode, this->m_pNodeConnectionFactory);
 
@@ -70,7 +70,7 @@ void CMasterApp::onDestroy()
 {
 	this->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionFromNode, nullptr);
 
-	SAFE_DELETE(this->m_pNodeMgr);
+	SAFE_DELETE(this->m_pServiceMgr);
 	SAFE_DELETE(this->m_pNodeConnectionFactory);
 }
 
@@ -79,9 +79,9 @@ void CMasterApp::onQuit()
 	this->doQuit();
 }
 
-CNodeMgr* CMasterApp::getNodeMgr() const
+CServiceMgr* CMasterApp::getServiceMgr() const
 {
-	return this->m_pNodeMgr;
+	return this->m_pServiceMgr;
 }
 
 int32_t main(int32_t argc, char* argv[])

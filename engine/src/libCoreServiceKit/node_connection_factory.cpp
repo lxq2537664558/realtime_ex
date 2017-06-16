@@ -1,12 +1,12 @@
 #include "stdafx.h"
-#include "service_connection_factory.h"
+#include "node_connection_factory.h"
 #include "service_base.h"
 #include "core_connection_to_master.h"
-#include "core_connection_other_service.h"
+#include "core_connection_other_node.h"
 
 namespace core
 {
-	CBaseConnection* CServiceConnectionFactory::createBaseConnection(uint32_t nType, const std::string& szContext)
+	CBaseConnection* CNodeConnectionFactory::createBaseConnection(uint32_t nType, const std::string& szContext)
 	{
 		switch (nType)
 		{
@@ -25,14 +25,14 @@ namespace core
 		case eBCT_ConnectionFromOtherNode:
 		case eBCT_ConnectionToOtherNode:
 			{
-				CCoreConnectionOtherNode* pCoreConnectionOtherService = new CCoreConnectionOtherNode();
-				if (!pCoreConnectionOtherService->init(nType, szContext))
+				CCoreConnectionOtherNode* pCoreConnectionOtherNode = new CCoreConnectionOtherNode();
+				if (!pCoreConnectionOtherNode->init(nType, szContext))
 				{
-					SAFE_RELEASE(pCoreConnectionOtherService);
+					SAFE_RELEASE(pCoreConnectionOtherNode);
 					return nullptr;
 				}
 
-				return pCoreConnectionOtherService;
+				return pCoreConnectionOtherNode;
 			}
 			break;
 

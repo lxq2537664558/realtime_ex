@@ -167,7 +167,7 @@
     <ClInclude Include="core_message_registry.h" />
     <ClInclude Include="core_service_app_impl.h" />
     <ClInclude Include="core_other_node_proxy.h" />
-    <ClInclude Include="service_connection_factory.h" />
+    <ClInclude Include="node_connection_factory.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="transporter.h" />
@@ -188,7 +188,7 @@
     <ClCompile Include="message_dispatcher.cpp" />
     <ClCompile Include="protobuf_helper.cpp" />
     <ClCompile Include="core_service_app_impl.cpp" />
-    <ClCompile Include="service_connection_factory.cpp" />
+    <ClCompile Include="node_connection_factory.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

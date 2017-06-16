@@ -16,7 +16,7 @@
 	<!--本节点需要连接的服务-->
 	<connect_service_info>
 		<!--如果需要连接所有某一个类型的服务，用*通配-->
-		<service_info service_name = "gas_1" servie_type = "gas"/>
+		<service_info service_name = "gas_1" servie_type = "gas" invoke_timeout = "10000"/>
 	<connect_service_info/>
 	
 	<!--连接master地址-->

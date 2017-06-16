@@ -74,26 +74,31 @@ namespace core
 		// 加载节点基本信息
 		this->m_sNodeBaseInfo.nID = (uint16_t)nID;
 		this->m_sNodeBaseInfo.szName = pNodeInfoXML->Attribute("node_name");
-		this->m_sNodeBaseInfo.szType = pNodeInfoXML->Attribute("node_group");
-		this->m_nInvokTimeout = (uint32_t)(pNodeInfoXML->UnsignedAttribute("invoke_timeout"));
-		tinyxml2::XMLElement* pHostInfoXML = pNodeInfoXML->FirstChildElement("host_info");
-		if (pHostInfoXML != nullptr)
+		this->m_sNodeBaseInfo.szHost = pNodeInfoXML->Attribute("host");
+		this->m_sNodeBaseInfo.nPort = (uint16_t)pNodeInfoXML->UnsignedAttribute("port");
+		this->m_sNodeBaseInfo.nRecvBufSize = pNodeInfoXML->UnsignedAttribute("recv_buf_size");
+		this->m_sNodeBaseInfo.nSendBufSize = pNodeInfoXML->UnsignedAttribute("send_buf_size");
+		
+		for (tinyxml2::XMLElement* pServiceInfoXML = pNodeInfoXML->FirstChildElement("service_info"); pServiceInfoXML != nullptr; pServiceInfoXML = pServiceInfoXML->NextSiblingElement("service_info"))
 		{
-			this->m_sNodeBaseInfo.szHost = pHostInfoXML->Attribute("host");
-			this->m_sNodeBaseInfo.nPort = (uint16_t)pHostInfoXML->UnsignedAttribute("port");
-			this->m_sNodeBaseInfo.nRecvBufSize = pHostInfoXML->UnsignedAttribute("recv_buf_size");
-			this->m_sNodeBaseInfo.nSendBufSize = pHostInfoXML->UnsignedAttribute("send_buf_size");
+			SServiceBaseInfo sServiceBaseInfo;
+			sServiceBaseInfo.nID = pServiceInfoXML->UnsignedAttribute("service_id");
+			sServiceBaseInfo.szName = pServiceInfoXML->Attribute("service_name");
+			sServiceBaseInfo.szType = pServiceInfoXML->Attribute("service_type");
+			this->m_vecServiceBaseInfo.push_back(sServiceBaseInfo);
 		}
 
-		this->m_pNodeConnectionFactory = new CServiceConnectionFactory();
+		tinyxml2::XMLElement* pConnectServiceInfoXML = pRootXML->FirstChildElement("connect_service_info");
+
+		this->m_pNodeConnectionFactory = new CNodeConnectionFactory();
 		CBaseApp::Inst()->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionFromOtherNode, this->m_pNodeConnectionFactory);
 		CBaseApp::Inst()->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionToOtherNode, this->m_pNodeConnectionFactory);
 		CBaseApp::Inst()->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionToMaster, this->m_pNodeConnectionFactory);
 
 		this->m_pCoreOtherNodeProxy = new CCoreOtherNodeProxy();
-		if (!this->m_pCoreOtherNodeProxy->init())
+		if (!this->m_pCoreOtherNodeProxy->init(pConnectServiceInfoXML))
 		{
-			PrintWarning("this->m_pCoreOtherNodeProxy->init()");
+			PrintWarning("this->m_pCoreOtherNodeProxy->init(pConnectServiceInfoXML)");
 			return false;
 		}
 
@@ -205,9 +210,14 @@ namespace core
 		this->m_pCoreConnectionToMaster = pCoreConnectionToMaster;
 	}
 
-	const SServiceBaseInfo& CCoreServiceAppImpl::getNodeBaseInfo() const
+	const SNodeBaseInfo& CCoreServiceAppImpl::getNodeBaseInfo() const
 	{
 		return this->m_sNodeBaseInfo;
+	}
+
+	const std::vector<SServiceBaseInfo>& CCoreServiceAppImpl::getServiceBaseInfo() const
+	{
+		return this->m_vecServiceBaseInfo;
 	}
 
 	void CCoreServiceAppImpl::addGlobalBeforeFilter(const GlobalBeforeFilter& callback)

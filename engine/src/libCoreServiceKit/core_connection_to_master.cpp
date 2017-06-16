@@ -30,16 +30,9 @@ namespace core
 
 	void CCoreConnectionToMaster::onConnect()
 	{
-		// 连接master的连接只能有一个
-		std::vector<CBaseConnection*> vecBaseConnection = CBaseApp::Inst()->getBaseConnectionMgr()->getBaseConnection(this->getType());
-		if (vecBaseConnection.size() > 1)
-		{
-			this->shutdown(false, "dup master connection");
-			return;
-		}
-
-		smt_register_service_base_info netMsg;
-		netMsg.vecServiceBaseInfo = CCoreServiceAppImpl::Inst()->getNodeBaseInfo();
+		smt_register_node_base_info netMsg;
+		netMsg.sNodeBaseInfo = CCoreServiceAppImpl::Inst()->getNodeBaseInfo();
+		netMsg.vecServiceBaseInfo = CCoreServiceAppImpl::Inst()->getServiceBaseInfo();
 
 		base::CWriteBuf& writeBuf = CBaseApp::Inst()->getWriteBuf();
 		netMsg.pack(writeBuf);
@@ -68,14 +61,14 @@ namespace core
 			smt_sync_node_base_info netMsg;
 			netMsg.unpack(pData, nSize);
 			
-			CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->addNodeBaseInfo(netMsg.sNodeBaseInfo);
+			CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->addNodeProxyInfo(netMsg.sNodeBaseInfo, netMsg.vecServiceBaseInfo, true);
 		}
 		else if (pHeader->nMessageID == eSMT_remove_node_base_info)
 		{
 			smt_remove_node_base_info netMsg;
 			netMsg.unpack(pData, nSize);
 
-			CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->delNodeBaseInfo(netMsg.nNodeID, !!netMsg.nForce);
+			CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->delNodeProxyInfo(netMsg.nNodeID);
 		}
 	}
 }

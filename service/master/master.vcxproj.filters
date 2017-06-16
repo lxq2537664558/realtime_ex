@@ -27,13 +27,13 @@
     <ClInclude Include="master_app.h">
       <Filter>inc</Filter>
     </ClInclude>
+    <ClInclude Include="service_mgr.h">
+      <Filter>inc</Filter>
+    </ClInclude>
     <ClInclude Include="connection_from_node.h">
       <Filter>inc</Filter>
     </ClInclude>
     <ClInclude Include="node_connection_factory.h">
-      <Filter>inc</Filter>
-    </ClInclude>
-    <ClInclude Include="node_mgr.h">
       <Filter>inc</Filter>
     </ClInclude>
   </ItemGroup>
@@ -50,7 +50,7 @@
     <ClCompile Include="node_connection_factory.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="node_mgr.cpp">
+    <ClCompile Include="service_mgr.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

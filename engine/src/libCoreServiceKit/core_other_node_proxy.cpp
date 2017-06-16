@@ -22,12 +22,26 @@ namespace core
 		SAFE_DELETE(this->m_pDefaultSerializeAdapter);
 	}
 
-	bool CCoreOtherNodeProxy::init()
+	bool CCoreOtherNodeProxy::init(tinyxml2::XMLElement* pXMLElement)
 	{
+		if (pXMLElement != nullptr)
+		{
+			for (tinyxml2::XMLElement* pServiceInfoXML = pXMLElement->FirstChildElement("service_info"); pServiceInfoXML != nullptr; pServiceInfoXML = pServiceInfoXML->NextSiblingElement("service_info"))
+			{
+				std::string szServiceName = pServiceInfoXML->Attribute("service_name");
+				std::string szServiceType = pServiceInfoXML->Attribute("service_type");
+				uint32_t nServiceInvokeTimeout = pServiceInfoXML->UnsignedAttribute("invoke_timeout");
+				if (szServiceName == "*")
+					this->m_mapConnectServiceType[szServiceType] = nServiceInvokeTimeout;
+				else
+					this->m_mapConnectServiceName[szServiceName] = nServiceInvokeTimeout;
+			}
+		}
+
 		return true;
 	}
 
-	void CCoreOtherNodeProxy::addNodeProxyInfo(const SNodeBaseInfo& sNodeBaseInfo, const std::vector<SServiceBaseInfo>& vecServiceBaseInfo)
+	void CCoreOtherNodeProxy::addNodeProxyInfo(const SNodeBaseInfo& sNodeBaseInfo, const std::vector<SServiceBaseInfo>& vecServiceBaseInfo, bool bMaster)
 	{
 		auto iter = this->m_mapNodeProxyInfo.find(sNodeBaseInfo.nID);
 		if (iter != this->m_mapNodeProxyInfo.end())
@@ -43,6 +57,7 @@ namespace core
 		sNodeProxyInfo.pCoreConnectionOtherNode = nullptr;
 		sNodeProxyInfo.sNodeBaseInfo = sNodeBaseInfo;
 		sNodeProxyInfo.vecServiceBaseInfo = vecServiceBaseInfo;
+		
 		sNodeProxyInfo.pTicker = std::make_unique<CTicker>();
 		sNodeProxyInfo.pTicker->setCallback([&sNodeProxyInfo](uint64_t nContext)
 		{
@@ -62,6 +77,25 @@ namespace core
 			this->m_mapServiceName[vecServiceBaseInfo[i].szName] == vecServiceBaseInfo[i].nID;
 			this->m_mapServiceProxyInfo[vecServiceBaseInfo[i].nID] = { vecServiceBaseInfo[i], nullptr };
 		}
+
+		bool bConnect = false;
+		for (size_t i = 0; i < vecServiceBaseInfo.size(); ++i)
+		{
+			if (this->m_mapConnectServiceName.find(vecServiceBaseInfo[i].szName) != this->m_mapConnectServiceName.end())
+			{
+				bConnect = true;
+				break;
+			}
+
+			if (this->m_mapConnectServiceType.find(vecServiceBaseInfo[i].szType) != this->m_mapConnectServiceType.end())
+			{
+				bConnect = true;
+				break;
+			}
+		}
+
+		if (bConnect && bMaster)
+			CBaseApp::Inst()->registerTicker(sNodeProxyInfo.pTicker.get(), _CHECK_CONNECT_TIME, _CHECK_CONNECT_TIME, 0);
 
 		PrintInfo("add proxy node node_id: %d node_name: %s", sNodeBaseInfo.nID, sNodeBaseInfo.szName.c_str());
 	}
@@ -98,13 +132,23 @@ namespace core
 		return iter->second;
 	}
 
-	const SServiceBaseInfo* CCoreOtherNodeProxy::getServiceBaseInfo(uint16_t nID) const
+	const SServiceBaseInfo* CCoreOtherNodeProxy::getServiceBaseInfoByServiceID(uint16_t nServiceID) const
 	{
-		auto iter = this->m_mapServiceProxyInfo.find(nID);
+		auto iter = this->m_mapServiceProxyInfo.find(nServiceID);
 		if (iter == this->m_mapServiceProxyInfo.end())
 			return nullptr;
 		
 		return &iter->second.sServiceBaseInfo;
+	}
+
+	bool CCoreOtherNodeProxy::getServiceBaseInfoByNodeID(uint16_t nNodeID, std::vector<SServiceBaseInfo>& vecServiceBaseInfo) const
+	{
+		auto iter = this->m_mapNodeProxyInfo.find(nNodeID);
+		if (iter == this->m_mapNodeProxyInfo.end())
+			return false;
+
+		vecServiceBaseInfo = iter->second.vecServiceBaseInfo;
+		return true;
 	}
 
 	void CCoreOtherNodeProxy::delCoreConnectionOtherNodeByNodeID(uint16_t nNodeID)
@@ -139,6 +183,12 @@ namespace core
 		}
 
 		SNodeProxyInfo& sNodeProxyInfo = iter->second;
+		if (sNodeProxyInfo.pCoreConnectionOtherNode != nullptr)
+		{
+			PrintWarning("dup node connection node_id: %d remote_addr: %s %d", nNodeID, pCoreConnectionOtherNode->getRemoteAddr().szHost, pCoreConnectionOtherNode->getRemoteAddr().nPort);
+			return false;
+		}
+
 		for (size_t i = 0; i < sNodeProxyInfo.vecServiceBaseInfo.size(); ++i)
 		{
 			auto iter = this->m_mapServiceProxyInfo.find(sNodeProxyInfo.vecServiceBaseInfo[i].nID);

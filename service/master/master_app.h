@@ -1,7 +1,7 @@
 #pragma once
 #include "libCoreCommon/base_app.h"
 
-#include "node_mgr.h"
+#include "service_mgr.h"
 
 class CNodeConnectionFactory;
 class CMasterApp
@@ -18,9 +18,9 @@ public:
 
 	virtual void	onQuit();
 
-	CNodeMgr*		getNodeMgr() const;
+	CServiceMgr*	getServiceMgr() const;
 
 private:
-	CNodeMgr*				m_pNodeMgr;
+	CServiceMgr*			m_pServiceMgr;
 	CNodeConnectionFactory*	m_pNodeConnectionFactory;
 };

@@ -6,7 +6,7 @@
 
 #include "scheduler.h"
 #include "transporter.h"
-#include "core_other_service_proxy.h"
+#include "core_other_node_proxy.h"
 #include "core_message_registry.h"
 #include "message_dispatcher.h"
 #include "core_service_app.h"
@@ -18,7 +18,7 @@ namespace core
 	class CCoreServiceConnection;
 	class CCoreConnectionOtherNode;
 	class CCoreConnectionToMaster;
-	class CServiceConnectionFactory;
+	class CNodeConnectionFactory;
 	class CCoreServiceAppImpl :
 		public base::CSingleton<CCoreServiceAppImpl>
 	{
@@ -39,7 +39,9 @@ namespace core
 		CCoreConnectionToMaster*	getConnectionToMaster() const;
 		void						setCoreConnectionToMaster(CCoreConnectionToMaster* pCoreConnectionToMaster);
 
-		const SServiceBaseInfo&		getNodeBaseInfo() const;
+		const SNodeBaseInfo&		getNodeBaseInfo() const;
+		const std::vector<SServiceBaseInfo>&
+									getServiceBaseInfo() const;
 
 		void						addGlobalBeforeFilter(const GlobalBeforeFilter& callback);
 		void						addGlobalAfterFilter(const GlobalAfterFilter& callback);
@@ -67,27 +69,28 @@ namespace core
 		void						onCheckConnectMaster(uint64_t nContext);
 
 	private:
-		CTicker							m_tickCheckConnectMaster;
-		CTransporter*					m_pTransporter;
-		CCoreMessageRegistry*			m_pCoreMessageRegistry;
-		CScheduler*						m_pScheduler;
-		CCoreOtherNodeProxy*			m_pCoreOtherNodeProxy;
-		CMessageDispatcher*				m_pMessageDispatcher;
-		CServiceConnectionFactory*			m_pNodeConnectionFactory;
-		CCoreConnectionToMaster*		m_pCoreConnectionToMaster;
-		SServiceBaseInfo					m_sNodeBaseInfo;
-		std::string						m_szMasterHost;
-		uint16_t						m_nMasterPort;
-		uint32_t						m_nInvokTimeout;
-		uint32_t						m_nThroughput;
+		CTicker								m_tickCheckConnectMaster;
+		CTransporter*						m_pTransporter;
+		CCoreMessageRegistry*				m_pCoreMessageRegistry;
+		CScheduler*							m_pScheduler;
+		CCoreOtherNodeProxy*				m_pCoreOtherNodeProxy;
+		CMessageDispatcher*					m_pMessageDispatcher;
+		CNodeConnectionFactory*				m_pNodeConnectionFactory;
+		CCoreConnectionToMaster*			m_pCoreConnectionToMaster;
+		SNodeBaseInfo						m_sNodeBaseInfo;
+		std::vector<SServiceBaseInfo>		m_vecServiceBaseInfo;
+		std::string							m_szMasterHost;
+		uint16_t							m_nMasterPort;
+		uint32_t							m_nInvokTimeout;
+		uint32_t							m_nThroughput;
 
-		base::CLuaFacade*				m_pLuaFacade;
+		base::CLuaFacade*					m_pLuaFacade;
 
-		std::vector<GlobalBeforeFilter>	m_vecGlobalBeforeFilter;
-		std::vector<GlobalAfterFilter>	m_vecGlobalAfterFilter;
+		std::vector<GlobalBeforeFilter>		m_vecGlobalBeforeFilter;
+		std::vector<GlobalAfterFilter>		m_vecGlobalAfterFilter;
 
-		std::function<void(uint16_t)>	m_fnNodeConnectCallback;
-		std::function<void(uint16_t)>	m_fnNodeDisconnectCallback;
+		std::function<void(uint16_t)>		m_fnNodeConnectCallback;
+		std::function<void(uint16_t)>		m_fnNodeDisconnectCallback;
 	};
 
 }

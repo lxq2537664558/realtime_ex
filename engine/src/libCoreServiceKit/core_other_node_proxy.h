@@ -22,9 +22,9 @@ namespace core
 		CCoreOtherNodeProxy();
 		~CCoreOtherNodeProxy();
 
-		bool							init();
+		bool							init(tinyxml2::XMLElement* pXMLElement);
 		
-		void							addNodeProxyInfo(const SNodeBaseInfo& sNodeBaseInfo, const std::vector<SServiceBaseInfo>& vecServiceBaseInfo);
+		void							addNodeProxyInfo(const SNodeBaseInfo& sNodeBaseInfo, const std::vector<SServiceBaseInfo>& vecServiceBaseInfo, bool bMaster);
 		void							delNodeProxyInfo(uint16_t nID);
 
 		void							setSerializeAdapter(uint16_t nID, CSerializeAdapter* pSerializeAdapter);
@@ -32,7 +32,8 @@ namespace core
 
 		uint16_t						getServiceID(const std::string& szName) const;
 		
-		const SServiceBaseInfo*			getServiceBaseInfo(uint16_t nID) const;
+		const SServiceBaseInfo*			getServiceBaseInfoByServiceID(uint16_t nServiceID) const;
+		bool							getServiceBaseInfoByNodeID(uint16_t nNodeID, std::vector<SServiceBaseInfo>& vecServiceBaseInfo) const;
 		
 		CCoreConnectionOtherNode*		getCoreConnectionOtherNodeByServiceID(uint16_t nServiceID) const;
 		CCoreConnectionOtherNode*		getCoreConnectionOtherNodeByNodeID(uint16_t nNodeID) const;
@@ -59,5 +60,7 @@ namespace core
 		std::map<std::string, uint16_t>			m_mapServiceName;
 		CSerializeAdapter*						m_pDefaultSerializeAdapter;
 		std::map<uint16_t, CSerializeAdapter*>	m_mapSerializeAdapter;
+		std::map<std::string, uint32_t>			m_mapConnectServiceName;
+		std::map<std::string, uint32_t>			m_mapConnectServiceType;
 	};
 }
