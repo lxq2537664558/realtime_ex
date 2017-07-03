@@ -3,11 +3,12 @@
 #include "protobuf_helper.h"
 #include "core_service_app_impl.h"
 #include "core_service_kit_common.h"
+#include "core_service_define.h"
 #include "coroutine.h"
+#include "actor_base_impl.h"
 
 #include "libBaseCommon/debug_helper.h"
 #include "libBaseCommon/defer.h"
-
 
 namespace core
 {
@@ -30,19 +31,6 @@ namespace core
 	{
 		DebugAst(pData != nullptr);
 
-		bool bFilter = false;
-		const std::vector<GlobalBeforeFilter>& vecGlobalBeforeFilter = CCoreServiceAppImpl::Inst()->getGlobalBeforeFilter();
-		for (size_t i = 0; i < vecGlobalBeforeFilter.size(); ++i)
-		{
-			if (!vecGlobalBeforeFilter[i](nFromSocketID, nFromNodeID, nMessageType, pData, nSize))
-			{
-				bFilter = true;
-				break;
-			}
-		}
-		if (bFilter)
-			return;
-
 		if ((nMessageType&eMT_TYPE_MASK) == eMT_REQUEST)
 		{
 			DebugAst(nSize > sizeof(request_cookice));
@@ -50,7 +38,7 @@ namespace core
 			const request_cookice* pCookice = reinterpret_cast<const request_cookice*>(pData);
 
 			SServiceSessionInfo& sServiceSessionInfo = CCoreServiceAppImpl::Inst()->getTransporter()->getServiceSessionInfo();
-			sServiceSessionInfo.nServiceID = pCookice->nFromID;
+			sServiceSessionInfo.nServiceID = pCookice->nFromServiceID;
 			sServiceSessionInfo.nSessionID = pCookice->nSessionID;
 
 			// °þµôcookice
@@ -63,7 +51,7 @@ namespace core
 				DebugAst(pSerializeAdapter != nullptr);
 				
 				CMessagePtr<char> pMessage = pSerializeAdapter->deserialize(pHeader);
-				bFilter = !callback(nFromNodeID, pMessage);
+				callback(nFromNodeID, pMessage);
 			}
 			sServiceSessionInfo.nServiceID = 0;
 			sServiceSessionInfo.nSessionID = 0;
@@ -73,27 +61,24 @@ namespace core
 			const response_cookice* pCookice = reinterpret_cast<const response_cookice*>(pData);
 			// °þµôcookice
 			const message_header* pHeader = reinterpret_cast<const message_header*>(pCookice + 1);
+			
+			SResponseWaitInfo* pResponseWaitInfo = CCoreServiceAppImpl::Inst()->getTransporter()->getResponseWaitInfo(pCookice->nSessionID, true);
+			if (nullptr == pResponseWaitInfo)
+				return;
 
-			if (pCookice->nActorID == 0)
+			Defer(delete pResponseWaitInfo);
+
+			if (pCookice->nResult == eRRT_OK)
 			{
-				SResponseWaitInfo* pResponseWaitInfo = CCoreServiceAppImpl::Inst()->getTransporter()->getResponseWaitInfo(pCookice->nSessionID, true);
-				if (nullptr == pResponseWaitInfo)
-					return;
+				CSerializeAdapter* pSerializeAdapter = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getSerializeAdapter(nFromNodeID);
+				DebugAst(pSerializeAdapter != nullptr);
 
-				Defer(delete pResponseWaitInfo);
-
-				if (pCookice->nResult == eRRT_OK)
-				{
-					CSerializeAdapter* pSerializeAdapter = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getSerializeAdapter(nFromNodeID);
-					DebugAst(pSerializeAdapter != nullptr);
-
-					CMessagePtr<char> pMessage = pSerializeAdapter->deserialize(pHeader);
-					pResponseWaitInfo->callback(pMessage, eRRT_OK);
-				}
-				else if (pCookice->nResult != eRRT_OK)
-				{
-					pResponseWaitInfo->callback(nullptr, (EResponseResultType)pCookice->nResult);
-				}
+				CMessagePtr<char> pMessage = pSerializeAdapter->deserialize(pHeader);
+				pResponseWaitInfo->callback(pMessage, eRRT_OK);
+			}
+			else if (pCookice->nResult != eRRT_OK)
+			{
+				pResponseWaitInfo->callback(nullptr, (EResponseResultType)pCookice->nResult);
 			}
 		}
 		else if ((nMessageType&eMT_TYPE_MASK) == eMT_GATE_FORWARD)
@@ -111,17 +96,74 @@ namespace core
 				DebugAst(pSerializeAdapter != nullptr);
 
 				CMessagePtr<char> pMessage = pSerializeAdapter->deserialize(pHeader);
-				bFilter = !callback(session, pMessage);
+				callback(session, pMessage);
 			}
 		}
-
-		if (bFilter)
-			return;
-
-		const std::vector<GlobalAfterFilter>& vecGlobalAfterFilter = CCoreServiceAppImpl::Inst()->getGlobalAfterFilter();
-		for (size_t i = 0; i < vecGlobalAfterFilter.size(); ++i)
+		else if ((nMessageType&eMT_TYPE_MASK) == eMT_ACTOR_REQUEST)
 		{
-			vecGlobalAfterFilter[i](nFromSocketID, nFromNodeID, nMessageType, pData, nSize);
+			DebugAst(nSize > sizeof(core::actor_request_cookice));
+
+			const core::actor_request_cookice* pCookice = reinterpret_cast<const core::actor_request_cookice*>(pData);
+
+			// °þµôcookice
+			const core::message_header* pHeader = reinterpret_cast<const core::message_header*>(pCookice + 1);
+
+			core::CActorBaseImpl* pActorBase = core::CCoreServiceAppImpl::Inst()->getScheduler()->getBaseActor(pCookice->nToActorID);
+			if (NULL == pActorBase)
+				return;
+
+			char* pNewData = new char[nSize];
+			memcpy(pNewData, pData, nSize);
+			core::SMessagePacket sMessagePacket;
+			sMessagePacket.nID = pCookice->nFromActorID;
+			sMessagePacket.nType = eMT_ACTOR_REQUEST;
+			sMessagePacket.nDataSize = nSize;
+			sMessagePacket.pData = pNewData;
+			pActorBase->getChannel()->send(sMessagePacket);
+
+			core::CCoreServiceAppImpl::Inst()->getScheduler()->addWorkActorBase(pActorBase);
+		}
+		else if ((nMessageType&eMT_TYPE_MASK) == eMT_ACTOR_RESPONSE)
+		{
+			const core::actor_response_cookice* pCookice = reinterpret_cast<const core::actor_response_cookice*>(pData);
+			// °þµôcookice
+			const core::message_header* pHeader = reinterpret_cast<const core::message_header*>(pCookice + 1);
+
+			core::CActorBaseImpl* pActorBase = core::CCoreServiceAppImpl::Inst()->getScheduler()->getBaseActor(pCookice->nToActorID);
+			if (NULL == pActorBase)
+				return;
+
+			char* pNewData = new char[nSize];
+			memcpy(pNewData, pData, nSize);
+			core::SMessagePacket sMessagePacket;
+			sMessagePacket.nID = nFromNodeID;
+			sMessagePacket.nType = eMT_RESPONSE;
+			sMessagePacket.nDataSize = nSize;
+			sMessagePacket.pData = pNewData;
+			pActorBase->getChannel()->send(sMessagePacket);
+
+			core::CCoreServiceAppImpl::Inst()->getScheduler()->addWorkActorBase(pActorBase);
+		}
+		else if ((nMessageType&eMT_TYPE_MASK) == eMT_ACTOR_GATE_FORWARD)
+		{
+			const core::actor_gate_forward_cookice* pCookice = reinterpret_cast<const core::actor_gate_forward_cookice*>(pData);
+			// °þµôcookice
+			const core::message_header* pHeader = reinterpret_cast<const core::message_header*>(pCookice + 1);
+
+			core::CActorBaseImpl* pActorBase = core::CCoreServiceAppImpl::Inst()->getScheduler()->getBaseActor(pCookice->nToActorID);
+			if (NULL == pActorBase)
+				return;
+
+			char* pNewData = new char[nSize];
+			memcpy(pNewData, pData, nSize);
+			core::SMessagePacket sMessagePacket;
+			sMessagePacket.nID = nFromNodeID;
+			sMessagePacket.nType = eMT_GATE_FORWARD;
+			sMessagePacket.nDataSize = nSize;
+			sMessagePacket.pData = pNewData;
+			pActorBase->getChannel()->send(sMessagePacket);
+
+			core::CCoreServiceAppImpl::Inst()->getScheduler()->addWorkActorBase(pActorBase);
 		}
 	}
 }

@@ -71,7 +71,13 @@ namespace core
 #pragma pack(push,1)
 	struct gate_forward_cookice
 	{
-		uint64_t nActorID;
+		uint32_t nToServiceID;
+		uint64_t nSessionID;
+	};
+
+	struct actor_gate_forward_cookice
+	{
+		uint64_t nToActorID;
 		uint64_t nSessionID;
 	};
 
@@ -89,13 +95,26 @@ namespace core
 	struct request_cookice
 	{
 		uint64_t nSessionID;
-		uint64_t nFromID;
-		uint64_t nToID;
+		uint32_t nFromServiceID;
+		uint32_t nToServiceID;
 	};
 
 	struct response_cookice
 	{
-		uint64_t	nActorID;
+		uint64_t	nSessionID;
+		uint8_t		nResult;
+	};
+
+	struct actor_request_cookice
+	{
+		uint64_t nSessionID;
+		uint64_t nFromActorID;
+		uint64_t nToActorID;
+	};
+
+	struct actor_response_cookice
+	{
+		uint64_t	nToActorID;
 		uint64_t	nSessionID;
 		uint8_t		nResult;
 	};

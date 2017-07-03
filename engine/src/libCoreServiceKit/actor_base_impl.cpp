@@ -13,10 +13,10 @@
 
 namespace core
 {
-	CActorBaseImpl::CActorBaseImpl(uint64_t nID, CActorBase* pActor)
+	CActorBaseImpl::CActorBaseImpl(uint64_t nID, CActorBase* pActorBase)
 		: m_channel(_DEFAULT_CHANNEL_CAP)
 		, m_nID(nID)
-		, m_pBaseActor(pActor)
+		, m_pActorBase(pActorBase)
 	{
 
 	}
@@ -31,6 +31,18 @@ namespace core
 		return this->m_nID;
 	}
 
+
+	CActorBaseImpl::EActorBaseState CActorBaseImpl::getState() const
+	{
+		return this->m_eState;
+	}
+
+	void CActorBaseImpl::setState(EActorBaseState eState)
+	{
+		this->m_eState = eState;
+	}
+
+
 	void CActorBaseImpl::process()
 	{
 		if (this->m_channel.empty())
@@ -42,18 +54,18 @@ namespace core
 			if (!this->m_channel.recv(sMessagePacket))
 				break;
 
-			if ((sMessagePacket.nType&eMT_TYPE_MASK) == eMT_REQUEST)
+			if ((sMessagePacket.nType&eMT_TYPE_MASK) == eMT_ACTOR_REQUEST)
 			{
 				DebugAst(sMessagePacket.nDataSize > sizeof(request_cookice));
 
-				const request_cookice* pCookice = reinterpret_cast<const request_cookice*>(sMessagePacket.pData);
+				const actor_request_cookice* pCookice = reinterpret_cast<const actor_request_cookice*>(sMessagePacket.pData);
 				// °þµôcookice
 				const message_header* pHeader = reinterpret_cast<const message_header*>(pCookice + 1);
 
-				this->m_sActorSessionInfo.nActorID = pCookice->nFromID;
+				this->m_sActorSessionInfo.nActorID = pCookice->nFromActorID;
 				this->m_sActorSessionInfo.nSessionID = pCookice->nSessionID;
 
-				CSerializeAdapter* pSerializeAdapter = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getSerializeAdapter(CActorBase::getServiceID(pCookice->nFromID));
+				CSerializeAdapter* pSerializeAdapter = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getSerializeAdapter(0);
 				DebugAst(pSerializeAdapter != nullptr);
 
 				CMessagePtr<char> pMessage = pSerializeAdapter->deserialize(pHeader);
@@ -68,12 +80,12 @@ namespace core
 
 						if (!sMessageHandlerInfo.bAsync)
 						{
-							uint64_t nCoroutineID = coroutine::create([&](uint64_t){ sMessageHandlerInfo.handler(this->m_pBaseActor, pCookice->nFromID, pMessage); });
+							uint64_t nCoroutineID = coroutine::create(0, [&](uint64_t){ sMessageHandlerInfo.handler(this->m_pActorBase, pCookice->nFromActorID, pMessage); });
 							coroutine::resume(nCoroutineID, 0);
 						}
 						else
 						{
-							sMessageHandlerInfo.handler(this->m_pBaseActor, pCookice->nFromID, pMessage);
+							sMessageHandlerInfo.handler(this->m_pActorBase, pCookice->nFromActorID, pMessage);
 						}
 					}
 				}
@@ -81,9 +93,9 @@ namespace core
 				this->m_sActorSessionInfo.nActorID = 0;
 				this->m_sActorSessionInfo.nSessionID = 0;
 			}
-			else if ((sMessagePacket.nType&eMT_TYPE_MASK) == eMT_RESPONSE)
+			else if ((sMessagePacket.nType&eMT_TYPE_MASK) == eMT_ACTOR_RESPONSE)
 			{
-				const response_cookice* pCookice = reinterpret_cast<const response_cookice*>(sMessagePacket.pData);
+				const actor_response_cookice* pCookice = reinterpret_cast<const actor_response_cookice*>(sMessagePacket.pData);
 				// °þµôcookice
 				const message_header* pHeader = reinterpret_cast<const message_header*>(pCookice + 1);
 
@@ -96,7 +108,7 @@ namespace core
 					{
 						if (pCookice->nResult == eRRT_OK)
 						{
-							CSerializeAdapter* pSerializeAdapter = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getSerializeAdapter((uint16_t)sMessagePacket.nID);
+							CSerializeAdapter* pSerializeAdapter = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getSerializeAdapter(0);
 							DebugAst(pSerializeAdapter != nullptr);
 
 							CMessagePtr<char> pMessage = pSerializeAdapter->deserialize(pHeader);
@@ -124,15 +136,15 @@ namespace core
 					}
 				}
 			}
-			else if ((sMessagePacket.nType&eMT_TYPE_MASK) == eMT_GATE_FORWARD)
+			else if ((sMessagePacket.nType&eMT_TYPE_MASK) == eMT_ACTOR_GATE_FORWARD)
 			{
-				const gate_forward_cookice* pCookice = reinterpret_cast<const gate_forward_cookice*>(sMessagePacket.pData);
+				const actor_gate_forward_cookice* pCookice = reinterpret_cast<const actor_gate_forward_cookice*>(sMessagePacket.pData);
 				// °þµôcookice
 				const message_header* pHeader = reinterpret_cast<const message_header*>(pCookice + 1);
 
 				SClientSessionInfo session((uint16_t)sMessagePacket.nID, pCookice->nSessionID);
 				
-				CSerializeAdapter* pSerializeAdapter = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getSerializeAdapter(CActorBase::getServiceID((uint16_t)sMessagePacket.nID));
+				CSerializeAdapter* pSerializeAdapter = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getSerializeAdapter(0);
 				DebugAst(pSerializeAdapter != nullptr);
 
 				CMessagePtr<char> pMessage = pSerializeAdapter->deserialize(pHeader);
@@ -147,12 +159,12 @@ namespace core
 
 						if (!sForwardHandlerInfo.bAsync)
 						{
-							uint64_t nCoroutineID = coroutine::create([&](uint64_t){ sForwardHandlerInfo.handler(this->m_pBaseActor, session, pMessage); });
+							uint64_t nCoroutineID = coroutine::create(0, [&](uint64_t){ sForwardHandlerInfo.handler(this->m_pActorBase, session, pMessage); });
 							coroutine::resume(nCoroutineID, 0);
 						}
 						else
 						{
-							sForwardHandlerInfo.handler(this->m_pBaseActor, session, pMessage);
+							sForwardHandlerInfo.handler(this->m_pActorBase, session, pMessage);
 						}
 					}
 				}
@@ -162,7 +174,7 @@ namespace core
 		}
 
 		if (!this->m_channel.empty())
-			CCoreServiceAppImpl::Inst()->getScheduler()->addWorkBaseActor(this);
+			CCoreServiceAppImpl::Inst()->getScheduler()->addWorkActorBase(this);
 	}
 
 	CChannel* CActorBaseImpl::getChannel()
@@ -213,7 +225,6 @@ namespace core
 		pResponseWaitInfo->callback = nullptr;
 		pResponseWaitInfo->nSessionID = nSessionID;
 		pResponseWaitInfo->nCoroutineID = nCoroutineID;
-		pResponseWaitInfo->nTraceID = 0;
 		pResponseWaitInfo->nToID = 0;
 		pResponseWaitInfo->nMessageID = 0;
 		pResponseWaitInfo->nBeginTime = 0;

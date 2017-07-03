@@ -42,14 +42,6 @@ namespace core
 		*/
 		void					registerForwardHandler(uint16_t nMessageID, const std::function<bool(SClientSessionInfo, CMessagePtr<char>)>& callback);
 		/**
-		@brief: 添加节点之间的前置过滤器
-		*/
-		void					addGlobalBeforeFilter(GlobalBeforeFilter callback);
-		/**
-		@brief: 添加节点之间的后置过滤器
-		*/
-		void					addGlobalAfterFilter(GlobalAfterFilter callback);
-		/**
 		@brief: 设置消息序列化适配器
 		*/
 		void					setSerializeAdapter(uint16_t nNodeID, CSerializeAdapter* pSerializeAdapter);

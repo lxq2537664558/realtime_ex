@@ -4,7 +4,7 @@
 #include "libCoreCommon/core_common.h"
 
 #include "core_service_kit_common.h"
-
+#include "core_service_define.h"
 #include "service_base.h"
 #include "actor_base.h"
 
@@ -19,10 +19,21 @@ namespace core
 		public base::noncopyable
 	{
 	public:
-		CActorBaseImpl(uint64_t nID, CActorBase* pActor);
+		enum EActorBaseState
+		{
+			eABS_Pending,
+			eABS_Working,
+			eABS_Empty,
+		};
+
+	public:
+		CActorBaseImpl(uint64_t nID, CActorBase* pActorBase);
 		~CActorBaseImpl();
 
 		uint64_t			getID() const;
+		EActorBaseState		getState() const;
+		void				setState(EActorBaseState eState);
+
 		void				process();
 		CChannel*			getChannel();
 		SActorSessionInfo	getActorSessionInfo() const;
@@ -37,9 +48,10 @@ namespace core
 
 	private:
 		uint64_t			m_nID;
-		CActorBase*			m_pBaseActor;
+		CActorBase*			m_pActorBase;
 		SActorSessionInfo	m_sActorSessionInfo;
 		CChannel			m_channel;
+		EActorBaseState		m_eState;
 		std::map<uint64_t, SResponseWaitInfo*>
 							m_mapResponseWaitInfo;
 

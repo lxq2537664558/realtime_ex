@@ -51,8 +51,8 @@ namespace core
 		// 野割cookice
 		request_cookice cookice;
 		cookice.nSessionID = sRequestMessageInfo.nSessionID;
-		cookice.nFromID = sRequestMessageInfo.nFromActorID;
-		cookice.nToID = sRequestMessageInfo.nToActorID;
+		cookice.nFromServiceID = sRequestMessageInfo.nFromActorID;
+		cookice.nToServiceID = sRequestMessageInfo.nToActorID;
 
 		CSerializeAdapter* pSerializeAdapter = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getSerializeAdapter(nServiceID);
 		DebugAstEx(pSerializeAdapter != nullptr, false);
@@ -109,7 +109,7 @@ namespace core
 		// 野割cookice
 		gate_forward_cookice cookice;
 		cookice.nSessionID = sGateForwardMessageInfo.nSessionID;
-		cookice.nActorID = sGateForwardMessageInfo.nActorID;
+		cookice.nToServiceID = sGateForwardMessageInfo.nActorID;
 		pCoreConnectionOtherService->send(eMT_GATE_FORWARD, &cookice, sizeof(cookice), pData, pData->nMessageSize);
 
 		return true;

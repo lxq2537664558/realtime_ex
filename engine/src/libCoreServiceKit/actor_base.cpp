@@ -1,11 +1,12 @@
 #include "stdafx.h"
-#include "base_actor.h"
-#include "base_actor_impl.h"
+#include "actor_base.h"
+#include "actor_base_impl.h"
 #include "core_service_app_impl.h"
 #include "cluster_invoker.h"
-#include "base_actor_factory.h"
+#include "actor_base_factory.h"
+#include "coroutine.h"
+#include "core_service_define.h"
 
-#include "libCoreCommon/coroutine.h"
 #include "libBaseCommon/base_time.h"
 
 #define _REMOTE_BIT 48
@@ -20,7 +21,7 @@ namespace core
 	CActorBase::~CActorBase()
 	{
 		if (this->m_pBaseActorImpl != nullptr)
-			CCoreServiceAppImpl::Inst()->getScheduler()->destroyBaseActor(this->m_pBaseActorImpl);
+			CCoreServiceAppImpl::Inst()->getScheduler()->destroyActorBase(this->m_pBaseActorImpl);
 	}
 
 	uint64_t CActorBase::getID() const
@@ -81,7 +82,7 @@ namespace core
 		DebugAstEx(pBaseActorFactory != nullptr, nullptr);
 
 		CActorBase* pBaseActor = pBaseActorFactory->createActorBase();
-		pBaseActor->m_pBaseActorImpl = CCoreServiceAppImpl::Inst()->getScheduler()->createBaseActor(pBaseActor);
+		pBaseActor->m_pBaseActorImpl = CCoreServiceAppImpl::Inst()->getScheduler()->createActorBase(pBaseActor);
 		if (pBaseActor->m_pBaseActorImpl == nullptr)
 		{
 			SAFE_DELETE(pBaseActor);
