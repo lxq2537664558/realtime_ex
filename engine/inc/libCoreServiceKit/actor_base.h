@@ -1,5 +1,6 @@
 #pragma once
 #include "libBaseCommon/noncopyable.h"
+#include "google/protobuf/message.h"
 
 #include "coroutine.h"
 #include "core_service_kit_common.h"
@@ -21,38 +22,48 @@ namespace core
 
 		uint64_t			getID() const;
 
-		bool				invoke(uint64_t nID, const void* pData);
+		/*
+		给某一个actor发送消息
+		*/
+		bool				send(uint64_t nID, const google::protobuf::Message* pMessage);
 
+		/*
+		异步的调用远程的接口，通过callback来拿到响应结果
+		*/
 		template<class T>
-		bool				invoke_r(uint64_t nID, const void* pData, const std::function<void(CMessagePtr<T>, uint32_t)>& callback);
-
+		bool				async_call(uint64_t nID, const google::protobuf::Message* pMessage, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback);
+		/*
+		异步的调用远程的接口，通过CFuture来拿到响应结果
+		*/
 		template<class T>
-		inline uint32_t		invoke(uint64_t nID, const void* pData, CMessagePtr<T>& pResultMessage);
+		inline bool			async_call(uint64_t nID, const google::protobuf::Message* pMessage, CFuture<T>& sFuture);
 
+		/*
+		同步的调用远程的接口，通过pResponseMessage来拿到响应结果，这里用shared_ptr的原因是为了自动释放pResponseMessage
+		*/
 		template<class T>
-		inline bool			invoke_r(uint64_t nID, const void* pData, CFuture<CMessagePtr<T>>& sFuture);
+		inline uint32_t		sync_call(uint64_t nID, const google::protobuf::Message* pMessage, std::shared_ptr<R>& pResponseMessage);
 
-		SActorSessionInfo	getActorSessionInfo() const;
-		void				response(const void* pData);
-		void				response(const SActorSessionInfo& sActorSessionInfo, const void* pData);
+		void				response(const google::protobuf::Message* pMessage);
+		void				response(const SActorSessionInfo& sActorSessionInfo, const google::protobuf::Message* pMessage);
 
 		void				release();
 
-		static void			registerMessageHandler(uint16_t nMessageID, const std::function<void(CActorBase*, uint64_t, CMessagePtr<char>)>& handler, bool bAsync);
-		static void			registerForwardHandler(uint16_t nMessageID, const std::function<void(CActorBase*, SClientSessionInfo, CMessagePtr<char>)>& handler, bool bAsync);
+		static void			registerMessageHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SActorSessionInfo, const google::protobuf::Message*)>& handler);
+		static void			registerForwardHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SClientSessionInfo, const google::protobuf::Message*)>& handler);
 
-		static CActorBase*	createActor(void* pContext, CActorBaseFactory* pBaseActorFactory);
+		static CActorBase*	createActorBase(void* pContext, CActorBaseFactory* pActorBaseFactory);
 
 		static uint16_t		getServiceID(uint64_t nActorID);
 		static uint64_t		getLocalActorID(uint64_t nActorID);
 		static uint64_t		makeRemoteActorID(uint16_t nServiceID, uint64_t nActorID);
 
 	private:
-		bool				invokeImpl(uint64_t nID, const void* pData, uint64_t nCoroutineID, const std::function<void(CMessagePtr<char>, uint32_t)>& callback);
+		bool				invokeImpl(uint64_t nID, const google::protobuf::Message* pMessage, uint64_t nCoroutineID, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback);
 
 	private:
-		CActorBaseImpl*	m_pBaseActorImpl;
+		CActorBaseImpl*	m_pActorBaseImpl;
 	};
 }
 
-#include "actor_actor.inl"
+#include "actor_base.inl"

@@ -145,7 +145,7 @@
     <ClInclude Include="..\..\inc\libCoreServiceKit\actor_base.h" />
     <ClInclude Include="..\..\inc\libCoreServiceKit\actor_base_factory.h" />
     <ClInclude Include="..\..\inc\libCoreServiceKit\service_base.h" />
-    <ClInclude Include="..\..\inc\libCoreServiceKit\cluster_invoker.h" />
+    <ClInclude Include="..\..\inc\libCoreServiceKit\service_invoker.h" />
     <ClInclude Include="..\..\inc\libCoreServiceKit\coroutine.h" />
     <ClInclude Include="..\..\inc\libCoreServiceKit\message_ptr.h" />
     <ClInclude Include="..\..\inc\libCoreServiceKit\native_serialize_adapter.h" />
@@ -210,12 +210,11 @@
   <ItemGroup>
     <None Include="..\..\inc\libCoreServiceKit\actor_message_registry.inl" />
     <None Include="..\..\inc\libCoreServiceKit\actor_base.inl" />
-    <None Include="..\..\inc\libCoreServiceKit\cluster_invoker.inl" />
+    <None Include="..\..\inc\libCoreServiceKit\service_invoker.inl" />
     <None Include="..\..\inc\libCoreServiceKit\future.inl" />
     <None Include="..\..\inc\libCoreServiceKit\message_ptr.inl" />
     <None Include="..\..\inc\libCoreServiceKit\service_message_registry.inl" />
     <None Include="..\..\inc\libCoreServiceKit\promise.inl" />
-    <None Include="context_linux.S" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

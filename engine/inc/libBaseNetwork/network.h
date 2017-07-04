@@ -147,7 +147,7 @@ namespace base
 		*/
 		virtual void		onDisconnect() = 0;
 		/**
-		@brief: 主动连接失败
+		@brief: 主动连接失败，在迟迟未收到syn包响应的情况下（rst包也没有），tcp会做指数避退，这个时间在各个平台不一致，但是至少大几十秒，所以如果连接广域网上的地址上层最好自己做超时处理，而不是依赖onConnectFail回调
 		*/
 		virtual void		onConnectFail() = 0;
 	};

@@ -139,7 +139,7 @@ namespace core
 			return false;
 		}
 
-		if (!CClusterInvoker::Inst()->init())
+		if (!CServiceInvoker::Inst()->init())
 		{
 			PrintWarning("CClusterInvoker::Inst()->init()");
 			return false;
@@ -218,26 +218,6 @@ namespace core
 	const std::vector<SServiceBaseInfo>& CCoreServiceAppImpl::getServiceBaseInfo() const
 	{
 		return this->m_vecServiceBaseInfo;
-	}
-
-	void CCoreServiceAppImpl::addGlobalBeforeFilter(const GlobalBeforeFilter& callback)
-	{
-		this->m_vecGlobalBeforeFilter.push_back(callback);
-	}
-
-	void CCoreServiceAppImpl::addGlobalAfterFilter(const GlobalAfterFilter& callback)
-	{
-		this->m_vecGlobalAfterFilter.push_back(callback);
-	}
-
-	const std::vector<GlobalBeforeFilter>& CCoreServiceAppImpl::getGlobalBeforeFilter()
-	{
-		return this->m_vecGlobalBeforeFilter;
-	}
-
-	const std::vector<GlobalAfterFilter>& CCoreServiceAppImpl::getGlobalAfterFilter()
-	{
-		return this->m_vecGlobalAfterFilter;
 	}
 
 	CTransporter* CCoreServiceAppImpl::getTransporter() const

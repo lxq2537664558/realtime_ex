@@ -19,7 +19,7 @@ namespace core
 		return static_cast<CCoreServiceApp*>(CBaseApp::Inst());
 	}
 
-	const SServiceBaseInfo& CCoreServiceApp::getNodeBaseInfo() const
+	const SNodeBaseInfo& CCoreServiceApp::getNodeBaseInfo() const
 	{
 		return CCoreServiceAppImpl::Inst()->getNodeBaseInfo();
 	}
@@ -44,24 +44,14 @@ namespace core
 		CCoreServiceAppImpl::Inst()->setNodeDisconnectCallback(callback);
 	}
 
-	void CCoreServiceApp::registerMessageHandler(uint16_t nMessageID, const std::function<bool(uint16_t, CMessagePtr<char>)>& callback)
+	void CCoreServiceApp::registerMessageHandler(uint16_t nServiceID, const std::string& szMessageName, const std::function<bool(uint16_t, google::protobuf::Message*)>& callback)
 	{
-		CCoreServiceAppImpl::Inst()->getCoreMessageRegistry()->registerCallback(nMessageID, callback);
+		CCoreServiceAppImpl::Inst()->getCoreMessageRegistry()->registerCallback(nServiceID, szMessageName, callback);
 	}
 
-	void CCoreServiceApp::registerForwardHandler(uint16_t nMessageID, const std::function<bool(SClientSessionInfo, CMessagePtr<char>)>& callback)
+	void CCoreServiceApp::registerForwardHandler(uint16_t nServiceID, const std::string& szMessageName, const std::function<bool(SClientSessionInfo, google::protobuf::Message*)>& callback)
 	{
-		CCoreServiceAppImpl::Inst()->getCoreMessageRegistry()->registerGateForwardCallback(nMessageID, callback);
-	}
-
-	void CCoreServiceApp::addGlobalBeforeFilter(GlobalBeforeFilter callback)
-	{
-		CCoreServiceAppImpl::Inst()->addGlobalBeforeFilter(callback);
-	}
-
-	void CCoreServiceApp::addGlobalAfterFilter(GlobalAfterFilter callback)
-	{
-		CCoreServiceAppImpl::Inst()->addGlobalAfterFilter(callback);
+		CCoreServiceAppImpl::Inst()->getCoreMessageRegistry()->registerGateForwardCallback(nServiceID, szMessageName, callback);
 	}
 
 	bool CCoreServiceApp::onInit()

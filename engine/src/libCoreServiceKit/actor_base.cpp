@@ -14,25 +14,25 @@
 namespace core
 {
 	CActorBase::CActorBase()
-		: m_pBaseActorImpl(nullptr)
+		: m_pActorBaseImpl(nullptr)
 	{
 	}
 
 	CActorBase::~CActorBase()
 	{
-		if (this->m_pBaseActorImpl != nullptr)
-			CCoreServiceAppImpl::Inst()->getScheduler()->destroyActorBase(this->m_pBaseActorImpl);
+		if (this->m_pActorBaseImpl != nullptr)
+			CCoreServiceAppImpl::Inst()->getScheduler()->destroyActorBase(this->m_pActorBaseImpl);
 	}
 
 	uint64_t CActorBase::getID() const
 	{
-		return this->m_pBaseActorImpl->getID();
+		return this->m_pActorBaseImpl->getID();
 	}
 
-	bool CActorBase::invoke(uint64_t nID, const void* pData)
+	bool CActorBase::send(uint64_t nID, const google::protobuf::Message* pMessage)
 	{
 		SRequestMessageInfo sRequestMessageInfo;
-		sRequestMessageInfo.pData = pData;
+		sRequestMessageInfo.pMessage = pMessage;
 		sRequestMessageInfo.nSessionID = 0;
 		sRequestMessageInfo.nFromActorID = this->getID();
 		sRequestMessageInfo.nToActorID = nID;
@@ -42,7 +42,7 @@ namespace core
 
 	SActorSessionInfo CActorBase::getActorSessionInfo() const
 	{
-		return this->m_pBaseActorImpl->getActorSessionInfo();
+		return this->m_pActorBaseImpl->getActorSessionInfo();
 	}
 
 	void CActorBase::response(const void* pData)
@@ -77,13 +77,13 @@ namespace core
 		return (uint64_t)nServiceID << _REMOTE_ACTOR_BIT | nActorID;
 	}
 
-	CActorBase* CActorBase::createActor(void* pContext, CActorBaseFactory* pBaseActorFactory)
+	CActorBase* CActorBase::createActorBase(void* pContext, CActorBaseFactory* pBaseActorFactory)
 	{
 		DebugAstEx(pBaseActorFactory != nullptr, nullptr);
 
 		CActorBase* pBaseActor = pBaseActorFactory->createActorBase();
-		pBaseActor->m_pBaseActorImpl = CCoreServiceAppImpl::Inst()->getScheduler()->createActorBase(pBaseActor);
-		if (pBaseActor->m_pBaseActorImpl == nullptr)
+		pBaseActor->m_pActorBaseImpl = CCoreServiceAppImpl::Inst()->getScheduler()->createActorBase(pBaseActor);
+		if (pBaseActor->m_pActorBaseImpl == nullptr)
 		{
 			SAFE_DELETE(pBaseActor);
 			return nullptr;
@@ -109,20 +109,20 @@ namespace core
 		delete this;
 	}
 
-	void CActorBase::registerMessageHandler(uint16_t nMessageID, const std::function<void(CActorBase*, uint64_t, CMessagePtr<char>)>& handler, bool bAsync)
+	void CActorBase::registerMessageHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SActorSessionInfo, const google::protobuf::Message*)>& handler)
 	{
-		CActorBaseImpl::registerMessageHandler(nMessageID, handler, bAsync);
+		CActorBaseImpl::registerMessageHandler(szMessageName, handler);
 	}
 
-	void CActorBase::registerForwardHandler(uint16_t nMessageID, const std::function<void(CActorBase*, SClientSessionInfo, CMessagePtr<char>)>& handler, bool bAsync)
+	void CActorBase::registerForwardHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SClientSessionInfo, const google::protobuf::Message*)>& handler)
 	{
-		CActorBaseImpl::registerForwardHandler(nMessageID, handler, bAsync);
+		CActorBaseImpl::registerForwardHandler(szMessageName, handler);
 	}
 
-	bool CActorBase::invokeImpl(uint64_t nID, const void* pData, uint64_t nCoroutineID, const std::function<void(CMessagePtr<char>, uint32_t)>& callback)
+	bool CActorBase::invokeImpl(uint64_t nID, const google::protobuf::Message* pMessage, uint64_t nCoroutineID, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback)
 	{
 		SRequestMessageInfo sRequestMessageInfo;
-		sRequestMessageInfo.pData = pData;
+		sRequestMessageInfo.pMessage = pMessage;
 		sRequestMessageInfo.nSessionID = CCoreServiceAppImpl::Inst()->getTransporter()->genSessionID();
 		sRequestMessageInfo.nFromActorID = this->getID();
 		sRequestMessageInfo.nToActorID = nID;
@@ -130,12 +130,11 @@ namespace core
 		if (!CCoreServiceAppImpl::Inst()->getScheduler()->invoke(sRequestMessageInfo))
 			return false;
 
-		SResponseWaitInfo* pResponseWaitInfo = this->m_pBaseActorImpl->addResponseWaitInfo(sRequestMessageInfo.nSessionID, nCoroutineID);
+		SResponseWaitInfo* pResponseWaitInfo = this->m_pActorBaseImpl->addResponseWaitInfo(sRequestMessageInfo.nSessionID, nCoroutineID);
 		DebugAstEx(nullptr != pResponseWaitInfo, false);
 	
 		pResponseWaitInfo->callback = callback;
 		pResponseWaitInfo->nToID = nID;
-		//pResponseWaitInfo->nMessageID = pData->nMessageID;
 		pResponseWaitInfo->nBeginTime = base::getGmtTime();
 
 		return true;

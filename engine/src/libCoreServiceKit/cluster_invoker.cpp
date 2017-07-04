@@ -12,22 +12,22 @@
 
 namespace core
 {
-	CClusterInvoker::CClusterInvoker()
+	CServiceInvoker::CServiceInvoker()
 	{
 
 	}
 
-	CClusterInvoker::~CClusterInvoker()
+	CServiceInvoker::~CServiceInvoker()
 	{
 
 	}
 
-	bool CClusterInvoker::init()
+	bool CServiceInvoker::init()
 	{
 		return true;
 	}
 
-	bool CClusterInvoker::invoke(uint16_t nServiceID, const void* pData)
+	bool CServiceInvoker::send(uint16_t nServiceID, const void* pData)
 	{
 		DebugAstEx(pData != nullptr, false);
 
@@ -40,14 +40,14 @@ namespace core
 		return CCoreServiceAppImpl::Inst()->getTransporter()->invoke(nServiceID, sRequestMessageInfo);
 	}
 
-	void CClusterInvoker::response(const void* pData)
+	void CServiceInvoker::response(const void* pData)
 	{
 		DebugAst(pData != nullptr);
 
 		this->response(CCoreServiceAppImpl::Inst()->getTransporter()->getServiceSessionInfo(), pData);
 	}
 
-	void CClusterInvoker::response(const SServiceSessionInfo& sServiceSessionInfo, const void* pData)
+	void CServiceInvoker::response(const SServiceSessionInfo& sServiceSessionInfo, const void* pData)
 	{
 		DebugAst(pData != nullptr);
 
@@ -62,12 +62,12 @@ namespace core
 		DebugAst(bRet);
 	}
 
-	SServiceSessionInfo CClusterInvoker::getServiceSessionInfo()
+	SServiceSessionInfo CServiceInvoker::getServiceSessionInfo()
 	{
 		return CCoreServiceAppImpl::Inst()->getTransporter()->getServiceSessionInfo();
 	}
 
-	bool CClusterInvoker::send(const SClientSessionInfo& sClientSessionInfo, const void* pData)
+	bool CServiceInvoker::send(const SClientSessionInfo& sClientSessionInfo, const void* pData)
 	{
 		DebugAstEx(pData != nullptr, false);
 
@@ -78,7 +78,7 @@ namespace core
 		return CCoreServiceAppImpl::Inst()->getTransporter()->send(sClientSessionInfo.nGateNodeID, sGateMessageInfo);
 	}
 
-	bool CClusterInvoker::forward(uint16_t nServiceID, uint64_t nSessionID, const void* pData)
+	bool CServiceInvoker::forward(uint16_t nServiceID, uint64_t nSessionID, const void* pData)
 	{
 		DebugAstEx(pData != nullptr, false);
 
@@ -90,7 +90,7 @@ namespace core
 		return CCoreServiceAppImpl::Inst()->getTransporter()->forward(nServiceID, sGateMessageInfo);
 	}
 
-	bool CClusterInvoker::forward_a(uint64_t nActorID, uint64_t nSessionID, const void* pData)
+	bool CServiceInvoker::forward_a(uint64_t nActorID, uint64_t nSessionID, const void* pData)
 	{
 		DebugAstEx(pData != nullptr, false);
 
@@ -103,7 +103,7 @@ namespace core
 		return CCoreServiceAppImpl::Inst()->getTransporter()->forward(nNodeID, sGateMessageInfo);
 	}
 
-	bool CClusterInvoker::broadcast(const std::vector<SClientSessionInfo>& vecClientSessionInfo, const void* pData)
+	bool CServiceInvoker::broadcast(const std::vector<SClientSessionInfo>& vecClientSessionInfo, const void* pData)
 	{
 		DebugAstEx(pData != nullptr, false);
 
@@ -126,7 +126,7 @@ namespace core
 		return bRet;
 	}
 
-	bool CClusterInvoker::invokeImpl(uint16_t nServiceID, const void* pData, const std::function<void(CMessagePtr<char>, uint32_t)>& callback)
+	bool CServiceInvoker::invokeImpl(uint16_t nServiceID, const void* pData, const std::function<void(CMessagePtr<char>, uint32_t)>& callback)
 	{
 		SRequestMessageInfo sRequestMessageInfo;
 		sRequestMessageInfo.pData = pData;

@@ -14,7 +14,8 @@ namespace core
 		uint64_t	nFromActorID;
 		uint64_t	nToActorID;
 		uint64_t	nSessionID;
-		const void*	pData;
+		const google::protobuf::Message*
+					pMessage;
 	};
 
 	struct SResponseMessageInfo
@@ -23,26 +24,30 @@ namespace core
 		uint64_t	nToActorID;
 		uint64_t	nSessionID;
 		uint8_t		nResult;
-		const void*	pData;
+		const google::protobuf::Message*
+					pMessage;
 	};
 
 	struct SGateForwardMessageInfo
 	{
 		uint64_t	nActorID;
 		uint64_t	nSessionID;
-		const void*	pData;
+		const google::protobuf::Message*
+					pMessage;
 	};
 
 	struct SGateMessageInfo
 	{
 		uint64_t	nSessionID;
-		const void*	pData;
+		const google::protobuf::Message*
+					pMessage;
 	};
 
 	struct SGateBroadcastMessageInfo
 	{
 		std::vector<uint64_t>	vecSessionID;
-		const void*				pData;
+		const google::protobuf::Message*
+								pMessage;
 	};
 
 	struct SResponseWaitInfo
@@ -55,7 +60,7 @@ namespace core
 		int64_t		nBeginTime;	// 发送时间
 		uint16_t	nMessageID;	// 消息ID
 		
-		std::function<void(CMessagePtr<char>, uint32_t)>
+		std::function<void(google::protobuf::Message*, uint32_t)>
 					callback;
 	};
 

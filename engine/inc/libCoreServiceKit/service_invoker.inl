@@ -1,7 +1,7 @@
 namespace core
 {
 	template<class T>
-	bool CClusterInvoker::invoke_r(uint16_t nNodeID, const void* pData, CFuture<CMessagePtr<T>>& sFuture)
+	bool CServiceInvoker::async_call(uint16_t nNodeID, const void* pData, CFuture<CMessagePtr<T>>& sFuture)
 	{
 		DebugAstEx(pData != nullptr, false);
 
@@ -21,7 +21,7 @@ namespace core
 	}
 
 	template<class T>
-	bool CClusterInvoker::invoke_r(uint16_t nNodeID, const void* pData, const std::function<void(CMessagePtr<T>, uint32_t)>& callback)
+	bool CServiceInvoker::async_call(uint16_t nNodeID, const void* pData, const std::function<void(CMessagePtr<T>, uint32_t)>& callback)
 	{
 		DebugAstEx(pData != nullptr && callback != nullptr, false);
 

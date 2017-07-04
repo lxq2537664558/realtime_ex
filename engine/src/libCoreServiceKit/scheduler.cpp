@@ -47,37 +47,22 @@ namespace core
 		CActorBaseImpl* pFromActorBaseImpl = iter->second;
 		DebugAstEx(pFromActorBaseImpl != nullptr, false);
 
-		uint16_t nServiceID = CActorBase::getServiceID(sRequestMessageInfo.nToActorID);
-		if (nServiceID == 0)
+		auto iter = this->m_mapActorBase.find(sRequestMessageInfo.nToActorID);
+		if (iter != this->m_mapActorBase.end())
 		{
-			auto iter = this->m_mapActorBase.find(sRequestMessageInfo.nToActorID);
-			if (iter == this->m_mapActorBase.end())
-				return false;
-
 			CActorBaseImpl* pToActorBaseImpl = iter->second;
 			DebugAstEx(pToActorBaseImpl != nullptr, false);
 
-			CSerializeAdapter* pSerializeAdapter = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getSerializeAdapter(0);
-			DebugAstEx(pSerializeAdapter != nullptr, false);
-
-			message_header* pData = pSerializeAdapter->serialize(sRequestMessageInfo.pData, &this->m_vecBuf[0], (uint16_t)this->m_vecBuf.size());
-			if (pData == nullptr)
+			google::protobuf::Message* pMessage = create_protobuf_message(sRequestMessageInfo.pMessage->GetTypeName());
+			if (nullptr == pMessage)
 				return false;
 
-			char* pBuf = new char[sizeof(request_cookice) + pData->nMessageSize];
-			// Ìî³äcookice
-			actor_request_cookice* pCookice = reinterpret_cast<actor_request_cookice*>(pBuf);
-			pCookice->nSessionID = sRequestMessageInfo.nSessionID;
-			pCookice->nFromActorID = sRequestMessageInfo.nFromActorID;
-			pCookice->nToActorID = sRequestMessageInfo.nToActorID;
-
-			memcpy(pCookice + 1, pData, pData->nMessageSize);
+			pMessage->CopyFrom(*sRequestMessageInfo.pMessage);
 
 			SMessagePacket sMessagePacket;
 			sMessagePacket.nID = sRequestMessageInfo.nFromActorID;
 			sMessagePacket.nType = eMT_ACTOR_REQUEST;
-			sMessagePacket.nDataSize = pData->nMessageSize + sizeof(request_cookice);
-			sMessagePacket.pData = pBuf;
+			sMessagePacket.pMessage = pMessage;
 
 			pToActorBaseImpl->getChannel()->send(sMessagePacket);
 
@@ -95,37 +80,22 @@ namespace core
 
 	bool CScheduler::response(const SResponseMessageInfo& sResponseMessageInfo)
 	{
-		uint16_t nNodeID = CActorBase::getServiceID(sResponseMessageInfo.nToActorID);
-		if (nNodeID == 0)
+		auto iter = this->m_mapActorBase.find(sResponseMessageInfo.nToActorID);
+		if (iter != this->m_mapActorBase.end())
 		{
-			auto iter = this->m_mapActorBase.find(sResponseMessageInfo.nToActorID);
-			if (iter == this->m_mapActorBase.end())
-				return false;
-
 			CActorBaseImpl* pToActorBaseImpl = iter->second;
 			DebugAstEx(pToActorBaseImpl != nullptr, false);
 
-			CSerializeAdapter* pSerializeAdapter = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getSerializeAdapter(0);
-			DebugAstEx(pSerializeAdapter != nullptr, false);
-
-			message_header* pData = pSerializeAdapter->serialize(sResponseMessageInfo.pData, &this->m_vecBuf[0], (uint16_t)this->m_vecBuf.size());
-			if (pData == nullptr)
+			google::protobuf::Message* pMessage = create_protobuf_message(sResponseMessageInfo.pMessage->GetTypeName());
+			if (nullptr == pMessage)
 				return false;
 
-			char* pBuf = new char[sizeof(response_cookice) + pData->nMessageSize];
-
-			actor_response_cookice* pCookice = reinterpret_cast<actor_response_cookice*>(pBuf);
-			pCookice->nToActorID = sResponseMessageInfo.nToActorID;
-			pCookice->nSessionID = sResponseMessageInfo.nSessionID;
-			pCookice->nResult = sResponseMessageInfo.nResult;
-
-			memcpy(pCookice + 1, pData, pData->nMessageSize);
+			pMessage->CopyFrom(*sResponseMessageInfo.pMessage);
 
 			SMessagePacket sMessagePacket;
 			sMessagePacket.nID = sResponseMessageInfo.nFromActorID;
 			sMessagePacket.nType = eMT_ACTOR_RESPONSE;
-			sMessagePacket.nDataSize = pData->nMessageSize + sizeof(response_cookice);
-			sMessagePacket.pData = pBuf;
+			sMessagePacket.pMessage = pMessage;
 
 			pToActorBaseImpl->getChannel()->send(sMessagePacket);
 

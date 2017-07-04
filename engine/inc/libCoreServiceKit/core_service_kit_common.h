@@ -54,6 +54,10 @@ namespace core
 	{
 		uint16_t	nServiceID;
 		uint64_t	nSessionID;
+
+		SServiceSessionInfo(uint16_t nServiceID, uint64_t nSessionID)
+			: nServiceID(nServiceID), nSessionID(nSessionID)
+		{}
 	};
 
 	struct SActorSessionInfo
@@ -71,14 +75,18 @@ namespace core
 #pragma pack(push,1)
 	struct gate_forward_cookice
 	{
-		uint32_t nToServiceID;
-		uint64_t nSessionID;
+		uint32_t	nToServiceID;
+		uint64_t	nSessionID;
+		uint16_t	nMessageNameLen;
+		char		szMessageName[1];
 	};
 
 	struct actor_gate_forward_cookice
 	{
-		uint64_t nToActorID;
-		uint64_t nSessionID;
+		uint64_t	nToActorID;
+		uint64_t	nSessionID;
+		uint16_t	nMessageNameLen;
+		char		szMessageName[1];
 	};
 
 	struct gate_send_cookice
@@ -94,22 +102,28 @@ namespace core
 
 	struct request_cookice
 	{
-		uint64_t nSessionID;
-		uint32_t nFromServiceID;
-		uint32_t nToServiceID;
+		uint64_t	nSessionID;
+		uint16_t	nFromServiceID;
+		uint16_t	nToServiceID;
+		uint16_t	nMessageNameLen;
+		char		szMessageName[1];
 	};
 
 	struct response_cookice
 	{
 		uint64_t	nSessionID;
 		uint8_t		nResult;
+		uint16_t	nMessageNameLen;
+		char		szMessageName[1];
 	};
 
 	struct actor_request_cookice
 	{
-		uint64_t nSessionID;
-		uint64_t nFromActorID;
-		uint64_t nToActorID;
+		uint64_t	nSessionID;
+		uint64_t	nFromActorID;
+		uint64_t	nToActorID;
+		uint16_t	nMessageNameLen;
+		char		szMessageName[1];
 	};
 
 	struct actor_response_cookice
@@ -117,6 +131,8 @@ namespace core
 		uint64_t	nToActorID;
 		uint64_t	nSessionID;
 		uint8_t		nResult;
+		uint16_t	nMessageNameLen;
+		char		szMessageName[1];
 	};
 
 #pragma pack(pop)

@@ -20,7 +20,7 @@ namespace core
 		/**
 		@brief: 获取本节点基本信息
 		*/
-		const SServiceBaseInfo&	getNodeBaseInfo() const;
+		const SNodeBaseInfo&	getNodeBaseInfo() const;
 		/**
 		@brief: 根据节点名字获取节点id
 		*/
@@ -36,11 +36,11 @@ namespace core
 		/**
 		@brief: 注册普通节点消息
 		*/
-		void					registerMessageHandler(uint16_t nMessageID, const std::function<bool(uint16_t, CMessagePtr<char>)>& callback);
+		void					registerMessageHandler(uint16_t nServiceID, const std::string& szMessageName, const std::function<bool(uint16_t, google::protobuf::Message*)>& callback);
 		/**
 		@brief: 注册经网关节点转发客户端的消息
 		*/
-		void					registerForwardHandler(uint16_t nMessageID, const std::function<bool(SClientSessionInfo, CMessagePtr<char>)>& callback);
+		void					registerForwardHandler(uint16_t nServiceID, const std::string& szMessageName, const std::function<bool(SClientSessionInfo, google::protobuf::Message*)>& callback);
 		/**
 		@brief: 设置消息序列化适配器
 		*/

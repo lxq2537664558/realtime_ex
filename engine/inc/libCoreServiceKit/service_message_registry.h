@@ -1,5 +1,5 @@
 #pragma once
-#include "base_actor.h"
+#include "protobuf_helper.h"
 
 #include <map>
 
@@ -9,36 +9,42 @@ namespace core
 	class CServiceMessageRegistry
 	{
 	public:
-		typedef bool(T::*funMessageHandler)(uint16_t, CMessagePtr<char>);
-		typedef bool(T::*funForwardHandler)(SClientSessionInfo, CMessagePtr<char>);
+		typedef bool(T::*funMessageHandler)(SServiceSessionInfo, google::protobuf::Message*);
+		typedef bool(T::*funForwardHandler)(SClientSessionInfo, google::protobuf::Message*);
 
 	public:
-		static inline void	registerMessageHandler(uint16_t nMessageID, bool(T::*handler)(uint16_t, CMessagePtr<char>));
+		CServiceMessageRegistry(uint16_t nServiceID);
+		~CServiceMessageRegistry();
 
-		static inline void	registerForwardHandler(uint16_t nMessageID, bool(T::*handler)(SClientSessionInfo, CMessagePtr<char>));
+		inline void	registerMessageHandler(const std::string& szMessageName, bool(T::*handler)(SServiceSessionInfo, google::protobuf::Message*));
+
+		inline void	registerForwardHandler(const std::string& szMessageName, bool(T::*handler)(SClientSessionInfo, google::protobuf::Message*));
+
+		uint16_t	getServiceID() const;
 
 	protected:
-		static inline bool	dispatch(T* pObject, uint16_t nFrom, CMessagePtr<char>& pMessage);
+		inline bool	dispatch(T* pObject, SServiceSessionInfo& sServiceSessionInfo, google::protobuf::Message* pMessage);
 
-		static inline bool	forward(T* pObject, SClientSessionInfo& sSession, CMessagePtr<char>& pMessage);
+		inline bool	forward(T* pObject, SClientSessionInfo& sClientSessionInfo, google::protobuf::Message* pMessage);
 
 	private:
-		static std::map<uint16_t, funMessageHandler>	s_mapMessageHandler;
-		static std::map<uint16_t, funForwardHandler>	s_mapForwardHandler;
+		uint16_t									m_nServiceID;
+		std::map<std::string, funMessageHandler>	m_mapMessageHandler;
+		std::map<std::string, funForwardHandler>	m_mapForwardHandler;
 	};
 }
 
 #define DEFEND_SERVICE_MESSAGE_FUNCTION(Class) \
-		inline bool	onDefaultServiceMessageHandler(uint16_t nFrom, core::CMessagePtr<char> pMessage)\
+		inline bool	onDefaultServiceMessageHandler(SServiceSessionInfo sServiceSessionInfo, google::protobuf::Message* pMessage)\
 		{\
-			return core::CServiceMessageRegistry<Class>::dispatch(this, nFrom, pMessage);\
+			return core::CServiceMessageRegistry<Class>::dispatch(this, sServiceSessionInfo, pMessage);\
 		}\
-		inline bool	onDefaultServiceForwardHandler(core::SClientSessionInfo& sClientSessionInfo, core::CMessagePtr<char> pMessage)\
+		inline bool	onDefaultServiceForwardHandler(core::SClientSessionInfo& sClientSessionInfo, google::protobuf::Message* pMessage)\
 		{\
 			return core::CServiceMessageRegistry<Class>::forward(this, sClientSessionInfo, pMessage);\
 		}
 
-#define REGISTER_SERVICE_MESSAGE_HANDLER(Class, id, handler)	do { core::CServiceMessageRegistry<Class>::registerMessageHandler(id, (core::CServiceMessageRegistry<Class>::funMessageHandler)handler); core::CCoreServiceApp::Inst()->registerMessageHandler(id, std::bind(&Class::onDefaultServiceMessageHandler, this, std::placeholders::_1, std::placeholders::_2)); } while(0)
-#define REGISTER_SERVICE_FORWARD_HANDLER(Class, id, handler)	do { core::CServiceMessageRegistry<Class>::registerForwardHandler(id, (core::CServiceMessageRegistry<Class>::funForwardHandler)handler); core::CCoreServiceApp::Inst()->registerForwardHandler(id, std::bind(&Class::onDefaultServiceForwardHandler, this, std::placeholders::_1, std::placeholders::_2)); } while(0)
+#define REGISTER_SERVICE_MESSAGE_HANDLER(Class, id, handler)	do { core::CServiceMessageRegistry<Class>::registerMessageHandler(id, (core::CServiceMessageRegistry<Class>::funMessageHandler)handler); core::CCoreServiceApp::Inst()->registerMessageHandler(this->getServiceID(), id, std::bind(&Class::onDefaultServiceMessageHandler, this, std::placeholders::_1, std::placeholders::_2)); } while(0)
+#define REGISTER_SERVICE_FORWARD_HANDLER(Class, id, handler)	do { core::CServiceMessageRegistry<Class>::registerForwardHandler(id, (core::CServiceMessageRegistry<Class>::funForwardHandler)handler); core::CCoreServiceApp::Inst()->registerForwardHandler(this->getServiceID(), id, std::bind(&Class::onDefaultServiceForwardHandler, this, std::placeholders::_1, std::placeholders::_2)); } while(0)
 
 #include "service_message_registry.inl"

@@ -26,9 +26,6 @@
     <ClInclude Include="targetver.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreServiceKit\cluster_invoker.h">
-      <Filter>inc</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\inc\libCoreServiceKit\proto_system.h">
       <Filter>inc</Filter>
     </ClInclude>
@@ -113,6 +110,9 @@
     <ClInclude Include="..\..\inc\libCoreServiceKit\core_service_kit_common.h">
       <Filter>inc</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreServiceKit\service_invoker.h">
+      <Filter>inc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -180,14 +180,8 @@
     <None Include="..\..\inc\libCoreServiceKit\promise.inl">
       <Filter>inc</Filter>
     </None>
-    <None Include="..\..\inc\libCoreServiceKit\cluster_invoker.inl">
-      <Filter>inc</Filter>
-    </None>
     <None Include="..\..\inc\libCoreServiceKit\message_ptr.inl">
       <Filter>inc</Filter>
-    </None>
-    <None Include="context_linux.S">
-      <Filter>src</Filter>
     </None>
     <None Include="..\..\inc\libCoreServiceKit\service_message_registry.inl">
       <Filter>inc</Filter>
@@ -197,6 +191,9 @@
     </None>
     <None Include="..\..\inc\libCoreServiceKit\actor_base.inl">
       <Filter>inc\actor</Filter>
+    </None>
+    <None Include="..\..\inc\libCoreServiceKit\service_invoker.inl">
+      <Filter>inc</Filter>
     </None>
   </ItemGroup>
 </Project>

@@ -24,51 +24,68 @@ namespace core
 		return true;
 	}
 
-	void CCoreMessageRegistry::registerCallback(uint16_t nMessageID, const std::function<bool(uint16_t, CMessagePtr<char>)>& callback)
+	void CCoreMessageRegistry::registerCallback(uint16_t nServiceID, const std::string& szMessageName, const std::function<bool(SServiceSessionInfo, google::protobuf::Message*)>& callback)
 	{
-		auto iter = this->m_mapMessageName.find(nMessageID);
-		if (iter != this->m_mapMessageName.end())
+		SServiceRegistryInfo& sServiceRegistryInfo = this->m_mapServiceRegistryInfo[nServiceID];
+
+		auto iter = sServiceRegistryInfo.mapServiceCallback.find(szMessageName);
+		if (iter != sServiceRegistryInfo.mapServiceCallback.end())
 		{
-			PrintWarning("dup message by register node callback message_id: %d", nMessageID);
+			PrintWarning("dup message callback service_id: %d message_name: %s", nServiceID, szMessageName.c_str());
 			return;
 		}
-		this->m_mapNodeCallback[nMessageID] = callback;
+		sServiceRegistryInfo.mapServiceCallback[szMessageName] = callback;
 	}
 
-	void CCoreMessageRegistry::registerGateForwardCallback(uint16_t nMessageID, const std::function<bool(SClientSessionInfo, CMessagePtr<char>)>& callback)
+	void CCoreMessageRegistry::registerGateForwardCallback(uint16_t nServiceID, const std::string& szMessageName, const std::function<bool(SClientSessionInfo, google::protobuf::Message*)>& callback)
 	{
-		auto iter = this->m_mapMessageName.find(nMessageID);
-		if (iter != this->m_mapMessageName.end())
+		SServiceRegistryInfo& sServiceRegistryInfo = this->m_mapServiceRegistryInfo[nServiceID];
+
+		auto iter = sServiceRegistryInfo.mapGateForwardCallback.find(szMessageName);
+		if (iter != sServiceRegistryInfo.mapGateForwardCallback.end())
 		{
-			// Ãû×Ö¹þÏ£³åÍ»ÁË
-			PrintWarning("dup message by register node gate forward callback message_id: %d", nMessageID);
+			PrintWarning("dup message gate forward service_id: %d message_name: %s", nServiceID, szMessageName.c_str());
 			return;
 		}
-		this->m_mapGateForwardCallback[nMessageID] = callback;
+		sServiceRegistryInfo.mapGateForwardCallback[szMessageName] = callback;
 	}
 
-	std::function<bool(uint16_t, CMessagePtr<char>)>& CCoreMessageRegistry::getCallback(uint32_t nMessageID)
+	std::function<bool(SServiceSessionInfo, google::protobuf::Message*)>& CCoreMessageRegistry::getCallback(uint16_t nServiceID, const std::string& szMessageName)
 	{
-		auto iter = this->m_mapNodeCallback.find(nMessageID);
-		if (iter == this->m_mapNodeCallback.end())
+		auto iter = this->m_mapServiceRegistryInfo.find(nServiceID);
+		if (iter == this->m_mapServiceRegistryInfo.end())
 		{
-			static std::function<bool(uint16_t, CMessagePtr<char>)> callback;
+			static std::function<bool(SServiceSessionInfo, google::protobuf::Message*)> callback;
 			return callback;
 		}
 
-		return iter->second;
-	}
-
-	std::function<bool(SClientSessionInfo, CMessagePtr<char>)>& CCoreMessageRegistry::getGateForwardCallback(uint32_t nMessageID)
-	{
-		auto iter = this->m_mapGateForwardCallback.find(nMessageID);
-		if (iter == this->m_mapGateForwardCallback.end())
+		auto iterCallback =  iter->second.mapServiceCallback.find(szMessageName);
+		if (iterCallback == iter->second.mapServiceCallback.end())
 		{
-			static std::function<bool(SClientSessionInfo, CMessagePtr<char>)> callback;
+			static std::function<bool(SServiceSessionInfo, google::protobuf::Message*)> callback;
 			return callback;
 		}
 
-		return iter->second;
+		return iterCallback->second;
+	}
+
+	std::function<bool(SClientSessionInfo, google::protobuf::Message*)>& CCoreMessageRegistry::getGateForwardCallback(uint16_t nServiceID, const std::string& szMessageName)
+	{
+		auto iter = this->m_mapServiceRegistryInfo.find(nServiceID);
+		if (iter == this->m_mapServiceRegistryInfo.end())
+		{
+			static std::function<bool(SClientSessionInfo, google::protobuf::Message*)> callback;
+			return callback;
+		}
+
+		auto iterCallback = iter->second.mapGateForwardCallback.find(szMessageName);
+		if (iterCallback == iter->second.mapGateForwardCallback.end())
+		{
+			static std::function<bool(SClientSessionInfo, google::protobuf::Message*)> callback;
+			return callback;
+		}
+
+		return iterCallback->second;
 	}
 
 	void CCoreMessageRegistry::onConnectToMaster()

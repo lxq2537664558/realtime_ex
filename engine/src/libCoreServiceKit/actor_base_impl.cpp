@@ -249,25 +249,17 @@ namespace core
 		return pResponseWaitInfo;
 	}
 
-	void CActorBaseImpl::registerMessageHandler(uint16_t nMessageID, const std::function<void(CActorBase*, uint64_t, CMessagePtr<char>)>& handler, bool bAsync)
+	void CActorBaseImpl::registerMessageHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SActorSessionInfo, const google::protobuf::Message*)>& handler)
 	{
-		SMessageHandlerInfo sMessageHandlerInfo;
-		sMessageHandlerInfo.handler = handler;
-		sMessageHandlerInfo.bAsync = bAsync;
-
-		s_mapMessageHandlerInfo[nMessageID].push_back(sMessageHandlerInfo);
+		s_mapMessageHandlerInfo[szMessageName].push_back(handler);
 	}
 
-	void CActorBaseImpl::registerForwardHandler(uint16_t nMessageID, const std::function<void(CActorBase*, SClientSessionInfo, CMessagePtr<char>)>& handler, bool bAsync)
+	void CActorBaseImpl::registerForwardHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SClientSessionInfo, const google::protobuf::Message*)>& handler)
 	{
-		SForwardHandlerInfo sForwardHandlerInfo;
-		sForwardHandlerInfo.handler = handler;
-		sForwardHandlerInfo.bAsync = bAsync;
-
-		s_mapForwardHandlerInfo[nMessageID].push_back(sForwardHandlerInfo);
+		s_mapForwardHandlerInfo[szMessageName].push_back(handler);
 	}
 
-	std::map<uint16_t, std::vector<CActorBaseImpl::SForwardHandlerInfo>> CActorBaseImpl::s_mapForwardHandlerInfo;
+	std::map<std::string, std::vector<std::function<void(CActorBase*, SClientSessionInfo, const google::protobuf::Message*)>>> CActorBaseImpl::s_mapForwardHandlerInfo;
 
-	std::map<uint16_t, std::vector<CActorBaseImpl::SMessageHandlerInfo>> CActorBaseImpl::s_mapMessageHandlerInfo;
+	std::map<std::string, std::vector<std::function<void(CActorBase*, SActorSessionInfo, const google::protobuf::Message*)>>> CActorBaseImpl::s_mapMessageHandlerInfo;
 }

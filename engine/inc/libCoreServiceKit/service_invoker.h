@@ -1,33 +1,33 @@
 #pragma once
 #include "libBaseCommon/singleton.h"
 #include "libCoreCommon/core_common.h"
+#include "google/protobuf/message.h"
 
 #include "core_service_kit_common.h"
 
+
 namespace core
 {
-	class CClusterInvoker :
-		public base::CSingleton<CClusterInvoker>
+	class CServiceInvoker :
+		public base::CSingleton<CServiceInvoker>
 	{
 	public:
-		CClusterInvoker();
-		~CClusterInvoker();
+		CServiceInvoker();
+		~CServiceInvoker();
 
 		bool				init();
 
-		bool				invoke(uint16_t nServiceID, const void* pData);
+		bool				send(uint16_t nServiceID, const google::protobuf::Message* pMessage);
 
 		template<class T>
-		inline bool			invoke_r(uint16_t nServiceID, const void* pData, CFuture<CMessagePtr<T>>& sFuture);
+		inline bool			async_call(uint16_t nServiceID, const void* pData, CFuture<CMessagePtr<T>>& sFuture);
 
 		template<class T>
-		inline bool			invoke_r(uint16_t nServiceID, const void* pData, const std::function<void(CMessagePtr<T>, uint32_t)>& callback);
+		inline bool			async_call(uint16_t nServiceID, const void* pData, const std::function<void(CMessagePtr<T>, uint32_t)>& callback);
 		
 		void				response(const void* pData);
 		
 		void				response(const SServiceSessionInfo& sServiceSessionInfo, const void* pData);
-		
-		SServiceSessionInfo	getServiceSessionInfo();
 		
 		bool				send(const SClientSessionInfo& sClientSessionInfo, const void* pData);
 		
@@ -42,4 +42,4 @@ namespace core
 	};
 }
 
-#include "cluster_invoker.inl"
+#include "service_invoker.inl"

@@ -40,8 +40,8 @@ namespace core
 		SResponseWaitInfo*	addResponseWaitInfo(uint64_t nSessionID, uint64_t nCoroutineID);
 		SResponseWaitInfo*	getResponseWaitInfo(uint64_t nSessionID, bool bErase);
 
-		static void			registerMessageHandler(uint16_t nMessageID, const std::function<void(CActorBase*, uint64_t, CMessagePtr<char>)>& handler, bool bAsync);
-		static void			registerForwardHandler(uint16_t nMessageID, const std::function<void(CActorBase*, SClientSessionInfo, CMessagePtr<char>)>& handler, bool bAsync);
+		static void			registerMessageHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SActorSessionInfo, const google::protobuf::Message*)>& handler);
+		static void			registerForwardHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SClientSessionInfo, const google::protobuf::Message*)>& handler);
 
 	private:
 		void				onRequestMessageTimeout(uint64_t nContext);
@@ -55,21 +55,7 @@ namespace core
 		std::map<uint64_t, SResponseWaitInfo*>
 							m_mapResponseWaitInfo;
 
-		struct SMessageHandlerInfo
-		{
-			std::function<void(CActorBase*, uint64_t, CMessagePtr<char>)>
-							handler;
-			bool			bAsync;
-		};
-
-		struct SForwardHandlerInfo
-		{
-			std::function<void(CActorBase*, SClientSessionInfo, CMessagePtr<char>)>
-							handler;
-			bool			bAsync;
-		};
-
-		static std::map<uint16_t, std::vector<SMessageHandlerInfo>>	s_mapMessageHandlerInfo;
-		static std::map<uint16_t, std::vector<SForwardHandlerInfo>> s_mapForwardHandlerInfo;
+		static std::map<std::string, std::vector<std::function<void(CActorBase*, SActorSessionInfo, const google::protobuf::Message*)>>>	s_mapMessageHandlerInfo;
+		static std::map<std::string, std::vector<std::function<void(CActorBase*, SClientSessionInfo, const google::protobuf::Message*)>>>	s_mapForwardHandlerInfo;
 	};
 }

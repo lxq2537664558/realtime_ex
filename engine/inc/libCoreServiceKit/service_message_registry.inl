@@ -1,48 +1,55 @@
 namespace core
 {
 	template<class T>
-	std::map<uint16_t, typename CServiceMessageRegistry<T>::funMessageHandler> CServiceMessageRegistry<T>::s_mapMessageHandler;
-
-	template<class T>
-	std::map<uint16_t, typename CServiceMessageRegistry<T>::funForwardHandler> CServiceMessageRegistry<T>::s_mapForwardHandler;
-
-	template<class T>
-	void CServiceMessageRegistry<T>::registerMessageHandler(uint16_t nMessageID, bool(T::*handler)(uint16_t, CMessagePtr<char>))
+	CServiceMessageRegistry<T>::CServiceMessageRegistry(uint16_t nServiceID)
+		: m_nServiceID(nServiceID)
 	{
-		DebugAst(handler != nullptr);
 
-		s_mapMessageHandler[nMessageID] = handler;
 	}
 
 	template<class T>
-	void CServiceMessageRegistry<T>::registerForwardHandler(uint16_t nMessageID, bool(T::*handler)(SClientSessionInfo, CMessagePtr<char>))
+	void CServiceMessageRegistry<T>::registerMessageHandler(const std::string& szMessageName, bool(T::*handler)(SServiceSessionInfo, google::protobuf::Message*))
 	{
 		DebugAst(handler != nullptr);
 
-		s_mapForwardHandler[nMessageID] = handler;
+		m_mapMessageHandler[nMessageID] = handler;
 	}
 
 	template<class T>
-	bool CServiceMessageRegistry<T>::dispatch(T* pObject, uint16_t nFrom, CMessagePtr<char>& pMessage)
+	void CServiceMessageRegistry<T>::registerForwardHandler(const std::string& szMessageName, bool(T::*handler)(SClientSessionInfo, google::protobuf::Message*))
 	{
-		auto iter = s_mapMessageHandler.find(pMessage.getMessageID());
-		if (iter == s_mapMessageHandler.end())
+		DebugAst(handler != nullptr);
+
+		m_mapForwardHandler[nMessageID] = handler;
+	}
+
+	template<class T>
+	uint16_t CServiceMessageRegistry<T>::getServiceID() const
+	{
+		return this->m_nServiceID;
+	}
+
+	template<class T>
+	bool CServiceMessageRegistry<T>::dispatch(T* pObject, SServiceSessionInfo& sServiceSessionInfo, google::protobuf::Message* pMessage)
+	{
+		auto iter = m_mapMessageHandler.find(pMessage.getMessageID());
+		if (iter == m_mapMessageHandler.end())
 			return false;
 
 		funMessageHandler handler = iter->second;
 
-		return (pObject->*handler)(nFrom, pMessage);
+		return (pObject->*handler)(sServiceSessionInfo, pMessage);
 	}
 
 	template<class T>
-	bool CServiceMessageRegistry<T>::forward(T* pObject, SClientSessionInfo& sSession, CMessagePtr<char>& pMessage)
+	bool CServiceMessageRegistry<T>::forward(T* pObject, SClientSessionInfo& sClientSessionInfo, google::protobuf::Message* pMessage)
 	{
-		auto iter = s_mapForwardHandler.find(pMessage.getMessageID());
-		if (iter == s_mapForwardHandler.end())
+		auto iter = m_mapForwardHandler.find(pMessage.getMessageID());
+		if (iter == m_mapForwardHandler.end())
 			return false;
 
 		funForwardHandler handler = iter->second;
 
-		return (pObject->*handler)(sSession, pMessage);
+		return (pObject->*handler)(sClientSessionInfo, pMessage);
 	}
 }

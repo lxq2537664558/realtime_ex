@@ -43,14 +43,6 @@ namespace core
 		const std::vector<SServiceBaseInfo>&
 									getServiceBaseInfo() const;
 
-		void						addGlobalBeforeFilter(const GlobalBeforeFilter& callback);
-		void						addGlobalAfterFilter(const GlobalAfterFilter& callback);
-
-		const std::vector<GlobalBeforeFilter>&
-									getGlobalBeforeFilter();
-		const std::vector<GlobalAfterFilter>&
-									getGlobalAfterFilter();
-
 		base::CLuaFacade*			getLuaFacade() const;
 
 		uint32_t					getInvokeTimeout() const;
@@ -85,9 +77,6 @@ namespace core
 		uint32_t							m_nThroughput;
 
 		base::CLuaFacade*					m_pLuaFacade;
-
-		std::vector<GlobalBeforeFilter>		m_vecGlobalBeforeFilter;
-		std::vector<GlobalAfterFilter>		m_vecGlobalAfterFilter;
 
 		std::function<void(uint16_t)>		m_fnNodeConnectCallback;
 		std::function<void(uint16_t)>		m_fnNodeDisconnectCallback;
