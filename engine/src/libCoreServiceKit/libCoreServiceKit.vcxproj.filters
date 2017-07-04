@@ -113,12 +113,12 @@
     <ClInclude Include="..\..\inc\libCoreServiceKit\service_invoker.h">
       <Filter>inc</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreServiceKit\actor_id_converter.h">
+      <Filter>inc\actor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="cluster_invoker.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="core_connection_to_master.cpp">
@@ -170,6 +170,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="actor_base_impl.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="service_invoker.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

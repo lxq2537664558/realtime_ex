@@ -141,6 +141,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\inc\libCoreServiceKit\actor_id_converter.h" />
     <ClInclude Include="..\..\inc\libCoreServiceKit\actor_message_registry.h" />
     <ClInclude Include="..\..\inc\libCoreServiceKit\actor_base.h" />
     <ClInclude Include="..\..\inc\libCoreServiceKit\actor_base_factory.h" />
@@ -181,7 +182,7 @@
     <ClCompile Include="coroutine_mgr.cpp" />
     <ClCompile Include="native_serialize_adapter.cpp" />
     <ClCompile Include="scheduler.cpp" />
-    <ClCompile Include="cluster_invoker.cpp" />
+    <ClCompile Include="service_invoker.cpp" />
     <ClCompile Include="core_connection_other_node.cpp" />
     <ClCompile Include="core_connection_to_master.cpp" />
     <ClCompile Include="core_service_app.cpp" />
