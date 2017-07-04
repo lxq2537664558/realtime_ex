@@ -72,8 +72,14 @@ namespace core
 		}
 		else
 		{
-			const_cast<SRequestMessageInfo&>(sRequestMessageInfo).nToActorID = CActorBase::getLocalActorID(sRequestMessageInfo.nToActorID);
-			const_cast<SRequestMessageInfo&>(sRequestMessageInfo).nFromActorID = CActorBase::makeRemoteActorID(CCoreServiceAppImpl::Inst()->getNodeBaseInfo().nID, sRequestMessageInfo.nFromActorID);
+			const_cast<SRequestMessageInfo&>(sRequestMessageInfo).nToActorID = sRequestMessageInfo.nToActorID;
+			const_cast<SRequestMessageInfo&>(sRequestMessageInfo).nFromActorID = sRequestMessageInfo.nFromActorID;
+			CActorIDConverter* pActorIDConverter = CCoreServiceAppImpl::Inst()->getActorIDConverter();
+			DebugAstEx(pActorIDConverter != nullptr, false);
+
+			uint16_t nServiceID = pActorIDConverter->convertToServiceID(sRequestMessageInfo.nToActorID);
+			DebugAstEx(nServiceID != 0, false);
+
 			return CCoreServiceAppImpl::Inst()->getTransporter()->invoke(nServiceID, sRequestMessageInfo);
 		}
 	}
@@ -105,8 +111,14 @@ namespace core
 		}
 		else
 		{
-			const_cast<SResponseMessageInfo&>(sResponseMessageInfo).nToActorID = CActorBase::getLocalActorID(sResponseMessageInfo.nToActorID);
-			return CCoreServiceAppImpl::Inst()->getTransporter()->response(nNodeID, sResponseMessageInfo);
+			const_cast<SResponseMessageInfo&>(sResponseMessageInfo).nToActorID = sResponseMessageInfo.nToActorID;
+			CActorIDConverter* pActorIDConverter = CCoreServiceAppImpl::Inst()->getActorIDConverter();
+			DebugAstEx(pActorIDConverter != nullptr, false);
+
+			uint16_t nServiceID = pActorIDConverter->convertToServiceID(sResponseMessageInfo.nToActorID);
+			DebugAstEx(nServiceID != 0, false);
+
+			return CCoreServiceAppImpl::Inst()->getTransporter()->response(nServiceID, sResponseMessageInfo);
 		}
 	}
 

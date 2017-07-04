@@ -31,7 +31,6 @@ namespace core
 		return this->m_nID;
 	}
 
-
 	CActorBaseImpl::EActorBaseState CActorBaseImpl::getState() const
 	{
 		return this->m_eState;
@@ -41,7 +40,6 @@ namespace core
 	{
 		this->m_eState = eState;
 	}
-
 
 	void CActorBaseImpl::process()
 	{

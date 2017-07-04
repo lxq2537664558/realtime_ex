@@ -69,8 +69,9 @@ namespace core
 		CCoreServiceAppImpl::Inst()->run();
 	}
 
-	void CCoreServiceApp::setSerializeAdapter(uint16_t nNodeID, CSerializeAdapter* pSerializeAdapter)
+	void CCoreServiceApp::setActorIDConverter(CActorIDConverter* pActorIDConverter)
 	{
-		CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->setSerializeAdapter(nNodeID, pSerializeAdapter);
+
 	}
+
 }

@@ -30,6 +30,7 @@ namespace core
 		, m_pCoreConnectionToMaster(nullptr)
 		, m_pMessageDispatcher(nullptr)
 		, m_pLuaFacade(nullptr)
+		, m_pActorIDConverter(nullptr)
 	{
 		this->m_tickCheckConnectMaster.setCallback(std::bind(&CCoreServiceAppImpl::onCheckConnectMaster, this, std::placeholders::_1));
 	
@@ -238,6 +239,18 @@ namespace core
 	CMessageDispatcher* CCoreServiceAppImpl::getMessageDispatcher() const
 	{
 		return this->m_pMessageDispatcher;
+	}
+
+	void CCoreServiceAppImpl::setActorIDConverter(CActorIDConverter* pActorIDConverter)
+	{
+		DebugAst(pActorIDConverter != nullptr);
+
+		this->m_pActorIDConverter = pActorIDConverter;
+	}
+
+	CActorIDConverter* CCoreServiceAppImpl::getActorIDConverter() const
+	{
+		return this->m_pActorIDConverter;
 	}
 
 	CScheduler* CCoreServiceAppImpl::getScheduler() const

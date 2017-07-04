@@ -19,23 +19,25 @@ namespace core
 
 		bool				send(uint16_t nServiceID, const google::protobuf::Message* pMessage);
 
-		template<class T>
-		inline bool			async_call(uint16_t nServiceID, const void* pData, CFuture<CMessagePtr<T>>& sFuture);
+		bool				broadcast(uint16_t nServiceType, const google::protobuf::Message* pMessage);
 
 		template<class T>
-		inline bool			async_call(uint16_t nServiceID, const void* pData, const std::function<void(CMessagePtr<T>, uint32_t)>& callback);
+		inline bool			async_call(uint16_t nServiceID, const void* pData, CFuture<T>& sFuture);
+
+		template<class T>
+		inline bool			async_call(uint16_t nServiceID, const void* pData, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback);
 		
-		void				response(const void* pData);
+		void				response(const google::protobuf::Message* pMessage);
 		
-		void				response(const SServiceSessionInfo& sServiceSessionInfo, const void* pData);
+		void				response(const SServiceSessionInfo& sServiceSessionInfo, const google::protobuf::Message* pMessage);
 		
-		bool				send(const SClientSessionInfo& sClientSessionInfo, const void* pData);
+		bool				send(const SClientSessionInfo& sClientSessionInfo, const google::protobuf::Message* pMessage);
 		
-		bool				broadcast(const std::vector<SClientSessionInfo>& vecClientSessionInfo, const void* pData);
+		bool				broadcast(const std::vector<SClientSessionInfo>& vecClientSessionInfo, const google::protobuf::Message* pMessage);
 		
-		bool				forward(uint16_t nServiceID, uint64_t nSessionID, const void* pData);
+		bool				forward(uint16_t nServiceID, uint64_t nSessionID, const google::protobuf::Message* pMessage);
 		
-		bool				forward_a(uint64_t nActorID, uint64_t nSessionID, const void* pData);
+		bool				forward_a(uint64_t nActorID, uint64_t nSessionID, const google::protobuf::Message* pMessage);
 		
 	private:
 		bool				invokeImpl(uint16_t nServiceID, const void* pData, const std::function<void(CMessagePtr<char>, uint32_t)>& callback);

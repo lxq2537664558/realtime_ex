@@ -18,8 +18,6 @@ enum EResponseResultType
 	eRRT_ERROR,
 };
 
-#define _REMOTE_ACTOR_BIT 48
-
 namespace core
 {
 

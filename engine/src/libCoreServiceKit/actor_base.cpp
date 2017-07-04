@@ -67,16 +67,6 @@ namespace core
 		return (uint16_t)(nActorID >> _REMOTE_ACTOR_BIT);
 	}
 
-	uint64_t CActorBase::getLocalActorID(uint64_t nActorID)
-	{
-		return nActorID & 0x0000ffffffffffff;
-	}
-
-	uint64_t CActorBase::makeRemoteActorID(uint16_t nServiceID, uint64_t nActorID)
-	{
-		return (uint64_t)nServiceID << _REMOTE_ACTOR_BIT | nActorID;
-	}
-
 	CActorBase* CActorBase::createActorBase(void* pContext, CActorBaseFactory* pBaseActorFactory)
 	{
 		DebugAstEx(pBaseActorFactory != nullptr, nullptr);

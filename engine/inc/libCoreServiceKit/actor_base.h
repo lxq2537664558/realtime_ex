@@ -55,9 +55,7 @@ namespace core
 		static CActorBase*	createActorBase(void* pContext, CActorBaseFactory* pActorBaseFactory);
 
 		static uint16_t		getServiceID(uint64_t nActorID);
-		static uint64_t		getLocalActorID(uint64_t nActorID);
-		static uint64_t		makeRemoteActorID(uint16_t nServiceID, uint64_t nActorID);
-
+		
 	private:
 		bool				invokeImpl(uint64_t nID, const google::protobuf::Message* pMessage, uint64_t nCoroutineID, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback);
 

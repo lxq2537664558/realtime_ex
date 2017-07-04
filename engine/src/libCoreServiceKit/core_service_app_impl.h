@@ -35,6 +35,8 @@ namespace core
 		CCoreMessageRegistry*		getCoreMessageRegistry() const;
 		CScheduler*					getScheduler() const;
 		CMessageDispatcher*			getMessageDispatcher() const;
+		void						setActorIDConverter(CActorIDConverter* pActorIDConverter);
+		CActorIDConverter*			getActorIDConverter() const;
 
 		CCoreConnectionToMaster*	getConnectionToMaster() const;
 		void						setCoreConnectionToMaster(CCoreConnectionToMaster* pCoreConnectionToMaster);
@@ -68,6 +70,7 @@ namespace core
 		CCoreOtherNodeProxy*				m_pCoreOtherNodeProxy;
 		CMessageDispatcher*					m_pMessageDispatcher;
 		CNodeConnectionFactory*				m_pNodeConnectionFactory;
+		CActorIDConverter*					m_pActorIDConverter;
 		CCoreConnectionToMaster*			m_pCoreConnectionToMaster;
 		SNodeBaseInfo						m_sNodeBaseInfo;
 		std::vector<SServiceBaseInfo>		m_vecServiceBaseInfo;

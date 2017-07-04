@@ -168,8 +168,8 @@ namespace core
 			}
 			
 			core::SMessagePacket sMessagePacket;
-			sMessagePacket.nID = nFromNodeID;
-			sMessagePacket.nType = eMT_RESPONSE;
+			sMessagePacket.nID = 0;
+			sMessagePacket.nType = eMT_ACTOR_RESPONSE;
 			sMessagePacket.pMessage = pMessage;
 			pActorBase->getChannel()->send(sMessagePacket);
 

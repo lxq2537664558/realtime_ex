@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "cluster_invoker.h"
+#include "service_invoker.h"
 #include "core_service_app.h"
 #include "core_service_app_impl.h"
 #include "core_service_kit_common.h"
@@ -27,12 +27,12 @@ namespace core
 		return true;
 	}
 
-	bool CServiceInvoker::send(uint16_t nServiceID, const void* pData)
+	bool CServiceInvoker::send(uint16_t nServiceID, const google::protobuf::Message* pMessage)
 	{
-		DebugAstEx(pData != nullptr, false);
+		DebugAstEx(pMessage != nullptr, false);
 
 		SRequestMessageInfo sRequestMessageInfo;
-		sRequestMessageInfo.pData = pData;
+		sRequestMessageInfo.pMessage = pMessage;
 		sRequestMessageInfo.nSessionID = 0;
 		sRequestMessageInfo.nFromActorID = 0;
 		sRequestMessageInfo.nToActorID = 0;
@@ -62,50 +62,50 @@ namespace core
 		DebugAst(bRet);
 	}
 
-	SServiceSessionInfo CServiceInvoker::getServiceSessionInfo()
+	bool CServiceInvoker::send(const SClientSessionInfo& sClientSessionInfo, const google::protobuf::Message* pMessage)
 	{
-		return CCoreServiceAppImpl::Inst()->getTransporter()->getServiceSessionInfo();
-	}
-
-	bool CServiceInvoker::send(const SClientSessionInfo& sClientSessionInfo, const void* pData)
-	{
-		DebugAstEx(pData != nullptr, false);
+		DebugAstEx(pMessage != nullptr, false);
 
 		SGateMessageInfo sGateMessageInfo;
 		sGateMessageInfo.nSessionID = sClientSessionInfo.nSessionID;
-		sGateMessageInfo.pData = pData;
+		sGateMessageInfo.pMessage = pMessage;
 
 		return CCoreServiceAppImpl::Inst()->getTransporter()->send(sClientSessionInfo.nGateNodeID, sGateMessageInfo);
 	}
 
-	bool CServiceInvoker::forward(uint16_t nServiceID, uint64_t nSessionID, const void* pData)
+	bool CServiceInvoker::forward(uint16_t nServiceID, uint64_t nSessionID, const google::protobuf::Message* pMessage)
 	{
-		DebugAstEx(pData != nullptr, false);
+		DebugAstEx(pMessage != nullptr, false);
 
 		SGateForwardMessageInfo sGateMessageInfo;
 		sGateMessageInfo.nActorID = 0;
 		sGateMessageInfo.nSessionID = nSessionID;
-		sGateMessageInfo.pData = pData;
+		sGateMessageInfo.pMessage = pMessage;
 
 		return CCoreServiceAppImpl::Inst()->getTransporter()->forward(nServiceID, sGateMessageInfo);
 	}
 
-	bool CServiceInvoker::forward_a(uint64_t nActorID, uint64_t nSessionID, const void* pData)
+	bool CServiceInvoker::forward_a(uint64_t nActorID, uint64_t nSessionID, const google::protobuf::Message* pMessage)
 	{
-		DebugAstEx(pData != nullptr, false);
+		DebugAstEx(pMessage != nullptr, false);
 
 		SGateForwardMessageInfo sGateMessageInfo;
 		sGateMessageInfo.nActorID = nActorID;
 		sGateMessageInfo.nSessionID = nSessionID;
-		sGateMessageInfo.pData = pData;
+		sGateMessageInfo.pMessage = pMessage;
 
-		uint16_t nNodeID = CActorBase::getServiceID(nActorID);
-		return CCoreServiceAppImpl::Inst()->getTransporter()->forward(nNodeID, sGateMessageInfo);
+		CActorIDConverter* pActorIDConverter = CCoreServiceAppImpl::Inst()->getActorIDConverter();
+		DebugAstEx(pActorIDConverter != nullptr, false);
+
+		uint16_t nServiceID = pActorIDConverter->convertToServiceID(nActorID);
+		DebugAstEx(nServiceID != 0, false);
+
+		return CCoreServiceAppImpl::Inst()->getTransporter()->forward(nServiceID, sGateMessageInfo);
 	}
 
-	bool CServiceInvoker::broadcast(const std::vector<SClientSessionInfo>& vecClientSessionInfo, const void* pData)
+	bool CServiceInvoker::broadcast(const std::vector<SClientSessionInfo>& vecClientSessionInfo, const google::protobuf::Message* pMessage)
 	{
-		DebugAstEx(pData != nullptr, false);
+		DebugAstEx(pMessage != nullptr, false);
 
 		std::map<uint16_t, std::vector<uint64_t>> mapClientSessionInfo;
 		for (size_t i = 0; i < vecClientSessionInfo.size(); ++i)
