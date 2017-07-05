@@ -27,9 +27,9 @@ namespace core
 		bool					forward(uint64_t nSessionID, uint16_t nToServiceID, const google::protobuf::Message* pMessage);
 		bool					forward_a(uint64_t nSessionID, uint64_t nToActorID, const google::protobuf::Message* pMessage);
 
-		bool					send(uint16_t nServiceID, const SGateMessageInfo& sGateMessageInfo);
+		bool					send(uint64_t nSessionID, uint16_t nToServiceID, const google::protobuf::Message* pMessage);
 
-		bool					broadcast(uint16_t nServiceID, const SGateBroadcastMessageInfo& sGateBroadcastMessageInfo);
+		bool					broadcast(const std::vector<uint64_t>& vecSessionID, uint16_t nToServiceID, const google::protobuf::Message* pMessage);
 
 		SServiceSessionInfo&	getServiceSessionInfo();
 

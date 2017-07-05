@@ -5,6 +5,7 @@
 
 #include "core_service_kit_common.h"
 #include "actor_id_converter.h"
+#include "service_invoker.h"
 
 namespace core
 {
@@ -49,7 +50,11 @@ namespace core
 		@brief: 获取lua包装对象
 		*/
 		base::CLuaFacade*		getLuaFacade() const;
-
+		/**
+		@brief: 获取某一个服务的调用器
+		*/
+		CServiceInvoker*		getServiceInvoker(uint16_t nServiceID) const;
+		
 	protected:
 		virtual bool			onInit();
 		virtual void			onProcess();

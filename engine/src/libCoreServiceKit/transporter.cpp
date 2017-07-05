@@ -56,7 +56,7 @@ namespace core
 		pCookice->nMessageNameLen = (uint16_t)szMessageName.size();
 		base::crt::strcpy(pCookice->szMessageName, szMessageName.size() + 1, szMessageName.c_str());
 		
-		uint16_t nCookiceLen = (uint16_t)(sizeof(request_cookice)+pCookice->nMessageNameLen);
+		uint32_t nCookiceLen = (uint16_t)(sizeof(request_cookice)+pCookice->nMessageNameLen);
 		DebugAstEx(nCookiceLen < this->m_szBuf.size(), false);
 
 		if (!pMessage->SerializeToArray(&this->m_szBuf[0] + nCookiceLen, this->m_szBuf.size() - nCookiceLen))
@@ -92,7 +92,7 @@ namespace core
 		pCookice->nMessageNameLen = (uint16_t)szMessageName.size();
 		base::crt::strcpy(pCookice->szMessageName, szMessageName.size() + 1, szMessageName.c_str());
 
-		uint16_t nCookiceLen = (uint16_t)(sizeof(actor_request_cookice)+pCookice->nMessageNameLen);
+		uint32_t nCookiceLen = (uint16_t)(sizeof(actor_request_cookice) + pCookice->nMessageNameLen);
 		DebugAstEx(nCookiceLen < this->m_szBuf.size(), false);
 
 		if (!pMessage->SerializeToArray(&this->m_szBuf[0] + nCookiceLen, this->m_szBuf.size() - nCookiceLen))
@@ -121,7 +121,7 @@ namespace core
 		pCookice->nMessageNameLen = (uint16_t)szMessageName.size();
 		base::crt::strcpy(pCookice->szMessageName, szMessageName.size() + 1, szMessageName.c_str());
 
-		uint16_t nCookiceLen = (uint16_t)(sizeof(response_cookice)+pCookice->nMessageNameLen);
+		uint32_t nCookiceLen = (uint16_t)(sizeof(response_cookice) + pCookice->nMessageNameLen);
 		DebugAstEx(nCookiceLen < this->m_szBuf.size(), false);
 
 		if (!pMessage->SerializeToArray(&this->m_szBuf[0] + nCookiceLen, this->m_szBuf.size() - nCookiceLen))
@@ -157,7 +157,7 @@ namespace core
 		pCookice->nMessageNameLen = (uint16_t)szMessageName.size();
 		base::crt::strcpy(pCookice->szMessageName, szMessageName.size() + 1, szMessageName.c_str());
 
-		uint16_t nCookiceLen = (uint16_t)(sizeof(actor_response_cookice)+pCookice->nMessageNameLen);
+		uint32_t nCookiceLen = (uint16_t)(sizeof(actor_response_cookice) + pCookice->nMessageNameLen);
 		DebugAstEx(nCookiceLen < this->m_szBuf.size(), false);
 
 		if (!pMessage->SerializeToArray(&this->m_szBuf[0] + nCookiceLen, this->m_szBuf.size() - nCookiceLen))
@@ -170,76 +170,131 @@ namespace core
 		return true;
 	}
 
-	bool CTransporter::forward(uint16_t nServiceID, const SGateForwardMessageInfo& sGateForwardMessageInfo)
+	bool CTransporter::forward(uint64_t nSessionID, uint16_t nToServiceID, const google::protobuf::Message* pMessage)
 	{
-		DebugAstEx(sGateForwardMessageInfo.pData != nullptr, false);
+		DebugAstEx(pMessage != nullptr, false);
 
-		CCoreConnectionOtherNode* pCoreConnectionOtherService = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getCoreConnectionOtherNode(nServiceID);
-		if (nullptr == pCoreConnectionOtherService)
+		CCoreConnectionOtherNode* pCoreConnectionOtherNode = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getCoreConnectionOtherNodeByServiceID(nToServiceID);
+		if (nullptr == pCoreConnectionOtherNode)
 			return false;
 		
-		CSerializeAdapter* pSerializeAdapter = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getSerializeAdapter(nServiceID);
-		DebugAstEx(pSerializeAdapter != nullptr, false);
+		std::string szMessageName = pMessage->GetTypeName();
 
-		message_header* pData = pSerializeAdapter->serialize(sGateForwardMessageInfo.pData, &this->m_szHeadBuf[0], (uint16_t)this->m_szHeadBuf.size());
-		if (pData == nullptr)
+		gate_forward_cookice* pCookice = reinterpret_cast<gate_forward_cookice*>(this->m_szBuf[0]);
+		pCookice->nSessionID = nSessionID;
+		pCookice->nToServiceID = nToServiceID;
+		pCookice->nMessageNameLen = (uint16_t)szMessageName.size();
+		base::crt::strcpy(pCookice->szMessageName, szMessageName.size() + 1, szMessageName.c_str());
+
+		uint32_t nCookiceLen = (uint16_t)(sizeof(gate_forward_cookice) + pCookice->nMessageNameLen);
+		DebugAstEx(nCookiceLen < this->m_szBuf.size(), false);
+
+		if (!pMessage->SerializeToArray(&this->m_szBuf[0] + nCookiceLen, this->m_szBuf.size() - nCookiceLen))
 			return false;
-		
-		// 野割cookice
-		gate_forward_cookice cookice;
-		cookice.nSessionID = sGateForwardMessageInfo.nSessionID;
-		cookice.nToServiceID = sGateForwardMessageInfo.nActorID;
-		pCoreConnectionOtherService->send(eMT_GATE_FORWARD, &cookice, sizeof(cookice), pData, pData->nMessageSize);
+
+		uint16_t nDataSize = nCookiceLen + (uint16_t)pMessage->ByteSize();
+
+		pCoreConnectionOtherNode->send(eMT_GATE_FORWARD, &this->m_szBuf[0], nDataSize);
 
 		return true;
 	}
 
-	bool CTransporter::send(uint16_t nServiceID, const SGateMessageInfo& sGateMessageInfo)
+	bool CTransporter::forward_a(uint64_t nSessionID, uint64_t nToActorID, const google::protobuf::Message* pMessage)
 	{
-		DebugAstEx(sGateMessageInfo.pData != nullptr, false);
+		DebugAstEx(pMessage != nullptr, false);
 
-		CCoreConnectionOtherNode* pCoreConnectionOtherService = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getCoreConnectionOtherNode(nServiceID);
-		if (nullptr == pCoreConnectionOtherService)
+		CActorIDConverter* pActorIDConverter = CCoreServiceAppImpl::Inst()->getActorIDConverter();
+		DebugAstEx(pActorIDConverter != nullptr, false);
+
+		uint16_t nToServiceID = pActorIDConverter->convertToServiceID(nToActorID);
+		DebugAstEx(nToServiceID != 0, false);
+
+		CCoreConnectionOtherNode* pCoreConnectionOtherNode = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getCoreConnectionOtherNodeByServiceID(nToServiceID);
+		if (nullptr == pCoreConnectionOtherNode)
 			return false;
-		
-		CSerializeAdapter* pSerializeAdapter = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getSerializeAdapter(nServiceID);
-		DebugAstEx(pSerializeAdapter != nullptr, false);
 
-		message_header* pData = pSerializeAdapter->serialize(sGateMessageInfo.pData, &this->m_szHeadBuf[0], (uint16_t)this->m_szHeadBuf.size());
-		if (pData == nullptr)
+		std::string szMessageName = pMessage->GetTypeName();
+
+		actor_gate_forward_cookice* pCookice = reinterpret_cast<actor_gate_forward_cookice*>(this->m_szBuf[0]);
+		pCookice->nSessionID = nSessionID;
+		pCookice->nToActorID = nToActorID;
+		pCookice->nMessageNameLen = (uint16_t)szMessageName.size();
+		base::crt::strcpy(pCookice->szMessageName, szMessageName.size() + 1, szMessageName.c_str());
+
+		uint32_t nCookiceLen = (uint16_t)(sizeof(actor_gate_forward_cookice) + pCookice->nMessageNameLen);
+		DebugAstEx(nCookiceLen < this->m_szBuf.size(), false);
+
+		if (!pMessage->SerializeToArray(&this->m_szBuf[0] + nCookiceLen, this->m_szBuf.size() - nCookiceLen))
 			return false;
-		
-		// 野割cookice
-		gate_send_cookice cookice;
-		cookice.nSessionID = sGateMessageInfo.nSessionID;
 
-		pCoreConnectionOtherService->send(eMT_TO_GATE, &cookice, sizeof(cookice), pData, pData->nMessageSize);
+		uint16_t nDataSize = nCookiceLen + (uint16_t)pMessage->ByteSize();
+
+		pCoreConnectionOtherNode->send(eMT_ACTOR_GATE_FORWARD, &this->m_szBuf[0], nDataSize);
 
 		return true;
 	}
 
-	bool CTransporter::broadcast(uint16_t nServiceID, const SGateBroadcastMessageInfo& sGateBroadcastMessageInfo)
+	bool CTransporter::send(uint64_t nSessionID, uint16_t nToServiceID, const google::protobuf::Message* pMessage)
 	{
-		DebugAstEx(sGateBroadcastMessageInfo.pData != nullptr && !sGateBroadcastMessageInfo.vecSessionID.empty(), false);
+		DebugAstEx(pMessage != nullptr, false);
 
-		CCoreConnectionOtherNode* pCoreConnectionOtherService = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getCoreConnectionOtherNode(nServiceID);
-		if (pCoreConnectionOtherService == nullptr)
+		CCoreConnectionOtherNode* pCoreConnectionOtherNode = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getCoreConnectionOtherNodeByServiceID(nToServiceID);
+		if (nullptr == pCoreConnectionOtherNode)
 			return false;
-		
-		static char szBuf[4096] = { 0 };
-		// 野割cookice
-		gate_broadcast_cookice* pCookice = reinterpret_cast<gate_broadcast_cookice*>(szBuf);
-		pCookice->nCount = (uint16_t)sGateBroadcastMessageInfo.vecSessionID.size();
-		memcpy(pCookice + 1, &sGateBroadcastMessageInfo.vecSessionID[0], sizeof(uint64_t) * sGateBroadcastMessageInfo.vecSessionID.size());
 
-		CSerializeAdapter* pSerializeAdapter = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getSerializeAdapter(nServiceID);
-		DebugAstEx(pSerializeAdapter != nullptr, false);
+		std::string szMessageName = pMessage->GetTypeName();
 
-		message_header* pData = pSerializeAdapter->serialize(sGateBroadcastMessageInfo.pData, &this->m_szHeadBuf[0], (uint16_t)this->m_szHeadBuf.size());
-		if (pData == nullptr)
+		gate_send_cookice* pCookice = reinterpret_cast<gate_send_cookice*>(this->m_szBuf[0]);
+		pCookice->nSessionID = nSessionID;
+		pCookice->nToServiceID = nToServiceID;
+		pCookice->nMessageNameLen = (uint16_t)szMessageName.size();
+		base::crt::strcpy(pCookice->szMessageName, szMessageName.size() + 1, szMessageName.c_str());
+
+		uint32_t nCookiceLen = (uint16_t)(sizeof(gate_send_cookice) + pCookice->nMessageNameLen);
+		DebugAstEx(nCookiceLen < this->m_szBuf.size(), false);
+
+		if (!pMessage->SerializeToArray(&this->m_szBuf[0] + nCookiceLen, this->m_szBuf.size() - nCookiceLen))
 			return false;
+
+		uint16_t nDataSize = nCookiceLen + (uint16_t)pMessage->ByteSize();
+
+		pCoreConnectionOtherNode->send(eMT_TO_GATE, &this->m_szBuf[0], nDataSize);
 		
-		pCoreConnectionOtherService->send(eMT_TO_GATE, pCookice, (uint16_t)(sizeof(uint64_t) * sGateBroadcastMessageInfo.vecSessionID.size()), pData, pData->nMessageSize);
+		return true;
+	}
+
+	bool CTransporter::broadcast(const std::vector<uint64_t>& vecSessionID, uint16_t nToServiceID, const google::protobuf::Message* pMessage)
+	{
+		DebugAstEx(pMessage != nullptr, false);
+
+		if (vecSessionID.empty())
+			return true;
+
+		CCoreConnectionOtherNode* pCoreConnectionOtherNode = CCoreServiceAppImpl::Inst()->getCoreOtherNodeProxy()->getCoreConnectionOtherNodeByServiceID(nToServiceID);
+		if (nullptr == pCoreConnectionOtherNode)
+			return false;
+
+		std::string szMessageName = pMessage->GetTypeName();
+
+		gate_broadcast_cookice* pCookice = reinterpret_cast<gate_broadcast_cookice*>(this->m_szBuf[0]);
+		pCookice->nToServiceID = nToServiceID;
+		pCookice->nMessageNameLen = (uint16_t)szMessageName.size();
+		base::crt::strcpy(pCookice->szMessageName, szMessageName.size() + 1, szMessageName.c_str());
+
+		uint32_t nCookiceLen = (uint16_t)(sizeof(gate_broadcast_cookice) + pCookice->nMessageNameLen);
+		DebugAstEx(nCookiceLen < this->m_szBuf.size(), false);
+
+		pCookice->nSessionCount = (uint16_t)vecSessionID.size();
+		memcpy(&this->m_szBuf[0] + nCookiceLen, &vecSessionID[0], sizeof(uint64_t) * vecSessionID.size());
+		nCookiceLen += sizeof(uint64_t) * vecSessionID.size();
+		DebugAstEx(nCookiceLen < this->m_szBuf.size(), false);
+
+		if (!pMessage->SerializeToArray(&this->m_szBuf[0] + nCookiceLen, this->m_szBuf.size() - nCookiceLen))
+			return false;
+
+		uint16_t nDataSize = nCookiceLen + (uint16_t)pMessage->ByteSize();
+
+		pCoreConnectionOtherNode->send(eMT_TO_GATE | eMT_BROADCAST, &this->m_szBuf[0], nDataSize);
 
 		return true;
 	}

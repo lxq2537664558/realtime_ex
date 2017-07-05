@@ -12,7 +12,8 @@
 
 namespace core
 {
-	CServiceInvoker::CServiceInvoker()
+	CServiceInvoker::CServiceInvoker(uint16_t nServiceID)
+		: m_nServiceID(nServiceID)
 	{
 
 	}
@@ -31,34 +32,21 @@ namespace core
 	{
 		DebugAstEx(pMessage != nullptr, false);
 
-		SRequestMessageInfo sRequestMessageInfo;
-		sRequestMessageInfo.pMessage = pMessage;
-		sRequestMessageInfo.nSessionID = 0;
-		sRequestMessageInfo.nFromActorID = 0;
-		sRequestMessageInfo.nToActorID = 0;
-
-		return CCoreServiceAppImpl::Inst()->getTransporter()->invoke(nServiceID, sRequestMessageInfo);
+		return CCoreServiceAppImpl::Inst()->getTransporter()->invoke(nServiceID, 0, nServiceID, pMessage);
 	}
 
-	void CServiceInvoker::response(const void* pData)
+	void CServiceInvoker::response(const google::protobuf::Message* pMessage)
 	{
-		DebugAst(pData != nullptr);
+		DebugAst(pMessage != nullptr);
 
-		this->response(CCoreServiceAppImpl::Inst()->getTransporter()->getServiceSessionInfo(), pData);
+		this->response(CCoreServiceAppImpl::Inst()->getTransporter()->getServiceSessionInfo(), pMessage);
 	}
 
-	void CServiceInvoker::response(const SServiceSessionInfo& sServiceSessionInfo, const void* pData)
+	void CServiceInvoker::response(const SServiceSessionInfo& sServiceSessionInfo, const google::protobuf::Message* pMessage)
 	{
-		DebugAst(pData != nullptr);
+		DebugAst(pMessage != nullptr);
 
-		SResponseMessageInfo sResponseMessageInfo;
-		sResponseMessageInfo.nSessionID = sServiceSessionInfo.nSessionID;
-		sResponseMessageInfo.pData = pData;
-		sResponseMessageInfo.nResult = eRRT_OK;
-		sResponseMessageInfo.nFromActorID = 0;
-		sResponseMessageInfo.nToActorID = 0;
-
-		bool bRet = CCoreServiceAppImpl::Inst()->getTransporter()->response(sServiceSessionInfo.nServiceID, sResponseMessageInfo);
+		bool bRet = CCoreServiceAppImpl::Inst()->getTransporter()->response(sServiceSessionInfo.nSessionID, eRRT_OK, sServiceSessionInfo.nServiceID, pMessage);
 		DebugAst(bRet);
 	}
 
@@ -66,41 +54,21 @@ namespace core
 	{
 		DebugAstEx(pMessage != nullptr, false);
 
-		SGateMessageInfo sGateMessageInfo;
-		sGateMessageInfo.nSessionID = sClientSessionInfo.nSessionID;
-		sGateMessageInfo.pMessage = pMessage;
-
-		return CCoreServiceAppImpl::Inst()->getTransporter()->send(sClientSessionInfo.nGateNodeID, sGateMessageInfo);
+		return CCoreServiceAppImpl::Inst()->getTransporter()->send(sClientSessionInfo.nSessionID, sClientSessionInfo.nGateServiceID, pMessage);
 	}
 
 	bool CServiceInvoker::forward(uint16_t nServiceID, uint64_t nSessionID, const google::protobuf::Message* pMessage)
 	{
 		DebugAstEx(pMessage != nullptr, false);
 
-		SGateForwardMessageInfo sGateMessageInfo;
-		sGateMessageInfo.nActorID = 0;
-		sGateMessageInfo.nSessionID = nSessionID;
-		sGateMessageInfo.pMessage = pMessage;
-
-		return CCoreServiceAppImpl::Inst()->getTransporter()->forward(nServiceID, sGateMessageInfo);
+		return CCoreServiceAppImpl::Inst()->getTransporter()->forward(nSessionID, nServiceID, pMessage);
 	}
 
 	bool CServiceInvoker::forward_a(uint64_t nActorID, uint64_t nSessionID, const google::protobuf::Message* pMessage)
 	{
 		DebugAstEx(pMessage != nullptr, false);
 
-		SGateForwardMessageInfo sGateMessageInfo;
-		sGateMessageInfo.nActorID = nActorID;
-		sGateMessageInfo.nSessionID = nSessionID;
-		sGateMessageInfo.pMessage = pMessage;
-
-		CActorIDConverter* pActorIDConverter = CCoreServiceAppImpl::Inst()->getActorIDConverter();
-		DebugAstEx(pActorIDConverter != nullptr, false);
-
-		uint16_t nServiceID = pActorIDConverter->convertToServiceID(nActorID);
-		DebugAstEx(nServiceID != 0, false);
-
-		return CCoreServiceAppImpl::Inst()->getTransporter()->forward(nServiceID, sGateMessageInfo);
+		return CCoreServiceAppImpl::Inst()->getTransporter()->forward_a(nSessionID, nActorID, pMessage);
 	}
 
 	bool CServiceInvoker::broadcast(const std::vector<SClientSessionInfo>& vecClientSessionInfo, const google::protobuf::Message* pMessage)
@@ -110,37 +78,29 @@ namespace core
 		std::map<uint16_t, std::vector<uint64_t>> mapClientSessionInfo;
 		for (size_t i = 0; i < vecClientSessionInfo.size(); ++i)
 		{
-			mapClientSessionInfo[vecClientSessionInfo[i].nGateNodeID].push_back(vecClientSessionInfo[i].nSessionID);
+			mapClientSessionInfo[vecClientSessionInfo[i].nGateServiceID].push_back(vecClientSessionInfo[i].nSessionID);
 		}
 
 		bool bRet = true;
 		for (auto iter = mapClientSessionInfo.begin(); iter != mapClientSessionInfo.end(); ++iter)
 		{
-			SGateBroadcastMessageInfo sGateBroadcastMessageInfo;
-			sGateBroadcastMessageInfo.vecSessionID = iter->second;
-			sGateBroadcastMessageInfo.pData = pData;
-			if (!CCoreServiceAppImpl::Inst()->getTransporter()->broadcast(iter->first, sGateBroadcastMessageInfo))
+			if (!CCoreServiceAppImpl::Inst()->getTransporter()->broadcast(iter->second, iter->first, pMessage))
 				bRet = false;
 		}
 
 		return bRet;
 	}
 
-	bool CServiceInvoker::invokeImpl(uint16_t nServiceID, const void* pData, const std::function<void(CMessagePtr<char>, uint32_t)>& callback)
+	bool CServiceInvoker::invoke(uint16_t nServiceID, const google::protobuf::Message* pMessage, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback)
 	{
-		SRequestMessageInfo sRequestMessageInfo;
-		sRequestMessageInfo.pData = pData;
-		sRequestMessageInfo.nSessionID = CCoreServiceAppImpl::Inst()->getTransporter()->genSessionID();
-		sRequestMessageInfo.nFromActorID = 0;
-		sRequestMessageInfo.nToActorID = 0;
-
-		if (!CCoreServiceAppImpl::Inst()->getTransporter()->invoke(nServiceID, sRequestMessageInfo))
+		uint64_t nSessionID = CCoreServiceAppImpl::Inst()->getTransporter()->genSessionID();
+		if (!CCoreServiceAppImpl::Inst()->getTransporter()->invoke(nServiceID, this->m_nServiceID, nServiceID, pMessage))
 			return false;
 
-		SResponseWaitInfo* pResponseWaitInfo = CCoreServiceAppImpl::Inst()->getTransporter()->addResponseWaitInfo(sRequestMessageInfo.nSessionID);
+		SResponseWaitInfo* pResponseWaitInfo = CCoreServiceAppImpl::Inst()->getTransporter()->addResponseWaitInfo(nSessionID);
 		DebugAstEx(pResponseWaitInfo != nullptr, false);
 		pResponseWaitInfo->nToID = nServiceID;
-		//pResponseWaitInfo->nMessageID = pData->nMessageID;
+		pResponseWaitInfo->szMessageName = pMessage->GetTypeName();
 		pResponseWaitInfo->nBeginTime = base::getGmtTime();
 
 		pResponseWaitInfo->callback = callback;

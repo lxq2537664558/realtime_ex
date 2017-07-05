@@ -40,11 +40,11 @@ namespace core
 
 	struct SClientSessionInfo
 	{
-		uint16_t	nGateNodeID;
+		uint16_t	nGateServiceID;
 		uint64_t	nSessionID;
 
-		SClientSessionInfo(uint16_t	nGateNodeID, uint64_t nSessionID)
-			: nGateNodeID(nGateNodeID), nSessionID(nSessionID)
+		SClientSessionInfo(uint16_t	nGateServiceID, uint64_t nSessionID)
+			: nGateServiceID(nGateServiceID), nSessionID(nSessionID)
 		{}
 	};
 
@@ -89,13 +89,19 @@ namespace core
 
 	struct gate_send_cookice
 	{
-		uint64_t nSessionID;
+		uint32_t	nToServiceID;
+		uint64_t	nSessionID;
+		uint16_t	nMessageNameLen;
+		char		szMessageName[1];
 	};
 	
 	struct gate_broadcast_cookice :
 		public message_header
 	{
-		uint16_t nCount;
+		uint32_t	nToServiceID;
+		uint16_t	nSessionCount;
+		uint16_t	nMessageNameLen;
+		char		szMessageName[1];
 	};
 
 	struct request_cookice

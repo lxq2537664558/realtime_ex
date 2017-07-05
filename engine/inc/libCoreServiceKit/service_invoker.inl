@@ -12,7 +12,7 @@ namespace core
 			pPromise->setValue(CMessagePtr<T>::reinterpret_cast_message(pMessage), nErrorCode);
 		};
 
-		if (!this->invokeImpl(nNodeID, pData, callback))
+		if (!this->invoke(nNodeID, pData, callback))
 			return false;
 
 		sFuture = pPromise->getFuture();
@@ -30,6 +30,6 @@ namespace core
 			callback(CMessagePtr<T>::reinterpret_cast_message(pMessage), nErrorCode);
 		};
 
-		return this->invokeImpl(nNodeID, pData, callback_);
+		return this->invoke(nNodeID, pData, callback_);
 	}
 }
