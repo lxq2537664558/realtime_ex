@@ -1,6 +1,9 @@
 #pragma once
 
+#include "libBaseCommon\spin_lock.h"
+
 #include "ticker.h"
+
 
 namespace core
 {
@@ -26,7 +29,7 @@ namespace core
 
 		void				registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
 		void				unregisterTicker(CTicker* pTicker);
-		void				update();
+		void				update(int64_t nTime);
 		inline int64_t		getLogicTime() const { return this->m_nLogicTime; }
 		
 	private:
@@ -40,5 +43,6 @@ namespace core
 
 		std::vector<TickerNode_t*>	m_vecTempTickerNode;
 		int64_t						m_nLogicTime;													// 当前刻度时间
+		base::spin_lock				m_lock;
 	};
 }

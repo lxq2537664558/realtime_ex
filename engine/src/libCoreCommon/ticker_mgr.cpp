@@ -31,12 +31,15 @@ namespace core
 		pTicker->m_nContext = nContext;
 		pTicker->m_pTickerNode = pTickerNode;
 		
+		std::unique_lock<base::spin_lock> lock(this->m_lock);
 		this->insertTicker(pTickerNode);
 	}
 
 	void CTickerMgr::unregisterTicker(CTicker* pTicker)
 	{
 		DebugAst(pTicker != nullptr);
+
+		std::unique_lock<base::spin_lock> lock(this->m_lock);
 		if (!pTicker->isRegister())
 			return;
 
@@ -91,32 +94,28 @@ namespace core
 		}
 	}
 
-	void CTickerMgr::update()
+	void CTickerMgr::update(int64_t nTime)
 	{
-		int64_t nCurTime = base::getGmtTime();
 		// 每一次更新都将刻度时间慢慢推进到与当前时间一样
 		// 处理时间定时器
-		for (; this->m_nLogicTime < nCurTime; ++this->m_nLogicTime)
+		for (; this->m_nLogicTime < nTime; ++this->m_nLogicTime)
 		{
 			uint32_t nPos = (uint32_t)(this->m_nLogicTime&__TIME_NEAR_MASK);
 			auto& listTicker = this->m_listNearTicker[nPos];
 			this->m_vecTempTickerNode.clear();
+			this->m_lock.lock();
 			while (!listTicker.empty())
 			{
 				TickerNode_t* pTickerNode = listTicker.getHead();
 				pTickerNode->remove();
 				CTicker* pTicker = pTickerNode->Value.pTicker;
 
-#ifdef __PROFILING_OPEN	
-#endif
 				if (pTicker->m_nIntervalTime == 0)
 					this->unregisterTicker(pTicker);
 
 				if (pTicker->m_callback != nullptr)
 					pTicker->m_callback(pTicker->m_nContext);
 
-#ifdef __PROFILING_OPEN
-#endif
 				// 这个时候pTicker是不能动的，极有可能是个野指针
 				if (pTickerNode->Value.pTicker == nullptr)
 				{
@@ -140,6 +139,7 @@ namespace core
 			}
 
 			this->cascadeTicker();
+			this->m_lock.lock();
 		}
 	}
 
