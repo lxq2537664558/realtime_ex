@@ -20,9 +20,7 @@ namespace core
 
 	CTicker::CTicker(CTicker&& rhs)
 	{
-		this->m_pCoreContext.store(rhs.m_pCoreContext, std::memory_order_release);
-		if (this->m_pCoreContext)
-		reinterpret_cast<CCoreTickerInfo*>()
+		this->m_pCoreContext = rhs.m_pCoreContext;
 		this->m_nIntervalTime = rhs.m_nIntervalTime;
 		this->m_nContext = rhs.m_nContext;
 		this->m_callback = rhs.m_callback;
@@ -35,12 +33,12 @@ namespace core
 		if (this == &rhs)
 			return *this;
 
-		this->m_pTickerNode = rhs.m_pTickerNode;
+		this->m_pCoreContext = rhs.m_pCoreContext;
 		this->m_nIntervalTime = rhs.m_nIntervalTime;
 		this->m_nContext = rhs.m_nContext;
 		this->m_callback = rhs.m_callback;
 
-		rhs.m_pTickerNode = nullptr;
+		rhs.m_pCoreContext = nullptr;
 
 		return *this;
 	}
@@ -52,7 +50,7 @@ namespace core
 
 	bool CTicker::isRegister() const
 	{
-		return this->m_pTickerNode != nullptr;
+		return this->m_pCoreContext != nullptr;
 	}
 
 	void CTicker::setCallback(const std::function<void(uint64_t)>& callback)

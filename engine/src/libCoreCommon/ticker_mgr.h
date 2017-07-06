@@ -33,15 +33,15 @@ namespace core
 		inline int64_t		getLogicTime() const { return this->m_nLogicTime; }
 		
 	private:
-		void				insertTicker(TickerNode_t* pTickerNode);
+		void				insertTicker(CCoreTickerNode* pTickerNode);
 		void				cascadeTicker();
 
 	private:
-		base::TLink<TickerNode_t>	m_listNearTicker[__TIME_NEAR_SIZE];								// 最近运行到的时间刻度
-		base::TLink<TickerNode_t>	m_listCascadeTicker[__TIME_CASCADE_COUNT][__TIME_CASCADE_SIZE];	// 联级时间刻度
-		base::TLink<TickerNode_t>	m_listFarTicker;												// 最远的定时器链表
+		base::TLink<CCoreTickerNode>	m_listNearTicker[__TIME_NEAR_SIZE];								// 最近运行到的时间刻度
+		base::TLink<CCoreTickerNode>	m_listCascadeTicker[__TIME_CASCADE_COUNT][__TIME_CASCADE_SIZE];	// 联级时间刻度
+		base::TLink<CCoreTickerNode>	m_listFarTicker;												// 最远的定时器链表
 
-		std::vector<TickerNode_t*>	m_vecTempTickerNode;
+		std::vector<CCoreTickerNode*>	m_vecTempTickerNode;
 		int64_t						m_nLogicTime;													// 当前刻度时间
 		base::spin_lock				m_lock;
 	};

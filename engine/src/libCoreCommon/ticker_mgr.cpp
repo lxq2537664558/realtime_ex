@@ -24,8 +24,8 @@ namespace core
 		DebugAst(!pTicker->isRegister());
 		DebugAst(pTicker->m_callback != nullptr);
 
-		TickerNode_t* pTickerNode = new TickerNode_t();
-		pTickerNode->Value.pTicker = pTicker;
+		CCoreTickerNode* pTickerNode = new CCoreTickerNode();
+		pTickerNode->Value.m_pTicker = pTicker;
 		pTicker->m_nIntervalTime = nIntervalTime;
 		pTicker->m_nNextTickTime = this->m_nLogicTime + nStartTime;
 		pTicker->m_nContext = nContext;
@@ -57,12 +57,12 @@ namespace core
 		}
 	}
 
-	void CTickerMgr::insertTicker(TickerNode_t* pTickerNode)
+	void CTickerMgr::insertTicker(CCoreTickerNode* pTickerNode)
 	{
-		if ((pTickerNode->Value.pTicker->m_nNextTickTime | __TIME_NEAR_MASK) == (this->m_nLogicTime | __TIME_NEAR_MASK))
+		if ((pTickerNode->Value.m_pTicker->m_nNextTickTime | __TIME_NEAR_MASK) == (this->m_nLogicTime | __TIME_NEAR_MASK))
 		{
 			// 最近的定时器
-			uint32_t nPos = (uint32_t)(pTickerNode->Value.pTicker->m_nNextTickTime&__TIME_NEAR_MASK);
+			uint32_t nPos = (uint32_t)(pTickerNode->Value.m_pTicker->m_nNextTickTime&__TIME_NEAR_MASK);
 			this->m_listNearTicker[nPos].pushTail(pTickerNode);
 		}
 		else
@@ -72,7 +72,7 @@ namespace core
 			int64_t nMask = __TIME_NEAR_SIZE << __TIME_CASCADE_BITS;
 			for (; nLevel < _countof(this->m_listCascadeTicker); ++nLevel)
 			{
-				if ((pTickerNode->Value.pTicker->m_nNextTickTime | (nMask - 1)) == (this->m_nLogicTime | (nMask - 1)))
+				if ((pTickerNode->Value.m_pTicker->m_nNextTickTime | (nMask - 1)) == (this->m_nLogicTime | (nMask - 1)))
 					break;
 
 				nMask <<= __TIME_CASCADE_BITS;
@@ -81,7 +81,7 @@ namespace core
 			if (nLevel < _countof(this->m_listCascadeTicker))
 			{
 				// 在联级链表中
-				uint32_t nPos = (uint32_t)((pTickerNode->Value.pTicker->m_nNextTickTime >> (__TIME_NEAR_BITS + nLevel * __TIME_CASCADE_BITS))&__TIME_CASCADE_MASK);
+				uint32_t nPos = (uint32_t)((pTickerNode->Value.m_pTicker->m_nNextTickTime >> (__TIME_NEAR_BITS + nLevel * __TIME_CASCADE_BITS))&__TIME_CASCADE_MASK);
 				DebugAst(nPos != 0);
 
 				this->m_listCascadeTicker[nLevel][nPos].pushTail(pTickerNode);
@@ -106,9 +106,9 @@ namespace core
 			this->m_lock.lock();
 			while (!listTicker.empty())
 			{
-				TickerNode_t* pTickerNode = listTicker.getHead();
+				CCoreTickerNode* pTickerNode = listTicker.getHead();
 				pTickerNode->remove();
-				CTicker* pTicker = pTickerNode->Value.pTicker;
+				CTicker* pTicker = pTickerNode->Value.m_pTicker;
 
 				if (pTicker->m_nIntervalTime == 0)
 					this->unregisterTicker(pTicker);
@@ -117,7 +117,7 @@ namespace core
 					pTicker->m_callback(pTicker->m_nContext);
 
 				// 这个时候pTicker是不能动的，极有可能是个野指针
-				if (pTickerNode->Value.pTicker == nullptr)
+				if (pTickerNode->Value.m_pTicker == nullptr)
 				{
 					SAFE_DELETE(pTickerNode);
 					continue;
@@ -128,9 +128,9 @@ namespace core
 			size_t nCount = this->m_vecTempTickerNode.size();
 			for (size_t i = 0; i < nCount; ++i)
 			{
-				TickerNode_t* pTickerNode = this->m_vecTempTickerNode[i];
+				CCoreTickerNode* pTickerNode = this->m_vecTempTickerNode[i];
 				// 有可能后执行的定时器删除了前执行的定时器
-				if (pTickerNode->Value.pTicker == nullptr)
+				if (pTickerNode->Value.m_pTicker == nullptr)
 				{
 					SAFE_DELETE(pTickerNode);
 					continue;
@@ -161,7 +161,7 @@ namespace core
 				auto& listTicker = this->m_listCascadeTicker[nLevel][nPos];
 				while (!listTicker.empty())
 				{
-					TickerNode_t* pTickerNode = listTicker.getHead();
+					CCoreTickerNode* pTickerNode = listTicker.getHead();
 					pTickerNode->remove();
 					
 					this->insertTicker(pTickerNode);
@@ -179,7 +179,7 @@ namespace core
 			this->m_vecTempTickerNode.clear();
 			while (!this->m_listFarTicker.empty())
 			{
-				TickerNode_t* pTickerNode = this->m_listFarTicker.getHead();
+				CCoreTickerNode* pTickerNode = this->m_listFarTicker.getHead();
 				pTickerNode->remove();
 				
 				this->m_vecTempTickerNode.push_back(pTickerNode);
@@ -188,7 +188,7 @@ namespace core
 			size_t nCount = this->m_vecTempTickerNode.size();
 			for (size_t i = 0; i < nCount; ++i)
 			{
-				TickerNode_t* pTickerNode = this->m_vecTempTickerNode[i];
+				CCoreTickerNode* pTickerNode = this->m_vecTempTickerNode[i];
 				this->insertTicker(this->m_vecTempTickerNode[i]);
 			}
 		}

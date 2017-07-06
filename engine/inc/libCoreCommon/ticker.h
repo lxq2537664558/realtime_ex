@@ -31,7 +31,7 @@ namespace core
 		void		setCallback(const std::function<void(uint64_t)>& callback);
 
 	private:
-		std::atomic<void*>				m_pCoreContext;
+		void*							m_pCoreContext;
 		int64_t							m_nIntervalTime;	// 定时器运行的间隔时间
 		uint64_t						m_nContext;
 		std::function<void(uint64_t)>	m_callback;

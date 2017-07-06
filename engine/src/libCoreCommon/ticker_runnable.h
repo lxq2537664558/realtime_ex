@@ -1,11 +1,13 @@
 #pragma once
 
 #include "libBaseCommon/thread_base.h"
+#include "libBaseCommon/spin_lock.h"
 #include "libBaseCommon/link.h"
 
 #include "ticker.h"
 
 #include <memory>
+
 
 namespace core
 {
@@ -31,13 +33,13 @@ namespace core
 		int32_t	getRef() const;
 
 	private:
-		CTicker*				pTicker;
-		int64_t					nNextTime;	// 下一次定时器运行时间
-		std::atomic<int32_t>	nRef;
-		std::atomic<int32_t>	nState;
+		CTicker*				m_pTicker;
+		void*					m_pMemory;
+		int64_t					m_nNextTime;	// 下一次定时器运行时间
+		std::atomic<int32_t>	m_nRef;
 	};
 
-	typedef base::TLinkNode<CCoreTickerInfo> TickerNode_t;
+	typedef base::TLinkNode<CCoreTickerInfo> CCoreTickerNode;
 
 	class CTickerRunnable :
 		public base::IRunnable
@@ -75,18 +77,18 @@ namespace core
 
 		void			update(int64_t nTime);
 
-		void			insertTicker(TickerNode_t* pTickerNode);
+		void			insertTicker(CCoreTickerNode* pCoreTickerNode);
 		void			cascadeTicker();
-		void			onTicker(CTicker* pTicker);
+		void			onTicker(CCoreTickerNode* pCoreTickerNode);
 
 	private:
-		base::CThreadBase*			m_pThreadBase;
-		base::TLink<TickerNode_t>	m_listNearTicker[__TIME_NEAR_SIZE];								// 最近运行到的时间刻度
-		base::TLink<TickerNode_t>	m_listCascadeTicker[__TIME_CASCADE_COUNT][__TIME_CASCADE_SIZE];	// 联级时间刻度
-		base::TLink<TickerNode_t>	m_listFarTicker;												// 最远的定时器链表
+		base::CThreadBase*				m_pThreadBase;
+		base::TLink<CCoreTickerNode>	m_listNearTicker[__TIME_NEAR_SIZE];								// 最近运行到的时间刻度
+		base::TLink<CCoreTickerNode>	m_listCascadeTicker[__TIME_CASCADE_COUNT][__TIME_CASCADE_SIZE];	// 联级时间刻度
+		base::TLink<CCoreTickerNode>	m_listFarTicker;												// 最远的定时器链表
 
-		std::vector<TickerNode_t*>	m_vecTempTickerNode;
-		int64_t						m_nLogicTime;													// 当前刻度时间
-		base::spin_lock				m_lock;
+		std::vector<CCoreTickerNode*>	m_vecTempTickerNode;
+		int64_t							m_nLogicTime;													// 当前刻度时间
+		base::spin_lock					m_lock;
 	};
 }

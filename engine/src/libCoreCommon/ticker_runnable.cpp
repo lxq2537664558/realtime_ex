@@ -85,17 +85,17 @@ namespace core
 		DebugAstEx(pTicker != nullptr, false);
 		DebugAstEx(!pTicker->isRegister(), false);
 
-		TickerNode_t* pTickerNode = new TickerNode_t();
-		pTickerNode->Value.pTicker = pTicker;
-		pTickerNode->Value.nNextTime = this->m_nLogicTime + nStartTime;
+		CCoreTickerNode* pCoreTickerNode = new CCoreTickerNode();
+		pCoreTickerNode->Value.m_pTicker = pTicker;
+		pCoreTickerNode->Value.m_nNextTime = this->m_nLogicTime + nStartTime;
+		pCoreTickerNode->Value.m_pMemory = pCoreTickerNode;
 		
 		pTicker->m_nIntervalTime = nIntervalTime;
 		pTicker->m_nContext = nContext;
-
-		pTicker->m_pCoreContext.store(pTickerNode, std::memory_order_release);
+		pTicker->m_pCoreContext = pCoreTickerNode;
 
 		std::unique_lock<base::spin_lock> lock(this->m_lock);
-		this->insertTicker(pTickerNode);
+		this->insertTicker(pCoreTickerNode);
 	}
 
 	void CTickerRunnable::unregisterTicker(CTicker* pTicker)
@@ -107,27 +107,21 @@ namespace core
 
 		std::unique_lock<base::spin_lock> lock(this->m_lock);
 
-		pTicker->m_pCoreContext
-		if (pTicker->m_pTickerNode->isLink())
-		{
-			pTicker->m_pTickerNode->remove();
-			pTicker->m_pTickerNode->Value.pTicker = nullptr;
+		CCoreTickerNode* pCoreTickerNode = reinterpret_cast<CCoreTickerNode*>(pTicker->m_pCoreContext);
+		if (pCoreTickerNode->isLink())
+			pCoreTickerNode->remove();
 
-			SAFE_DELETE(pTicker->m_pTickerNode);
-		}
-		else
-		{
-			pTicker->m_pTickerNode->Value.pTicker = nullptr;
-			pTicker->m_pTickerNode = nullptr;
-		}
+		pCoreTickerNode->Value.m_pTicker = nullptr;
+		pTicker->m_pCoreContext = nullptr;
+		pCoreTickerNode->Value.release();
 	}
 
-	void CTickerRunnable::insertTicker(TickerNode_t* pTickerNode)
+	void CTickerRunnable::insertTicker(CCoreTickerNode* pTickerNode)
 	{
-		if ((pTickerNode->Value.nNextTime | __TIME_NEAR_MASK) == (this->m_nLogicTime | __TIME_NEAR_MASK))
+		if ((pTickerNode->Value.m_nNextTime | __TIME_NEAR_MASK) == (this->m_nLogicTime | __TIME_NEAR_MASK))
 		{
 			// 最近的定时器
-			uint32_t nPos = (uint32_t)(pTickerNode->Value.nNextTime&__TIME_NEAR_MASK);
+			uint32_t nPos = (uint32_t)(pTickerNode->Value.m_nNextTime&__TIME_NEAR_MASK);
 			this->m_listNearTicker[nPos].pushTail(pTickerNode);
 		}
 		else
@@ -137,7 +131,7 @@ namespace core
 			int64_t nMask = __TIME_NEAR_SIZE << __TIME_CASCADE_BITS;
 			for (; nLevel < _countof(this->m_listCascadeTicker); ++nLevel)
 			{
-				if ((pTickerNode->Value.nNextTime | (nMask - 1)) == (this->m_nLogicTime | (nMask - 1)))
+				if ((pTickerNode->Value.m_nNextTime | (nMask - 1)) == (this->m_nLogicTime | (nMask - 1)))
 					break;
 
 				nMask <<= __TIME_CASCADE_BITS;
@@ -146,7 +140,7 @@ namespace core
 			if (nLevel < _countof(this->m_listCascadeTicker))
 			{
 				// 在联级链表中
-				uint32_t nPos = (uint32_t)((pTickerNode->Value.nNextTime >> (__TIME_NEAR_BITS + nLevel * __TIME_CASCADE_BITS))&__TIME_CASCADE_MASK);
+				uint32_t nPos = (uint32_t)((pTickerNode->Value.m_nNextTime >> (__TIME_NEAR_BITS + nLevel * __TIME_CASCADE_BITS))&__TIME_CASCADE_MASK);
 				DebugAst(nPos != 0);
 
 				this->m_listCascadeTicker[nLevel][nPos].pushTail(pTickerNode);
@@ -171,19 +165,16 @@ namespace core
 			this->m_lock.lock();
 			while (!listTicker.empty())
 			{
-				TickerNode_t* pTickerNode = listTicker.getHead();
-				pTickerNode->remove();
+				CCoreTickerNode* pCoreTickerNode = listTicker.getHead();
+				pCoreTickerNode->remove();
 				
-				this->onTicker(pTickerNode->Value.pTicker);
+				this->onTicker(pCoreTickerNode);
 
-				if (pTickerNode->Value.pTicker->m_nIntervalTime == 0)
-				{
-					this->unregisterTicker(pTickerNode->Value.pTicker);
+				if (pCoreTickerNode->Value.m_pTicker->m_nIntervalTime == 0)
 					continue;
-				}
-
-				pTickerNode->Value.nNextTime += pTickerNode->Value.pTicker->m_nIntervalTime;
-				this->m_vecTempTickerNode.push_back(pTickerNode);
+				
+				pCoreTickerNode->Value.m_nNextTime += pCoreTickerNode->Value.m_pTicker->m_nIntervalTime;
+				this->m_vecTempTickerNode.push_back(pCoreTickerNode);
 			}
 			size_t nCount = this->m_vecTempTickerNode.size();
 			for (size_t i = 0; i < nCount; ++i)
@@ -214,7 +205,7 @@ namespace core
 				auto& listTicker = this->m_listCascadeTicker[nLevel][nPos];
 				while (!listTicker.empty())
 				{
-					TickerNode_t* pTickerNode = listTicker.getHead();
+					CCoreTickerNode* pTickerNode = listTicker.getHead();
 					pTickerNode->remove();
 
 					this->insertTicker(pTickerNode);
@@ -232,7 +223,7 @@ namespace core
 			this->m_vecTempTickerNode.clear();
 			while (!this->m_listFarTicker.empty())
 			{
-				TickerNode_t* pTickerNode = this->m_listFarTicker.getHead();
+				CCoreTickerNode* pTickerNode = this->m_listFarTicker.getHead();
 				pTickerNode->remove();
 
 				this->m_vecTempTickerNode.push_back(pTickerNode);
@@ -241,9 +232,43 @@ namespace core
 			size_t nCount = this->m_vecTempTickerNode.size();
 			for (size_t i = 0; i < nCount; ++i)
 			{
-				TickerNode_t* pTickerNode = this->m_vecTempTickerNode[i];
+				CCoreTickerNode* pTickerNode = this->m_vecTempTickerNode[i];
 				this->insertTicker(this->m_vecTempTickerNode[i]);
 			}
 		}
+	}
+
+	void CTickerRunnable::onTicker(CCoreTickerNode* pCoreTickerNode)
+	{
+		DebugAst(pCoreTickerNode != nullptr);
+
+		pCoreTickerNode->Value.addRef();
+		// 发送到消息队列，另外消息队列取出定时器对象的时候如果发现是一次性定时器，需要反注册
+	}
+
+	CCoreTickerInfo::CCoreTickerInfo()
+	{
+		this->m_pTicker = nullptr;
+		this->m_pMemory = nullptr;
+		this->m_nNextTime = 0;
+		this->m_nRef = 1;
+	}
+
+	void CCoreTickerInfo::addRef()
+	{
+		++this->m_nRef;
+	}
+
+	void CCoreTickerInfo::release()
+	{
+		if ((--this->m_nRef) == 0)
+		{
+			delete reinterpret_cast<CCoreTickerNode*>(this->m_pMemory);
+		}
+	}
+
+	int32_t CCoreTickerInfo::getRef() const
+	{
+		return this->m_nRef.load();
 	}
 }

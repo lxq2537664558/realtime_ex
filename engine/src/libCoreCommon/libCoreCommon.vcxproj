@@ -26,6 +26,7 @@
     <ClInclude Include="monitor.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="ticker_mgr.h" />
+    <ClInclude Include="ticker_runnable.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="base_connection.cpp" />
@@ -42,6 +43,7 @@
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="ticker.cpp" />
     <ClCompile Include="ticker_mgr.cpp" />
+    <ClCompile Include="ticker_runnable.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\libBaseNetwork\libBaseNetwork.vcxproj">
