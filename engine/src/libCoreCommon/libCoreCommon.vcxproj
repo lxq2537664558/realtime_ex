@@ -23,6 +23,8 @@
     <ClInclude Include="core_connection_mgr.h" />
     <ClInclude Include="core_connection_monitor.h" />
     <ClInclude Include="fix_memory_pool.h" />
+    <ClInclude Include="logic_message_queue.h" />
+    <ClInclude Include="logic_runnable.h" />
     <ClInclude Include="message_command.h" />
     <ClInclude Include="monitor.h" />
     <ClInclude Include="net_message_queue.h" />
@@ -41,6 +43,7 @@
     <ClCompile Include="core_connection_mgr.cpp" />
     <ClCompile Include="core_connection_monitor.cpp" />
     <ClCompile Include="fix_memory_pool.cpp" />
+    <ClCompile Include="logic_runnable.cpp" />
     <ClCompile Include="memory_new.cpp" />
     <ClCompile Include="monitor.cpp" />
     <ClCompile Include="net_message_queue.cpp" />

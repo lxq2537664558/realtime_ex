@@ -66,6 +66,12 @@
     <ClInclude Include="message_command.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="logic_runnable.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="logic_message_queue.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="base_app.cpp">
@@ -117,6 +123,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="net_runnable.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="logic_runnable.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
