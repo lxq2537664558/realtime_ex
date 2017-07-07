@@ -31,18 +31,6 @@ namespace core
 		@brief: 反注册定时器
 		*/
 		void				unregisterTicker(CTicker* pTicker);
-		/**
-		@brief: 获取当前逻辑时间
-		*/
-		int64_t				getLogicTime() const;
-		/*
-		@brief: 获取连接管理器
-		*/
-		CBaseConnectionMgr*	getBaseConnectionMgr() const;
-		/*
-		@brief: 获取连接管理器
-		*/
-		CCoreConnectionMgr*	getCoreConnectionMgr() const;
 		/*
 		@brief: 获取配置文件名
 		*/
@@ -89,8 +77,6 @@ namespace core
 	protected:
 		std::string				m_szConfig;
 		std::string				m_szPID;
-		CTickerMgr*				m_pTickerMgr;
-		CCoreConnectionMgr*		m_pCoreConnectionMgr;
 		base::CWriteBuf			m_writeBuf;
 		uint32_t				m_nCycleCount;
 		int64_t					m_nTotalSamplingTime;

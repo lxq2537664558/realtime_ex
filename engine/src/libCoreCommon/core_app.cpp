@@ -27,6 +27,9 @@
 #include "monitor.h"
 #include "base_connection_mgr.h"
 #include "base_connection.h"
+#include "ticker_runnable.h"
+#include "net_runnable.h"
+#include "logic_runnable.h"
 
 #include "tinyxml2/tinyxml2.h"
 
@@ -91,9 +94,7 @@ static bool initProcessInfo(size_t argc, char** argv, const char* title)
 namespace core
 {
 	CCoreApp::CCoreApp()
-		: m_pTickerMgr(nullptr)
-		, m_pCoreConnectionMgr(nullptr)
-		, m_nRunState(eARS_Start)
+		: m_nRunState(eARS_Start)
 		, m_writeBuf(UINT16_MAX)
 		, m_bMarkQuit(false)
 		, m_nTotalSamplingTime(0)
@@ -144,27 +145,12 @@ namespace core
 
 	void CCoreApp::registerTicker(uint64_t nFrom, uint32_t nType, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
 	{
-		this->m_pTickerMgr->registerTicker(pTicker, nStartTime, nIntervalTime, nContext);
+		CTickerRunnable::Inst()->registerTicker(nFrom, nType, pTicker, nStartTime, nIntervalTime, nContext);
 	}
 
 	void CCoreApp::unregisterTicker(CTicker* pTicker)
 	{
-		this->m_pTickerMgr->unregisterTicker(pTicker);
-	}
-
-	int64_t CCoreApp::getLogicTime() const
-	{
-		return this->m_pTickerMgr->getLogicTime();
-	}
-
-	CBaseConnectionMgr* CCoreApp::getBaseConnectionMgr() const
-	{
-		return this->m_pCoreConnectionMgr->getBaseConnectionMgr();
-	}
-
-	CCoreConnectionMgr* CCoreApp::getCoreConnectionMgr() const
-	{
-		return this->m_pCoreConnectionMgr;
+		CTickerRunnable::Inst()->unregisterTicker(pTicker);
 	}
 
 	const std::string& CCoreApp::getConfigFileName() const
@@ -342,12 +328,22 @@ namespace core
 			return false;
 		}
 
-		this->m_pTickerMgr = new core::CTickerMgr();
 		uint32_t nMaxConnectionCount = (uint32_t)pBaseInfoXML->IntAttribute("connections");
-		this->m_pCoreConnectionMgr = new CCoreConnectionMgr();
-		if (!this->m_pCoreConnectionMgr->init(nMaxConnectionCount))
+		if (!CNetRunnable::Inst()->init(nMaxConnectionCount))
 		{
-			PrintWarning("this->m_pCoreConnectionMgr->init(nMaxConnectionCount)");
+			PrintWarning("CNetRunnable::Inst()->init(nMaxConnectionCount)");
+			return false;
+		}
+
+		if (!CLogicRunnable::Inst()->init())
+		{
+			PrintWarning("CLogicRunnable::Inst()->init()");
+			return false;
+		}
+
+		if (!CTickerRunnable::Inst()->init())
+		{
+			PrintWarning("CTickerRunnable::Inst()->init()");
 			return false;
 		}
 		
@@ -382,8 +378,9 @@ namespace core
 
 		PrintInfo("CCoreApp::onDestroy");
 
-		SAFE_DELETE(this->m_pCoreConnectionMgr);
-		SAFE_DELETE(this->m_pTickerMgr);
+		CNetRunnable::Inst()->release();
+		CLogicRunnable::Inst()->release();
+		CTickerRunnable::Inst()->release();
 
 		CBaseObject::unRegistClassInfo();
 
@@ -401,43 +398,43 @@ namespace core
 
 	bool CCoreApp::onProcess()
 	{
-		int64_t nBeginTime = base::getProcessPassTime();
-
-		PROFILING_BEGIN(this->m_pCoreConnectionMgr->update)
-		int64_t nDeltaTime = _MAX_WAIT_NET_TIME - (base::getGmtTime() - this->m_pTickerMgr->getLogicTime());
-		if (this->m_bBusy || nDeltaTime < 0)
-			nDeltaTime = 0;
-		this->m_pCoreConnectionMgr->update(nDeltaTime);
-		PROFILING_END(this->m_pCoreConnectionMgr->update)
-
-		PROFILING_BEGIN(this->m_pTickerMgr->update)
-		this->m_pTickerMgr->update();
-		PROFILING_END(this->m_pTickerMgr->update)
-
-		PROFILING_BEGIN(CBaseApp::Inst()->onProcess)
-		CBaseApp::Inst()->onProcess();
-		PROFILING_END(CBaseApp::Inst()->onProcess)
-
-		if (this->m_nRunState == eARS_Quitting && !this->m_bMarkQuit)
-		{
-			this->m_bMarkQuit = true;
-
-			PrintInfo("CCoreApp::onQuit");
-
-			base::flushLog();
-			CBaseApp::Inst()->onQuit();
-		}
-		if (this->m_nRunState == eARS_Quit)
-			return false;
-
-		int64_t nEndTime = base::getProcessPassTime();
-		this->m_nTotalSamplingTime = this->m_nTotalSamplingTime + (uint32_t)(nEndTime - nBeginTime);
-
-		if (this->m_nTotalSamplingTime / 1000 >= this->m_nSamplingTime)
-		{
-			base::profiling(this->m_nTotalSamplingTime);
-			this->m_nTotalSamplingTime = 0;
-		}
+// 		int64_t nBeginTime = base::getProcessPassTime();
+// 
+// 		PROFILING_BEGIN(this->m_pCoreConnectionMgr->update)
+// 		int64_t nDeltaTime = _MAX_WAIT_NET_TIME - (base::getGmtTime() - this->m_pTickerMgr->getLogicTime());
+// 		if (this->m_bBusy || nDeltaTime < 0)
+// 			nDeltaTime = 0;
+// 		this->m_pCoreConnectionMgr->update(nDeltaTime);
+// 		PROFILING_END(this->m_pCoreConnectionMgr->update)
+// 
+// 		PROFILING_BEGIN(this->m_pTickerMgr->update)
+// 		this->m_pTickerMgr->update();
+// 		PROFILING_END(this->m_pTickerMgr->update)
+// 
+// 		PROFILING_BEGIN(CBaseApp::Inst()->onProcess)
+// 		CBaseApp::Inst()->onProcess();
+// 		PROFILING_END(CBaseApp::Inst()->onProcess)
+// 
+// 		if (this->m_nRunState == eARS_Quitting && !this->m_bMarkQuit)
+// 		{
+// 			this->m_bMarkQuit = true;
+// 
+// 			PrintInfo("CCoreApp::onQuit");
+// 
+// 			base::flushLog();
+// 			CBaseApp::Inst()->onQuit();
+// 		}
+// 		if (this->m_nRunState == eARS_Quit)
+// 			return false;
+// 
+// 		int64_t nEndTime = base::getProcessPassTime();
+// 		this->m_nTotalSamplingTime = this->m_nTotalSamplingTime + (uint32_t)(nEndTime - nBeginTime);
+// 
+// 		if (this->m_nTotalSamplingTime / 1000 >= this->m_nSamplingTime)
+// 		{
+// 			base::profiling(this->m_nTotalSamplingTime);
+// 			this->m_nTotalSamplingTime = 0;
+// 		}
 
 		return true;
 	}

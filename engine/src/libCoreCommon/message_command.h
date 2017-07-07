@@ -50,7 +50,7 @@ namespace core
 	struct SMCT_REQUEST_SOCKET_SHUTDOWN
 	{
 		uint64_t	nSocketID;
-		bool		bForce;
+		uint32_t	nType;
 		std::string	szMsg;
 	};
 

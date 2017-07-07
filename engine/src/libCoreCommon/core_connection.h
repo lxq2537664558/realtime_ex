@@ -16,10 +16,19 @@ namespace core
 		friend class CBaseConnectionMgr;
 
 	public:
+		enum
+		{
+			eCCS_None,
+			eCCS_Connectting,
+			eCCS_Connected,
+			eCCS_Disconnectting,
+		};
+
+	public:
 		CCoreConnection();
 		~CCoreConnection();
 
-		bool				init(CBaseConnection* pBaseConnection, uint64_t nID, uint32_t nType);
+		bool				init(uint32_t nType, uint64_t nID, const std::string& szContext, const MessageParser& messageParser);
 		void				send(uint8_t nMessageType, const void* pData, uint16_t nSize);
 		void				send(uint8_t nMessageType, const void* pData, uint16_t nSize, const void* pExtraBuf, uint16_t nExtraSize);
 		
@@ -62,7 +71,8 @@ namespace core
 
 		uint64_t				m_nID;
 		uint32_t				m_nType;
-		CBaseConnection*		m_pBaseConnection;
+		uint32_t				m_nState;
+		std::string				m_szContext;
 		MessageParser			m_messageParser;
 		CCoreConnectionMonitor	m_monitor;
 	};

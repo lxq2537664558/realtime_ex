@@ -78,7 +78,9 @@ namespace core
 		void					onHeartbeat(uint64_t nContext);
 
 	private:
-		uint32_t			m_nType;
-		CCoreConnection*	m_pCoreConnection;
+		uint32_t	m_nType;
+		uint64_t	m_nID;
+		SNetAddr	m_sLocalAddr;
+		SNetAddr	m_sRemoteAddr;
 	};
 }

@@ -56,7 +56,7 @@ namespace core
 
 		bool			init();
 
-		bool			registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
+		bool			registerTicker(uint64_t nFrom, uint32_t nType, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
 		void			unregisterTicker(CTicker* pTicker);
 		
 		void			join();

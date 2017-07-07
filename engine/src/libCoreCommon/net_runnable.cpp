@@ -39,7 +39,7 @@ namespace core
 	CNetRunnable* CNetRunnable::Inst()
 	{
 		if (g_pNetRunnable == nullptr)
-			g_pNetRunnable = new core::CNetRunnable();
+			g_pNetRunnable = new CNetRunnable();
 
 		return g_pNetRunnable;
 	}
@@ -95,27 +95,7 @@ namespace core
 	{
 		int64_t nBeginSamplingTime = base::getProcessPassTime();
 
-		int64_t nCurTime = base::getGmtTime();
-		// windows下没有实现事件通知机制，所以这边直接等待1ms
-#ifndef _WIN32
-		int64_t nWaitTime = std::max<int64_t>(0, _CYCLE_TIME - (nCurTime - this->m_nLastCheckTime) / 1000);
-#else
-		int64_t nWaitTime = 1;
-#endif
-		this->m_pCoreConnectionMgr->update(nWaitTime);
-
-		nCurTime = base::getGmtTime();
-		if (nCurTime - this->m_nLastCheckTime >= _CYCLE_TIME)
-		{
-			this->m_nLastCheckTime = nCurTime;
-			SMessagePacket sMessagePacket;
-			sMessagePacket.nType = eMCT_TIMER;
-			sMessagePacket.pData = nullptr;
-			sMessagePacket.nDataSize = 0;
-			CCoreApp::Inst()->getMessageQueue()->send(sMessagePacket);
-
-			this->m_pCoreConnectionMgr->onTimer(nCurTime);
-		}
+		this->m_pCoreConnectionMgr->update(-1);
 		
 		static std::vector<SMessagePacket> vecMessagePacket;
 		this->m_pMessageQueue->recv(vecMessagePacket);
@@ -171,7 +151,7 @@ namespace core
 					}
 					CCoreConnection* pCoreConnection = this->m_pCoreConnectionMgr->getCoreConnectionByID(pContext->nSocketID);
 					if (nullptr != pCoreConnection)
-						pCoreConnection->shutdown(pContext->bForce, pContext->szMsg);
+						pCoreConnection->shutdown((base::ENetConnecterCloseType)pContext->nType, pContext->szMsg);
 
 					SAFE_DELETE(pContext);
 				}
@@ -186,7 +166,7 @@ namespace core
 						PrintWarning("context == nullptr type: eMCT_NOTIFY_CONNECTION_DESTROY");
 						continue;
 					}
-					this->m_pCoreConnectionMgr->destroyConnection(pContext->nSocketID);
+					this->m_pCoreConnectionMgr->destroyCoreConnection(pContext->nSocketID);
 
 					SAFE_DELETE(pContext);
 				}
@@ -280,24 +260,6 @@ namespace core
 					CCoreConnection* pCoreConnection = this->m_pCoreConnectionMgr->getCoreConnectionByID(pContext->nSocketID);
 					if (nullptr != pCoreConnection)
 						pCoreConnection->enableHeartbeat(!!pContext->nEnable);
-					char* szBuf = reinterpret_cast<char*>(sMessagePacket.pData);
-					SAFE_DELETE_ARRAY(szBuf);
-				}
-				break;
-
-			case eMCT_SEND_HEARTBEAT:
-				{
-					PROFILING_GUARD(eMCT_SEND_HEARTBEAT)
-					SMCT_SEND_HEARTBEAT* pContext = reinterpret_cast<SMCT_SEND_HEARTBEAT*>(sMessagePacket.pData);
-					if (pContext == nullptr)
-					{
-						PrintWarning("context == nullptr type: SMCT_SEND_HEARTBEAT");
-						continue;
-					}
-
-					CCoreConnection* pCoreConnection = this->m_pCoreConnectionMgr->getCoreConnectionByID(pContext->nSocketID);
-					if (nullptr != pCoreConnection)
-						pCoreConnection->onHeartbeat();
 					char* szBuf = reinterpret_cast<char*>(sMessagePacket.pData);
 					SAFE_DELETE_ARRAY(szBuf);
 				}

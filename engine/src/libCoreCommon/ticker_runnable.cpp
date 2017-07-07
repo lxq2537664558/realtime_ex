@@ -21,14 +21,12 @@ core::CTickerRunnable*	g_pTickerRunnable;
 namespace core
 {
 	CTickerRunnable::CTickerRunnable()
-		: m_pTickerMgr(nullptr)
-		, m_pThreadBase(nullptr)
+		: m_pThreadBase(nullptr)
 	{
 	}
 
 	CTickerRunnable::~CTickerRunnable()
 	{
-		SAFE_DELETE(this->m_pTickerMgr);
 		SAFE_RELEASE(this->m_pThreadBase);
 	}
 
@@ -42,7 +40,6 @@ namespace core
 
 	bool CTickerRunnable::init()
 	{
-		this->m_pTickerMgr = new core::CTickerMgr();
 		this->m_pThreadBase = base::CThreadBase::createNew(this);
 		return nullptr != this->m_pThreadBase;
 	}
@@ -80,7 +77,7 @@ namespace core
 		return true;
 	}
 
-	bool CTickerRunnable::registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
+	bool CTickerRunnable::registerTicker(uint64_t nFrom, uint32_t nType, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
 	{
 		DebugAstEx(pTicker != nullptr, false);
 		DebugAstEx(!pTicker->isRegister(), false);

@@ -98,13 +98,14 @@ namespace core
 		SAFE_DELETE(pWaitActiveConnecterHandler);
 	}
 
-	bool CCoreConnectionMgr::connect(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize)
+	bool CCoreConnectionMgr::connect(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser)
 	{
 		PrintInfo("start connect host: %s  port: %u type: %u context: %s", szHost.c_str(), nPort, nType, szContext.c_str());
 		SNetActiveWaitConnecterHandler* pWaitActiveConnecterHandler = new SNetActiveWaitConnecterHandler();
 		pWaitActiveConnecterHandler->szContext = szContext;
 		pWaitActiveConnecterHandler->nType = nType;
 		pWaitActiveConnecterHandler->pCoreConnectionMgr = this;
+		pWaitActiveConnecterHandler->messageParser = messageParser;
 
 		SNetAddr sNetAddr;
 		base::crt::strcpy(sNetAddr.szHost, _countof(sNetAddr.szHost), szHost.c_str());
@@ -119,12 +120,13 @@ namespace core
 		return true;
 	}
 
-	bool CCoreConnectionMgr::listen(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize)
+	bool CCoreConnectionMgr::listen(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser)
 	{
 		SNetAccepterHandler* pNetAccepterHandler = new SNetAccepterHandler();
 		pNetAccepterHandler->szContext = szContext;
 		pNetAccepterHandler->nType = nType;
 		pNetAccepterHandler->pCoreConnectionMgr = this;
+		pNetAccepterHandler->messageParser = messageParser;
 
 		SNetAddr sNetAddr;
 		base::crt::strcpy(sNetAddr.szHost, _countof(sNetAddr.szHost), szHost.c_str());
@@ -253,22 +255,25 @@ namespace core
 		return pCoreConnection;
 	}
 
-	void CCoreConnectionMgr::destroyCoreConnection(CCoreConnection* pCoreConnection)
+	void CCoreConnectionMgr::destroyCoreConnection(uint64_t nSocketID)
 	{
-		DebugAst(pCoreConnection != nullptr);
+		auto iter = this->m_mapCoreConnectionByID.find(nSocketID);
+		if (iter == this->m_mapCoreConnectionByID.end())
+			return;
 
+		CCoreConnection* pCoreConnection = iter->second;
+		if (nullptr == pCoreConnection)
+		{
+			PrintWarning("destroy core connection error socket_id: "UINT64FMT, nSocketID);
+			this->m_mapCoreConnectionByID.erase(iter);
+			return;
+		}
 		auto iterType = this->m_mapCoreConnectionByTypeID.find(pCoreConnection->getType());
 		if (iterType != this->m_mapCoreConnectionByTypeID.end())
 			iterType->second.remove(pCoreConnection);
 
 		this->m_mapCoreConnectionByID.erase(pCoreConnection->getID());
 
-		CBaseConnection* pBaseConnection = pCoreConnection->m_pBaseConnection;
-		SAFE_RELEASE(pBaseConnection);
-
-		pCoreConnection->m_pBaseConnection = nullptr;
-
 		SAFE_DELETE(pCoreConnection);
 	}
-
 }
