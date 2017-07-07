@@ -31,6 +31,8 @@ namespace core
 		void		setCallback(const std::function<void(uint64_t)>& callback);
 
 	private:
+		uint64_t						m_nFrom;
+		uint32_t						m_nType;
 		void*							m_pCoreContext;
 		int64_t							m_nIntervalTime;	// 定时器运行的间隔时间
 		uint64_t						m_nContext;

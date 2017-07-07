@@ -163,9 +163,6 @@
     <ProjectReference Include="..\..\..\libBaseCommon\libBaseCommon.vcxproj">
       <Project>{84193500-4184-4a95-9cd4-e7bc1d8b3532}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\libBaseLua.vcxproj">
-      <Project>{308a2842-363c-4d31-b5bf-3d80cbdcf0d2}</Project>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

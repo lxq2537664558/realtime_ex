@@ -48,9 +48,9 @@ namespace core
 		return CCoreApp::Inst()->run(argc, argv, szConfig);
 	}
 
-	void CBaseApp::registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
+	void CBaseApp::registerTicker(uint64_t nFrom, uint32_t nType, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
 	{
-		CCoreApp::Inst()->registerTicker(pTicker, nStartTime, nIntervalTime, nContext);
+		CCoreApp::Inst()->registerTicker(nFrom, nType, pTicker, nStartTime, nIntervalTime, nContext);
 	}
 
 	void CBaseApp::unregisterTicker(CTicker* pTicker)

@@ -142,7 +142,7 @@ namespace core
 		return true;
 	}
 
-	void CCoreApp::registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
+	void CCoreApp::registerTicker(uint64_t nFrom, uint32_t nType, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
 	{
 		this->m_pTickerMgr->registerTicker(pTicker, nStartTime, nIntervalTime, nContext);
 	}

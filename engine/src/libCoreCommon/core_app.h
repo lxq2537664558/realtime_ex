@@ -3,7 +3,6 @@
 #include "libBaseCommon/singleton.h"
 
 #include "base_app.h"
-#include "ticker_mgr.h"
 #include "core_connection_mgr.h"
 
 namespace core
@@ -27,7 +26,7 @@ namespace core
 		nStartTime 第一次触发定时器的时间
 		nIntervalTime 第一次触发定时器后接下来定时器触发的间隔时间，如果该值是0就表示这个定时器只触发一次
 		*/
-		void				registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
+		void				registerTicker(uint64_t nFrom, uint32_t nType, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
 		/**
 		@brief: 反注册定时器
 		*/

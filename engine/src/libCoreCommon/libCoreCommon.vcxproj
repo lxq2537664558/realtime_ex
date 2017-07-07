@@ -23,7 +23,10 @@
     <ClInclude Include="core_connection_mgr.h" />
     <ClInclude Include="core_connection_monitor.h" />
     <ClInclude Include="fix_memory_pool.h" />
+    <ClInclude Include="message_command.h" />
     <ClInclude Include="monitor.h" />
+    <ClInclude Include="net_message_queue.h" />
+    <ClInclude Include="net_runnable.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="ticker_mgr.h" />
     <ClInclude Include="ticker_runnable.h" />
@@ -40,6 +43,8 @@
     <ClCompile Include="fix_memory_pool.cpp" />
     <ClCompile Include="memory_new.cpp" />
     <ClCompile Include="monitor.cpp" />
+    <ClCompile Include="net_message_queue.cpp" />
+    <ClCompile Include="net_runnable.cpp" />
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="ticker.cpp" />
     <ClCompile Include="ticker_mgr.cpp" />

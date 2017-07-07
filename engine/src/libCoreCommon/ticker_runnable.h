@@ -14,14 +14,6 @@ namespace core
 	class CTickerRunnable;
 	class CCoreTickerInfo
 	{
-	public:
-		enum
-		{
-			eRegister,
-			eUnRegister,
-			eDown,
-		};
-
 		friend class CTickerRunnable;
 
 	public:

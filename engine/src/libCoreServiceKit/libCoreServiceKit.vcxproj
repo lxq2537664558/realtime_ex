@@ -201,9 +201,6 @@
     <ClCompile Include="core_other_node_proxy.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\libBaseLua\libBaseLua.vcxproj">
-      <Project>{308a2842-363c-4d31-b5bf-3d80cbdcf0d2}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\libCoreCommon\libCoreCommon.vcxproj">
       <Project>{ac3ef028-d610-4f35-904f-c981ca278960}</Project>
     </ProjectReference>
