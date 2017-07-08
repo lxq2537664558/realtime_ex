@@ -22,6 +22,8 @@ namespace core
 
 	CTicker::CTicker(CTicker&& rhs)
 	{
+		this->m_nType = rhs.m_nType;
+		this->m_nFrom = rhs.m_nFrom;
 		this->m_nIntervalTime = rhs.m_nIntervalTime;
 		this->m_nContext = rhs.m_nContext;
 		this->m_callback = rhs.m_callback;
@@ -37,6 +39,8 @@ namespace core
 		if (this == &rhs)
 			return *this;
 
+		this->m_nType = rhs.m_nType;
+		this->m_nFrom = rhs.m_nFrom;
 		this->m_nIntervalTime = rhs.m_nIntervalTime;
 		this->m_nContext = rhs.m_nContext;
 		this->m_callback = rhs.m_callback;
@@ -64,9 +68,13 @@ namespace core
 		this->m_callback = callback;
 	}
 
+	std::function<void(uint64_t)>& CTicker::getCallback()
+	{
+		return this->m_callback;
+	}
+
 	uint64_t CTicker::getContext() const
 	{
 		return this->m_nContext;
 	}
-
 }

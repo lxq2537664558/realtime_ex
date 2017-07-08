@@ -111,11 +111,6 @@ namespace core
 		std::vector<uint64_t>*	vecExcludeID;
 	};
 
-	struct SMCT_TICKER
-	{
-		void*	pCoreTickerInfo;
-	};
-
 	struct SMCT_ENABLE_HEARTBEAT
 	{
 		uint64_t	nSocketID;

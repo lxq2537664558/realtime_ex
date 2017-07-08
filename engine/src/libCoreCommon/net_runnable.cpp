@@ -5,6 +5,7 @@
 #include "core_connection_mgr.h"
 #include "core_app.h"
 #include "message_command.h"
+#include "ticker_runnable.h"
 
 #include "libBaseCommon/debug_helper.h"
 #include "libBaseCommon/base_time.h"
@@ -262,6 +263,28 @@ namespace core
 						pCoreConnection->enableHeartbeat(!!pContext->nEnable);
 					char* szBuf = reinterpret_cast<char*>(sMessagePacket.pData);
 					SAFE_DELETE_ARRAY(szBuf);
+				}
+				break;
+
+			case eMCT_TICKER:
+				{
+					PROFILING_GUARD(eMCT_TICKER)
+					CCoreTickerNode* pCoreTickerNode = reinterpret_cast<CCoreTickerNode*>(sMessagePacket.pData);
+					if (pCoreTickerNode == nullptr)
+					{
+						PrintWarning("pCoreTickerNode == nullptr type: eMCT_TICKER");
+						continue;
+					}
+
+					if (pCoreTickerNode->Value.m_pTicker == nullptr)
+					{
+						pCoreTickerNode->Value.release();
+						continue;
+					}
+
+					CTicker* pTicker = pCoreTickerNode->Value.m_pTicker;
+					pTicker->getCallback()(pTicker->getContext());
+					pCoreTickerNode->Value.release();
 				}
 				break;
 

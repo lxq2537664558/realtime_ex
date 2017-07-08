@@ -5,6 +5,7 @@
 #include "core_app.h"
 #include "base_connection_mgr.h"
 #include "base_connection.h"
+#include "ticker_runnable.h"
 
 #include "libBaseCommon/debug_helper.h"
 #include "libBaseCommon/base_time.h"
@@ -153,6 +154,28 @@ namespace core
 					pBaseConnection->onDispatch(pContext->nMessageType, pContext->pData, pContext->nDataSize);
 				
 					SAFE_DELETE(pContext);
+				}
+				break;
+
+			case eMCT_TICKER:
+				{
+					PROFILING_GUARD(eMCT_TICKER)
+					CCoreTickerNode* pCoreTickerNode = reinterpret_cast<CCoreTickerNode*>(sMessagePacket.pData);
+					if (pCoreTickerNode == nullptr)
+					{
+						PrintWarning("pCoreTickerNode == nullptr type: eMCT_TICKER");
+						continue;
+					}
+
+					if (pCoreTickerNode->Value.m_pTicker == nullptr)
+					{
+						pCoreTickerNode->Value.release();
+						continue;
+					}
+
+					CTicker* pTicker = pCoreTickerNode->Value.m_pTicker;
+					pTicker->getCallback()(pTicker->getContext());
+					pCoreTickerNode->Value.release();
 				}
 				break;
 

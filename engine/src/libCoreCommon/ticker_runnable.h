@@ -12,10 +12,14 @@
 namespace core
 {
 	class CTickerRunnable;
+	class CNetRunnable;
+	class CLogicRunnable;
 	class CTicker;
 	class CCoreTickerInfo
 	{
 		friend class CTickerRunnable;
+		friend class CNetRunnable;
+		friend class CLogicRunnable;
 		friend class CTicker;
 
 	public:
@@ -34,6 +38,7 @@ namespace core
 		void*					m_pMemory;
 		int64_t					m_nNextTime;		// 下一次定时器运行时间
 		int64_t					m_nIntervalTime;	// 定时器运行的间隔时间
+		uint32_t				m_nType;
 		std::atomic<int32_t>	m_nRef;
 	};
 

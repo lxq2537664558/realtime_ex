@@ -13,6 +13,7 @@
 #include <thread>
 #include "message_command.h"
 #include "net_runnable.h"
+#include "logic_runnable.h"
 
 // 放这里为了调试或者看dump的时候方便
 core::CTickerRunnable*	g_pTickerRunnable;
@@ -90,7 +91,8 @@ namespace core
 		pCoreTickerNode->Value.m_nNextTime = this->m_nLogicTime + nStartTime;
 		pCoreTickerNode->Value.m_nIntervalTime = nIntervalTime;
 		pCoreTickerNode->Value.m_pMemory = pCoreTickerNode;
-		
+		pCoreTickerNode->Value.m_nType = nType;
+
 		pTicker->m_nIntervalTime = nIntervalTime;
 		pTicker->m_nContext = nContext;
 		pTicker->m_pCoreContext = pCoreTickerNode;
@@ -246,16 +248,19 @@ namespace core
 	void CTickerRunnable::onTicker(CCoreTickerNode* pCoreTickerNode)
 	{
 		DebugAst(pCoreTickerNode != nullptr);
-		DebugAst(pCoreTickerNode->Value.m_pTicker != nullptr);
-
+		
 		pCoreTickerNode->Value.addRef();
 
 		SMessagePacket sMessagePacket;
 		sMessagePacket.nType = eMCT_TICKER;
 		sMessagePacket.pData = pCoreTickerNode;
 		sMessagePacket.nDataSize = 0;
-		CNetRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
+
 		// 发送到消息队列，另外消息队列取出定时器对象的时候如果发现是一次性定时器，需要反注册
+		if (pCoreTickerNode->Value.m_nType == CTicker::eTT_Logic)
+			CLogicRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
+		else
+			CNetRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
 	}
 
 	CCoreTickerInfo::CCoreTickerInfo()
@@ -263,6 +268,8 @@ namespace core
 		this->m_pTicker = nullptr;
 		this->m_pMemory = nullptr;
 		this->m_nNextTime = 0;
+		this->m_nIntervalTime = 0;
+		this->m_nType = CTicker::eTT_None;
 		this->m_nRef = 1;
 	}
 
