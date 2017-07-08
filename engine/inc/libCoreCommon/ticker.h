@@ -41,7 +41,7 @@ namespace core
 	private:
 		uint64_t						m_nFrom;
 		uint32_t						m_nType;
-		void*							m_pCoreContext;
+		void*							m_pCoreContext;		// 这块数据只会有逻辑线程去读
 		int64_t							m_nIntervalTime;	// 定时器运行的间隔时间
 		uint64_t						m_nContext;
 		std::function<void(uint64_t)>	m_callback;

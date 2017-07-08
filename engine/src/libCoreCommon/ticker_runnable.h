@@ -12,9 +12,11 @@
 namespace core
 {
 	class CTickerRunnable;
+	class CTicker;
 	class CCoreTickerInfo
 	{
 		friend class CTickerRunnable;
+		friend class CTicker;
 
 	public:
 		CCoreTickerInfo();
@@ -30,7 +32,8 @@ namespace core
 	private:
 		CTicker*				m_pTicker;
 		void*					m_pMemory;
-		int64_t					m_nNextTime;	// 下一次定时器运行时间
+		int64_t					m_nNextTime;		// 下一次定时器运行时间
+		int64_t					m_nIntervalTime;	// 定时器运行的间隔时间
 		std::atomic<int32_t>	m_nRef;
 	};
 

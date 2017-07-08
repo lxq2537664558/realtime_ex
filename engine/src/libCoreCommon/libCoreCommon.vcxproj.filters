@@ -69,7 +69,7 @@
     <ClInclude Include="logic_message_queue.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="service_base.h">
+    <ClInclude Include="..\..\inc\libCoreCommon\service_base.h">
       <Filter>inc</Filter>
     </ClInclude>
   </ItemGroup>

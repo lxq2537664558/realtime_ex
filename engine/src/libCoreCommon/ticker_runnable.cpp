@@ -88,6 +88,7 @@ namespace core
 		CCoreTickerNode* pCoreTickerNode = new CCoreTickerNode();
 		pCoreTickerNode->Value.m_pTicker = pTicker;
 		pCoreTickerNode->Value.m_nNextTime = this->m_nLogicTime + nStartTime;
+		pCoreTickerNode->Value.m_nIntervalTime = nIntervalTime;
 		pCoreTickerNode->Value.m_pMemory = pCoreTickerNode;
 		
 		pTicker->m_nIntervalTime = nIntervalTime;
@@ -174,10 +175,10 @@ namespace core
 				
 				this->onTicker(pCoreTickerNode);
 
-				if (pCoreTickerNode->Value.m_pTicker->m_nIntervalTime == 0)
+				if (pCoreTickerNode->Value.m_nIntervalTime == 0)
 					continue;
 				
-				pCoreTickerNode->Value.m_nNextTime += pCoreTickerNode->Value.m_pTicker->m_nIntervalTime;
+				pCoreTickerNode->Value.m_nNextTime += pCoreTickerNode->Value.m_nIntervalTime;
 				this->m_vecTempTickerNode.push_back(pCoreTickerNode);
 			}
 			size_t nCount = this->m_vecTempTickerNode.size();

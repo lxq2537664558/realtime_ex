@@ -17,6 +17,7 @@
     <ClInclude Include="..\..\inc\libCoreCommon\base_app.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\base_object.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\core_common.h" />
+    <ClInclude Include="..\..\inc\libCoreCommon\service_base.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\ticker.h" />
     <ClInclude Include="core_app.h" />
     <ClInclude Include="core_connection.h" />
@@ -29,7 +30,6 @@
     <ClInclude Include="monitor.h" />
     <ClInclude Include="net_message_queue.h" />
     <ClInclude Include="net_runnable.h" />
-    <ClInclude Include="service_base.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="ticker_runnable.h" />
   </ItemGroup>
