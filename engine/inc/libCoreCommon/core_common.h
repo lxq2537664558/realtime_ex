@@ -84,7 +84,6 @@ namespace core
 	{
 		uint8_t		nType;
 		uint32_t	nDataSize;
-		uint64_t	nID;
 		void*		pData;
 	};
 }

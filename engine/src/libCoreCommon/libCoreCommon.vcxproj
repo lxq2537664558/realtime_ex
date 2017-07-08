@@ -29,8 +29,8 @@
     <ClInclude Include="monitor.h" />
     <ClInclude Include="net_message_queue.h" />
     <ClInclude Include="net_runnable.h" />
+    <ClInclude Include="service_base.h" />
     <ClInclude Include="stdafx.h" />
-    <ClInclude Include="ticker_mgr.h" />
     <ClInclude Include="ticker_runnable.h" />
   </ItemGroup>
   <ItemGroup>
@@ -50,7 +50,6 @@
     <ClCompile Include="net_runnable.cpp" />
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="ticker.cpp" />
-    <ClCompile Include="ticker_mgr.cpp" />
     <ClCompile Include="ticker_runnable.cpp" />
   </ItemGroup>
   <ItemGroup>

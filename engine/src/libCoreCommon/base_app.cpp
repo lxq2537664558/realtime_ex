@@ -48,24 +48,14 @@ namespace core
 		return CCoreApp::Inst()->run(argc, argv, szConfig);
 	}
 
-	void CBaseApp::registerTicker(uint64_t nFrom, uint32_t nType, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
+	void CBaseApp::registerTicker(uint32_t nType, uint64_t nFrom, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
 	{
-		CCoreApp::Inst()->registerTicker(nFrom, nType, pTicker, nStartTime, nIntervalTime, nContext);
+		CCoreApp::Inst()->registerTicker(nType, nFrom, pTicker, nStartTime, nIntervalTime, nContext);
 	}
 
 	void CBaseApp::unregisterTicker(CTicker* pTicker)
 	{
 		CCoreApp::Inst()->unregisterTicker(pTicker);
-	}
-
-	int64_t CBaseApp::getLogicTime() const
-	{
-		return CCoreApp::Inst()->getLogicTime();
-	}
-
-	CBaseConnectionMgr* CBaseApp::getBaseConnectionMgr() const
-	{
-		return CCoreApp::Inst()->getBaseConnectionMgr();
 	}
 
 	const std::string& CBaseApp::getConfigFileName() const

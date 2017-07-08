@@ -11,7 +11,7 @@ namespace core
 		: m_pCoreContext(nullptr)
 		, m_nIntervalTime(0)
 		, m_nFrom(0)
-		, m_nType(0)
+		, m_nType(eTT_None)
 	{
 	}
 

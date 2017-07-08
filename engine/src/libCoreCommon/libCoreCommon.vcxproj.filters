@@ -42,9 +42,6 @@
     <ClInclude Include="stdafx.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="ticker_mgr.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="core_connection_monitor.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -71,6 +68,9 @@
     </ClInclude>
     <ClInclude Include="logic_message_queue.h">
       <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="service_base.h">
+      <Filter>inc</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -102,9 +102,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="ticker.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="ticker_mgr.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="core_connection_monitor.cpp">

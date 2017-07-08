@@ -37,7 +37,7 @@ namespace core
 		CCoreConnection*	getCoreConnectionByID(uint64_t nID) const;
 		uint32_t			getCoreConnectionCount(uint32_t nType) const;
 
-		CBaseConnectionMgr*	getBaseConnectionMgr() const;
+		void				wakeup();
 
 	private:
 		struct SNetAccepterHandler :
@@ -77,13 +77,12 @@ namespace core
 		std::map<uint32_t, std::list<CCoreConnection*>>	m_mapCoreConnectionByTypeID;
 		std::map<uint64_t, CCoreConnection*>			m_mapCoreConnectionByID;
 		uint64_t										m_nNextCoreConnectionID;
-		CBaseConnectionMgr*								m_pBaseConnectionMgr;
 		
 	private:
 		base::INetConnecterHandler*	onAccept( SNetAccepterHandler* pNetAccepterHandler, base::INetConnecter* pNetConnecter );
 		void						onConnect( SNetActiveWaitConnecterHandler* pNetActiveWaitConnecterHandler );
 		void						delActiveWaitConnecterHandler( SNetActiveWaitConnecterHandler* pWaitActiveConnecterHandler );
 
-		CCoreConnection*			createCoreConnection(uint32_t nType, const std::string& szContext);
+		CCoreConnection*			createCoreConnection(uint32_t nType, const std::string& szContext, const MessageParser& messageParser);
 	};
 }

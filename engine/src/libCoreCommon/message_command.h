@@ -20,7 +20,7 @@ namespace core
 		eMCT_RECV_SOCKET_DATA,
 		eMCT_BROADCAST_SOCKET_DATA1,
 		eMCT_BROADCAST_SOCKET_DATA2,
-		eMCT_TIMER,
+		eMCT_TICKER,
 		eMCT_ENABLE_HEARTBEAT,
 		eMCT_SEND_HEARTBEAT,
 	};
@@ -109,6 +109,11 @@ namespace core
 		uint32_t				nType;
 		uint8_t					nMessageType;
 		std::vector<uint64_t>*	vecExcludeID;
+	};
+
+	struct SMCT_TICKER
+	{
+		void*	pCoreTickerInfo;
 	};
 
 	struct SMCT_ENABLE_HEARTBEAT

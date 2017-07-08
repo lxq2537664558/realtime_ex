@@ -7,7 +7,6 @@ namespace base
 	{
 		this->pNext = nullptr;
 		this->pPre = nullptr;
-		this->Value = T();
 	}
 
 	template<class T>

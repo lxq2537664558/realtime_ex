@@ -11,6 +11,8 @@
 
 #include <algorithm>
 #include <thread>
+#include "message_command.h"
+#include "net_runnable.h"
 
 // 放这里为了调试或者看dump的时候方便
 core::CTickerRunnable*	g_pTickerRunnable;
@@ -77,10 +79,11 @@ namespace core
 		return true;
 	}
 
-	bool CTickerRunnable::registerTicker(uint64_t nFrom, uint32_t nType, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
+	bool CTickerRunnable::registerTicker(uint32_t nType, uint64_t nFrom, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
 	{
 		DebugAstEx(pTicker != nullptr, false);
 		DebugAstEx(!pTicker->isRegister(), false);
+		DebugAstEx(nType == CTicker::eTT_Logic || nType == CTicker::eTT_Net, false);
 
 		CCoreTickerNode* pCoreTickerNode = new CCoreTickerNode();
 		pCoreTickerNode->Value.m_pTicker = pTicker;
@@ -90,9 +93,13 @@ namespace core
 		pTicker->m_nIntervalTime = nIntervalTime;
 		pTicker->m_nContext = nContext;
 		pTicker->m_pCoreContext = pCoreTickerNode;
+		pTicker->m_nType = nType;
+		pTicker->m_nFrom = nFrom;
 
 		std::unique_lock<base::spin_lock> lock(this->m_lock);
 		this->insertTicker(pCoreTickerNode);
+
+		return true;
 	}
 
 	void CTickerRunnable::unregisterTicker(CTicker* pTicker)
@@ -238,8 +245,15 @@ namespace core
 	void CTickerRunnable::onTicker(CCoreTickerNode* pCoreTickerNode)
 	{
 		DebugAst(pCoreTickerNode != nullptr);
+		DebugAst(pCoreTickerNode->Value.m_pTicker != nullptr);
 
 		pCoreTickerNode->Value.addRef();
+
+		SMessagePacket sMessagePacket;
+		sMessagePacket.nType = eMCT_TICKER;
+		sMessagePacket.pData = pCoreTickerNode;
+		sMessagePacket.nDataSize = 0;
+		CNetRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
 		// 发送到消息队列，另外消息队列取出定时器对象的时候如果发现是一次性定时器，需要反注册
 	}
 

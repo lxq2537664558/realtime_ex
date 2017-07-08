@@ -19,6 +19,14 @@ namespace core
 		friend class CTickerRunnable;
 		
 	public:
+		enum ETickerType
+		{
+			eTT_None	= 0,
+			eTT_Net		= 1,
+			eTT_Logic	= 2,
+		};
+
+	public:
 		CTicker();
 		~CTicker();
 

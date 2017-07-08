@@ -23,7 +23,6 @@
 #include "core_app.h"
 #include "base_app.h"
 #include "base_object.h"
-#include "ticker_mgr.h"
 #include "monitor.h"
 #include "base_connection_mgr.h"
 #include "base_connection.h"
@@ -143,9 +142,9 @@ namespace core
 		return true;
 	}
 
-	void CCoreApp::registerTicker(uint64_t nFrom, uint32_t nType, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
+	void CCoreApp::registerTicker(uint32_t nType, uint64_t nFrom, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
 	{
-		CTickerRunnable::Inst()->registerTicker(nFrom, nType, pTicker, nStartTime, nIntervalTime, nContext);
+		CTickerRunnable::Inst()->registerTicker(nType, nFrom, pTicker, nStartTime, nIntervalTime, nContext);
 	}
 
 	void CCoreApp::unregisterTicker(CTicker* pTicker)
@@ -361,7 +360,7 @@ namespace core
 		}
 
 		this->m_tickerQPS.setCallback(std::bind(&CCoreApp::onQPS, this, std::placeholders::_1));
-		this->registerTicker(&this->m_tickerQPS, 1000, 1000, 0);
+		this->registerTicker(CTicker::eTT_Logic, 0, &this->m_tickerQPS, 1000, 1000, 0);
 
 		SAFE_DELETE(pConfigXML);
 

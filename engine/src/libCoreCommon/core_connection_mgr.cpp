@@ -5,7 +5,8 @@
 #include "base_connection.h"
 #include "base_connection_factory.h"
 #include "base_app.h"
-#include "core_app.h"
+#include "message_command.h"
+#include "logic_runnable.h"
 
 #include "libBaseCommon/base_time.h"
 #include "libBaseCommon/logger.h"
@@ -32,14 +33,21 @@ namespace core
 
 	void CCoreConnectionMgr::SNetActiveWaitConnecterHandler::onConnectFail()
 	{
-		CBaseApp::Inst()->getBaseConnectionMgr()->onConnectFail(szContext);
+		SMCT_NOTIFY_SOCKET_CONNECT_FAIL* pContext = new SMCT_NOTIFY_SOCKET_CONNECT_FAIL();
+		pContext->szContext = this->szContext;
+
+		SMessagePacket sMessagePacket;
+		sMessagePacket.nType = eMCT_NOTIFY_SOCKET_CONNECT_FAIL;
+		sMessagePacket.pData = pContext;
+		sMessagePacket.nDataSize = sizeof(SMCT_NOTIFY_SOCKET_CONNECT_FAIL);
+
+		CLogicRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
 
 		pCoreConnectionMgr->delActiveWaitConnecterHandler(this);
 	}
 
 	CCoreConnectionMgr::CCoreConnectionMgr()
 		: m_pNetEventLoop(nullptr)
-		, m_pBaseConnectionMgr(nullptr)
 		, m_nNextCoreConnectionID(1)
 	{
 	}
@@ -50,7 +58,6 @@ namespace core
 		{
 			SAFE_DELETE(this->m_vecNetAccepterHandler[i]);
 		}
-		SAFE_DELETE(this->m_pBaseConnectionMgr);
 		SAFE_RELEASE(this->m_pNetEventLoop);
 	}
 
@@ -58,9 +65,6 @@ namespace core
 	{
 		if (!base::startupNetwork())
 			return false;
-
-		this->m_pBaseConnectionMgr = new CBaseConnectionMgr();
-		this->m_pBaseConnectionMgr->m_pCoreConnectionMgr = this;
 
 		this->m_pNetEventLoop = base::createNetEventLoop();
 		return this->m_pNetEventLoop->init(nMaxConnectionCount);
@@ -70,7 +74,7 @@ namespace core
 	{
 		DebugAstEx(pNetConnecter != nullptr && pNetAccepterHandler != nullptr, nullptr);
 
-		CCoreConnection* pCoreConnection = this->createCoreConnection(pNetAccepterHandler->nType, pNetAccepterHandler->szContext);
+		CCoreConnection* pCoreConnection = this->createCoreConnection(pNetAccepterHandler->nType, pNetAccepterHandler->szContext, pNetAccepterHandler->messageParser);
 		DebugAstEx(nullptr != pCoreConnection, nullptr);
 
 		return pCoreConnection;
@@ -80,7 +84,7 @@ namespace core
 	{
 		DebugAst(pNetActiveWaitConnecterHandler != nullptr && pNetActiveWaitConnecterHandler->getNetConnecter() != nullptr);
 
-		CCoreConnection* pCoreConnection = this->createCoreConnection(pNetActiveWaitConnecterHandler->nType, pNetActiveWaitConnecterHandler->szContext);
+		CCoreConnection* pCoreConnection = this->createCoreConnection(pNetActiveWaitConnecterHandler->nType, pNetActiveWaitConnecterHandler->szContext, pNetActiveWaitConnecterHandler->messageParser);
 		if (nullptr == pCoreConnection)
 			return;
 
@@ -144,11 +148,6 @@ namespace core
 	void CCoreConnectionMgr::update(int64_t nTime)
 	{
 		this->m_pNetEventLoop->update(nTime);
-	}
-
-	CBaseConnectionMgr* CCoreConnectionMgr::getBaseConnectionMgr() const
-	{
-		return this->m_pBaseConnectionMgr;
 	}
 
 	uint32_t CCoreConnectionMgr::getCoreConnectionCount(uint32_t nType) const
@@ -226,23 +225,10 @@ namespace core
 		}
 	}
 
-	CCoreConnection* CCoreConnectionMgr::createCoreConnection(uint32_t nType, const std::string& szContext)
+	CCoreConnection* CCoreConnectionMgr::createCoreConnection(uint32_t nType, const std::string& szContext, const MessageParser& messageParser)
 	{
-		CBaseConnectionFactory* pBaseConnectionFactory = this->m_pBaseConnectionMgr->getBaseConnectionFactory(nType);
-		if (nullptr == pBaseConnectionFactory)
-		{
-			PrintWarning("can't find base connection factory type: %d context: %s", nType, szContext.c_str());
-			return nullptr;
-		}
-		CBaseConnection* pBaseConnection = pBaseConnectionFactory->createBaseConnection(nType, szContext);
-		if (nullptr == pBaseConnection)
-		{
-			PrintWarning("create base connection error type: %d context: %s", nType, szContext.c_str());
-			return nullptr;
-		}
-
 		CCoreConnection* pCoreConnection = new CCoreConnection();
-		if (!pCoreConnection->init(pBaseConnection, this->m_nNextCoreConnectionID++, nType))
+		if (!pCoreConnection->init(nType, this->m_nNextCoreConnectionID++, szContext, messageParser))
 		{
 			SAFE_DELETE(pCoreConnection);
 			PrintWarning("init core connection error type: %d context: %s", nType, szContext.c_str());
@@ -275,5 +261,10 @@ namespace core
 		this->m_mapCoreConnectionByID.erase(pCoreConnection->getID());
 
 		SAFE_DELETE(pCoreConnection);
+	}
+
+	void CCoreConnectionMgr::wakeup()
+	{
+		this->m_pNetEventLoop->wakeup();
 	}
 }

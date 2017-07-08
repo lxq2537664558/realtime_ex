@@ -7,7 +7,7 @@
 #include "ticker.h"
 
 #include <memory>
-
+#include <vector>
 
 namespace core
 {
@@ -19,6 +19,9 @@ namespace core
 	public:
 		CCoreTickerInfo();
 		~CCoreTickerInfo();
+
+		CCoreTickerInfo(const CCoreTickerInfo& rhs) = delete;
+		const CCoreTickerInfo& operator = (const CCoreTickerInfo& rhs) = delete;
 
 		void	addRef();
 		void	release();
@@ -56,7 +59,7 @@ namespace core
 
 		bool			init();
 
-		bool			registerTicker(uint64_t nFrom, uint32_t nType, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
+		bool			registerTicker(uint32_t nType, uint64_t nFrom, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
 		void			unregisterTicker(CTicker* pTicker);
 		
 		void			join();

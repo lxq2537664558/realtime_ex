@@ -19,7 +19,6 @@ namespace core
 	};
 
 	class CBaseConnectionMgr;
-	class CCoreConnectionMgr;
 	class CCoreApp;
 	/**
 	@brief: 基础框架类
@@ -27,8 +26,7 @@ namespace core
 	class CBaseApp
 	{
 		friend class CCoreApp;
-		friend class CCoreConnectionMgr;
-
+		
 	public:
 		CBaseApp();
 		virtual ~CBaseApp();
@@ -44,15 +42,11 @@ namespace core
 		nStartTime 第一次触发定时器的时间
 		nIntervalTime 第一次触发定时器后接下来定时器触发的间隔时间，如果该值是0就表示这个定时器只触发一次
 		*/
-		void						registerTicker(uint64_t	nFrom, uint32_t nType, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
+		void						registerTicker(uint32_t nType, uint64_t nFrom, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
 		/**
 		@brief: 反注册定时器
 		*/
 		void						unregisterTicker(CTicker* pTicker);
-		/**
-		@brief: 获取当前逻辑时间
-		*/
-		int64_t						getLogicTime() const;
 		/*
 		@brief: 获取连接管理器
 		*/
