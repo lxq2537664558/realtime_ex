@@ -13,6 +13,39 @@
 
 namespace base
 {
+
+	void IRunnable::quit()
+	{
+		if (this->m_pThreadBase == nullptr)
+			return;
+
+		this->m_pThreadBase->quit();
+	}
+
+	uint32_t IRunnable::isQuit() const
+	{
+		if (this->m_pThreadBase == nullptr)
+			return 1;
+
+		return this->m_pThreadBase->isQuit();
+	}
+
+	void IRunnable::join()
+	{
+		if (this->m_pThreadBase == nullptr)
+			return;
+
+		this->m_pThreadBase->join();
+	}
+
+	uint32_t IRunnable::getID() const
+	{
+		if (this->m_pThreadBase == nullptr)
+			return 0;
+
+		return this->m_pThreadBase->getID();
+	}
+
 #ifdef _WIN32
 	uint32_t CThreadBase::threadProc(void* pContext)
 #else
@@ -72,6 +105,7 @@ namespace base
 		this->m_bQuit = false;
 		this->m_pRunnable = pRunnable;
 		this->m_nThreadID = __INVALID_ID;
+		this->m_pRunnable->m_pThreadBase = this;
 
 #ifdef _WIN32
 		this->m_hThread = nullptr;

@@ -3,6 +3,7 @@
 #include "core_common.h"
 #include "ticker.h"
 #include "service_invoker.h"
+#include "base_object.h"
 
 #include "libBaseCommon/buf_file.h"
 
@@ -20,12 +21,15 @@ namespace core
 	};
 
 	class CLogicRunnable;
+	class CCoreApp;
 	/**
 	@brief: 服务基础类
 	*/
-	class CServiceBase
+	class CServiceBase :
+		public CBaseObject
 	{
 		friend class CLogicRunnable;
+		friend class CCoreApp;
 
 	public:
 		CServiceBase();
@@ -44,11 +48,11 @@ namespace core
 		/**
 		@brief: 注册普通节点消息
 		*/
-		void				registerMessageHandler(const std::string& szMessageName, const std::function<bool(SServiceSessionInfo, google::protobuf::Message*)>& callback);
+		void				registerMessageHandler(const std::string& szMessageName, const std::function<void(SServiceSessionInfo, google::protobuf::Message*)>& callback);
 		/**
 		@brief: 注册经网关节点转发客户端的消息
 		*/
-		void				registerForwardHandler(const std::string& szMessageName, const std::function<bool(SClientSessionInfo, google::protobuf::Message*)>& callback);
+		void				registerForwardHandler(const std::string& szMessageName, const std::function<void(SClientSessionInfo, google::protobuf::Message*)>& callback);
 		/**
 		@brief: 获取服务调用器
 		*/
@@ -75,9 +79,9 @@ namespace core
 		void				doQuit();
 
 	protected:
-		virtual bool		onInit() { return true; }
+		virtual bool		onInit() = 0;
 		virtual void		onFrame() { }
-		virtual void		onQuit() { }
+		virtual void		onQuit() = 0;
 
 	private:
 		EServiceRunState	m_eState;

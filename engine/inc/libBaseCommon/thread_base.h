@@ -13,12 +13,22 @@ namespace base
 	class CThreadBase;
 	class __BASE_COMMON_API__ IRunnable
 	{
+		friend class CThreadBase;
+
 	public:
 		virtual ~IRunnable() { }
+
+		void			quit();
+		uint32_t		isQuit() const;
+		void			join();
+		uint32_t		getID() const;
 
 		virtual bool	onInit() { return true; }
 		virtual bool	onProcess() = 0;
 		virtual void	onDestroy() { }
+
+	private:
+		CThreadBase*	m_pThreadBase;
 	};
 
 	class __BASE_COMMON_API__ CThreadBase :

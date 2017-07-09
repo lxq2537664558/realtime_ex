@@ -17,12 +17,12 @@ namespace core
 
 	}
 
-	void CServiceBase::registerMessageHandler(const std::string& szMessageName, const std::function<bool(SServiceSessionInfo, google::protobuf::Message*)>& callback)
+	void CServiceBase::registerMessageHandler(const std::string& szMessageName, const std::function<void(SServiceSessionInfo, google::protobuf::Message*)>& callback)
 	{
 		CCoreApp::Inst()->getCoreMessageRegistry()->registerCallback(this->m_nServiceID, szMessageName, callback);
 	}
 
-	void CServiceBase::registerForwardHandler(const std::string& szMessageName, const std::function<bool(SClientSessionInfo, google::protobuf::Message*)>& callback)
+	void CServiceBase::registerForwardHandler(const std::string& szMessageName, const std::function<void(SClientSessionInfo, google::protobuf::Message*)>& callback)
 	{
 		CCoreApp::Inst()->getCoreMessageRegistry()->registerGateForwardCallback(this->m_nServiceID, szMessageName, callback);
 	}
@@ -35,6 +35,13 @@ namespace core
 	void CServiceBase::unregisterTicker(CTicker* pTicker)
 	{
 		CCoreApp::Inst()->unregisterTicker(pTicker);
+	}
+
+	void CServiceBase::doQuit()
+	{
+		DebugAst(this->m_eState == eSRS_Quitting);
+
+		this->m_eState = eSRS_Quit;
 	}
 
 }

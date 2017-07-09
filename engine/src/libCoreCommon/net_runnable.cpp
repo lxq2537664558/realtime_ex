@@ -61,11 +61,6 @@ namespace core
 		return nullptr != this->m_pThreadBase;
 	}
 
-	void CNetRunnable::join()
-	{
-		this->m_pThreadBase->join();
-	}
-
 	void CNetRunnable::release()
 	{
 		delete g_pNetRunnable;

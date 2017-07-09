@@ -326,22 +326,35 @@ namespace core
 		}
 
 		uint32_t nMaxConnectionCount = (uint32_t)pBaseInfoXML->IntAttribute("connections");
-		if (!CNetRunnable::Inst()->init(nMaxConnectionCount))
+
+		tinyxml2::XMLElement* pNodeInfoXML = pRootXML->FirstChildElement("node_info");
+		if (pNodeInfoXML == nullptr)
 		{
-			PrintWarning("CNetRunnable::Inst()->init(nMaxConnectionCount)");
+			PrintWarning("pNodeInfoXML == nullptr");
 			return false;
 		}
 
-		if (!CLogicRunnable::Inst()->init())
+		uint32_t nID = pNodeInfoXML->UnsignedAttribute("node_id");
+		if (nID > UINT16_MAX)
 		{
-			PrintWarning("CLogicRunnable::Inst()->init()");
+			PrintWarning("too big node id: %d", nID);
 			return false;
 		}
+		// 加载节点基本信息
+		this->m_sNodeBaseInfo.nID = (uint16_t)nID;
+		this->m_sNodeBaseInfo.szName = pNodeInfoXML->Attribute("node_name");
+		this->m_sNodeBaseInfo.szHost = pNodeInfoXML->Attribute("host");
+		this->m_sNodeBaseInfo.nPort = (uint16_t)pNodeInfoXML->UnsignedAttribute("port");
+		this->m_sNodeBaseInfo.nRecvBufSize = pNodeInfoXML->UnsignedAttribute("recv_buf_size");
+		this->m_sNodeBaseInfo.nSendBufSize = pNodeInfoXML->UnsignedAttribute("send_buf_size");
 
-		if (!CTickerRunnable::Inst()->init())
+		for (tinyxml2::XMLElement* pServiceInfoXML = pNodeInfoXML->FirstChildElement("service_info"); pServiceInfoXML != nullptr; pServiceInfoXML = pServiceInfoXML->NextSiblingElement("service_info"))
 		{
-			PrintWarning("CTickerRunnable::Inst()->init()");
-			return false;
+			SServiceBaseInfo sServiceBaseInfo;
+			sServiceBaseInfo.nID = (uint16_t)pServiceInfoXML->UnsignedAttribute("service_id");
+			sServiceBaseInfo.szName = pServiceInfoXML->Attribute("service_name");
+			sServiceBaseInfo.szType = pServiceInfoXML->Attribute("service_type");
+			this->m_vecServiceBaseInfo.push_back(sServiceBaseInfo);
 		}
 		
 		// 加载服务连接心跳信息
@@ -359,6 +372,44 @@ namespace core
 
 		this->m_tickerQPS.setCallback(std::bind(&CCoreApp::onQPS, this, std::placeholders::_1));
 		this->registerTicker(CTicker::eTT_Logic, 0, &this->m_tickerQPS, 1000, 1000, 0);
+
+		if (!CNetRunnable::Inst()->init(nMaxConnectionCount))
+		{
+			PrintWarning("CNetRunnable::Inst()->init(nMaxConnectionCount)");
+			return false;
+		}
+
+		if (!CLogicRunnable::Inst()->init())
+		{
+			PrintWarning("CLogicRunnable::Inst()->init()");
+			return false;
+		}
+
+		if (!CTickerRunnable::Inst()->init())
+		{
+			PrintWarning("CTickerRunnable::Inst()->init()");
+			return false;
+		}
+
+		for (tinyxml2::XMLElement* pServiceInfoXML = pNodeInfoXML->FirstChildElement("service_info"); pServiceInfoXML != nullptr; pServiceInfoXML = pServiceInfoXML->NextSiblingElement("service_info"))
+		{
+			uint16_t nID = (uint16_t)pServiceInfoXML->UnsignedAttribute("service_id");
+			std::string szName = pServiceInfoXML->Attribute("service_name");
+			std::string szClassName = pServiceInfoXML->Attribute("service_class_name");
+			CServiceBase* pServiceBase = dynamic_cast<CServiceBase*>(CBaseObject::createObject(szClassName));
+			if (nullptr == pServiceBase)
+			{
+				PrintWarning("create service %s", szName.c_str());
+				return false;
+			}
+			PrintInfo("create service %s ok", szName.c_str());
+			if (!pServiceBase->onInit())
+				return false;
+			
+			pServiceBase->m_eState = eSRS_Normal;
+
+			this->m_vecServiceBase.push_back(pServiceBase);
+		}
 
 		SAFE_DELETE(pConfigXML);
 

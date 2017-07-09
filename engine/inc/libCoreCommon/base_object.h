@@ -102,4 +102,5 @@ public:\
 		auto pfCreateBaseObject = std::bind(&create##Class, std::placeholders::_1);\
 		auto pfDestroyBaseObject = std::bind(&destroy##Class, std::placeholders::_1);\
 		core::CBaseObject::registClassInfo(s_szClassName, sizeof(Class), nBatchCount, pfCreateBaseObject, pfDestroyBaseObject);\
-	}
+	}\
+	Class::registClassInfo()

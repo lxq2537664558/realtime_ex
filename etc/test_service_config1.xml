@@ -10,7 +10,7 @@
 	
 	<!--节点信息-->
 	<node_info node_id = "2" node_name = "test1-1" host = "127.0.0.1" port = "6000" send_buf_size = "1024" recv_buf_size = "1024">
-		<service_info service_id = "1" service_name = "gas_1" servie_type = "gas" lib = "aaa"/>
+		<service_info service_id = "1" service_name = "gas_1" servie_type = "gas" service_class_name = "aaa"/>
 	</node_info>
 	
 	<!--本节点需要连接的服务-->

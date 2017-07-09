@@ -12,6 +12,7 @@
 #include "libBaseCommon/profiling.h"
 
 #include <algorithm>
+#include "net_runnable.h"
 
 // 放这里为了调试或者看dump的时候方便
 core::CLogicRunnable*	g_pLogicRunnable;
@@ -52,11 +53,6 @@ namespace core
 
 		this->m_pThreadBase = base::CThreadBase::createNew(this);
 		return nullptr != this->m_pThreadBase;
-	}
-
-	void CLogicRunnable::join()
-	{
-		this->m_pThreadBase->join();
 	}
 
 	void CLogicRunnable::release()
@@ -106,7 +102,7 @@ namespace core
 
 					for (size_t i = 0; i < vecServiceBase.size(); ++i)
 					{
-						if (vecServiceBase[i]->m_eState == eSRS_Quitting)
+						if (vecServiceBase[i]->m_eState != eSRS_Normal)
 							continue;
 
 						vecServiceBase[i]->m_eState = eSRS_Quitting;
@@ -122,6 +118,23 @@ namespace core
 					for (size_t i = 0; i < vecServiceBase.size(); ++i)
 					{
 						  vecServiceBase[i]->onFrame();
+					}
+
+					bool bQuit = true;
+					for (size_t i = 0; i < vecServiceBase.size(); ++i)
+					{
+						if (vecServiceBase[i]->getState() != eSRS_Quit)
+						{
+							bQuit = false;
+							break;
+						}
+					}
+					if (bQuit)
+					{
+						CNetRunnable::Inst()->quit();
+						CTickerRunnable::Inst()->quit();
+
+						return false;
 					}
 				}
 				break;

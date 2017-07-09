@@ -22,12 +22,6 @@
     <Filter Include="inc\framework">
       <UniqueIdentifier>{7b3107e2-caa8-41d9-8cdf-64d811625057}</UniqueIdentifier>
     </Filter>
-    <Filter Include="inc\common">
-      <UniqueIdentifier>{b789cf0e-80e7-4952-9fe1-95e9d03f8e3b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="inc\future">
-      <UniqueIdentifier>{74907e36-76bd-4ed6-b34a-9897e97f09ca}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\inc\libCoreCommon\ticker.h">
@@ -150,26 +144,26 @@
     <ClInclude Include="..\..\inc\libCoreCommon\base_connection_mgr.h">
       <Filter>inc\framework</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreCommon\future.h">
-      <Filter>inc\future</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreCommon\promise.h">
-      <Filter>inc\future</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreCommon\when_all.h">
-      <Filter>inc\future</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreCommon\core_common.h">
-      <Filter>inc\common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreCommon\proto_system.h">
-      <Filter>inc\common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreCommon\protobuf_helper.h">
-      <Filter>inc\common</Filter>
-    </ClInclude>
     <ClInclude Include="actor_scheduler.h">
       <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreCommon\protobuf_helper.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreCommon\core_common.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreCommon\proto_system.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreCommon\future.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreCommon\promise.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreCommon\when_all.h">
+      <Filter>inc</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -290,13 +284,13 @@
       <Filter>inc\service_base</Filter>
     </None>
     <None Include="..\..\inc\libCoreCommon\future.inl">
-      <Filter>inc\future</Filter>
+      <Filter>inc</Filter>
     </None>
     <None Include="..\..\inc\libCoreCommon\promise.inl">
-      <Filter>inc\future</Filter>
+      <Filter>inc</Filter>
     </None>
     <None Include="..\..\inc\libCoreCommon\when_all.inl">
-      <Filter>inc\future</Filter>
+      <Filter>inc</Filter>
     </None>
   </ItemGroup>
 </Project>

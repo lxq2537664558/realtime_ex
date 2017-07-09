@@ -22,7 +22,6 @@ namespace core
 		CCoreConnectionMgr*	getCoreConnectionMgr() const;
 		CNetMessageQueue*	getMessageQueue() const;
 
-		void				join();
 		void				release();
 
 	private:

@@ -47,11 +47,6 @@ namespace core
 		return nullptr != this->m_pThreadBase;
 	}
 
-	void CTickerRunnable::join()
-	{
-		this->m_pThreadBase->join();
-	}
-
 	void CTickerRunnable::release()
 	{
 		delete g_pTickerRunnable;

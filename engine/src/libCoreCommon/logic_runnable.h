@@ -20,7 +20,6 @@ namespace core
 		CLogicMessageQueue*	getMessageQueue() const;
 		CBaseConnectionMgr*	getBaseConnectionMgr() const;
 
-		void				join();
 		void				release();
 
 	private:
