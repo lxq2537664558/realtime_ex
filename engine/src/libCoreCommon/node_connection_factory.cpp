@@ -3,7 +3,7 @@
 #include "service_base.h"
 #include "base_connection_to_master.h"
 #include "base_connection_other_node.h"
-#include "core_service_define.h"
+#include "core_common_define.h"
 
 namespace core
 {

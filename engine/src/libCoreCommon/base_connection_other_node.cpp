@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "base_connection_other_node.h"
 #include "message_dispatcher.h"
-#include "core_service_define.h"
+#include "core_common_define.h"
 #include "proto_system.h"
 #include "core_app.h"
 

@@ -2,7 +2,6 @@
 #include "transporter.h"
 #include "message_dispatcher.h"
 #include "protobuf_helper.h"
-#include "core_service_kit_common.h"
 #include "coroutine.h"
 #include "base_app.h"
 #include "base_connection_mgr.h"

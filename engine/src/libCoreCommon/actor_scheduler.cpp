@@ -4,7 +4,7 @@
 #include "actor_base.h"
 #include "coroutine.h"
 #include "core_app.h"
-#include "core_service_define.h"
+#include "core_common_define.h"
 #include "actor_base_impl.h"
 
 #include "libCoreCommon/base_app.h"

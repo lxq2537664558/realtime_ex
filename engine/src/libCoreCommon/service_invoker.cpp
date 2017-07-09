@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "service_invoker.h"
-#include "core_service_kit_common.h"
-#include "core_service_define.h"
+#include "core_common_define.h"
 #include "actor_base.h"
 #include "coroutine.h"
 #include "core_app.h"

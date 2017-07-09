@@ -81,9 +81,6 @@
     <ClInclude Include="..\..\inc\libCoreCommon\actor_message_registry.h">
       <Filter>inc\actor</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreCommon\core_service_kit_common.h">
-      <Filter>inc</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\inc\libCoreCommon\coroutine.h">
       <Filter>inc</Filter>
     </ClInclude>
@@ -97,9 +94,6 @@
       <Filter>inc\service_base</Filter>
     </ClInclude>
     <ClInclude Include="core_message_registry.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="core_service_define.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="coroutine_impl.h">
@@ -161,6 +155,9 @@
     </ClInclude>
     <ClInclude Include="..\..\inc\libCoreCommon\when_all.h">
       <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="core_common_define.h">
+      <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

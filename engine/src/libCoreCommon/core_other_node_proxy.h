@@ -5,11 +5,12 @@
 #include "tinyxml2/tinyxml2.h"
 
 #include "core_common.h"
-#include "core_service_kit_common.h"
 #include "base_connection_other_node.h"
 
 #include <map>
+#include <vector>
 #include <string>
+#include <memory>
 
 namespace core
 {

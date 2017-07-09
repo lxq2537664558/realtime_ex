@@ -2,7 +2,7 @@
 #include "libCoreCommon/core_common.h"
 #include "libBaseCommon/buf_file.h"
 
-#include "core_service_kit_common.h"
+#include "core_common.h"
 
 #include <vector>
 

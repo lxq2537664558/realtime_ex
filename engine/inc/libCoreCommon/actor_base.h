@@ -3,7 +3,10 @@
 #include "google/protobuf/message.h"
 
 #include "coroutine.h"
-#include "core_service_kit_common.h"
+#include "core_common.h"
+#include "future.h"
+
+#include <memory>
 
 namespace core
 {

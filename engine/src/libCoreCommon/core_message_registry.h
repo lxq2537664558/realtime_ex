@@ -1,8 +1,7 @@
 #pragma once
 #include "libBaseCommon/noncopyable.h"
-#include "libCoreCommon/core_common.h"
 
-#include "core_service_kit_common.h"
+#include "core_common.h"
 #include "protobuf_helper.h"
 
 #include <map>

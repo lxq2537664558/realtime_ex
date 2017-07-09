@@ -1,10 +1,8 @@
 #pragma once
 #include "libBaseCommon/circle_queue.h"
 
-#include "libCoreCommon/core_common.h"
-
-#include "core_service_kit_common.h"
-#include "core_service_define.h"
+#include "core_common.h"
+#include "core_common_define.h"
 #include "service_base.h"
 #include "actor_base.h"
 

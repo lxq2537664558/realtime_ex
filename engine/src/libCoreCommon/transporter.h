@@ -4,7 +4,7 @@
 #include "libCoreCommon/base_connection.h"
 
 #include "service_base.h"
-#include "core_service_define.h"
+#include "core_common_define.h"
 
 #include <map>
 

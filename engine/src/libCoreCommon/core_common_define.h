@@ -5,7 +5,6 @@
 #include <string>
 
 #include "core_common.h"
-#include "core_service_kit_common.h"
 
 #include "google\protobuf\message.h"
 
