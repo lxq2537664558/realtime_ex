@@ -98,6 +98,34 @@ namespace core
 
 			switch (sMessagePacket.nType)
 			{
+			case eMCT_QUIT:
+				{
+					const std::vector<CServiceBase*>& vecServiceBase = CCoreApp::Inst()->getServiceBase();
+					if (vecServiceBase.empty())
+						return false;
+
+					for (size_t i = 0; i < vecServiceBase.size(); ++i)
+					{
+						if (vecServiceBase[i]->m_eState == eSRS_Quitting)
+							continue;
+
+						vecServiceBase[i]->m_eState = eSRS_Quitting;
+						vecServiceBase[i]->onQuit();
+					}
+				}
+				break;
+
+			case eMCT_FRAME:
+				{
+					const std::vector<CServiceBase*>& vecServiceBase = CCoreApp::Inst()->getServiceBase();
+					
+					for (size_t i = 0; i < vecServiceBase.size(); ++i)
+					{
+						  vecServiceBase[i]->onFrame();
+					}
+				}
+				break;
+
 			case eMCT_NOTIFY_SOCKET_CONNECT:
 				{
 					SMCT_NOTIFY_SOCKET_CONNECT* pContext = reinterpret_cast<SMCT_NOTIFY_SOCKET_CONNECT*>(sMessagePacket.pData);

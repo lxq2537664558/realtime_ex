@@ -107,12 +107,6 @@ namespace core
 
 			switch (sMessagePacket.nType)
 			{
-			case eMCT_EXIT:
-				{
-					return false;
-				}
-				break;
-
 			case eMCT_REQUEST_SOCKET_LISTEN:
 				{
 					PROFILING_GUARD(eMCT_REQUEST_SOCKET_LISTEN)

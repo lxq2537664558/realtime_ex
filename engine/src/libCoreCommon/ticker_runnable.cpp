@@ -72,6 +72,14 @@ namespace core
 	{
 		int64_t nCurTime = base::getGmtTime();
 		this->update(nCurTime);
+
+		SMessagePacket sMessagePacket;
+		sMessagePacket.nType = eMCT_FRAME;
+		sMessagePacket.pData = nullptr;
+		sMessagePacket.nDataSize = 0;
+
+		CLogicRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
+
 		int64_t nEndTime = base::getGmtTime();
 		int64_t nDeltaTime = nEndTime - nCurTime;
 		if (_CYCLE_TIME - nDeltaTime > 0)

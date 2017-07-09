@@ -1,23 +1,15 @@
 #pragma once
 
 #include "core_common.h"
+#include "service_base.h"
+#include "service_factory.h"
+#include "actor_id_converter.h"
 #include "ticker.h"
 
 #include "libBaseCommon/buf_file.h"
 
 namespace core
 {
-	// 服务器状态 eARS_Start->eARS_Normal->eARS_Quitting->eARS_Quit
-	// 其中eARS_Quitting状态切换到eARS_Quit是有逻辑层主动调用doQuit来完成的，
-	// 这样做保证了关服前做一些需要比较长的时间来确认一些事的行为，比如数据存储
-	enum EAppRunState
-	{
-		eARS_Start		= 0,	// 启动状态
-		eARS_Normal		= 1,	// 正常状态
-		eARS_Quitting	= 2,	// 退出中
-		eARS_Quit		= 3,	// 最终退出
-	};
-
 	class CBaseConnectionMgr;
 	class CCoreApp;
 	/**
@@ -52,6 +44,39 @@ namespace core
 		*/
 		CBaseConnectionMgr*			getBaseConnectionMgr() const;
 		/*
+		@brief: 根据服务ID获取服务
+		*/
+		CServiceBase*				getServiceBase(uint16_t nServiceID) const;
+		/**
+		@brief: 设置某一个类型的连接创建工厂
+		*/
+		void						setServiceFactory(uint16_t nServiceID, CServiceFactory* pServiceFactory);
+		/**
+		@brief: 获取服务列表
+		*/
+		const std::vector<CServiceBase*>
+									getServiceBase() const;
+		/**
+		@brief: 获取本节点基本信息
+		*/
+		const SNodeBaseInfo&		getNodeBaseInfo() const;
+		/**
+		@brief: 根据节点名字获取节点id
+		*/
+		uint16_t					getServiceID(const std::string& szName) const;
+		/**
+		@brief: 设置全局的服务连接成功回调
+		*/
+		void						setServiceConnectCallback(const std::function<void(uint16_t)>& callback);
+		/**
+		@brief: 设置全局的服务连接断开回调
+		*/
+		void						setServiceDisconnectCallback(const std::function<void(uint16_t)>& callback);
+		/**
+		@brief: 设置actorid转换器
+		*/
+		void						setActorIDConverter(CActorIDConverter* pActorIDConverter);
+		/*
 		@brief: 获取配置文件名
 		*/
 		const std::string&			getConfigFileName() const;
@@ -64,10 +89,6 @@ namespace core
 		*/
 		uint32_t					getQPS() const;
 		/*
-		@brief: 标记繁忙，这样逻辑线程可以不等待消息队列的数据
-		*/
-		void						busy();
-		/*
 		@brief: 设置是否输出调试信息
 		*/
 		void						debugLog(bool bEnable);
@@ -75,13 +96,9 @@ namespace core
 		@brief: 设置是否打开性能分析
 		*/
 		void						profiling(bool bEnable);
-		
-	protected:
-		virtual bool				onInit() { return true; }
-		virtual void				onProcess() { }
-		virtual void				onDestroy() { }
-
-		virtual	void				onQuit() = 0;
+		/**
+		@brief: 发起退出
+		*/
 		void						doQuit();
 	};
 }

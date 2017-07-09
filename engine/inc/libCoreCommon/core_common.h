@@ -82,6 +82,8 @@ namespace core
 
 	struct	SMessagePacket
 	{
+		uint64_t	nID;
+		uint64_t	nSessionID;
 		uint8_t		nType;
 		uint32_t	nDataSize;
 		void*		pData;

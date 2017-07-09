@@ -29,12 +29,12 @@
 #include "ticker_runnable.h"
 #include "net_runnable.h"
 #include "logic_runnable.h"
+#include "message_command.h"
 
 #include "tinyxml2/tinyxml2.h"
 
 #define _DEFAULT_HEARTBEAT_LIMIT	3
 #define _DEFAULT_HEARTBEAT_TIME		10
-#define _MAIN_CO_STACK_SIZE			10*1024*1024
 #define _DEFAULT_SAMPLING_TIME		1000
 
 #ifndef _WIN32
@@ -93,16 +93,14 @@ static bool initProcessInfo(size_t argc, char** argv, const char* title)
 namespace core
 {
 	CCoreApp::CCoreApp()
-		: m_nRunState(eARS_Start)
-		, m_writeBuf(UINT16_MAX)
-		, m_bMarkQuit(false)
+		: m_writeBuf(UINT16_MAX)
+		, m_nQuiting(0)
 		, m_nTotalSamplingTime(0)
 		, m_nCycleCount(0)
 		, m_nHeartbeatLimit(0)
 		, m_nHeartbeatTime(0)
 		, m_nSamplingTime(_DEFAULT_SAMPLING_TIME)
 		, m_nQPS(0)
-		, m_bBusy(false)
 	{
 	}
 
@@ -126,16 +124,10 @@ namespace core
 		base::initProcessExceptionHander();
 		base::initThreadExceptionHander();
 
-		if (!this->onInit())
+		if (!this->init())
 			return false;
 
-		while (true)
-		{
-			if (!this->onProcess())
-				break;
-		}
-
-		this->onDestroy();
+		this->destroy();
 
 		base::uninitProcessExceptionHander();
 
@@ -152,6 +144,16 @@ namespace core
 		CTickerRunnable::Inst()->unregisterTicker(pTicker);
 	}
 
+	CBaseConnectionMgr* CCoreApp::getBaseConnectionMgr() const
+	{
+		return CLogicRunnable::Inst()->getBaseConnectionMgr();
+	}
+
+	const std::vector<CServiceBase*> CCoreApp::getServiceBase() const
+	{
+		return this->m_vecServiceBase;
+	}
+
 	const std::string& CCoreApp::getConfigFileName() const
 	{
 		return this->m_szConfig;
@@ -163,7 +165,7 @@ namespace core
 		return const_cast<base::CWriteBuf&>(this->m_writeBuf);
 	}
 
-	bool CCoreApp::onInit()
+	bool CCoreApp::init()
 	{
 		// 首先获取可执行文件目录
 		char szBinPath[MAX_PATH] = { 0 };
@@ -262,11 +264,7 @@ namespace core
 		memset(&sig_action, 0, sizeof(sig_action));
 		sig_action.sa_sigaction = [](int32_t signo, siginfo_t*, void* ptr)->void
 		{
-			if (CCoreApp::Inst()->m_nRunState != eARS_Normal)
-				return;
-
-			PrintInfo("server start quit");
-			CCoreApp::Inst()->m_nRunState = eARS_Quitting;
+			CCoreApp::Inst()->doQuit();
 		};
 		sig_action.sa_flags = SA_SIGINFO;
 		sigaction(SIGUSR1, &sig_action, 0);
@@ -364,18 +362,18 @@ namespace core
 
 		SAFE_DELETE(pConfigXML);
 
-		this->m_nRunState = eARS_Normal;
+		PrintInfo("CCoreApp::init");
 
-		PrintInfo("CCoreApp::onInit");
-
-		return CBaseApp::Inst()->onInit();
+		return true;
 	}
 
-	void CCoreApp::onDestroy()
+	void CCoreApp::destroy()
 	{
-		CBaseApp::Inst()->onDestroy();
+		PrintInfo("CCoreApp::destroy");
 
-		PrintInfo("CCoreApp::onDestroy");
+		CLogicRunnable::Inst()->join();
+		CNetRunnable::Inst()->join();
+		CTickerRunnable::Inst()->join();
 
 		CNetRunnable::Inst()->release();
 		CLogicRunnable::Inst()->release();
@@ -393,57 +391,19 @@ namespace core
 #endif
 	}
 
-#define _MAX_WAIT_NET_TIME 10
-
-	bool CCoreApp::onProcess()
-	{
-// 		int64_t nBeginTime = base::getProcessPassTime();
-// 
-// 		PROFILING_BEGIN(this->m_pCoreConnectionMgr->update)
-// 		int64_t nDeltaTime = _MAX_WAIT_NET_TIME - (base::getGmtTime() - this->m_pTickerMgr->getLogicTime());
-// 		if (this->m_bBusy || nDeltaTime < 0)
-// 			nDeltaTime = 0;
-// 		this->m_pCoreConnectionMgr->update(nDeltaTime);
-// 		PROFILING_END(this->m_pCoreConnectionMgr->update)
-// 
-// 		PROFILING_BEGIN(this->m_pTickerMgr->update)
-// 		this->m_pTickerMgr->update();
-// 		PROFILING_END(this->m_pTickerMgr->update)
-// 
-// 		PROFILING_BEGIN(CBaseApp::Inst()->onProcess)
-// 		CBaseApp::Inst()->onProcess();
-// 		PROFILING_END(CBaseApp::Inst()->onProcess)
-// 
-// 		if (this->m_nRunState == eARS_Quitting && !this->m_bMarkQuit)
-// 		{
-// 			this->m_bMarkQuit = true;
-// 
-// 			PrintInfo("CCoreApp::onQuit");
-// 
-// 			base::flushLog();
-// 			CBaseApp::Inst()->onQuit();
-// 		}
-// 		if (this->m_nRunState == eARS_Quit)
-// 			return false;
-// 
-// 		int64_t nEndTime = base::getProcessPassTime();
-// 		this->m_nTotalSamplingTime = this->m_nTotalSamplingTime + (uint32_t)(nEndTime - nBeginTime);
-// 
-// 		if (this->m_nTotalSamplingTime / 1000 >= this->m_nSamplingTime)
-// 		{
-// 			base::profiling(this->m_nTotalSamplingTime);
-// 			this->m_nTotalSamplingTime = 0;
-// 		}
-
-		return true;
-	}
-
 	void CCoreApp::doQuit()
 	{
 		PrintInfo("CCoreApp::doQuit");
-		DebugAst(this->m_nRunState == eARS_Quitting);
+		DebugAst(!this->m_nQuiting);
 
-		this->m_nRunState = eARS_Quit;
+		this->m_nQuiting = true;
+
+		SMessagePacket sMessagePacket;
+		sMessagePacket.nType = eMCT_QUIT;
+		sMessagePacket.pData = nullptr;
+		sMessagePacket.nDataSize = 0;
+
+		CLogicRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
 	}
 
 	uint32_t CCoreApp::getHeartbeatLimit() const
@@ -476,8 +436,90 @@ namespace core
 		return this->m_nQPS;
 	}
 
-	void CCoreApp::busy()
+	CBaseConnectionToMaster* CCoreApp::getConnectionToMaster() const
 	{
-		this->m_bBusy = true;
+		return this->m_pServiceConnectionToMaster;
+	}
+
+	void CCoreApp::setCoreConnectionToMaster(CBaseConnectionToMaster* pCoreConnectionToMaster)
+	{
+		this->m_pServiceConnectionToMaster = pCoreConnectionToMaster;
+	}
+
+	const SNodeBaseInfo& CCoreApp::getNodeBaseInfo() const
+	{
+		return this->m_sNodeBaseInfo;
+	}
+
+	const std::vector<SServiceBaseInfo>& CCoreApp::getServiceBaseInfo() const
+	{
+		return this->m_vecServiceBaseInfo;
+	}
+
+	CTransporter* CCoreApp::getTransporter() const
+	{
+		return this->m_pTransporter;
+	}
+
+	CCoreOtherNodeProxy* CCoreApp::getCoreOtherNodeProxy() const
+	{
+		return this->m_pCoreOtherNodeProxy;
+	}
+
+	CCoreMessageRegistry* CCoreApp::getCoreMessageRegistry() const
+	{
+		return this->m_pCoreMessageRegistry;
+	}
+
+	CMessageDispatcher* CCoreApp::getMessageDispatcher() const
+	{
+		return this->m_pMessageDispatcher;
+	}
+
+	void CCoreApp::setActorIDConverter(CActorIDConverter* pActorIDConverter)
+	{
+		DebugAst(pActorIDConverter != nullptr);
+
+		this->m_pActorIDConverter = pActorIDConverter;
+	}
+
+	CActorIDConverter* CCoreApp::getActorIDConverter() const
+	{
+		return this->m_pActorIDConverter;
+	}
+
+	CActorScheduler* CCoreApp::getActorScheduler() const
+	{
+		return this->m_pActorScheduler;
+	}
+
+	uint32_t CCoreApp::getInvokeTimeout() const
+	{
+		return this->m_nInvokTimeout;
+	}
+
+	uint32_t CCoreApp::getThroughput() const
+	{
+		return this->m_nThroughput;
+	}
+
+	void CCoreApp::setServiceConnectCallback(const std::function<void(uint16_t)>& callback)
+	{
+		this->m_fnServiceConnectCallback = callback;
+	}
+
+	void CCoreApp::setServiceDisconnectCallback(const std::function<void(uint16_t)>& callback)
+	{
+		this->m_fnServiceDisconnectCallback = callback;
+	}
+
+	std::function<void(uint16_t)>& CCoreApp::getServiceConnectCallback()
+	{
+		return this->m_fnServiceConnectCallback;
+	}
+
+	std::function<void(uint16_t)>& CCoreApp::getServiceDisconnectCallback()
+	{
+		return this->m_fnServiceDisconnectCallback;
 	}
 }

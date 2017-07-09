@@ -7,7 +7,8 @@ namespace core
 {
 	enum EMessageCommandType
 	{
-		eMCT_EXIT,
+		eMCT_QUIT,
+		eMCT_FRAME,
 		eMCT_REQUEST_SOCKET_LISTEN,
 		eMCT_REQUEST_SOCKET_CONNECT,
 		eMCT_REQUEST_SOCKET_SHUTDOWN,

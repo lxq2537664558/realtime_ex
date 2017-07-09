@@ -58,6 +58,46 @@ namespace core
 		CCoreApp::Inst()->unregisterTicker(pTicker);
 	}
 
+	CBaseConnectionMgr*	CBaseApp::getBaseConnectionMgr() const
+	{
+		return CCoreApp::Inst()->getBaseConnectionMgr();
+	}
+
+	const std::vector<CServiceBase*> CBaseApp::getServiceBase() const
+	{
+		return CCoreApp::Inst()->getServiceBase();
+	}
+
+	const SNodeBaseInfo& CBaseApp::getNodeBaseInfo() const
+	{
+		return CCoreApp::Inst()->getNodeBaseInfo();
+	}
+
+	uint16_t CBaseApp::getServiceID(const std::string& szName) const
+	{
+		return CCoreApp::Inst()->getCoreOtherNodeProxy()->getServiceID(szName);
+	}
+
+	void CBaseApp::setServiceFactory(uint16_t nServiceID, CServiceFactory* pServiceFactory)
+	{
+		CCoreApp::Inst()->setServiceFactory(nServiceID, pServiceFactory);
+	}
+
+	void CBaseApp::setServiceConnectCallback(const std::function<void(uint16_t)>& callback)
+	{
+		CCoreApp::Inst()->setServiceConnectCallback(callback);
+	}
+
+	void CBaseApp::setServiceDisconnectCallback(const std::function<void(uint16_t)>& callback)
+	{
+		CCoreApp::Inst()->setServiceDisconnectCallback(callback);
+	}
+
+	void CBaseApp::setActorIDConverter(CActorIDConverter* pActorIDConverter)
+	{
+		CCoreApp::Inst()->setActorIDConverter(pActorIDConverter);
+	}
+
 	const std::string& CBaseApp::getConfigFileName() const
 	{
 		return CCoreApp::Inst()->getConfigFileName();
@@ -83,11 +123,6 @@ namespace core
 	uint32_t CBaseApp::getQPS() const
 	{
 		return CCoreApp::Inst()->getQPS();
-	}
-
-	void CBaseApp::busy()
-	{
-		CCoreApp::Inst()->busy();
 	}
 
 	void CBaseApp::debugLog(bool bEnable)
