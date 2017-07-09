@@ -69,7 +69,7 @@ namespace core
 
 		for (size_t i = 0; i < vecServiceBaseInfo.size(); ++i)
 		{
-			this->m_mapServiceName[vecServiceBaseInfo[i].szName] == vecServiceBaseInfo[i].nID;
+			this->m_mapServiceName[vecServiceBaseInfo[i].szName] = vecServiceBaseInfo[i].nID;
 			this->m_mapServiceProxyInfo[vecServiceBaseInfo[i].nID] = { vecServiceBaseInfo[i], nullptr };
 		}
 

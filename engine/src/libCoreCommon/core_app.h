@@ -33,7 +33,6 @@ namespace core
 
 		CBaseConnectionMgr*			getBaseConnectionMgr() const;
 
-		void						setServiceFactory(uint16_t nServiceID, CServiceFactory* pServiceFactory);
 		const std::vector<CServiceBase*>
 									getServiceBase() const;
 

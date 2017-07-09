@@ -293,7 +293,7 @@ namespace core
 
 		uint16_t nDataSize = (uint16_t)(nCookiceLen + (uint16_t)pMessage->ByteSize());
 
-		pBaseConnectionOtherNode->send(eMT_TO_GATE | eMT_BROADCAST, &this->m_szBuf[0], nDataSize);
+		pBaseConnectionOtherNode->send((uint8_t)(eMT_TO_GATE | eMT_BROADCAST), &this->m_szBuf[0], nDataSize);
 
 		return true;
 	}

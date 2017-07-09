@@ -93,9 +93,6 @@
     <ClInclude Include="..\..\inc\libCoreCommon\service_invoker.h">
       <Filter>inc\service_base</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreCommon\service_factory.h">
-      <Filter>inc\service_base</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\inc\libCoreCommon\service_base.h">
       <Filter>inc\service_base</Filter>
     </ClInclude>

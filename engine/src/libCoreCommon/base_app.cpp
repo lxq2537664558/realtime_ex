@@ -78,11 +78,6 @@ namespace core
 		return CCoreApp::Inst()->getCoreOtherNodeProxy()->getServiceID(szName);
 	}
 
-	void CBaseApp::setServiceFactory(uint16_t nServiceID, CServiceFactory* pServiceFactory)
-	{
-		CCoreApp::Inst()->setServiceFactory(nServiceID, pServiceFactory);
-	}
-
 	void CBaseApp::setServiceConnectCallback(const std::function<void(uint16_t)>& callback)
 	{
 		CCoreApp::Inst()->setServiceConnectCallback(callback);

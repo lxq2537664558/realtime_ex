@@ -2,7 +2,6 @@
 
 #include "core_common.h"
 #include "service_base.h"
-#include "service_factory.h"
 #include "actor_id_converter.h"
 #include "ticker.h"
 
@@ -47,10 +46,6 @@ namespace core
 		@brief: 根据服务ID获取服务
 		*/
 		CServiceBase*				getServiceBase(uint16_t nServiceID) const;
-		/**
-		@brief: 设置某一个类型的连接创建工厂
-		*/
-		void						setServiceFactory(uint16_t nServiceID, CServiceFactory* pServiceFactory);
 		/**
 		@brief: 获取服务列表
 		*/
