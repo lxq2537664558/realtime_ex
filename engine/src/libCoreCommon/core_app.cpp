@@ -154,6 +154,17 @@ namespace core
 		return this->m_vecServiceBase;
 	}
 
+	bool CCoreApp::isOwnerService(uint16_t nServiceID) const
+	{
+		for (size_t i = 0; i < this->m_vecServiceBaseInfo.size(); ++i)
+		{
+			if (this->m_vecServiceBaseInfo[i].nID == nServiceID)
+				return true;
+		}
+		
+		return false;
+	}
+
 	const std::string& CCoreApp::getConfigFileName() const
 	{
 		return this->m_szConfig;

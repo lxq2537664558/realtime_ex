@@ -5,14 +5,14 @@ namespace core
 	{
 		DebugAstEx(pData != nullptr, false);
 
-		auto pPromise = std::make_shared<CPromise<CMessagePtr<T>>>();
+		auto pPromise = std::make_shared<CPromise<T>>();
 		
-		auto callback = [pPromise](CMessagePtr<char> pMessage, uint32_t nErrorCode)->void
+		auto callback = [pPromise](const google::protobuf::Message* pMessage, uint32_t nErrorCode)->void
 		{
-			pPromise->setValue(CMessagePtr<T>::reinterpret_cast_message(pMessage), nErrorCode);
+			pPromise->setValue(pMessage, nErrorCode);
 		};
 
-		if (!this->invoke(nNodeID, pData, callback))
+		if (!this->invoke(nServiceID, pData, callback))
 			return false;
 
 		sFuture = pPromise->getFuture();
@@ -25,11 +25,11 @@ namespace core
 	{
 		DebugAstEx(pData != nullptr && callback != nullptr, false);
 
-		auto callback_ = [callback](CMessagePtr<char> pMessage, uint32_t nErrorCode)->void
+		auto callback_ = [callback](const google::protobuf::Message* pMessage, uint32_t nErrorCode)->void
 		{
-			callback(CMessagePtr<T>::reinterpret_cast_message(pMessage), nErrorCode);
+			callback(pMessage, nErrorCode);
 		};
 
-		return this->invoke(nNodeID, pData, callback_);
+		return this->invoke(nServiceID, pData, callback_);
 	}
 }

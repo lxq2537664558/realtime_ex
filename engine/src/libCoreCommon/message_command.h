@@ -9,6 +9,7 @@ namespace core
 	{
 		eMCT_QUIT,
 		eMCT_FRAME,
+		eMCT_INSIDE_MESSAGE,
 		eMCT_REQUEST_SOCKET_LISTEN,
 		eMCT_REQUEST_SOCKET_CONNECT,
 		eMCT_REQUEST_SOCKET_SHUTDOWN,
@@ -24,6 +25,13 @@ namespace core
 		eMCT_TICKER,
 		eMCT_ENABLE_HEARTBEAT,
 		eMCT_SEND_HEARTBEAT,
+	};
+
+	struct SMCT_INSIDE_MESSAGE
+	{
+		uint8_t		nMessageType;
+		uint16_t	nDataSize;
+		void*		pData;
 	};
 
 	struct SMCT_REQUEST_SOCKET_LISTEN

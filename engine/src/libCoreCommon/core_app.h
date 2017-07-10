@@ -36,6 +36,8 @@ namespace core
 		const std::vector<CServiceBase*>
 									getServiceBase() const;
 
+		bool						isOwnerService(uint16_t nServiceID) const;
+
 		CTransporter*				getTransporter() const;
 		CCoreOtherNodeProxy*		getCoreOtherNodeProxy() const;
 		CCoreMessageRegistry*		getCoreMessageRegistry() const;
