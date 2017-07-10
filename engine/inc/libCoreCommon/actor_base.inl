@@ -5,9 +5,9 @@ namespace core
 	{
 		DebugAstEx(pData != nullptr && callback != nullptr, false);
 
-		auto callback_ = [callback](CMessagePtr<char> pMessage, uint32_t nErrorCode)->void
+		auto callback_ = [callback](const google::protobuf::Message* pMessage, uint32_t nErrorCode)->void
 		{
-			callback(CMessagePtr<T>::reinterpret_cast_message(pMessage), nErrorCode);
+			callback(pMessage, nErrorCode);
 		};
 
 		if (!this->invoke(nID, pData, 0, callback_))
@@ -21,11 +21,11 @@ namespace core
 	{
 		DebugAstEx(pData != nullptr, false);
 
-		auto pPromise = std::make_shared<CPromise<CMessagePtr<T>>>();
+		auto pPromise = std::make_shared<CPromise<T>>();
 
-		auto callback = [pPromise](CMessagePtr<char> pMessage, uint32_t nErrorCode)->void
+		auto callback = [pPromise](const google::protobuf::Message* pMessage, uint32_t nErrorCode)->void
 		{
-			pPromise->setValue(CMessagePtr<T>::reinterpret_cast_message(pMessage), nErrorCode);
+			pPromise->setValue(pMessage, nErrorCode);
 		};
 
 		if (!this->invoke(nID, pData, 0, callback))
@@ -44,12 +44,15 @@ namespace core
 
 		coroutine::yield();
 
-		CMessage* pMessage = reinterpret_cast<CMessage*>(coroutine::getLocalData(coroutine::getCurrentID()));
-		uint32_t nRet = (uint32_t)reinterpret_cast<uint64_t>(coroutine::getLocalData(coroutine::getCurrentID()));
+		uint64_t nMessage = 0;
+		uint64_t nRet = 0;
+		DebugAstEx(coroutine::getLocalData(coroutine::getCurrentID(), "message", nMessage), eRRT_ERROR);
+		DebugAstEx(coroutine::getLocalData(coroutine::getCurrentID(), "result", nRet), eRRT_ERROR);
 
-		pResponseMessage = CMessagePtr<T>::reinterpret_cast_message(*pMessage);
-		SAFE_DELETE(pMessage);
+		auto pMessage = *reinterpret_cast<std::shared_ptr<google::protobuf::Message>*>(nMessage);
 
-		return nRet;
+		pResponseMessage = pMessage;
+
+		return (uint32_t)nRet;
 	}
 }

@@ -8,6 +8,7 @@
 
 #include "libBaseCommon/debug_helper.h"
 #include "libBaseCommon/defer.h"
+#include <memory>
 
 namespace core
 {
@@ -38,23 +39,23 @@ namespace core
 			DebugAst(nSize > sizeof(request_cookice) + pCookice->nMessageNameLen);
 			DebugAst(pCookice->szMessageName[pCookice->nMessageNameLen] == 0);
 			
-			const char* pMessageData = reinterpret_cast<const char*>(pCookice + 1) + pCookice->nMessageNameLen;
 			const std::string szMessageName = pCookice->szMessageName;
 
 			auto& callback = CCoreApp::Inst()->getCoreMessageRegistry()->getCallback(pCookice->nToServiceID, szMessageName);
 			if (callback == nullptr)
-				return;
-
-			google::protobuf::Message* pMessage = create_protobuf_message(szMessageName);
-			if (nullptr == pMessage || !pMessage->ParseFromArray(pMessageData, nSize - sizeof(request_cookice) - pCookice->nMessageNameLen))
 			{
-				SAFE_DELETE(pMessage);
+				PrintWarning("CMessageDispatcher::dispatch error unknown request message name %s", szMessageName.c_str());
 				return;
 			}
 
+			const char* pMessageData = reinterpret_cast<const char*>(pCookice + 1) + pCookice->nMessageNameLen;
+			auto pMessage = std::unique_ptr<google::protobuf::Message>(create_protobuf_message(szMessageName));
+			if (nullptr == pMessage || !pMessage->ParseFromArray(pMessageData, nSize - sizeof(request_cookice) - pCookice->nMessageNameLen))
+				return;
+
 			SServiceSessionInfo sServiceSessionInfo(pCookice->nFromServiceID, pCookice->nSessionID);
 
-			callback(sServiceSessionInfo, pMessage);
+			callback(sServiceSessionInfo, pMessage.get());
 		}
 		else if ((nMessageType&eMT_TYPE_MASK) == eMT_RESPONSE)
 		{
@@ -64,24 +65,19 @@ namespace core
 			DebugAst(nSize > sizeof(response_cookice) + pCookice->nMessageNameLen);
 			DebugAst(pCookice->szMessageName[pCookice->nMessageNameLen] == 0);
 
-			SResponseWaitInfo* pResponseWaitInfo = CCoreApp::Inst()->getTransporter()->getResponseWaitInfo(pCookice->nSessionID, true);
+			auto pResponseWaitInfo = std::unique_ptr<SResponseWaitInfo>(CCoreApp::Inst()->getTransporter()->getResponseWaitInfo(pCookice->nSessionID, true));
 			if (nullptr == pResponseWaitInfo)
 				return;
-
-			Defer(delete pResponseWaitInfo);
 
 			if (pCookice->nResult == eRRT_OK)
 			{
 				const char* pMessageData = reinterpret_cast<const char*>(pCookice + 1) + pCookice->nMessageNameLen;
 				const std::string szMessageName = pCookice->szMessageName;
-				google::protobuf::Message* pMessage = create_protobuf_message(szMessageName);
+				auto pMessage = std::unique_ptr<google::protobuf::Message>(create_protobuf_message(szMessageName));
 				if (nullptr == pMessage || !pMessage->ParseFromArray(pMessageData, nSize - sizeof(request_cookice) - pCookice->nMessageNameLen))
-				{
-					SAFE_DELETE(pMessage);
 					return;
-				}
 
-				pResponseWaitInfo->callback(pMessage, eRRT_OK);
+				pResponseWaitInfo->callback(pMessage.get(), eRRT_OK);
 			}
 			else if (pCookice->nResult != eRRT_OK)
 			{
@@ -96,23 +92,20 @@ namespace core
 			DebugAst(nSize > sizeof(gate_forward_cookice) + pCookice->nMessageNameLen);
 			DebugAst(pCookice->szMessageName[pCookice->nMessageNameLen] == 0);
 
-			const char* pMessageData = reinterpret_cast<const char*>(pCookice + 1) + pCookice->nMessageNameLen;
 			const std::string szMessageName = pCookice->szMessageName;
 
 			auto& callback = CCoreApp::Inst()->getCoreMessageRegistry()->getGateForwardCallback(pCookice->nToServiceID, szMessageName);
 			if (callback == nullptr)
 				return;
 
-			google::protobuf::Message* pMessage = create_protobuf_message(szMessageName);
+			const char* pMessageData = reinterpret_cast<const char*>(pCookice + 1) + pCookice->nMessageNameLen;
+			auto pMessage = std::unique_ptr<google::protobuf::Message>(create_protobuf_message(szMessageName));
 			if (nullptr == pMessage || !pMessage->ParseFromArray(pMessageData, nSize - sizeof(request_cookice) - pCookice->nMessageNameLen))
-			{
-				SAFE_DELETE(pMessage);
 				return;
-			}
 
 			SClientSessionInfo session(nFromNodeID, pCookice->nSessionID);
 
-			callback(session, pMessage);
+			callback(session, pMessage.get());
 		}
 		else if ((nMessageType&eMT_TYPE_MASK) == eMT_ACTOR_REQUEST)
 		{
@@ -136,12 +129,12 @@ namespace core
 				return;
 			}
 
-			SMessagePacket sMessagePacket;
-			sMessagePacket.nID = pCookice->nFromActorID;
-			sMessagePacket.nSessionID = pCookice->nSessionID;
-			sMessagePacket.nType = eMT_ACTOR_REQUEST;
-			sMessagePacket.pData = pMessage;
-			pActorBase->getChannel()->send(sMessagePacket);
+			SActorMessagePacket sActorMessagePacket;
+			sActorMessagePacket.nData = pCookice->nFromActorID;
+			sActorMessagePacket.nSessionID = pCookice->nSessionID;
+			sActorMessagePacket.nType = eMT_ACTOR_REQUEST;
+			sActorMessagePacket.pMessage = pMessage;
+			pActorBase->getChannel()->send(sActorMessagePacket);
 
 			CCoreApp::Inst()->getActorScheduler()->addWorkActorBase(pActorBase);
 		}
@@ -167,12 +160,12 @@ namespace core
 				return;
 			}
 			
-			SMessagePacket sMessagePacket;
-			sMessagePacket.nID = pCookice->nResult;
-			sMessagePacket.nSessionID = pCookice->nSessionID;
-			sMessagePacket.nType = eMT_ACTOR_RESPONSE;
-			sMessagePacket.pData = pMessage;
-			pActorBase->getChannel()->send(sMessagePacket);
+			SActorMessagePacket sActorMessagePacket;
+			sActorMessagePacket.nData = pCookice->nResult;
+			sActorMessagePacket.nSessionID = pCookice->nSessionID;
+			sActorMessagePacket.nType = eMT_ACTOR_RESPONSE;
+			sActorMessagePacket.pMessage = pMessage;
+			pActorBase->getChannel()->send(sActorMessagePacket);
 
 			CCoreApp::Inst()->getActorScheduler()->addWorkActorBase(pActorBase);
 		}
@@ -198,12 +191,12 @@ namespace core
 				return;
 			}
 
-			SMessagePacket sMessagePacket;
-			sMessagePacket.nID = pCookice->nFromServiceID;
-			sMessagePacket.nSessionID = pCookice->nSessionID;
-			sMessagePacket.nType = eMT_GATE_FORWARD;
-			sMessagePacket.pData = pMessage;
-			pActorBase->getChannel()->send(sMessagePacket);
+			SActorMessagePacket sActorMessagePacket;
+			sActorMessagePacket.nData = pCookice->nFromServiceID;
+			sActorMessagePacket.nSessionID = pCookice->nSessionID;
+			sActorMessagePacket.nType = eMT_GATE_FORWARD;
+			sActorMessagePacket.pMessage = pMessage;
+			pActorBase->getChannel()->send(sActorMessagePacket);
 
 			CCoreApp::Inst()->getActorScheduler()->addWorkActorBase(pActorBase);
 		}

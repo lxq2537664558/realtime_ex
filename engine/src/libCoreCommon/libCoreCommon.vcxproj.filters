@@ -22,6 +22,9 @@
     <Filter Include="inc\framework">
       <UniqueIdentifier>{7b3107e2-caa8-41d9-8cdf-64d811625057}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\framework">
+      <UniqueIdentifier>{a20f5320-00dc-4cb3-8e30-069100a6d27f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\inc\libCoreCommon\ticker.h">
@@ -30,43 +33,10 @@
     <ClInclude Include="..\..\inc\libCoreCommon\base_object.h">
       <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="core_connection.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="core_connection_mgr.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="fix_memory_pool.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="monitor.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="stdafx.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="core_connection_monitor.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="core_app.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="ticker_runnable.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="net_message_queue.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="net_runnable.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="message_command.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="logic_runnable.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="logic_message_queue.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\inc\libCoreCommon\actor_base.h">
@@ -93,35 +63,14 @@
     <ClInclude Include="..\..\inc\libCoreCommon\service_base.h">
       <Filter>inc\service_base</Filter>
     </ClInclude>
-    <ClInclude Include="core_message_registry.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="coroutine_impl.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="coroutine_mgr.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="message_dispatcher.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="node_connection_factory.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="transporter.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="actor_base_impl.h">
       <Filter>src\actor</Filter>
-    </ClInclude>
-    <ClInclude Include="base_connection_other_node.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="base_connection_to_master.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="core_other_node_proxy.h">
-      <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\inc\libCoreCommon\base_app.h">
       <Filter>inc\framework</Filter>
@@ -134,9 +83,6 @@
     </ClInclude>
     <ClInclude Include="..\..\inc\libCoreCommon\base_connection_mgr.h">
       <Filter>inc\framework</Filter>
-    </ClInclude>
-    <ClInclude Include="actor_scheduler.h">
-      <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\inc\libCoreCommon\protobuf_helper.h">
       <Filter>inc</Filter>
@@ -159,30 +105,69 @@
     <ClInclude Include="core_common_define.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="actor_scheduler.h">
+      <Filter>src\actor</Filter>
+    </ClInclude>
+    <ClInclude Include="base_connection_other_node.h">
+      <Filter>src\framework</Filter>
+    </ClInclude>
+    <ClInclude Include="base_connection_to_master.h">
+      <Filter>src\framework</Filter>
+    </ClInclude>
+    <ClInclude Include="core_app.h">
+      <Filter>src\framework</Filter>
+    </ClInclude>
+    <ClInclude Include="core_connection.h">
+      <Filter>src\framework</Filter>
+    </ClInclude>
+    <ClInclude Include="core_connection_mgr.h">
+      <Filter>src\framework</Filter>
+    </ClInclude>
+    <ClInclude Include="core_connection_monitor.h">
+      <Filter>src\framework</Filter>
+    </ClInclude>
+    <ClInclude Include="core_message_registry.h">
+      <Filter>src\framework</Filter>
+    </ClInclude>
+    <ClInclude Include="core_other_node_proxy.h">
+      <Filter>src\framework</Filter>
+    </ClInclude>
+    <ClInclude Include="logic_message_queue.h">
+      <Filter>src\framework</Filter>
+    </ClInclude>
+    <ClInclude Include="logic_runnable.h">
+      <Filter>src\framework</Filter>
+    </ClInclude>
+    <ClInclude Include="message_dispatcher.h">
+      <Filter>src\framework</Filter>
+    </ClInclude>
+    <ClInclude Include="message_command.h">
+      <Filter>src\framework</Filter>
+    </ClInclude>
+    <ClInclude Include="monitor.h">
+      <Filter>src\framework</Filter>
+    </ClInclude>
+    <ClInclude Include="net_message_queue.h">
+      <Filter>src\framework</Filter>
+    </ClInclude>
+    <ClInclude Include="net_runnable.h">
+      <Filter>src\framework</Filter>
+    </ClInclude>
+    <ClInclude Include="node_connection_factory.h">
+      <Filter>src\framework</Filter>
+    </ClInclude>
+    <ClInclude Include="ticker_runnable.h">
+      <Filter>src\framework</Filter>
+    </ClInclude>
+    <ClInclude Include="transporter.h">
+      <Filter>src\framework</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="base_app.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="base_connection.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="base_connection_mgr.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="base_object.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="core_connection.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="core_connection_mgr.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="fix_memory_pool.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="monitor.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="stdafx.cpp">
@@ -191,31 +176,7 @@
     <ClCompile Include="ticker.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="core_connection_monitor.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="memory_new.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="core_app.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="ticker_runnable.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="net_message_queue.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="net_runnable.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="logic_runnable.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="core_message_registry.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="core_other_node_proxy.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="coroutine.cpp">
@@ -227,22 +188,7 @@
     <ClCompile Include="coroutine_mgr.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="logic_message_queue.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="message_dispatcher.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="node_connection_factory.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="protobuf_helper.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="service_invoker.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="transporter.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="actor_base_impl.cpp">
@@ -254,14 +200,71 @@
     <ClCompile Include="service_base.cpp">
       <Filter>src\service_base</Filter>
     </ClCompile>
+    <ClCompile Include="actor_scheduler.cpp">
+      <Filter>src\actor</Filter>
+    </ClCompile>
+    <ClCompile Include="base_app.cpp">
+      <Filter>src\framework</Filter>
+    </ClCompile>
+    <ClCompile Include="base_connection.cpp">
+      <Filter>src\framework</Filter>
+    </ClCompile>
+    <ClCompile Include="base_connection_mgr.cpp">
+      <Filter>src\framework</Filter>
+    </ClCompile>
     <ClCompile Include="base_connection_other_node.cpp">
-      <Filter>src</Filter>
+      <Filter>src\framework</Filter>
     </ClCompile>
     <ClCompile Include="base_connection_to_master.cpp">
-      <Filter>src</Filter>
+      <Filter>src\framework</Filter>
     </ClCompile>
-    <ClCompile Include="actor_scheduler.cpp">
-      <Filter>src</Filter>
+    <ClCompile Include="core_app.cpp">
+      <Filter>src\framework</Filter>
+    </ClCompile>
+    <ClCompile Include="core_connection.cpp">
+      <Filter>src\framework</Filter>
+    </ClCompile>
+    <ClCompile Include="core_connection_mgr.cpp">
+      <Filter>src\framework</Filter>
+    </ClCompile>
+    <ClCompile Include="core_connection_monitor.cpp">
+      <Filter>src\framework</Filter>
+    </ClCompile>
+    <ClCompile Include="core_message_registry.cpp">
+      <Filter>src\framework</Filter>
+    </ClCompile>
+    <ClCompile Include="core_other_node_proxy.cpp">
+      <Filter>src\framework</Filter>
+    </ClCompile>
+    <ClCompile Include="logic_message_queue.cpp">
+      <Filter>src\framework</Filter>
+    </ClCompile>
+    <ClCompile Include="logic_runnable.cpp">
+      <Filter>src\framework</Filter>
+    </ClCompile>
+    <ClCompile Include="message_dispatcher.cpp">
+      <Filter>src\framework</Filter>
+    </ClCompile>
+    <ClCompile Include="monitor.cpp">
+      <Filter>src\framework</Filter>
+    </ClCompile>
+    <ClCompile Include="net_message_queue.cpp">
+      <Filter>src\framework</Filter>
+    </ClCompile>
+    <ClCompile Include="net_runnable.cpp">
+      <Filter>src\framework</Filter>
+    </ClCompile>
+    <ClCompile Include="node_connection_factory.cpp">
+      <Filter>src\framework</Filter>
+    </ClCompile>
+    <ClCompile Include="ticker_runnable.cpp">
+      <Filter>src\framework</Filter>
+    </ClCompile>
+    <ClCompile Include="transporter.cpp">
+      <Filter>src\framework</Filter>
+    </ClCompile>
+    <ClCompile Include="service_invoker.cpp">
+      <Filter>src\service_base</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

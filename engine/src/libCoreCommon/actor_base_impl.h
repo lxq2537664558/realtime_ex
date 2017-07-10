@@ -10,7 +10,7 @@
 
 namespace core
 {
-	typedef base::CCircleQueue<SMessagePacket, false> CChannel;
+	typedef base::CCircleQueue<SActorMessagePacket, false> CChannel;
 
 	class CActorBase;
 	class CActorBaseImpl :

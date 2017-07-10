@@ -58,12 +58,13 @@ namespace core
 
 			pNewMessage->CopyFrom(*pMessage);
 
-			SMessagePacket sMessagePacket;
-			sMessagePacket.nID = nFromActorID;
-			sMessagePacket.nType = eMT_ACTOR_REQUEST;
-			sMessagePacket.pData = pNewMessage;
+			SActorMessagePacket sActorMessagePacket;
+			sActorMessagePacket.nData = nFromActorID;
+			sActorMessagePacket.nSessionID = nSessionID;
+			sActorMessagePacket.nType = eMT_ACTOR_REQUEST;
+			sActorMessagePacket.pMessage = pNewMessage;
 
-			pToActorBaseImpl->getChannel()->send(sMessagePacket);
+			pToActorBaseImpl->getChannel()->send(sActorMessagePacket);
 
 			this->addWorkActorBase(pToActorBaseImpl);
 			
@@ -89,12 +90,13 @@ namespace core
 
 			pNewMessage->CopyFrom(*pMessage);
 
-			SMessagePacket sMessagePacket;
-			sMessagePacket.nID = 0;
-			sMessagePacket.nType = eMT_ACTOR_RESPONSE;
-			sMessagePacket.pData = pNewMessage;
+			SActorMessagePacket sActorMessagePacket;
+			sActorMessagePacket.nData = nResult;
+			sActorMessagePacket.nSessionID = nSessionID;
+			sActorMessagePacket.nType = eMT_ACTOR_RESPONSE;
+			sActorMessagePacket.pMessage = pNewMessage;
 
-			pToActorBaseImpl->getChannel()->send(sMessagePacket);
+			pToActorBaseImpl->getChannel()->send(sActorMessagePacket);
 
 			this->addWorkActorBase(pToActorBaseImpl);
 			

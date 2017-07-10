@@ -2,9 +2,11 @@
 
 #include <functional>
 
+#include "ticker.h"
+
 #include "libBaseNetwork/network.h"
 
-#include "ticker.h"
+#include "google/protobuf/message.h"
 
 #define _GET_MESSAGE_ID(szMessageName) (base::hash(szMessageName.c_str()))
 
@@ -91,11 +93,18 @@ namespace core
 
 	struct	SMessagePacket
 	{
-		uint64_t	nID;
-		uint64_t	nSessionID;
 		uint8_t		nType;
 		uint32_t	nDataSize;
 		void*		pData;
+	};
+
+	struct	SActorMessagePacket
+	{
+		uint8_t		nType;
+		uint64_t	nData;
+		uint64_t	nSessionID;
+		google::protobuf::Message*		
+					pMessage;
 	};
 
 	struct SNodeBaseInfo

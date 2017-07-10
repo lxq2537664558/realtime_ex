@@ -22,7 +22,14 @@ namespace core
 
 	CActorBaseImpl::~CActorBaseImpl()
 	{
+		for (uint32_t i = 0; i < CCoreApp::Inst()->getThroughput(); ++i)
+		{
+			SActorMessagePacket sActorMessagePacket;
+			if (!this->m_channel.recv(sActorMessagePacket))
+				break;
 
+			SAFE_DELETE(sActorMessagePacket.pMessage);
+		}
 	}
 
 	uint64_t CActorBaseImpl::getID() const
@@ -45,19 +52,19 @@ namespace core
 		if (this->m_channel.empty())
 			return;
 
+		// 这里协程回调使用的pMessage的生命周期跟协程一致，采用值捕获lambda的方式来达到这一目的
 		for (uint32_t i = 0; i < CCoreApp::Inst()->getThroughput(); ++i)
 		{
-			SMessagePacket sMessagePacket;
-			if (!this->m_channel.recv(sMessagePacket))
+			SActorMessagePacket sActorMessagePacket;
+			if (!this->m_channel.recv(sActorMessagePacket))
 				break;
 
-			if ((sMessagePacket.nType&eMT_TYPE_MASK) == eMT_ACTOR_REQUEST)
+			if ((sActorMessagePacket.nType&eMT_TYPE_MASK) == eMT_ACTOR_REQUEST)
 			{
-				this->m_sActorSessionInfo.nActorID = sMessagePacket.nID;
-				this->m_sActorSessionInfo.nSessionID = sMessagePacket.nSessionID;
-
-				google::protobuf::Message* pMessage = reinterpret_cast<google::protobuf::Message*>(sMessagePacket.pData);
-
+				this->m_sActorSessionInfo.nActorID = sActorMessagePacket.nData;
+				this->m_sActorSessionInfo.nSessionID = sActorMessagePacket.nSessionID;
+				
+				auto pMessage = std::shared_ptr<google::protobuf::Message>(sActorMessagePacket.pMessage);
 				auto iter = s_mapMessageHandlerInfo.find(pMessage->GetTypeName());
 				if (iter != s_mapMessageHandlerInfo.end())
 				{
@@ -66,7 +73,7 @@ namespace core
 					{
 						auto& callback = vecMessageHandlerInfo[k];
 
-						uint64_t nCoroutineID = coroutine::create(0, [&](uint64_t){ callback(this->m_pActorBase, this->m_sActorSessionInfo, pMessage); });
+						uint64_t nCoroutineID = coroutine::create(0, [&callback, this, pMessage](uint64_t){ callback(this->m_pActorBase, this->m_sActorSessionInfo, pMessage.get()); });
 						coroutine::resume(nCoroutineID, 0);
 					}
 				}
@@ -74,40 +81,41 @@ namespace core
 				this->m_sActorSessionInfo.nActorID = 0;
 				this->m_sActorSessionInfo.nSessionID = 0;
 			}
-			else if ((sMessagePacket.nType&eMT_TYPE_MASK) == eMT_ACTOR_RESPONSE)
+			else if ((sActorMessagePacket.nType&eMT_TYPE_MASK) == eMT_ACTOR_RESPONSE)
 			{
-				SResponseWaitInfo* pResponseWaitInfo = this->getResponseWaitInfo(sMessagePacket.nSessionID, true);
+				auto pMessage = std::shared_ptr<google::protobuf::Message>(sActorMessagePacket.pMessage);
+				auto pResponseWaitInfo = std::unique_ptr<SResponseWaitInfo>(this->getResponseWaitInfo(sActorMessagePacket.nSessionID, true));
 				if (nullptr != pResponseWaitInfo)
 				{
-					Defer(delete pResponseWaitInfo);
-
-					google::protobuf::Message* pMessage = reinterpret_cast<google::protobuf::Message*>(sMessagePacket.pData);
-
-					if (pResponseWaitInfo->callback != nullptr)
+					if (pResponseWaitInfo->nCoroutineID != 0)
 					{
-						if (sMessagePacket.nID == eRRT_OK)
-						{
-							pResponseWaitInfo->callback(pMessage, (uint8_t)sMessagePacket.nID);
-						}
-						else
-						{
-							pResponseWaitInfo->callback(nullptr, (uint8_t)sMessagePacket.nID);
-						}
-					}
-					else if (pResponseWaitInfo->nCoroutineID != 0)
-					{
-						coroutine::setLocalData(pResponseWaitInfo->nCoroutineID, "message", reinterpret_cast<uint64_t>(pMessage));
-						coroutine::setLocalData(pResponseWaitInfo->nCoroutineID, "result", sMessagePacket.nID);
+						coroutine::setLocalData(pResponseWaitInfo->nCoroutineID, "message", reinterpret_cast<uint64_t>(&pMessage));
+						coroutine::setLocalData(pResponseWaitInfo->nCoroutineID, "result", sActorMessagePacket.nData);
 
 						coroutine::resume(pResponseWaitInfo->nCoroutineID, 0);
 					}
+					else if (pResponseWaitInfo->callback != nullptr)
+					{
+						if (sActorMessagePacket.nData == eRRT_OK)
+						{
+							pResponseWaitInfo->callback(pMessage.get(), (uint8_t)sActorMessagePacket.nData);
+						}
+						else
+						{
+							pResponseWaitInfo->callback(nullptr, (uint8_t)sActorMessagePacket.nData);
+						}
+					}
+					else
+					{
+						PrintWarning("invalid response session_id: "UINT64FMT" actor_id: "UINT64FMT" message_name: %s", pResponseWaitInfo->nSessionID, this->getID(), pResponseWaitInfo->szMessageName.c_str());
+					}
 				}
 			}
-			else if ((sMessagePacket.nType&eMT_TYPE_MASK) == eMT_ACTOR_GATE_FORWARD)
+			else if ((sActorMessagePacket.nType&eMT_TYPE_MASK) == eMT_ACTOR_GATE_FORWARD)
 			{
-				SClientSessionInfo session((uint16_t)sMessagePacket.nID, sMessagePacket.nSessionID);
+				SClientSessionInfo session((uint16_t)sActorMessagePacket.nData, sActorMessagePacket.nSessionID);
 				
-				google::protobuf::Message* pMessage = reinterpret_cast<google::protobuf::Message*>(sMessagePacket.pData);
+				auto pMessage = std::unique_ptr<google::protobuf::Message>(sActorMessagePacket.pMessage);
 
 				auto iter = s_mapForwardHandlerInfo.find(pMessage->GetTypeName());
 				if (iter != s_mapForwardHandlerInfo.end())
@@ -117,13 +125,11 @@ namespace core
 					{
 						auto& callback = vecForwardHandlerInfo[k];
 
-						uint64_t nCoroutineID = coroutine::create(0, [&](uint64_t){ callback(this->m_pActorBase, session, pMessage); });
+						uint64_t nCoroutineID = coroutine::create(0, [&](uint64_t){ callback(this->m_pActorBase, session, pMessage.get()); });
 						coroutine::resume(nCoroutineID, 0);
 					}
 				}
 			}
-
-			SAFE_DELETE_ARRAY(sMessagePacket.pData);
 		}
 
 		if (!this->m_channel.empty())
@@ -156,13 +162,13 @@ namespace core
 			return;
 		}
 
-		SMessagePacket sMessagePacket;
-		sMessagePacket.nID = eRRT_TIME_OUT;
-		sMessagePacket.nSessionID = pResponseWaitInfo->nSessionID;
-		sMessagePacket.nType = eMT_RESPONSE;
-		sMessagePacket.nDataSize = sizeof(core::response_cookice);
-		sMessagePacket.pData = nullptr;
-		this->m_channel.send(sMessagePacket);
+		SActorMessagePacket sActorMessagePacket;
+		sActorMessagePacket.nData = eRRT_TIME_OUT;
+		sActorMessagePacket.nSessionID = pResponseWaitInfo->nSessionID;
+		sActorMessagePacket.nType = eMT_ACTOR_RESPONSE;
+		sActorMessagePacket.pMessage = nullptr;
+
+		this->m_channel.send(sActorMessagePacket);
 	}
 
 	SResponseWaitInfo* CActorBaseImpl::addResponseWaitInfo(uint64_t nSessionID, uint64_t nCoroutineID)
