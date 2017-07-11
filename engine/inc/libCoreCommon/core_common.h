@@ -74,11 +74,8 @@ enum EMessageType
 	eMT_REQUEST				= 3,		// 服务之间的请求消息
 	eMT_RESPONSE			= 4,		// 服务之间的响应消息
 	eMT_GATE_FORWARD		= 5,		// 客户端通过网关服务转发给其他服务消息
-	eMT_ACTOR_REQUEST		= 6,		// actor之间的请求消息
-	eMT_ACTOR_RESPONSE		= 7,		// actor之间的响应消息
-	eMT_ACTOR_GATE_FORWARD	= 8,		// 客户端通过网关服务转发给其他actor消息
-	eMT_TO_GATE				= 9,		// 其他服务通过网关服务转发客户端消息
-	eMT_CLIENT				= 10,		// 客户端消息
+	eMT_TO_GATE				= 6,		// 其他服务通过网关服务转发客户端消息
+	eMT_CLIENT				= 7,		// 客户端消息
 	
 	eMT_TYPE_MASK			= 0x00ff,	// 类型掩码
 	eMT_LUA					= 0x0100,	// lua消息
@@ -90,6 +87,14 @@ enum EMessageType
 namespace core
 {
 	typedef std::function<int32_t(const char*, uint32_t, uint8_t&)>	MessageParser;	// 原生消息
+
+	enum EMessageTargetType
+	{
+		eMTT_None		= 0,
+		eMTT_Actor		= 1,
+		eMTT_Service	= 2,
+		eMTT_Client		= 3,
+	};
 
 	struct	SMessagePacket
 	{
@@ -128,34 +133,13 @@ namespace core
 	{
 		uint16_t	nGateServiceID;
 		uint64_t	nSessionID;
-
-		SClientSessionInfo(uint16_t	nGateServiceID, uint64_t nSessionID)
-			: nGateServiceID(nGateServiceID), nSessionID(nSessionID)
-		{}
-
-		SClientSessionInfo()
-			: nGateServiceID(0), nSessionID(0)
-		{}
 	};
 
-	struct SServiceSessionInfo
+	struct SSessionInfo
 	{
-		uint16_t	nServiceID;
-		uint64_t	nSessionID;
-
-		SServiceSessionInfo(uint16_t nServiceID, uint64_t nSessionID)
-			: nServiceID(nServiceID), nSessionID(nSessionID)
-		{}
-
-		SServiceSessionInfo()
-			: nServiceID(0), nSessionID(0)
-		{}
-	};
-
-	struct SActorSessionInfo
-	{
-		uint64_t	nActorID;
-		uint64_t	nSessionID;
+		uint64_t			nFromID;
+		uint64_t			nSessionID;
+		EMessageTargetType	eMessageTargetType;
 	};
 
 	typedef std::function<void(uint64_t, const message_header*)> ClientCallback;	// 客户端消息处理函数类型
@@ -163,18 +147,10 @@ namespace core
 #pragma pack(push,1)
 	struct gate_forward_cookice
 	{
-		uint16_t	nFromServiceID;
-		uint16_t	nToServiceID;
 		uint64_t	nSessionID;
-		uint16_t	nMessageNameLen;
-		char		szMessageName[1];
-	};
-
-	struct actor_gate_forward_cookice
-	{
-		uint16_t	nFromServiceID;
-		uint64_t	nToActorID;
-		uint64_t	nSessionID;
+		uint64_t	nFromID;
+		uint64_t	nToID;
+		uint8_t		nTargetType;
 		uint16_t	nMessageNameLen;
 		char		szMessageName[1];
 	};
@@ -199,8 +175,9 @@ namespace core
 	struct request_cookice
 	{
 		uint64_t	nSessionID;
-		uint16_t	nFromServiceID;
-		uint16_t	nToServiceID;
+		uint64_t	nFromID;
+		uint64_t	nToID;
+		uint8_t		nTargetType;
 		uint16_t	nMessageNameLen;
 		char		szMessageName[1];
 	};
@@ -208,25 +185,9 @@ namespace core
 	struct response_cookice
 	{
 		uint64_t	nSessionID;
+		uint64_t	nToID;
 		uint8_t		nResult;
-		uint16_t	nMessageNameLen;
-		char		szMessageName[1];
-	};
-
-	struct actor_request_cookice
-	{
-		uint64_t	nSessionID;
-		uint64_t	nFromActorID;
-		uint64_t	nToActorID;
-		uint16_t	nMessageNameLen;
-		char		szMessageName[1];
-	};
-
-	struct actor_response_cookice
-	{
-		uint64_t	nToActorID;
-		uint64_t	nSessionID;
-		uint8_t		nResult;
+		uint8_t		nTargetType;
 		uint16_t	nMessageNameLen;
 		char		szMessageName[1];
 	};

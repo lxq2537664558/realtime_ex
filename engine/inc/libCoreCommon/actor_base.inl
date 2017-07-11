@@ -1,7 +1,7 @@
 namespace core
 {
 	template<class T>
-	bool CActorBase::async_call(uint64_t nID, const google::protobuf::Message* pMessage, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback)
+	bool CActorBase::async_call(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback)
 	{
 		DebugAstEx(pData != nullptr && callback != nullptr, false);
 
@@ -10,14 +10,14 @@ namespace core
 			callback(pMessage, nErrorCode);
 		};
 
-		if (!this->invoke(nID, pData, 0, callback_))
+		if (!this->invoke(eType, nID, pData, 0, callback_))
 			return false;
 
 		return true;
 	}
 
 	template<class T>
-	bool CActorBase::async_call(uint64_t nID, const google::protobuf::Message* pMessage, CFuture<T>& sFuture)
+	bool CActorBase::async_call(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, CFuture<T>& sFuture)
 	{
 		DebugAstEx(pData != nullptr, false);
 
@@ -28,7 +28,7 @@ namespace core
 			pPromise->setValue(pMessage, nErrorCode);
 		};
 
-		if (!this->invoke(nID, pData, 0, callback))
+		if (!this->invoke(eType, nID, pData, 0, callback))
 			return false;
 
 		sFuture = pPromise->getFuture();
@@ -37,9 +37,9 @@ namespace core
 	}
 
 	template<class T>
-	uint32_t CActorBase::sync_call(uint64_t nID, const google::protobuf::Message* pMessage, std::shared_ptr<T>& pResponseMessage)
+	uint32_t CActorBase::sync_call(uint16_t nServiceID, const google::protobuf::Message* pMessage, std::shared_ptr<T>& pResponseMessage)
 	{
-		if (!this->invoke(nID, pMessage, coroutine::getCurrentID(), nullptr))
+		if (!this->invoke(eMTT_Service, nServiceID, pMessage, coroutine::getCurrentID(), nullptr))
 			return eRRT_ERROR;
 
 		coroutine::yield();

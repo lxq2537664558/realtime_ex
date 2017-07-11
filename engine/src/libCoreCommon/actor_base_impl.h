@@ -37,7 +37,7 @@ namespace core
 		SResponseWaitInfo*	addResponseWaitInfo(uint64_t nSessionID, uint64_t nCoroutineID, uint64_t nToID, const std::string& szMessageName, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback);
 		SResponseWaitInfo*	getResponseWaitInfo(uint64_t nSessionID, bool bErase);
 
-		static void			registerActorMessageHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SActorSessionInfo, const google::protobuf::Message*)>& handler);
+		static void			registerMessageHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SSessionInfo, const google::protobuf::Message*)>& handler);
 		static void			registerForwardMessageHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SClientSessionInfo, const google::protobuf::Message*)>& handler);
 		
 	private:
@@ -51,7 +51,7 @@ namespace core
 		std::map<uint64_t, SResponseWaitInfo*>
 							m_mapResponseWaitInfo;
 
-		static std::map<std::string, std::vector<std::function<void(CActorBase*, SActorSessionInfo, const google::protobuf::Message*)>>>	s_mapActorMessageHandlerInfo;
+		static std::map<std::string, std::vector<std::function<void(CActorBase*, SSessionInfo, const google::protobuf::Message*)>>>			s_mapMessageHandlerInfo;
 		static std::map<std::string, std::vector<std::function<void(CActorBase*, SClientSessionInfo, const google::protobuf::Message*)>>>	s_mapForwardMessageHandlerInfo;
 	};
 }

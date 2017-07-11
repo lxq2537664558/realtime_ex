@@ -8,7 +8,7 @@ namespace core
 	}
 
 	template<class T>
-	void CServiceMessageRegistry<T>::registerMessageHandler(const std::string& szMessageName, void(T::*handler)(SServiceSessionInfo, const google::protobuf::Message*))
+	void CServiceMessageRegistry<T>::registerMessageHandler(const std::string& szMessageName, void(T::*handler)(SSessionInfo, const google::protobuf::Message*))
 	{
 		DebugAst(handler != nullptr);
 
@@ -30,7 +30,7 @@ namespace core
 	}
 
 	template<class T>
-	void CServiceMessageRegistry<T>::dispatch(T* pObject, SServiceSessionInfo& sServiceSessionInfo, const google::protobuf::Message* pMessage)
+	void CServiceMessageRegistry<T>::dispatch(T* pObject, SSessionInfo& sSessionInfo, const google::protobuf::Message* pMessage)
 	{
 		DebugAst(pMessage != nullptr);
 
@@ -40,7 +40,7 @@ namespace core
 
 		funMessageHandler handler = iter->second;
 
-		(pObject->*handler)(sServiceSessionInfo, pMessage);
+		(pObject->*handler)(sSessionInfo, pMessage);
 	}
 
 	template<class T>

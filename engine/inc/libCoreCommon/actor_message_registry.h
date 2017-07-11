@@ -9,16 +9,16 @@ namespace core
 	class CActorMessageRegistry
 	{
 	public:
-		typedef void(T::*funMessageHandler)(CActorBase*, uint64_t, const google::protobuf::Message*);
+		typedef void(T::*funMessageHandler)(CActorBase*, SSessionInfo, const google::protobuf::Message*);
 		typedef void(T::*funForwardHandler)(CActorBase*, SClientSessionInfo, const google::protobuf::Message*);
 
 	public:
-		static inline void	registerMessageHandler(const std::string& szMessageName, void(T::*handler)(CActorBase*, SActorSessionInfo, const google::protobuf::Message*));
+		static inline void	registerMessageHandler(const std::string& szMessageName, void(T::*handler)(CActorBase*, SSessionInfo, const google::protobuf::Message*));
 
 		static inline void	registerForwardHandler(const std::string& szMessageName, void(T::*handler)(CActorBase*, SClientSessionInfo, const google::protobuf::Message*));
 
 	protected:
-		static inline void	dispatch(T* pObject, CActorBase* pActorBase, SActorSessionInfo& sActorSessionInfo, const google::protobuf::Message* pMessage);
+		static inline void	dispatch(T* pObject, CActorBase* pActorBase, SSessionInfo& sSessionInfo, const google::protobuf::Message* pMessage);
 
 		static inline void	forward(T* pObject, CActorBase* pActorBase, SClientSessionInfo& sClientSessionInfo, const google::protobuf::Message* pMessage);
 
@@ -29,9 +29,9 @@ namespace core
 }
 
 #define DEFEND_ACTOR_MESSAGE_FUNCTION(Class) \
-		inline void	onDefaultActorMessageHandler(core::CActorBase* pActorBase, core::SActorSessionInfo& sActorSessionInfo, const google::protobuf::Message* pMessage)\
+		inline void	onDefaultActorMessageHandler(core::CActorBase* pActorBase, core::SSessionInfo& sSessionInfo, const google::protobuf::Message* pMessage)\
 		{\
-			core::CActorMessageRegistry<Class>::dispatch(this, pActorBase, sActorSessionInfo, pMessage);\
+			core::CActorMessageRegistry<Class>::dispatch(this, pActorBase, sSessionInfo, pMessage); \
 		}\
 		inline void	onDefaultActorForwardHandler(core::CActorBase* pActorBase, core::SClientSessionInfo& sClientSessionInfo, const google::protobuf::Message* pMessage)\
 		{\

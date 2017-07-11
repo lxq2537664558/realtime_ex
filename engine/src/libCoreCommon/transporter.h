@@ -19,14 +19,11 @@ namespace core
 
 		bool					init();
 
-		bool					invoke(uint64_t nSessionID, uint16_t nFromServiceID, uint16_t nToServiceID, const google::protobuf::Message* pMessage);
-		bool					invoke_a(uint64_t nSessionID, uint64_t nFromActorID, uint64_t nToActorID, const google::protobuf::Message* pMessage);
-		bool					response(uint64_t nSessionID, uint8_t nResult, uint16_t nToServiceID, const google::protobuf::Message* pMessage);
-		bool					response_a(uint64_t nSessionID, uint8_t nResult, uint64_t nToActorID, const google::protobuf::Message* pMessage);
-
-		bool					forward(uint64_t nSessionID, uint16_t nToServiceID, const google::protobuf::Message* pMessage);
-		bool					forward_a(uint64_t nSessionID, uint64_t nToActorID, const google::protobuf::Message* pMessage);
-
+		bool					invoke(EMessageTargetType eType, uint64_t nSessionID, uint64_t nFromID, uint64_t nToID, const google::protobuf::Message* pMessage);
+		bool					response(EMessageTargetType eType, uint64_t nSessionID, uint8_t nResult, uint64_t nToID, const google::protobuf::Message* pMessage);
+		
+		bool					forward(EMessageTargetType eType, uint64_t nSessionID, uint64_t nFromID, uint64_t nToID, const google::protobuf::Message* pMessage);
+		
 		bool					send(uint64_t nSessionID, uint16_t nToServiceID, const google::protobuf::Message* pMessage);
 
 		bool					broadcast(const std::vector<uint64_t>& vecSessionID, uint16_t nToServiceID, const google::protobuf::Message* pMessage);

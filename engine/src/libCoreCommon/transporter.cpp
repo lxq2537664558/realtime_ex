@@ -39,7 +39,7 @@ namespace core
 		return this->m_nNextSessionID;
 	}
 
-	bool CTransporter::invoke(uint64_t nSessionID, uint16_t nFromServiceID, uint16_t nToServiceID, const google::protobuf::Message* pMessage)
+	bool CTransporter::invoke(EMessageTargetType eType, uint64_t nSessionID, uint64_t nFromID, uint64_t nToID, const google::protobuf::Message* pMessage)
 	{
 		DebugAstEx(pMessage != nullptr, false);
 
@@ -47,8 +47,9 @@ namespace core
 		// 野割cookice
 		request_cookice* pCookice = reinterpret_cast<request_cookice*>(this->m_szBuf[0]);
 		pCookice->nSessionID = nSessionID;
-		pCookice->nFromServiceID = nFromServiceID;
-		pCookice->nToServiceID = nToServiceID;
+		pCookice->nFromID = nFromID;
+		pCookice->nToID = nToID;
+		pCookice->nTargetType = (uint8_t)eType;
 		pCookice->nMessageNameLen = (uint16_t)szMessageName.size();
 		base::crt::strcpy(pCookice->szMessageName, szMessageName.size() + 1, szMessageName.c_str());
 
@@ -59,6 +60,20 @@ namespace core
 			return false;
 
 		uint16_t nDataSize = (uint16_t)(nCookiceLen + (uint16_t)pMessage->ByteSize());
+
+		uint16_t nToServiceID = 0;
+		if (eType == eMTT_Actor)
+		{
+			CActorIDConverter* pActorIDConverter = CCoreApp::Inst()->getActorIDConverter();
+			DebugAstEx(pActorIDConverter != nullptr, false);
+
+			nToServiceID = pActorIDConverter->convertToServiceID(nToID);
+			DebugAstEx(nToServiceID != 0, false);
+		}
+		else
+		{
+			nToServiceID = (uint16_t)nToID;
+		}
 
 		if (!CCoreApp::Inst()->isOwnerService(nToServiceID))
 		{
@@ -88,43 +103,7 @@ namespace core
 		return true;
 	}
 
-	bool CTransporter::invoke_a(uint64_t nSessionID, uint64_t nFromActorID, uint64_t nToActorID, const google::protobuf::Message* pMessage)
-	{
-		DebugAstEx(pMessage != nullptr, false);
-
-		CActorIDConverter* pActorIDConverter = CCoreApp::Inst()->getActorIDConverter();
-		DebugAstEx(pActorIDConverter != nullptr, false);
-
-		uint16_t nToServiceID = pActorIDConverter->convertToServiceID(nToActorID);
-		DebugAstEx(nToServiceID != 0, false);
-
-		CBaseConnectionOtherNode* pBaseConnectionOtherNode = CCoreApp::Inst()->getCoreOtherNodeProxy()->getBaseConnectionOtherNodeByServiceID(nToServiceID);
-		if (nullptr == pBaseConnectionOtherNode)
-			return false;
-
-		std::string szMessageName = pMessage->GetTypeName();
-		// 野割cookice
-		actor_request_cookice* pCookice = reinterpret_cast<actor_request_cookice*>(this->m_szBuf[0]);
-		pCookice->nSessionID = nSessionID;
-		pCookice->nFromActorID = nFromActorID;
-		pCookice->nToActorID = nToActorID;
-		pCookice->nMessageNameLen = (uint16_t)szMessageName.size();
-		base::crt::strcpy(pCookice->szMessageName, szMessageName.size() + 1, szMessageName.c_str());
-
-		uint32_t nCookiceLen = (uint16_t)(sizeof(actor_request_cookice) + pCookice->nMessageNameLen);
-		DebugAstEx(nCookiceLen < this->m_szBuf.size(), false);
-
-		if (!pMessage->SerializeToArray(&this->m_szBuf[0] + nCookiceLen, (int32_t)(this->m_szBuf.size() - nCookiceLen)))
-			return false;
-
-		uint16_t nDataSize = (uint16_t)(nCookiceLen + (uint16_t)pMessage->ByteSize());
-
-		pBaseConnectionOtherNode->send(eMT_ACTOR_REQUEST, &this->m_szBuf[0], nDataSize);
-
-		return true;
-	}
-
-	bool CTransporter::response(uint64_t nSessionID, uint8_t nResult, uint16_t nToServiceID, const google::protobuf::Message* pMessage)
+	bool CTransporter::response(EMessageTargetType eType, uint64_t nSessionID, uint8_t nResult, uint64_t nToID, const google::protobuf::Message* pMessage)
 	{
 		DebugAstEx(pMessage != nullptr, false);
 		
@@ -132,7 +111,9 @@ namespace core
 
 		response_cookice* pCookice = reinterpret_cast<response_cookice*>(this->m_szBuf[0]);
 		pCookice->nSessionID = nSessionID;
+		pCookice->nToID = nToID;
 		pCookice->nResult = nResult;
+		pCookice->nTargetType = (uint8_t)eType;
 		pCookice->nMessageNameLen = (uint16_t)szMessageName.size();
 		base::crt::strcpy(pCookice->szMessageName, szMessageName.size() + 1, szMessageName.c_str());
 
@@ -144,20 +125,35 @@ namespace core
 
 		uint16_t nDataSize = (uint16_t)(nCookiceLen + (uint16_t)pMessage->ByteSize());
 
+		uint16_t nToServiceID = 0;
+		if (eType == eMTT_Actor)
+		{
+			CActorIDConverter* pActorIDConverter = CCoreApp::Inst()->getActorIDConverter();
+			DebugAstEx(pActorIDConverter != nullptr, false);
+
+			nToServiceID = pActorIDConverter->convertToServiceID(nToID);
+			DebugAstEx(nToServiceID != 0, false);
+		}
+		else
+		{
+			nToServiceID = (uint16_t)nToID;
+		}
+
 		if (!CCoreApp::Inst()->isOwnerService(nToServiceID))
 		{
 			CBaseConnectionOtherNode* pBaseConnectionOtherNode = CCoreApp::Inst()->getCoreOtherNodeProxy()->getBaseConnectionOtherNodeByServiceID(nToServiceID);
 			if (nullptr == pBaseConnectionOtherNode)
 				return false;
 
-			pBaseConnectionOtherNode->send(eMT_REQUEST, &this->m_szBuf[0], nDataSize);
+			pBaseConnectionOtherNode->send(eMT_RESPONSE, &this->m_szBuf[0], nDataSize);
 		}
 		else
 		{
-			SMCT_INSIDE_MESSAGE* pContext = new SMCT_INSIDE_MESSAGE;
+			char* pBuf = new char[sizeof(SMCT_INSIDE_MESSAGE)+nDataSize];
+			SMCT_INSIDE_MESSAGE* pContext = reinterpret_cast<SMCT_INSIDE_MESSAGE*>(pBuf);
 			pContext->nMessageType = eMT_RESPONSE;
 			pContext->nDataSize = nDataSize;
-			pContext->pData = new char[nDataSize];
+			pContext->pData = pBuf + sizeof(SMCT_INSIDE_MESSAGE);
 			memcpy(pContext->pData, &this->m_szBuf[0], nDataSize);
 			SMessagePacket sMessagePacket;
 			sMessagePacket.nType = eMCT_INSIDE_MESSAGE;
@@ -170,55 +166,17 @@ namespace core
 		return true;
 	}
 
-	bool CTransporter::response_a(uint64_t nSessionID, uint8_t nResult, uint64_t nToActorID, const google::protobuf::Message* pMessage)
+	bool CTransporter::forward(EMessageTargetType eType, uint64_t nSessionID, uint64_t nFromID, uint64_t nToID, const google::protobuf::Message* pMessage)
 	{
 		DebugAstEx(pMessage != nullptr, false);
-
-		CActorIDConverter* pActorIDConverter = CCoreApp::Inst()->getActorIDConverter();
-		DebugAstEx(pActorIDConverter != nullptr, false);
-
-		uint16_t nToServiceID = pActorIDConverter->convertToServiceID(nToActorID);
-		DebugAstEx(nToServiceID != 0, false);
-
-		CBaseConnectionOtherNode* pBaseConnectionOtherNode = CCoreApp::Inst()->getCoreOtherNodeProxy()->getBaseConnectionOtherNodeByServiceID(nToServiceID);
-		if (nullptr == pBaseConnectionOtherNode)
-			return false;
-
-		std::string szMessageName = pMessage->GetTypeName();
-
-		actor_response_cookice* pCookice = reinterpret_cast<actor_response_cookice*>(this->m_szBuf[0]);
-		pCookice->nSessionID = nSessionID;
-		pCookice->nToActorID = nToActorID;
-		pCookice->nResult = nResult;
-		pCookice->nMessageNameLen = (uint16_t)szMessageName.size();
-		base::crt::strcpy(pCookice->szMessageName, szMessageName.size() + 1, szMessageName.c_str());
-
-		uint32_t nCookiceLen = (uint16_t)(sizeof(actor_response_cookice) + pCookice->nMessageNameLen);
-		DebugAstEx(nCookiceLen < this->m_szBuf.size(), false);
-
-		if (!pMessage->SerializeToArray(&this->m_szBuf[0] + nCookiceLen, (int32_t)(this->m_szBuf.size() - nCookiceLen)))
-			return false;
-
-		uint16_t nDataSize = (uint16_t)(nCookiceLen + (uint16_t)pMessage->ByteSize());
-
-		pBaseConnectionOtherNode->send(eMT_ACTOR_RESPONSE, &this->m_szBuf[0], nDataSize);
-
-		return true;
-	}
-
-	bool CTransporter::forward(uint64_t nSessionID, uint16_t nToServiceID, const google::protobuf::Message* pMessage)
-	{
-		DebugAstEx(pMessage != nullptr, false);
-
-		CBaseConnectionOtherNode* pBaseConnectionOtherNode = CCoreApp::Inst()->getCoreOtherNodeProxy()->getBaseConnectionOtherNodeByServiceID(nToServiceID);
-		if (nullptr == pBaseConnectionOtherNode)
-			return false;
 		
 		std::string szMessageName = pMessage->GetTypeName();
 
 		gate_forward_cookice* pCookice = reinterpret_cast<gate_forward_cookice*>(this->m_szBuf[0]);
 		pCookice->nSessionID = nSessionID;
-		pCookice->nToServiceID = nToServiceID;
+		pCookice->nToID = nToID;
+		pCookice->nFromID = nFromID;
+		pCookice->nTargetType = (uint8_t)eType;
 		pCookice->nMessageNameLen = (uint16_t)szMessageName.size();
 		base::crt::strcpy(pCookice->szMessageName, szMessageName.size() + 1, szMessageName.c_str());
 
@@ -230,42 +188,43 @@ namespace core
 
 		uint16_t nDataSize = uint16_t(nCookiceLen + (uint16_t)pMessage->ByteSize());
 
-		pBaseConnectionOtherNode->send(eMT_GATE_FORWARD, &this->m_szBuf[0], nDataSize);
+		uint16_t nToServiceID = 0;
+		if (eType == eMTT_Actor)
+		{
+			CActorIDConverter* pActorIDConverter = CCoreApp::Inst()->getActorIDConverter();
+			DebugAstEx(pActorIDConverter != nullptr, false);
 
-		return true;
-	}
+			nToServiceID = pActorIDConverter->convertToServiceID(nToID);
+			DebugAstEx(nToServiceID != 0, false);
+		}
+		else
+		{
+			nToServiceID = (uint16_t)nToID;
+		}
 
-	bool CTransporter::forward_a(uint64_t nSessionID, uint64_t nToActorID, const google::protobuf::Message* pMessage)
-	{
-		DebugAstEx(pMessage != nullptr, false);
+		if (!CCoreApp::Inst()->isOwnerService(nToServiceID))
+		{
+			CBaseConnectionOtherNode* pBaseConnectionOtherNode = CCoreApp::Inst()->getCoreOtherNodeProxy()->getBaseConnectionOtherNodeByServiceID(nToServiceID);
+			if (nullptr == pBaseConnectionOtherNode)
+				return false;
 
-		CActorIDConverter* pActorIDConverter = CCoreApp::Inst()->getActorIDConverter();
-		DebugAstEx(pActorIDConverter != nullptr, false);
+			pBaseConnectionOtherNode->send(eMT_GATE_FORWARD, &this->m_szBuf[0], nDataSize);
+		}
+		else
+		{
+			char* pBuf = new char[sizeof(SMCT_INSIDE_MESSAGE)+nDataSize];
+			SMCT_INSIDE_MESSAGE* pContext = reinterpret_cast<SMCT_INSIDE_MESSAGE*>(pBuf);
+			pContext->nMessageType = eMT_GATE_FORWARD;
+			pContext->nDataSize = nDataSize;
+			pContext->pData = pBuf + sizeof(SMCT_INSIDE_MESSAGE);
+			memcpy(pContext->pData, &this->m_szBuf[0], nDataSize);
+			SMessagePacket sMessagePacket;
+			sMessagePacket.nType = eMCT_INSIDE_MESSAGE;
+			sMessagePacket.nDataSize = sizeof(SMCT_INSIDE_MESSAGE);
+			sMessagePacket.pData = pContext;
 
-		uint16_t nToServiceID = pActorIDConverter->convertToServiceID(nToActorID);
-		DebugAstEx(nToServiceID != 0, false);
-
-		CBaseConnectionOtherNode* pBaseConnectionOtherNode = CCoreApp::Inst()->getCoreOtherNodeProxy()->getBaseConnectionOtherNodeByServiceID(nToServiceID);
-		if (nullptr == pBaseConnectionOtherNode)
-			return false;
-
-		std::string szMessageName = pMessage->GetTypeName();
-
-		actor_gate_forward_cookice* pCookice = reinterpret_cast<actor_gate_forward_cookice*>(this->m_szBuf[0]);
-		pCookice->nSessionID = nSessionID;
-		pCookice->nToActorID = nToActorID;
-		pCookice->nMessageNameLen = (uint16_t)szMessageName.size();
-		base::crt::strcpy(pCookice->szMessageName, szMessageName.size() + 1, szMessageName.c_str());
-
-		uint32_t nCookiceLen = (uint16_t)(sizeof(actor_gate_forward_cookice) + pCookice->nMessageNameLen);
-		DebugAstEx(nCookiceLen < this->m_szBuf.size(), false);
-
-		if (!pMessage->SerializeToArray(&this->m_szBuf[0] + nCookiceLen, (int32_t)(this->m_szBuf.size() - nCookiceLen)))
-			return false;
-
-		uint16_t nDataSize = (uint16_t)(nCookiceLen + (uint16_t)pMessage->ByteSize());
-
-		pBaseConnectionOtherNode->send(eMT_ACTOR_GATE_FORWARD, &this->m_szBuf[0], nDataSize);
+			CLogicRunnable::Inst()->sendInsideMessage(sMessagePacket);
+		}
 
 		return true;
 	}

@@ -48,7 +48,7 @@ namespace core
 		/**
 		@brief: 注册普通节点消息
 		*/
-		void				registerMessageHandler(const std::string& szMessageName, const std::function<void(SServiceSessionInfo, google::protobuf::Message*)>& callback);
+		void				registerMessageHandler(const std::string& szMessageName, const std::function<void(SSessionInfo, google::protobuf::Message*)>& callback);
 		/**
 		@brief: 注册经网关节点转发客户端的消息
 		*/

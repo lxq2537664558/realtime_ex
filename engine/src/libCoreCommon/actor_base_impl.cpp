@@ -60,27 +60,28 @@ namespace core
 			if (!this->m_channel.recv(sActorMessagePacket))
 				break;
 
-			if ((sActorMessagePacket.nType&eMT_TYPE_MASK) == eMT_ACTOR_REQUEST)
+			if ((sActorMessagePacket.nType&eMT_TYPE_MASK) == eMT_REQUEST)
 			{
 				auto pMessage = std::shared_ptr<google::protobuf::Message>(sActorMessagePacket.pMessage);
-				auto iter = s_mapActorMessageHandlerInfo.find(pMessage->GetTypeName());
-				if (iter != s_mapActorMessageHandlerInfo.end())
+				auto iter = s_mapMessageHandlerInfo.find(pMessage->GetTypeName());
+				if (iter != s_mapMessageHandlerInfo.end())
 				{
-					SActorSessionInfo sActorSessionInfo;
-					sActorSessionInfo.nActorID = sActorMessagePacket.nData;
-					sActorMessagePacket.nSessionID = sActorMessagePacket.nSessionID;
+					SSessionInfo sSessionInfo;
+					sSessionInfo.nFromID = sActorMessagePacket.nData;
+					sSessionInfo.nSessionID = sActorMessagePacket.nSessionID;
+					sSessionInfo.eMessageTargetType = eMTT_Actor;
 
 					auto& vecMessageHandlerInfo = iter->second;
 					for (size_t k = 0; k < vecMessageHandlerInfo.size(); ++k)
 					{
 						auto& callback = vecMessageHandlerInfo[k];
 
-						uint64_t nCoroutineID = coroutine::create(0, [&callback, this, pMessage, sActorSessionInfo](uint64_t){ callback(this->m_pActorBase, sActorSessionInfo, pMessage.get()); });
+						uint64_t nCoroutineID = coroutine::create(0, [&callback, this, pMessage, sSessionInfo](uint64_t){ callback(this->m_pActorBase, sSessionInfo, pMessage.get()); });
 						coroutine::resume(nCoroutineID, 0);
 					}
 				}
 			}
-			else if ((sActorMessagePacket.nType&eMT_TYPE_MASK) == eMT_ACTOR_RESPONSE)
+			else if ((sActorMessagePacket.nType&eMT_TYPE_MASK) == eMT_RESPONSE)
 			{
 				auto pMessage = std::shared_ptr<google::protobuf::Message>(sActorMessagePacket.pMessage);
 				auto pResponseWaitInfo = std::unique_ptr<SResponseWaitInfo>(this->getResponseWaitInfo(sActorMessagePacket.nSessionID, true));
@@ -110,11 +111,12 @@ namespace core
 					}
 				}
 			}
-			else if ((sActorMessagePacket.nType&eMT_TYPE_MASK) == eMT_ACTOR_GATE_FORWARD)
+			else if ((sActorMessagePacket.nType&eMT_TYPE_MASK) == eMT_GATE_FORWARD)
 			{
-				SClientSessionInfo session((uint16_t)sActorMessagePacket.nData, sActorMessagePacket.nSessionID);
-				
-				auto pMessage = std::unique_ptr<google::protobuf::Message>(sActorMessagePacket.pMessage);
+				SClientSessionInfo sClientSessionInfo;
+				sClientSessionInfo.nGateServiceID = (uint16_t)sActorMessagePacket.nData;
+				sClientSessionInfo.nSessionID = sActorMessagePacket.nSessionID;
+				auto pMessage = std::shared_ptr<google::protobuf::Message>(sActorMessagePacket.pMessage);
 
 				auto iter = s_mapForwardMessageHandlerInfo.find(pMessage->GetTypeName());
 				if (iter != s_mapForwardMessageHandlerInfo.end())
@@ -124,7 +126,7 @@ namespace core
 					{
 						auto& callback = vecForwardHandlerInfo[k];
 
-						uint64_t nCoroutineID = coroutine::create(0, [&](uint64_t){ callback(this->m_pActorBase, session, pMessage.get()); });
+						uint64_t nCoroutineID = coroutine::create(0, [&callback, this, pMessage, sClientSessionInfo](uint64_t){ callback(this->m_pActorBase, sClientSessionInfo, pMessage.get()); });
 						coroutine::resume(nCoroutineID, 0);
 					}
 				}
@@ -159,7 +161,7 @@ namespace core
 		SActorMessagePacket sActorMessagePacket;
 		sActorMessagePacket.nData = eRRT_TIME_OUT;
 		sActorMessagePacket.nSessionID = pResponseWaitInfo->nSessionID;
-		sActorMessagePacket.nType = eMT_ACTOR_RESPONSE;
+		sActorMessagePacket.nType = eMT_RESPONSE;
 		sActorMessagePacket.pMessage = nullptr;
 
 		this->m_channel.send(sActorMessagePacket);
@@ -198,9 +200,9 @@ namespace core
 		return pResponseWaitInfo;
 	}
 
-	void CActorBaseImpl::registerActorMessageHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SActorSessionInfo, const google::protobuf::Message*)>& handler)
+	void CActorBaseImpl::registerMessageHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SSessionInfo, const google::protobuf::Message*)>& handler)
 	{
-		s_mapActorMessageHandlerInfo[szMessageName].push_back(handler);
+		s_mapMessageHandlerInfo[szMessageName].push_back(handler);
 	}
 
 	void CActorBaseImpl::registerForwardMessageHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SClientSessionInfo, const google::protobuf::Message*)>& handler)
@@ -210,5 +212,5 @@ namespace core
 
 	std::map<std::string, std::vector<std::function<void(CActorBase*, SClientSessionInfo, const google::protobuf::Message*)>>> CActorBaseImpl::s_mapForwardMessageHandlerInfo;
 
-	std::map<std::string, std::vector<std::function<void(CActorBase*, SActorSessionInfo, const google::protobuf::Message*)>>> CActorBaseImpl::s_mapActorMessageHandlerInfo;
+	std::map<std::string, std::vector<std::function<void(CActorBase*, SSessionInfo, const google::protobuf::Message*)>>> CActorBaseImpl::s_mapMessageHandlerInfo;
 }

@@ -17,7 +17,7 @@ namespace core
 
 	}
 
-	void CServiceBase::registerMessageHandler(const std::string& szMessageName, const std::function<void(SServiceSessionInfo, google::protobuf::Message*)>& callback)
+	void CServiceBase::registerMessageHandler(const std::string& szMessageName, const std::function<void(SSessionInfo, google::protobuf::Message*)>& callback)
 	{
 		CCoreApp::Inst()->getCoreMessageRegistry()->registerCallback(this->m_nServiceID, szMessageName, callback);
 	}

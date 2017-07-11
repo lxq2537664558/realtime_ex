@@ -26,14 +26,14 @@ namespace core
 		return this->m_pActorBaseImpl->getID();
 	}
 
-	bool CActorBase::send(uint64_t nID, const google::protobuf::Message* pMessage)
+	bool CActorBase::send(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage)
 	{
-		return CCoreApp::Inst()->getActorScheduler()->invoke(0, this->getID(), nID, pMessage);
+		return CCoreApp::Inst()->getActorScheduler()->invoke(eType, 0, this->getID(), nID, pMessage);
 	}
 
-	void CActorBase::response(const SActorSessionInfo& sActorSessionInfo, const google::protobuf::Message* pMessage)
+	void CActorBase::response(const SSessionInfo& sSessionInfo, const google::protobuf::Message* pMessage)
 	{
-		bool bRet = CCoreApp::Inst()->getActorScheduler()->response(sActorSessionInfo.nSessionID, eRRT_OK, sActorSessionInfo.nActorID, pMessage);
+		bool bRet = CCoreApp::Inst()->getActorScheduler()->response(sSessionInfo.eMessageTargetType, sSessionInfo.nSessionID, eRRT_OK, sSessionInfo.nFromID, pMessage);
 	}
 
 	CActorBase* CActorBase::createActor(const std::string& szClassName, void* pContext)
@@ -68,9 +68,9 @@ namespace core
 		this->del();
 	}
 
-	void CActorBase::registerMessageHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SActorSessionInfo, const google::protobuf::Message*)>& handler)
+	void CActorBase::registerMessageHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SSessionInfo, const google::protobuf::Message*)>& handler)
 	{
-		CActorBaseImpl::registerActorMessageHandler(szMessageName, handler);
+		CActorBaseImpl::registerMessageHandler(szMessageName, handler);
 	}
 
 	void CActorBase::registerForwardHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SClientSessionInfo, const google::protobuf::Message*)>& handler)
@@ -78,11 +78,11 @@ namespace core
 		CActorBaseImpl::registerForwardMessageHandler(szMessageName, handler);
 	}
 
-	bool CActorBase::invoke(uint64_t nID, const google::protobuf::Message* pMessage, uint64_t nCoroutineID, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback)
+	bool CActorBase::invoke(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, uint64_t nCoroutineID, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback)
 	{
 		uint64_t nSessionID = CCoreApp::Inst()->getTransporter()->genSessionID();
 
-		if (!CCoreApp::Inst()->getActorScheduler()->invoke(nSessionID, this->getID(), nID, pMessage))
+		if (!CCoreApp::Inst()->getActorScheduler()->invoke(eType, nSessionID, this->getID(), nID, pMessage))
 			return false;
 
 		SResponseWaitInfo* pResponseWaitInfo = this->m_pActorBaseImpl->addResponseWaitInfo(nSessionID, nCoroutineID, nID, pMessage->GetTypeName(), callback);

@@ -21,7 +21,7 @@ namespace core
 		return true;
 	}
 
-	void CCoreMessageRegistry::registerCallback(uint16_t nServiceID, const std::string& szMessageName, const std::function<void(SServiceSessionInfo, google::protobuf::Message*)>& callback)
+	void CCoreMessageRegistry::registerCallback(uint16_t nServiceID, const std::string& szMessageName, const std::function<void(SSessionInfo, google::protobuf::Message*)>& callback)
 	{
 		SServiceRegistryInfo& sServiceRegistryInfo = this->m_mapServiceRegistryInfo[nServiceID];
 
@@ -47,19 +47,19 @@ namespace core
 		sServiceRegistryInfo.mapGateForwardCallback[szMessageName] = callback;
 	}
 
-	std::function<void(SServiceSessionInfo, google::protobuf::Message*)>& CCoreMessageRegistry::getCallback(uint16_t nServiceID, const std::string& szMessageName)
+	std::function<void(SSessionInfo, google::protobuf::Message*)>& CCoreMessageRegistry::getCallback(uint16_t nServiceID, const std::string& szMessageName)
 	{
 		auto iter = this->m_mapServiceRegistryInfo.find(nServiceID);
 		if (iter == this->m_mapServiceRegistryInfo.end())
 		{
-			static std::function<void(SServiceSessionInfo, google::protobuf::Message*)> callback;
+			static std::function<void(SSessionInfo, google::protobuf::Message*)> callback;
 			return callback;
 		}
 
 		auto iterCallback =  iter->second.mapServiceCallback.find(szMessageName);
 		if (iterCallback == iter->second.mapServiceCallback.end())
 		{
-			static std::function<void(SServiceSessionInfo, google::protobuf::Message*)> callback;
+			static std::function<void(SSessionInfo, google::protobuf::Message*)> callback;
 			return callback;
 		}
 

@@ -58,7 +58,7 @@ namespace core
 		CCoreApp::Inst()->unregisterTicker(pTicker);
 	}
 
-	void CBaseApp::registerCallback(uint16_t nServiceID, const std::string& szMessageName, const std::function<void(SServiceSessionInfo, google::protobuf::Message*)>& callback)
+	void CBaseApp::registerCallback(uint16_t nServiceID, const std::string& szMessageName, const std::function<void(SSessionInfo, google::protobuf::Message*)>& callback)
 	{
 		CCoreApp::Inst()->getCoreMessageRegistry()->registerCallback(nServiceID, szMessageName, callback);
 	}

@@ -7,7 +7,7 @@ namespace core
 	std::map<std::string, typename CActorMessageRegistry<T>::funForwardHandler> CActorMessageRegistry<T>::s_mapForwardHandler;
 
 	template<class T>
-	void CActorMessageRegistry<T>::registerMessageHandler(const std::string& szMessageName, void(T::*handler)(CActorBase*, uint64_t, const google::protobuf::Message*))
+	void CActorMessageRegistry<T>::registerMessageHandler(const std::string& szMessageName, void(T::*handler)(CActorBase*, SSessionInfo, const google::protobuf::Message*))
 	{
 		DebugAst(handler != nullptr);
 
@@ -23,7 +23,7 @@ namespace core
 	}
 
 	template<class T>
-	void CActorMessageRegistry<T>::dispatch(T* pObject, CActorBase* pActorBase, SActorSessionInfo& sActorSessionInfo, const google::protobuf::Message* pMessage)
+	void CActorMessageRegistry<T>::dispatch(T* pObject, CActorBase* pActorBase, SSessionInfo& sSessionInfo, const google::protobuf::Message* pMessage)
 	{
 		DebugAst(pMessage != nullptr);
 
@@ -33,7 +33,7 @@ namespace core
 
 		funMessageHandler handler = iter->second;
 
-		(pObject->*handler)(pActorBase, sActorSessionInfo, pMessage);
+		(pObject->*handler)(pActorBase, sSessionInfo, pMessage);
 	}
 
 	template<class T>

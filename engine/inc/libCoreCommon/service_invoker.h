@@ -5,6 +5,8 @@
 #include "core_common.h"
 #include "future.h"
 
+#include <vector>
+
 namespace core
 {
 	class CServiceInvoker :
@@ -16,28 +18,26 @@ namespace core
 
 		bool				init();
 
-		bool				send(uint16_t nServiceID, const google::protobuf::Message* pMessage);
+		bool				send(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage);
 
 		bool				broadcast(uint16_t nServiceType, const google::protobuf::Message* pMessage);
-
-		template<class T>
-		inline bool			async_call(uint16_t nServiceID, const void* pData, CFuture<T>& sFuture);
-
-		template<class T>
-		inline bool			async_call(uint16_t nServiceID, const void* pData, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback);
 		
-		void				response(const SServiceSessionInfo& sServiceSessionInfo, const google::protobuf::Message* pMessage);
+		template<class T>
+		inline bool			async_call(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback);
+
+		template<class T>
+		inline bool			async_call(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, CFuture<T>& sFuture);
+
+		void				response(const SSessionInfo& sSessionInfo, const google::protobuf::Message* pMessage);
 		
 		bool				send(const SClientSessionInfo& sClientSessionInfo, const google::protobuf::Message* pMessage);
 		
 		bool				broadcast(const std::vector<SClientSessionInfo>& vecClientSessionInfo, const google::protobuf::Message* pMessage);
 		
-		bool				forward(uint16_t nServiceID, uint64_t nSessionID, const google::protobuf::Message* pMessage);
-		
-		bool				forward_a(uint64_t nActorID, uint64_t nSessionID, const google::protobuf::Message* pMessage);
-		
+		bool				forward(EMessageTargetType eType, uint64_t nID, uint64_t nSessionID, const google::protobuf::Message* pMessage);
+
 	private:
-		bool				invoke(uint16_t nServiceID, const google::protobuf::Message* pMessage, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback);
+		bool				invoke(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback);
 	
 	private:
 		uint16_t	m_nServiceID;

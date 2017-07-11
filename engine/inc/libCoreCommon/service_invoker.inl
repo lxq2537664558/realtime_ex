@@ -1,7 +1,7 @@
 namespace core
 {
 	template<class T>
-	bool CServiceInvoker::async_call(uint16_t nServiceID, const void* pData, CFuture<T>& sFuture)
+	bool CServiceInvoker::async_call(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, CFuture<T>& sFuture)
 	{
 		DebugAstEx(pData != nullptr, false);
 
@@ -12,7 +12,7 @@ namespace core
 			pPromise->setValue(pMessage, nErrorCode);
 		};
 
-		if (!this->invoke(nServiceID, pData, callback))
+		if (!this->invoke(eType, nID, pData, callback))
 			return false;
 
 		sFuture = pPromise->getFuture();
@@ -21,7 +21,7 @@ namespace core
 	}
 
 	template<class T>
-	bool CServiceInvoker::async_call(uint16_t nServiceID, const void* pData, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback)
+	bool CServiceInvoker::async_call(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback)
 	{
 		DebugAstEx(pData != nullptr && callback != nullptr, false);
 
@@ -30,6 +30,6 @@ namespace core
 			callback(pMessage, nErrorCode);
 		};
 
-		return this->invoke(nServiceID, pData, callback_);
+		return this->invoke(eType, nID, pData, callback_);
 	}
 }

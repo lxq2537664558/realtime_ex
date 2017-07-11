@@ -37,7 +37,7 @@ namespace core
 		return iter->second;
 	}
 
-	bool CActorScheduler::invoke(uint64_t nSessionID, uint64_t nFromActorID, uint64_t nToActorID, const google::protobuf::Message* pMessage)
+	bool CActorScheduler::invoke(EMessageTargetType eType, uint64_t nSessionID, uint64_t nFromActorID, uint64_t nToID, const google::protobuf::Message* pMessage)
 	{
 		auto iter = this->m_mapActorBase.find(nFromActorID);
 		if (iter == this->m_mapActorBase.end())
@@ -46,65 +46,79 @@ namespace core
 		CActorBaseImpl* pFromActorBaseImpl = iter->second;
 		DebugAstEx(pFromActorBaseImpl != nullptr, false);
 
-		iter = this->m_mapActorBase.find(nToActorID);
-		if (iter != this->m_mapActorBase.end())
+		if (eType == eMTT_Actor)
 		{
-			CActorBaseImpl* pToActorBaseImpl = iter->second;
-			DebugAstEx(pToActorBaseImpl != nullptr, false);
+			iter = this->m_mapActorBase.find(nToID);
+			if (iter != this->m_mapActorBase.end())
+			{
+				CActorBaseImpl* pToActorBaseImpl = iter->second;
+				DebugAstEx(pToActorBaseImpl != nullptr, false);
 
-			google::protobuf::Message* pNewMessage = create_protobuf_message(pMessage->GetTypeName());
-			if (nullptr == pMessage)
-				return false;
+				google::protobuf::Message* pNewMessage = create_protobuf_message(pMessage->GetTypeName());
+				if (nullptr == pMessage)
+					return false;
 
-			pNewMessage->CopyFrom(*pMessage);
+				pNewMessage->CopyFrom(*pMessage);
 
-			SActorMessagePacket sActorMessagePacket;
-			sActorMessagePacket.nData = nFromActorID;
-			sActorMessagePacket.nSessionID = nSessionID;
-			sActorMessagePacket.nType = eMT_ACTOR_REQUEST;
-			sActorMessagePacket.pMessage = pNewMessage;
+				SActorMessagePacket sActorMessagePacket;
+				sActorMessagePacket.nData = nFromActorID;
+				sActorMessagePacket.nSessionID = nSessionID;
+				sActorMessagePacket.nType = eMT_REQUEST;
+				sActorMessagePacket.pMessage = pNewMessage;
 
-			pToActorBaseImpl->getChannel()->send(sActorMessagePacket);
+				pToActorBaseImpl->getChannel()->send(sActorMessagePacket);
 
-			this->addWorkActorBase(pToActorBaseImpl);
-			
-			return true;
+				this->addWorkActorBase(pToActorBaseImpl);
+
+				return true;
+			}
+			else
+			{
+				return CCoreApp::Inst()->getTransporter()->invoke(eMTT_Actor, nSessionID, nFromActorID, nToID, pMessage);
+			}
 		}
 		else
 		{
-			return CCoreApp::Inst()->getTransporter()->invoke_a(nSessionID, nFromActorID, nToActorID, pMessage);
+			return CCoreApp::Inst()->getTransporter()->invoke(eMTT_Service, nSessionID, nFromActorID, nToID, pMessage);
 		}
 	}
 
-	bool CActorScheduler::response(uint64_t nSessionID, uint8_t nResult, uint64_t nToActorID, const google::protobuf::Message* pMessage)
+	bool CActorScheduler::response(EMessageTargetType eType, uint64_t nSessionID, uint8_t nResult, uint64_t nToID, const google::protobuf::Message* pMessage)
 	{
-		auto iter = this->m_mapActorBase.find(nToActorID);
-		if (iter != this->m_mapActorBase.end())
+		if (eType == eMTT_Actor)
 		{
-			CActorBaseImpl* pToActorBaseImpl = iter->second;
-			DebugAstEx(pToActorBaseImpl != nullptr, false);
+			auto iter = this->m_mapActorBase.find(nToID);
+			if (iter != this->m_mapActorBase.end())
+			{
+				CActorBaseImpl* pToActorBaseImpl = iter->second;
+				DebugAstEx(pToActorBaseImpl != nullptr, false);
 
-			google::protobuf::Message* pNewMessage = create_protobuf_message(pMessage->GetTypeName());
-			if (nullptr == pMessage)
-				return false;
+				google::protobuf::Message* pNewMessage = create_protobuf_message(pMessage->GetTypeName());
+				if (nullptr == pMessage)
+					return false;
 
-			pNewMessage->CopyFrom(*pMessage);
+				pNewMessage->CopyFrom(*pMessage);
 
-			SActorMessagePacket sActorMessagePacket;
-			sActorMessagePacket.nData = nResult;
-			sActorMessagePacket.nSessionID = nSessionID;
-			sActorMessagePacket.nType = eMT_ACTOR_RESPONSE;
-			sActorMessagePacket.pMessage = pNewMessage;
+				SActorMessagePacket sActorMessagePacket;
+				sActorMessagePacket.nData = nResult;
+				sActorMessagePacket.nSessionID = nSessionID;
+				sActorMessagePacket.nType = eMT_RESPONSE;
+				sActorMessagePacket.pMessage = pNewMessage;
 
-			pToActorBaseImpl->getChannel()->send(sActorMessagePacket);
+				pToActorBaseImpl->getChannel()->send(sActorMessagePacket);
 
-			this->addWorkActorBase(pToActorBaseImpl);
-			
-			return true;
+				this->addWorkActorBase(pToActorBaseImpl);
+
+				return true;
+			}
+			else
+			{
+				return CCoreApp::Inst()->getTransporter()->response(eMTT_Actor, nSessionID, nResult, nToID, pMessage);
+			}
 		}
 		else
 		{
-			return CCoreApp::Inst()->getTransporter()->response_a(nSessionID, nResult, nToActorID, pMessage);
+			return CCoreApp::Inst()->getTransporter()->response(eMTT_Service, nSessionID, nResult, nToID, pMessage);
 		}
 	}
 

@@ -9,21 +9,21 @@ namespace core
 	class CServiceMessageRegistry
 	{
 	public:
-		typedef void(T::*funMessageHandler)(SServiceSessionInfo, const google::protobuf::Message*);
+		typedef void(T::*funMessageHandler)(SSessionInfo, const google::protobuf::Message*);
 		typedef void(T::*funForwardHandler)(SClientSessionInfo, const google::protobuf::Message*);
 
 	public:
 		CServiceMessageRegistry(uint16_t nServiceID);
 		~CServiceMessageRegistry();
 
-		inline void	registerMessageHandler(const std::string& szMessageName, void(T::*handler)(SServiceSessionInfo, const google::protobuf::Message*));
+		inline void	registerMessageHandler(const std::string& szMessageName, void(T::*handler)(SSessionInfo, const google::protobuf::Message*));
 
 		inline void	registerForwardHandler(const std::string& szMessageName, void(T::*handler)(SClientSessionInfo, const google::protobuf::Message*));
 
 		uint16_t	getServiceID() const;
 
 	protected:
-		inline void	dispatch(T* pObject, SServiceSessionInfo& sServiceSessionInfo, const google::protobuf::Message* pMessage);
+		inline void	dispatch(T* pObject, SSessionInfo& sSessionInfo, const google::protobuf::Message* pMessage);
 
 		inline void	forward(T* pObject, SClientSessionInfo& sClientSessionInfo, const google::protobuf::Message* pMessage);
 
@@ -35,9 +35,9 @@ namespace core
 }
 
 #define DEFEND_SERVICE_MESSAGE_FUNCTION(Class) \
-		inline void	onDefaultServiceMessageHandler(core::SServiceSessionInfo sServiceSessionInfo, const google::protobuf::Message* pMessage)\
+		inline void	onDefaultServiceMessageHandler(core::SSessionInfo sSessionInfo, const google::protobuf::Message* pMessage)\
 		{\
-			core::CServiceMessageRegistry<Class>::dispatch(this, sServiceSessionInfo, pMessage);\
+			core::CServiceMessageRegistry<Class>::dispatch(this, sSessionInfo, pMessage); \
 		}\
 		inline void	onDefaultServiceForwardHandler(core::SClientSessionInfo sClientSessionInfo, const google::protobuf::Message* pMessage)\
 		{\

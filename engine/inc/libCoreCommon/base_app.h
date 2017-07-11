@@ -41,7 +41,7 @@ namespace core
 		/**
 		@brief: 注册普通的服务回调
 		*/
-		void						registerCallback(uint16_t nServiceID, const std::string& szMessageName, const std::function<void(SServiceSessionInfo, google::protobuf::Message*)>& callback);
+		void						registerCallback(uint16_t nServiceID, const std::string& szMessageName, const std::function<void(SSessionInfo, google::protobuf::Message*)>& callback);
 		/**
 		@brief: 注册网关服务过来的服务回调
 		*/
