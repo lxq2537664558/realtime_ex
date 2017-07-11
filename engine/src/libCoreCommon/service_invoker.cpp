@@ -33,13 +33,6 @@ namespace core
 		return CCoreApp::Inst()->getTransporter()->invoke(nServiceID, 0, nServiceID, pMessage);
 	}
 
-	void CServiceInvoker::response(const google::protobuf::Message* pMessage)
-	{
-		DebugAst(pMessage != nullptr);
-
-		this->response(CCoreApp::Inst()->getTransporter()->getServiceSessionInfo(), pMessage);
-	}
-
 	void CServiceInvoker::response(const SServiceSessionInfo& sServiceSessionInfo, const google::protobuf::Message* pMessage)
 	{
 		DebugAst(pMessage != nullptr);
@@ -95,13 +88,9 @@ namespace core
 		if (!CCoreApp::Inst()->getTransporter()->invoke(nServiceID, this->m_nServiceID, nServiceID, pMessage))
 			return false;
 
-		SResponseWaitInfo* pResponseWaitInfo = CCoreApp::Inst()->getTransporter()->addResponseWaitInfo(nSessionID);
+		SResponseWaitInfo* pResponseWaitInfo = CCoreApp::Inst()->getTransporter()->addResponseWaitInfo(nSessionID, nServiceID, pMessage->GetTypeName(), callback);
 		DebugAstEx(pResponseWaitInfo != nullptr, false);
-		pResponseWaitInfo->nToID = nServiceID;
-		pResponseWaitInfo->szMessageName = pMessage->GetTypeName();
-		pResponseWaitInfo->nBeginTime = base::getGmtTime();
-
-		pResponseWaitInfo->callback = callback;
+		
 		return true;
 	}
 }

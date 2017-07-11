@@ -488,7 +488,7 @@ namespace base
 		bool atoi(const char* szBuf, int32_t& nVal)
 		{
 			errno = 0;
-			nVal = ::strtol(szBuf, NULL, 10);
+			nVal = ::strtol(szBuf, nullptr, 10);
 
 			return errno == 0;
 		}
@@ -496,7 +496,7 @@ namespace base
 		bool atoui(const char* szBuf, uint32_t& nVal)
 		{
 			errno = 0;
-			nVal = ::strtoul(szBuf, NULL, 10);
+			nVal = ::strtoul(szBuf, nullptr, 10);
 			return errno == 0;
 		}
 
@@ -504,7 +504,7 @@ namespace base
 		{
 #ifdef _WIN32
 			errno = 0;
-			nVal = ::_strtoi64(szBuf, NULL, 10);
+			nVal = ::_strtoi64(szBuf, nullptr, 10);
 			return errno == 0;
 #else
 			return true;
@@ -515,7 +515,7 @@ namespace base
 		{
 #ifdef _WIN32
 			errno = 0;
-			nVal = ::_strtoui64(szBuf, NULL, 10);
+			nVal = ::_strtoui64(szBuf, nullptr, 10);
 			return errno == 0;
 #else
 			return true;

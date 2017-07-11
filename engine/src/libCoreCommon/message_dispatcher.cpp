@@ -116,7 +116,7 @@ namespace core
 			DebugAst(pCookice->szMessageName[pCookice->nMessageNameLen] == 0);
 
 			CActorBaseImpl* pActorBase = CCoreApp::Inst()->getActorScheduler()->getActorBase(pCookice->nToActorID);
-			if (NULL == pActorBase)
+			if (nullptr == pActorBase)
 				return;
 
 			const char* pMessageData = reinterpret_cast<const char*>(pCookice + 1) + pCookice->nMessageNameLen;
@@ -178,7 +178,7 @@ namespace core
 			DebugAst(pCookice->szMessageName[pCookice->nMessageNameLen] == 0);
 
 			CActorBaseImpl* pActorBase = CCoreApp::Inst()->getActorScheduler()->getActorBase(pCookice->nToActorID);
-			if (NULL == pActorBase)
+			if (nullptr == pActorBase)
 				return;
 
 			const char* pMessageData = reinterpret_cast<const char*>(pCookice + 1) + pCookice->nMessageNameLen;

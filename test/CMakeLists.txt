@@ -1,2 +1,0 @@
-add_subdirectory(TestCoreCommon)
-add_subdirectory(TestCoroutine)

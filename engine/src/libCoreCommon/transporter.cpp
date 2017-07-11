@@ -10,6 +10,8 @@
 #include "core_app.h"
 #include "message_command.h"
 
+#include "libBaseCommon\base_time.h"
+
 namespace core
 {
 	CTransporter::CTransporter()
@@ -355,11 +357,6 @@ namespace core
 		SAFE_DELETE(pResponseWaitInfo);
 	}
 
-	SServiceSessionInfo& CTransporter::getServiceSessionInfo()
-	{
-		return this->m_sServiceSessionInfo;
-	}
-
 	SResponseWaitInfo* CTransporter::getResponseWaitInfo(uint64_t nSessionID, bool bErase)
 	{
 		auto iter = this->m_mapResponseWaitInfo.find(nSessionID);
@@ -373,7 +370,7 @@ namespace core
 		return pResponseWaitInfo;
 	}
 
-	SResponseWaitInfo* CTransporter::addResponseWaitInfo(uint64_t nSessionID)
+	SResponseWaitInfo* CTransporter::addResponseWaitInfo(uint64_t nSessionID, uint64_t nToID, const std::string& szMessageName, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback)
 	{
 		auto iter = this->m_mapResponseWaitInfo.find(nSessionID);
 		DebugAstEx(iter == this->m_mapResponseWaitInfo.end(), nullptr);
@@ -381,8 +378,9 @@ namespace core
 		SResponseWaitInfo* pResponseWaitInfo = new SResponseWaitInfo();
 		pResponseWaitInfo->callback = nullptr;
 		pResponseWaitInfo->nSessionID = nSessionID;
-		pResponseWaitInfo->nToID = 0;
-		pResponseWaitInfo->nBeginTime = 0;
+		pResponseWaitInfo->nToID = nToID;
+		pResponseWaitInfo->szMessageName = szMessageName;
+		pResponseWaitInfo->nBeginTime = base::getGmtTime();
 		pResponseWaitInfo->tickTimeout.setCallback(std::bind(&CTransporter::onRequestMessageTimeout, this, std::placeholders::_1));
 		CBaseApp::Inst()->registerTicker(CTicker::eTT_Logic, 0, &pResponseWaitInfo->tickTimeout, CCoreApp::Inst()->getInvokeTimeout(), 0, nSessionID);
 

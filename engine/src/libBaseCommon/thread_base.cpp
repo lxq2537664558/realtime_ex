@@ -115,7 +115,7 @@ namespace base
 
 #ifdef _WIN32
 		this->m_hThread = (HANDLE)_beginthreadex(nullptr, 0, &threadProc, this, 0, &this->m_nThreadID);
-		if (this->m_hThread == NULL || this->m_hThread == INVALID_HANDLE_VALUE)
+		if (this->m_hThread == nullptr || this->m_hThread == INVALID_HANDLE_VALUE)
 			return false;
 #else
 		// 这个m_hThread其实是个地址，里面包含了真正的线程id，可以用syscall(__NR_gettid)获取

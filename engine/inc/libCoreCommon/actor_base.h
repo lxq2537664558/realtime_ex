@@ -1,7 +1,7 @@
 #pragma once
-#include "libBaseCommon/noncopyable.h"
 #include "google/protobuf/message.h"
 
+#include "base_object.h"
 #include "coroutine.h"
 #include "core_common.h"
 #include "future.h"
@@ -11,9 +11,8 @@
 namespace core
 {
 	class CActorBaseImpl;
-	class CActorFactory;
 	class CActorBase :
-		public base::noncopyable
+		public CBaseObject
 	{
 	protected:
 		CActorBase();
@@ -47,20 +46,15 @@ namespace core
 		template<class T>
 		inline uint32_t		sync_call(uint64_t nID, const google::protobuf::Message* pMessage, std::shared_ptr<T>& pResponseMessage);
 
-		void				response(const google::protobuf::Message* pMessage);
 		void				response(const SActorSessionInfo& sActorSessionInfo, const google::protobuf::Message* pMessage);
-
-		SActorSessionInfo	getActorSessionInfo() const;
 
 		void				release();
 
 		static void			registerMessageHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SActorSessionInfo, const google::protobuf::Message*)>& handler);
 		static void			registerForwardHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SClientSessionInfo, const google::protobuf::Message*)>& handler);
 
-		static CActorBase*	createActorBase(void* pContext, CActorFactory* pActorBaseFactory);
+		static CActorBase*	createActor(const std::string& szClassName, void* pContext);
 
-		static uint16_t		getServiceID(uint64_t nActorID);
-		
 	private:
 		bool				invoke(uint64_t nID, const google::protobuf::Message* pMessage, uint64_t nCoroutineID, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback);
 

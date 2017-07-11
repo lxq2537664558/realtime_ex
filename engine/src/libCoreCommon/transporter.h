@@ -31,10 +31,8 @@ namespace core
 
 		bool					broadcast(const std::vector<uint64_t>& vecSessionID, uint16_t nToServiceID, const google::protobuf::Message* pMessage);
 
-		SServiceSessionInfo&	getServiceSessionInfo();
-
 		SResponseWaitInfo*		getResponseWaitInfo(uint64_t nSessionID, bool bErase);
-		SResponseWaitInfo*		addResponseWaitInfo(uint64_t nSessionID);
+		SResponseWaitInfo*		addResponseWaitInfo(uint64_t nSessionID, uint64_t nToID, const std::string& szMessageName, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback);
 
 		uint64_t				genSessionID();
 
@@ -43,7 +41,6 @@ namespace core
 		
 	private:
 		uint64_t									m_nNextSessionID;
-		SServiceSessionInfo							m_sServiceSessionInfo;
 		std::map<uint64_t, SResponseWaitInfo*>		m_mapResponseWaitInfo;
 		std::vector<char>							m_szBuf;
 	};

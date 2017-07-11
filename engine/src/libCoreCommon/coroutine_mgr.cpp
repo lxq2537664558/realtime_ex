@@ -193,7 +193,7 @@ namespace core
 		uint32_t nPageSize = CCoroutineMgr::getPageSize();
 		nStackSize = (nStackSize + nPageSize - 1) / nPageSize * nPageSize;
 
-		char* pStack = reinterpret_cast<char*>(mmap(NULL, nStackSize + 2 * nPageSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0));
+		char* pStack = reinterpret_cast<char*>(mmap(nullptr, nStackSize + 2 * nPageSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0));
 		if (pStack == (void*)MAP_FAILED)
 			return nullptr;
 

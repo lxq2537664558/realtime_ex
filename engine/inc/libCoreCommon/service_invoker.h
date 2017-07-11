@@ -26,8 +26,6 @@ namespace core
 		template<class T>
 		inline bool			async_call(uint16_t nServiceID, const void* pData, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback);
 		
-		void				response(const google::protobuf::Message* pMessage);
-		
 		void				response(const SServiceSessionInfo& sServiceSessionInfo, const google::protobuf::Message* pMessage);
 		
 		bool				send(const SClientSessionInfo& sClientSessionInfo, const google::protobuf::Message* pMessage);

@@ -42,9 +42,6 @@
     <ClInclude Include="..\..\inc\libCoreCommon\actor_base.h">
       <Filter>inc\actor</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreCommon\actor_factory.h">
-      <Filter>inc\actor</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\inc\libCoreCommon\actor_id_converter.h">
       <Filter>inc\actor</Filter>
     </ClInclude>
