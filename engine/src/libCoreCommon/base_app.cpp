@@ -58,6 +58,16 @@ namespace core
 		CCoreApp::Inst()->unregisterTicker(pTicker);
 	}
 
+	void CBaseApp::registerCallback(uint16_t nServiceID, const std::string& szMessageName, const std::function<void(SServiceSessionInfo, google::protobuf::Message*)>& callback)
+	{
+		CCoreApp::Inst()->getCoreMessageRegistry()->registerCallback(nServiceID, szMessageName, callback);
+	}
+
+	void CBaseApp::registerGateForwardCallback(uint16_t nServiceID, const std::string& szMessageName, const std::function<void(SClientSessionInfo, google::protobuf::Message*)>& callback)
+	{
+		CCoreApp::Inst()->getCoreMessageRegistry()->registerGateForwardCallback(nServiceID, szMessageName, callback);
+	}
+
 	CBaseConnectionMgr*	CBaseApp::getBaseConnectionMgr() const
 	{
 		return CCoreApp::Inst()->getBaseConnectionMgr();

@@ -29,7 +29,7 @@ namespace core
 }
 
 #define DEFEND_ACTOR_MESSAGE_FUNCTION(Class) \
-		inline void	onDefaultActorMessageHandler(core::CActorBase* pActorBase, SActorSessionInfo& sActorSessionInfo, const google::protobuf::Message* pMessage)\
+		inline void	onDefaultActorMessageHandler(core::CActorBase* pActorBase, core::SActorSessionInfo& sActorSessionInfo, const google::protobuf::Message* pMessage)\
 		{\
 			core::CActorMessageRegistry<Class>::dispatch(this, pActorBase, sActorSessionInfo, pMessage);\
 		}\
