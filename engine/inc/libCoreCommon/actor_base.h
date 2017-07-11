@@ -51,6 +51,14 @@ namespace core
 		通过请求的session响应请求
 		*/
 		void				response(const SSessionInfo& sSessionInfo, const google::protobuf::Message* pMessage);
+		/*
+		发送消息给客户端
+		*/
+		bool				send(const SClientSessionInfo& sClientSessionInfo, const google::protobuf::Message* pMessage);
+		/*
+		广播消息给客户端
+		*/
+		bool				broadcast(const std::vector<SClientSessionInfo>& vecClientSessionInfo, const google::protobuf::Message* pMessage);
 
 		void				release();
 

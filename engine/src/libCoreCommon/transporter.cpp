@@ -233,10 +233,6 @@ namespace core
 	{
 		DebugAstEx(pMessage != nullptr, false);
 
-		CBaseConnectionOtherNode* pBaseConnectionOtherNode = CCoreApp::Inst()->getCoreOtherNodeProxy()->getBaseConnectionOtherNodeByServiceID(nToServiceID);
-		if (nullptr == pBaseConnectionOtherNode)
-			return false;
-
 		std::string szMessageName = pMessage->GetTypeName();
 
 		gate_send_cookice* pCookice = reinterpret_cast<gate_send_cookice*>(this->m_szBuf[0]);
@@ -253,8 +249,30 @@ namespace core
 
 		uint16_t nDataSize = (uint16_t)(nCookiceLen + (uint16_t)pMessage->ByteSize());
 
-		pBaseConnectionOtherNode->send(eMT_TO_GATE, &this->m_szBuf[0], nDataSize);
-		
+		if (!CCoreApp::Inst()->isOwnerService(nToServiceID))
+		{
+			CBaseConnectionOtherNode* pBaseConnectionOtherNode = CCoreApp::Inst()->getCoreOtherNodeProxy()->getBaseConnectionOtherNodeByServiceID(nToServiceID);
+			if (nullptr == pBaseConnectionOtherNode)
+				return false;
+
+			pBaseConnectionOtherNode->send(eMT_TO_GATE, &this->m_szBuf[0], nDataSize);
+		}
+		else
+		{
+			char* pBuf = new char[sizeof(SMCT_INSIDE_MESSAGE)+nDataSize];
+			SMCT_INSIDE_MESSAGE* pContext = reinterpret_cast<SMCT_INSIDE_MESSAGE*>(pBuf);
+			pContext->nMessageType = eMT_TO_GATE;
+			pContext->nDataSize = nDataSize;
+			pContext->pData = pBuf + sizeof(SMCT_INSIDE_MESSAGE);
+			memcpy(pContext->pData, &this->m_szBuf[0], nDataSize);
+			SMessagePacket sMessagePacket;
+			sMessagePacket.nType = eMCT_INSIDE_MESSAGE;
+			sMessagePacket.nDataSize = sizeof(SMCT_INSIDE_MESSAGE);
+			sMessagePacket.pData = pContext;
+
+			CLogicRunnable::Inst()->sendInsideMessage(sMessagePacket);
+		}
+
 		return true;
 	}
 
@@ -264,10 +282,6 @@ namespace core
 
 		if (vecSessionID.empty())
 			return true;
-
-		CBaseConnectionOtherNode* pBaseConnectionOtherNode = CCoreApp::Inst()->getCoreOtherNodeProxy()->getBaseConnectionOtherNodeByServiceID(nToServiceID);
-		if (nullptr == pBaseConnectionOtherNode)
-			return false;
 
 		std::string szMessageName = pMessage->GetTypeName();
 
@@ -289,7 +303,29 @@ namespace core
 
 		uint16_t nDataSize = (uint16_t)(nCookiceLen + (uint16_t)pMessage->ByteSize());
 
-		pBaseConnectionOtherNode->send((uint8_t)(eMT_TO_GATE | eMT_BROADCAST), &this->m_szBuf[0], nDataSize);
+		if (!CCoreApp::Inst()->isOwnerService(nToServiceID))
+		{
+			CBaseConnectionOtherNode* pBaseConnectionOtherNode = CCoreApp::Inst()->getCoreOtherNodeProxy()->getBaseConnectionOtherNodeByServiceID(nToServiceID);
+			if (nullptr == pBaseConnectionOtherNode)
+				return false;
+
+			pBaseConnectionOtherNode->send(eMT_TO_GATE, &this->m_szBuf[0], nDataSize);
+		}
+		else
+		{
+			char* pBuf = new char[sizeof(SMCT_INSIDE_MESSAGE)+nDataSize];
+			SMCT_INSIDE_MESSAGE* pContext = reinterpret_cast<SMCT_INSIDE_MESSAGE*>(pBuf);
+			pContext->nMessageType = eMT_TO_GATE;
+			pContext->nDataSize = nDataSize;
+			pContext->pData = pBuf + sizeof(SMCT_INSIDE_MESSAGE);
+			memcpy(pContext->pData, &this->m_szBuf[0], nDataSize);
+			SMessagePacket sMessagePacket;
+			sMessagePacket.nType = eMCT_INSIDE_MESSAGE;
+			sMessagePacket.nDataSize = sizeof(SMCT_INSIDE_MESSAGE);
+			sMessagePacket.pData = pContext;
+
+			CLogicRunnable::Inst()->sendInsideMessage(sMessagePacket);
+		}
 
 		return true;
 	}
