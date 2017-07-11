@@ -51,8 +51,8 @@ namespace core
 	{
 		DebugAst(nMessageType == eMT_SYSTEM);
 
-		const core::message_header* pHeader = reinterpret_cast<const core::message_header*>(pData);
-		DebugAst(nSize > sizeof(core::message_header));
+		const message_header* pHeader = reinterpret_cast<const message_header*>(pData);
+		DebugAst(nSize > sizeof(message_header));
 
 		if (pHeader->nMessageID == eSMT_sync_node_base_info)
 		{

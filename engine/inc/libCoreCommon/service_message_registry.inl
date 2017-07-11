@@ -8,19 +8,19 @@ namespace core
 	}
 
 	template<class T>
-	void CServiceMessageRegistry<T>::registerMessageHandler(const std::string& szMessageName, bool(T::*handler)(SServiceSessionInfo, google::protobuf::Message*))
+	void CServiceMessageRegistry<T>::registerMessageHandler(const std::string& szMessageName, void(T::*handler)(SServiceSessionInfo, const google::protobuf::Message*))
 	{
 		DebugAst(handler != nullptr);
 
-		m_mapMessageHandler[nMessageID] = handler;
+		m_mapMessageHandler[szMessageName] = handler;
 	}
 
 	template<class T>
-	void CServiceMessageRegistry<T>::registerForwardHandler(const std::string& szMessageName, bool(T::*handler)(SClientSessionInfo, google::protobuf::Message*))
+	void CServiceMessageRegistry<T>::registerForwardHandler(const std::string& szMessageName, void(T::*handler)(SClientSessionInfo, const google::protobuf::Message*))
 	{
 		DebugAst(handler != nullptr);
 
-		m_mapForwardHandler[nMessageID] = handler;
+		m_mapForwardHandler[szMessageName] = handler;
 	}
 
 	template<class T>
@@ -30,26 +30,30 @@ namespace core
 	}
 
 	template<class T>
-	bool CServiceMessageRegistry<T>::dispatch(T* pObject, SServiceSessionInfo& sServiceSessionInfo, google::protobuf::Message* pMessage)
+	void CServiceMessageRegistry<T>::dispatch(T* pObject, SServiceSessionInfo& sServiceSessionInfo, const google::protobuf::Message* pMessage)
 	{
-		auto iter = m_mapMessageHandler.find(pMessage.getMessageID());
+		DebugAst(pMessage != nullptr);
+
+		auto iter = m_mapMessageHandler.find(pMessage->GetTypeName());
 		if (iter == m_mapMessageHandler.end())
-			return false;
+			return;
 
 		funMessageHandler handler = iter->second;
 
-		return (pObject->*handler)(sServiceSessionInfo, pMessage);
+		(pObject->*handler)(sServiceSessionInfo, pMessage);
 	}
 
 	template<class T>
-	bool CServiceMessageRegistry<T>::forward(T* pObject, SClientSessionInfo& sClientSessionInfo, google::protobuf::Message* pMessage)
+	void CServiceMessageRegistry<T>::forward(T* pObject, SClientSessionInfo& sClientSessionInfo, const google::protobuf::Message* pMessage)
 	{
-		auto iter = m_mapForwardHandler.find(pMessage.getMessageID());
+		DebugAst(pMessage != nullptr);
+
+		auto iter = m_mapForwardHandler.find(pMessage->GetTypeName());
 		if (iter == m_mapForwardHandler.end())
-			return false;
+			return;
 
 		funForwardHandler handler = iter->second;
 
-		return (pObject->*handler)(sClientSessionInfo, pMessage);
+		(pObject->*handler)(sClientSessionInfo, pMessage);
 	}
 }

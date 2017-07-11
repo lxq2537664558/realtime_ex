@@ -36,7 +36,7 @@ namespace core
 	CTickerRunnable* CTickerRunnable::Inst()
 	{
 		if (g_pTickerRunnable == nullptr)
-			g_pTickerRunnable = new core::CTickerRunnable();
+			g_pTickerRunnable = new CTickerRunnable();
 
 		return g_pTickerRunnable;
 	}

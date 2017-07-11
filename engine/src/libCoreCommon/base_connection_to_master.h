@@ -5,7 +5,7 @@
 namespace core
 {
 	class CBaseConnectionToMaster
-		: public core::CBaseConnection
+		: public CBaseConnection
 	{
 	public:
 		CBaseConnectionToMaster();

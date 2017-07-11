@@ -68,11 +68,13 @@ namespace core
 		}
 		else
 		{
-			SMCT_INSIDE_MESSAGE* pContext = new SMCT_INSIDE_MESSAGE;
+			char* pBuf = new char[sizeof(SMCT_INSIDE_MESSAGE) + nDataSize];
+			SMCT_INSIDE_MESSAGE* pContext = reinterpret_cast<SMCT_INSIDE_MESSAGE*>(pBuf);
 			pContext->nMessageType = eMT_REQUEST;
 			pContext->nDataSize = nDataSize;
-			pContext->pData = new char[nDataSize];
+			pContext->pData = pBuf + sizeof(SMCT_INSIDE_MESSAGE);
 			memcpy(pContext->pData, &this->m_szBuf[0], nDataSize);
+
 			SMessagePacket sMessagePacket;
 			sMessagePacket.nType = eMCT_INSIDE_MESSAGE;
 			sMessagePacket.nDataSize = sizeof(SMCT_INSIDE_MESSAGE);

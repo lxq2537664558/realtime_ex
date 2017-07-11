@@ -194,12 +194,13 @@ namespace core
 
 		this->m_monitor.onRecv(nSize);
 
+		char* pBuf = new char[sizeof(SMCT_RECV_SOCKET_DATA) + nSize];
 		SMessagePacket sMessagePacket;
-		SMCT_RECV_SOCKET_DATA* pContext = new SMCT_RECV_SOCKET_DATA();
+		SMCT_RECV_SOCKET_DATA* pContext = reinterpret_cast<SMCT_RECV_SOCKET_DATA*>(pBuf);
 		pContext->nSocketID = this->getID();
 		pContext->nMessageType = nMessageType;
 		pContext->nDataSize = nSize;
-		pContext->pData = new char[nSize];
+		pContext->pData = pBuf + sizeof(SMCT_RECV_SOCKET_DATA);
 		memcpy(pContext->pData, pData, nSize);
 
 		sMessagePacket.nType = eMCT_RECV_SOCKET_DATA;

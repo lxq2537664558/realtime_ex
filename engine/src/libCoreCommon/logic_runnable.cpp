@@ -132,9 +132,8 @@ namespace core
 					}
 					
 					CCoreApp::Inst()->getMessageDispatcher()->dispatch(0, CCoreApp::Inst()->getNodeBaseInfo().nID, pContext->nMessageType, pContext->pData, pContext->nDataSize);
-					char* pBuf = reinterpret_cast<char*>(pContext->pData);
+					char* pBuf = reinterpret_cast<char*>(sMessagePacket.pData);
 					SAFE_DELETE_ARRAY(pBuf);
-					SAFE_DELETE(pContext);
 				}
 				break;
 
@@ -252,9 +251,8 @@ namespace core
 						continue;
 					}
 					pBaseConnection->onDispatch(pContext->nMessageType, pContext->pData, pContext->nDataSize);
-					char* pBuf = reinterpret_cast<char*>(pContext->pData);
+					char* pBuf = reinterpret_cast<char*>(sMessagePacket.pData);
 					SAFE_DELETE_ARRAY(pBuf);
-					SAFE_DELETE(pContext);
 				}
 				break;
 

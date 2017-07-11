@@ -65,8 +65,8 @@ namespace core
 	{
 		if (nMessageType == eMT_SYSTEM)
 		{
-			const core::message_header* pHeader = reinterpret_cast<const core::message_header*>(pData);
-			DebugAst(nSize > sizeof(core::message_header));
+			const message_header* pHeader = reinterpret_cast<const message_header*>(pData);
+			DebugAst(nSize > sizeof(message_header));
 
 			switch (pHeader->nMessageID)
 			{

@@ -141,7 +141,7 @@ namespace core
 		return &this->m_channel;
 	}
 
-	core::SActorSessionInfo CActorBaseImpl::getActorSessionInfo() const
+	SActorSessionInfo CActorBaseImpl::getActorSessionInfo() const
 	{
 		return this->m_sActorSessionInfo;
 	}
