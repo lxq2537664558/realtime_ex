@@ -35,37 +35,17 @@ namespace core
 
 	bool CActorBase::send(const SClientSessionInfo& sClientSessionInfo, const google::protobuf::Message* pMessage)
 	{
-		DebugAstEx(pMessage != nullptr, false);
-
-		return CCoreApp::Inst()->getTransporter()->send(sClientSessionInfo.nSessionID, sClientSessionInfo.nGateServiceID, pMessage);
+		return CServiceInvoker::send(sClientSessionInfo, pMessage);
 	}
 
 	bool CActorBase::broadcast(const std::vector<SClientSessionInfo>& vecClientSessionInfo, const google::protobuf::Message* pMessage)
 	{
-		DebugAstEx(pMessage != nullptr, false);
-
-		std::map<uint16_t, std::vector<uint64_t>> mapClientSessionInfo;
-		for (size_t i = 0; i < vecClientSessionInfo.size(); ++i)
-		{
-			mapClientSessionInfo[vecClientSessionInfo[i].nGateServiceID].push_back(vecClientSessionInfo[i].nSessionID);
-		}
-
-		bool bRet = true;
-		for (auto iter = mapClientSessionInfo.begin(); iter != mapClientSessionInfo.end(); ++iter)
-		{
-			if (!CCoreApp::Inst()->getTransporter()->broadcast(iter->second, iter->first, pMessage))
-				bRet = false;
-		}
-
-		return bRet;
+		return CServiceInvoker::broadcast(vecClientSessionInfo, pMessage);
 	}
 
 	void CActorBase::response(const SSessionInfo& sSessionInfo, const google::protobuf::Message* pMessage)
 	{
-		DebugAst(pMessage != nullptr);
-
-		bool bRet = CCoreApp::Inst()->getActorScheduler()->response(sSessionInfo.eMessageTargetType, sSessionInfo.nSessionID, eRRT_OK, sSessionInfo.nFromID, pMessage);
-		DebugAst(bRet);
+		CServiceInvoker::response(sSessionInfo, pMessage);
 	}
 
 	CActorBase* CActorBase::createActor(const std::string& szClassName, void* pContext)

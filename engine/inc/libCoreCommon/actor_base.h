@@ -47,20 +47,20 @@ namespace core
 		template<class T>
 		inline uint32_t		sync_call(uint16_t nServiceID, const google::protobuf::Message* pMessage, std::shared_ptr<T>& pResponseMessage);
 
+		void				release();
+
 		/*
 		通过请求的session响应请求
 		*/
-		void				response(const SSessionInfo& sSessionInfo, const google::protobuf::Message* pMessage);
+		static void			response(const SSessionInfo& sSessionInfo, const google::protobuf::Message* pMessage);
 		/*
 		发送消息给客户端
 		*/
-		bool				send(const SClientSessionInfo& sClientSessionInfo, const google::protobuf::Message* pMessage);
+		static bool			send(const SClientSessionInfo& sClientSessionInfo, const google::protobuf::Message* pMessage);
 		/*
 		广播消息给客户端
 		*/
-		bool				broadcast(const std::vector<SClientSessionInfo>& vecClientSessionInfo, const google::protobuf::Message* pMessage);
-
-		void				release();
+		static bool			broadcast(const std::vector<SClientSessionInfo>& vecClientSessionInfo, const google::protobuf::Message* pMessage);
 
 		static void			registerMessageHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SSessionInfo, const google::protobuf::Message*)>& handler);
 		static void			registerForwardHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SClientSessionInfo, const google::protobuf::Message*)>& handler);

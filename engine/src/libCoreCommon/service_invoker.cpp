@@ -33,6 +33,13 @@ namespace core
 		return CCoreApp::Inst()->getTransporter()->invoke(eType, 0, this->m_nServiceID, nID, pMessage);
 	}
 
+	bool CServiceInvoker::forward(EMessageTargetType eType, uint64_t nID, uint64_t nSessionID, const google::protobuf::Message* pMessage)
+	{
+		DebugAstEx(pMessage != nullptr, false);
+
+		return CCoreApp::Inst()->getTransporter()->forward(eType, nSessionID, this->m_nServiceID, nID, pMessage);
+	}
+
 	void CServiceInvoker::response(const SSessionInfo& sSessionInfo, const google::protobuf::Message* pMessage)
 	{
 		DebugAst(pMessage != nullptr);
@@ -46,13 +53,6 @@ namespace core
 		DebugAstEx(pMessage != nullptr, false);
 
 		return CCoreApp::Inst()->getTransporter()->send(sClientSessionInfo.nSessionID, sClientSessionInfo.nGateServiceID, pMessage);
-	}
-
-	bool CServiceInvoker::forward(EMessageTargetType eType, uint64_t nID, uint64_t nSessionID, const google::protobuf::Message* pMessage)
-	{
-		DebugAstEx(pMessage != nullptr, false);
-
-		return CCoreApp::Inst()->getTransporter()->forward(eType, nSessionID, this->m_nServiceID, nID, pMessage);
 	}
 
 	bool CServiceInvoker::broadcast(const std::vector<SClientSessionInfo>& vecClientSessionInfo, const google::protobuf::Message* pMessage)

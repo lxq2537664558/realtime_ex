@@ -28,13 +28,13 @@ namespace core
 		template<class T>
 		inline bool			async_call(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, CFuture<T>& sFuture);
 
-		void				response(const SSessionInfo& sSessionInfo, const google::protobuf::Message* pMessage);
-		
-		bool				send(const SClientSessionInfo& sClientSessionInfo, const google::protobuf::Message* pMessage);
-		
-		bool				broadcast(const std::vector<SClientSessionInfo>& vecClientSessionInfo, const google::protobuf::Message* pMessage);
-		
 		bool				forward(EMessageTargetType eType, uint64_t nID, uint64_t nSessionID, const google::protobuf::Message* pMessage);
+		
+		static bool			send(const SClientSessionInfo& sClientSessionInfo, const google::protobuf::Message* pMessage);
+
+		static bool			broadcast(const std::vector<SClientSessionInfo>& vecClientSessionInfo, const google::protobuf::Message* pMessage);
+
+		static void			response(const SSessionInfo& sSessionInfo, const google::protobuf::Message* pMessage);
 
 	private:
 		bool				invoke(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback);
