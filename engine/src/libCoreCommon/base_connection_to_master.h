@@ -16,6 +16,6 @@ namespace core
 
 		virtual void		onConnect();
 		virtual void		onDisconnect();
-		virtual void		onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize);
+		virtual void		onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize, const void* pContext);
 	};
 }

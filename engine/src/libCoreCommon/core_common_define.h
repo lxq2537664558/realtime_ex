@@ -10,7 +10,7 @@
 
 namespace core
 {
-	struct SResponseWaitInfo
+	struct SPendingResponseInfo
 	{
 		CTicker		tickTimeout;
 		uint64_t	nSessionID;

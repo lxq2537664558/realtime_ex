@@ -194,15 +194,107 @@ namespace core
 
 		this->m_monitor.onRecv(nSize);
 
-		char* pBuf = new char[sizeof(SMCT_RECV_SOCKET_DATA) + nSize];
-		SMessagePacket sMessagePacket;
-		SMCT_RECV_SOCKET_DATA* pContext = reinterpret_cast<SMCT_RECV_SOCKET_DATA*>(pBuf);
-		pContext->nSocketID = this->getID();
-		pContext->nMessageType = nMessageType;
-		pContext->nDataSize = nSize;
-		pContext->pData = pBuf + sizeof(SMCT_RECV_SOCKET_DATA);
-		memcpy(pContext->pData, pData, nSize);
+		SMCT_RECV_SOCKET_DATA* pContext = nullptr;
+		if (nMessageType == eMT_REQUEST)
+		{
+			const request_cookice* pCookice = reinterpret_cast<const request_cookice*>(pData);
 
+			DebugAst(nSize > sizeof(request_cookice));
+			DebugAst(nSize > sizeof(request_cookice) + pCookice->nMessageNameLen);
+			DebugAst(pCookice->szMessageName[pCookice->nMessageNameLen] == 0);
+
+			const char* pMessageData = reinterpret_cast<const char*>(pCookice + 1) + pCookice->nMessageNameLen;
+			const std::string szMessageName = pCookice->szMessageName;
+
+			google::protobuf::Message* pMessage = create_protobuf_message(szMessageName);
+			if (nullptr == pMessage || !pMessage->ParseFromArray(pMessageData, nSize - sizeof(request_cookice) - pCookice->nMessageNameLen))
+			{
+				SAFE_DELETE(pMessage);
+				return;
+			}
+
+			pContext = new SMCT_RECV_SOCKET_DATA();
+			pContext->nSocketID = this->getID();
+			pContext->nSessionID = pCookice->nSessionID;
+			pContext->nFromID = pCookice->nFromID;
+			pContext->nToID = pCookice->nToID;
+			pContext->nTargetType = pCookice->nTargetType;
+			pContext->nMessageType = eMT_REQUEST;
+			pContext->nDataSize = nSize;
+			pContext->pData = pMessage;
+		}
+		else if (nMessageType == eMT_RESPONSE)
+		{
+			const response_cookice* pCookice = reinterpret_cast<const response_cookice*>(pData);
+
+			DebugAst(nSize > sizeof(response_cookice));
+			DebugAst(nSize > sizeof(response_cookice) + pCookice->nMessageNameLen);
+			DebugAst(pCookice->szMessageName[pCookice->nMessageNameLen] == 0);
+
+			const char* pMessageData = reinterpret_cast<const char*>(pCookice + 1) + pCookice->nMessageNameLen;
+			const std::string szMessageName = pCookice->szMessageName;
+
+			google::protobuf::Message* pMessage = create_protobuf_message(szMessageName);
+			if (nullptr == pMessage || !pMessage->ParseFromArray(pMessageData, nSize - sizeof(request_cookice) - pCookice->nMessageNameLen))
+			{
+				SAFE_DELETE(pMessage);
+				return;
+			}
+
+			pContext = new SMCT_RECV_SOCKET_DATA();
+			pContext->nSocketID = this->getID();
+			pContext->nSessionID = pCookice->nSessionID;
+			pContext->nFromID = pCookice->nResult;
+			pContext->nToID = pCookice->nToID;
+			pContext->nTargetType = pCookice->nTargetType;
+			pContext->nMessageType = eMT_RESPONSE;
+			pContext->nDataSize = nSize;
+			pContext->pData = pMessage;
+		}
+		else if (nMessageType == eMT_GATE_FORWARD)
+		{
+			const gate_forward_cookice* pCookice = reinterpret_cast<const gate_forward_cookice*>(pData);
+
+			DebugAst(nSize > sizeof(gate_forward_cookice));
+			DebugAst(nSize > sizeof(gate_forward_cookice) + pCookice->nMessageNameLen);
+			DebugAst(pCookice->szMessageName[pCookice->nMessageNameLen] == 0);
+
+			const char* pMessageData = reinterpret_cast<const char*>(pCookice + 1) + pCookice->nMessageNameLen;
+			const std::string szMessageName = pCookice->szMessageName;
+
+			google::protobuf::Message* pMessage = create_protobuf_message(szMessageName);
+			if (nullptr == pMessage || !pMessage->ParseFromArray(pMessageData, nSize - sizeof(request_cookice) - pCookice->nMessageNameLen))
+			{
+				SAFE_DELETE(pMessage);
+				return;
+			}
+
+			pContext = new SMCT_RECV_SOCKET_DATA();
+			pContext->nSocketID = this->getID();
+			pContext->nSessionID = pCookice->nSessionID;
+			pContext->nFromID = pCookice->nFromID;
+			pContext->nToID = pCookice->nToID;
+			pContext->nTargetType = pCookice->nTargetType;
+			pContext->nMessageType = eMT_GATE_FORWARD;
+			pContext->nDataSize = nSize;
+			pContext->pData = pMessage;
+		}
+		else
+		{
+			char* pBuf = new char[sizeof(SMCT_RECV_SOCKET_DATA) + nSize];
+			pContext = reinterpret_cast<SMCT_RECV_SOCKET_DATA*>(pBuf);
+			pContext->nSocketID = this->getID();
+			pContext->nSessionID = 0;
+			pContext->nFromID = 0;
+			pContext->nToID = 0;
+			pContext->nTargetType = 0;
+			pContext->nMessageType = nMessageType;
+			pContext->nDataSize = nSize;
+			pContext->pData = pBuf + sizeof(SMCT_RECV_SOCKET_DATA);
+			memcpy(pContext->pData, pData, nSize);
+		}
+
+		SMessagePacket sMessagePacket;
 		sMessagePacket.nType = eMCT_RECV_SOCKET_DATA;
 		sMessagePacket.pData = pContext;
 		sMessagePacket.nDataSize = sizeof(SMCT_RECV_SOCKET_DATA);

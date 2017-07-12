@@ -36,7 +36,7 @@ namespace core
 		/**
 		@brief: 消息回调
 		*/
-		virtual void			onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize) = 0;
+		virtual void			onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize, const void* pContext) = 0;
 		/**
 		@brief: 获取连接类型
 		*/

@@ -44,7 +44,7 @@ namespace core
 	{
 		DebugAst(pMessage != nullptr);
 
-		bool bRet = CCoreApp::Inst()->getTransporter()->response(sSessionInfo.eMessageTargetType, sSessionInfo.nSessionID, eRRT_OK, sSessionInfo.nFromID, pMessage);
+		bool bRet = CCoreApp::Inst()->getTransporter()->response(sSessionInfo.eTargetType, sSessionInfo.nSessionID, eRRT_OK, sSessionInfo.nFromID, pMessage);
 		DebugAst(bRet);
 	}
 
@@ -81,8 +81,8 @@ namespace core
 		if (!CCoreApp::Inst()->getTransporter()->invoke(eType, nSessionID, this->m_nServiceID, nID, pMessage))
 			return false;
 
-		SResponseWaitInfo* pResponseWaitInfo = CCoreApp::Inst()->getTransporter()->addResponseWaitInfo(nSessionID, nID, pMessage->GetTypeName(), callback);
-		DebugAstEx(pResponseWaitInfo != nullptr, false);
+		SPendingResponseInfo* pPendingResponseInfo = CCoreApp::Inst()->getTransporter()->addPendingResponseInfo(nSessionID, nID, pMessage->GetTypeName(), callback);
+		DebugAstEx(pPendingResponseInfo != nullptr, false);
 		
 		return true;
 	}

@@ -44,15 +44,18 @@ namespace core
 
 		coroutine::yield();
 
-		uint64_t nMessage = 0;
-		uint64_t nRet = 0;
-		DebugAstEx(coroutine::getLocalData(coroutine::getCurrentID(), "message", nMessage), eRRT_ERROR);
-		DebugAstEx(coroutine::getLocalData(coroutine::getCurrentID(), "result", nRet), eRRT_ERROR);
+		uint64_t nResponse = 0;
+		
+		DebugAstEx(coroutine::getLocalData(coroutine::getCurrentID(), "response", nResponse), eRRT_ERROR);
+		coroutine::delLocalData(coroutine::getCurrentID(), "response");
 
-		auto pMessage = *reinterpret_cast<std::shared_ptr<google::protobuf::Message>*>(nMessage);
+		SSyncCallResultInfo* pSyncCallResultInfo = reinterpret_cast<SSyncCallResultInfo*>(nResponse);
+		pResponseMessage = pSyncCallResultInfo->pMessage;
 
-		pResponseMessage = pMessage;
+		uint8_t nResult = pSyncCallResultInfo->nResult;
+		
+		SAFE_DELETE(pSyncCallResultInfo);
 
-		return (uint32_t)nRet;
+		return nResult;
 	}
 }

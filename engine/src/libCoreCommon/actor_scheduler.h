@@ -4,7 +4,6 @@
 #include "service_base.h"
 
 #include <map>
-#include <list>
 
 namespace core
 {
@@ -22,13 +21,15 @@ namespace core
 		CActorBaseImpl*		getActorBase(uint64_t nID) const;
 
 		void				addWorkActorBase(CActorBaseImpl* pActorBase);
+		void				addPendingActorBase(CActorBaseImpl* pActorBase);
 
 		void				run();
 	
 	private:
 		uint64_t								m_nNextActorID;
 		std::map<uint64_t, CActorBaseImpl*>		m_mapActorBase;
-		std::list<CActorBaseImpl*>				m_listWorkActorBase;
+		std::map<uint64_t, CActorBaseImpl*>		m_mapWorkActorBase;
+		std::map<uint64_t, CActorBaseImpl*>		m_mapPendingActorBase;
 		std::vector<char>						m_vecBuf;
 	};
 }

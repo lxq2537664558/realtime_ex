@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <memory>
 
 #include "ticker.h"
 
@@ -76,12 +77,6 @@ enum EMessageType
 	eMT_GATE_FORWARD		= 5,		// 客户端通过网关服务转发给其他服务消息
 	eMT_TO_GATE				= 6,		// 其他服务通过网关服务转发客户端消息
 	eMT_CLIENT				= 7,		// 客户端消息
-	
-	eMT_TYPE_MASK			= 0x00ff,	// 类型掩码
-	eMT_LUA					= 0x0100,	// lua消息
-
-	// 特殊标记
-	eMT_BROADCAST			= 0x200,	// 广播消息
 };
 
 namespace core
@@ -93,7 +88,6 @@ namespace core
 		eMTT_None		= 0,
 		eMTT_Actor		= 1,
 		eMTT_Service	= 2,
-		eMTT_Client		= 3,
 	};
 
 	struct	SMessagePacket
@@ -139,7 +133,14 @@ namespace core
 	{
 		uint64_t			nFromID;
 		uint64_t			nSessionID;
-		EMessageTargetType	eMessageTargetType;
+		EMessageTargetType	eTargetType;
+	};
+
+	struct SSyncCallResultInfo
+	{
+		uint8_t	nResult;
+		std::shared_ptr<google::protobuf::Message>
+				pMessage;
 	};
 
 	typedef std::function<void(uint64_t, const message_header*)> ClientCallback;	// 客户端消息处理函数类型

@@ -97,9 +97,9 @@ namespace core
 		if (!CCoreApp::Inst()->getTransporter()->invoke_a(eType, nSessionID, this->getID(), nID, pMessage))
 			return false;
 
-		SResponseWaitInfo* pResponseWaitInfo = this->m_pActorBaseImpl->addResponseWaitInfo(nSessionID, nCoroutineID, nID, pMessage->GetTypeName(), callback);
-		DebugAstEx(nullptr != pResponseWaitInfo, false);
-
+		SPendingResponseInfo* pPendingResponseInfo = this->m_pActorBaseImpl->addPendingResponseInfo(nSessionID, nCoroutineID, nID, pMessage->GetTypeName(), callback);
+		DebugAstEx(nullptr != pPendingResponseInfo, false);
+		
 		return true;
 	}
 }

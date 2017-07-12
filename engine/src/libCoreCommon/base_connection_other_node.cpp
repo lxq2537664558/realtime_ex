@@ -4,6 +4,7 @@
 #include "core_common_define.h"
 #include "proto_system.h"
 #include "core_app.h"
+#include "message_command.h"
 
 namespace core
 {
@@ -61,7 +62,7 @@ namespace core
 		}
 	}
 
-	void CBaseConnectionOtherNode::onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize)
+	void CBaseConnectionOtherNode::onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize, const void* pContext)
 	{
 		if (nMessageType == eMT_SYSTEM)
 		{
@@ -143,7 +144,7 @@ namespace core
 				return;
 			}
 
-			CCoreApp::Inst()->getMessageDispatcher()->dispatch(this->getID(), this->getNodeID(), nMessageType, pData, nSize);
+			CCoreApp::Inst()->getMessageDispatcher()->dispatch(this->getID(), this->getNodeID(), nMessageType, reinterpret_cast<const google::protobuf::Message*>(pData), reinterpret_cast<const SMCT_RECV_SOCKET_DATA*>(pContext));
 		}
 	}
 

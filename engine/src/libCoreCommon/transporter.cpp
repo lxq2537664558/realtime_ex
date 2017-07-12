@@ -85,16 +85,25 @@ namespace core
 		}
 		else
 		{
-			char* pBuf = new char[sizeof(SMCT_INSIDE_MESSAGE) + nDataSize];
-			SMCT_INSIDE_MESSAGE* pContext = reinterpret_cast<SMCT_INSIDE_MESSAGE*>(pBuf);
+			google::protobuf::Message* pNewMessage = create_protobuf_message(pMessage->GetTypeName());
+			if (nullptr == pMessage)
+				return false;
+
+			pNewMessage->CopyFrom(*pMessage);
+
+			SMCT_RECV_SOCKET_DATA* pContext = new SMCT_RECV_SOCKET_DATA();
+			pContext->nSocketID = 0;
+			pContext->nSessionID = nSessionID;
+			pContext->nFromID = nFromID;
+			pContext->nToID = nToID;
+			pContext->nTargetType = (uint8_t)eType;
 			pContext->nMessageType = eMT_REQUEST;
-			pContext->nDataSize = nDataSize;
-			pContext->pData = pBuf + sizeof(SMCT_INSIDE_MESSAGE);
-			memcpy(pContext->pData, &this->m_szBuf[0], nDataSize);
+			pContext->nDataSize = 0;
+			pContext->pData = pNewMessage;
 
 			SMessagePacket sMessagePacket;
-			sMessagePacket.nType = eMCT_INSIDE_MESSAGE;
-			sMessagePacket.nDataSize = sizeof(SMCT_INSIDE_MESSAGE);
+			sMessagePacket.nType = eMCT_RECV_SOCKET_DATA;
+			sMessagePacket.nDataSize = sizeof(SMCT_RECV_SOCKET_DATA);
 			sMessagePacket.pData = pContext;
 
 			CLogicRunnable::Inst()->sendInsideMessage(sMessagePacket);
@@ -149,15 +158,25 @@ namespace core
 		}
 		else
 		{
-			char* pBuf = new char[sizeof(SMCT_INSIDE_MESSAGE)+nDataSize];
-			SMCT_INSIDE_MESSAGE* pContext = reinterpret_cast<SMCT_INSIDE_MESSAGE*>(pBuf);
+			google::protobuf::Message* pNewMessage = create_protobuf_message(pMessage->GetTypeName());
+			if (nullptr == pMessage)
+				return false;
+
+			pNewMessage->CopyFrom(*pMessage);
+
+			SMCT_RECV_SOCKET_DATA* pContext = new SMCT_RECV_SOCKET_DATA();
+			pContext->nSocketID = 0;
+			pContext->nSessionID = nSessionID;
+			pContext->nFromID = nResult;
+			pContext->nToID = nToID;
+			pContext->nTargetType = (uint8_t)eType;
 			pContext->nMessageType = eMT_RESPONSE;
-			pContext->nDataSize = nDataSize;
-			pContext->pData = pBuf + sizeof(SMCT_INSIDE_MESSAGE);
-			memcpy(pContext->pData, &this->m_szBuf[0], nDataSize);
+			pContext->nDataSize = 0;
+			pContext->pData = pNewMessage;
+
 			SMessagePacket sMessagePacket;
-			sMessagePacket.nType = eMCT_INSIDE_MESSAGE;
-			sMessagePacket.nDataSize = sizeof(SMCT_INSIDE_MESSAGE);
+			sMessagePacket.nType = eMCT_RECV_SOCKET_DATA;
+			sMessagePacket.nDataSize = sizeof(SMCT_RECV_SOCKET_DATA);
 			sMessagePacket.pData = pContext;
 
 			CLogicRunnable::Inst()->sendInsideMessage(sMessagePacket);
@@ -284,15 +303,25 @@ namespace core
 		}
 		else
 		{
-			char* pBuf = new char[sizeof(SMCT_INSIDE_MESSAGE)+nDataSize];
-			SMCT_INSIDE_MESSAGE* pContext = reinterpret_cast<SMCT_INSIDE_MESSAGE*>(pBuf);
+			google::protobuf::Message* pNewMessage = create_protobuf_message(pMessage->GetTypeName());
+			if (nullptr == pMessage)
+				return false;
+
+			pNewMessage->CopyFrom(*pMessage);
+
+			SMCT_RECV_SOCKET_DATA* pContext = new SMCT_RECV_SOCKET_DATA();
+			pContext->nSocketID = 0;
+			pContext->nSessionID = nSessionID;
+			pContext->nFromID = nFromID;
+			pContext->nToID = nToID;
+			pContext->nTargetType = (uint8_t)eType;
 			pContext->nMessageType = eMT_GATE_FORWARD;
-			pContext->nDataSize = nDataSize;
-			pContext->pData = pBuf + sizeof(SMCT_INSIDE_MESSAGE);
-			memcpy(pContext->pData, &this->m_szBuf[0], nDataSize);
+			pContext->nDataSize = 0;
+			pContext->pData = pNewMessage;
+
 			SMessagePacket sMessagePacket;
-			sMessagePacket.nType = eMCT_INSIDE_MESSAGE;
-			sMessagePacket.nDataSize = sizeof(SMCT_INSIDE_MESSAGE);
+			sMessagePacket.nType = eMCT_RECV_SOCKET_DATA;
+			sMessagePacket.nDataSize = sizeof(SMCT_RECV_SOCKET_DATA);
 			sMessagePacket.pData = pContext;
 
 			CLogicRunnable::Inst()->sendInsideMessage(sMessagePacket);
@@ -331,15 +360,25 @@ namespace core
 		}
 		else
 		{
-			char* pBuf = new char[sizeof(SMCT_INSIDE_MESSAGE)+nDataSize];
-			SMCT_INSIDE_MESSAGE* pContext = reinterpret_cast<SMCT_INSIDE_MESSAGE*>(pBuf);
+			google::protobuf::Message* pNewMessage = create_protobuf_message(pMessage->GetTypeName());
+			if (nullptr == pMessage)
+				return false;
+
+			pNewMessage->CopyFrom(*pMessage);
+
+			SMCT_RECV_SOCKET_DATA* pContext = new SMCT_RECV_SOCKET_DATA();
+			pContext->nSocketID = 0;
+			pContext->nSessionID = nSessionID;
+			pContext->nFromID = 0;
+			pContext->nToID = nToServiceID;
+			pContext->nTargetType = (uint8_t)eMTT_Service;
 			pContext->nMessageType = eMT_TO_GATE;
-			pContext->nDataSize = nDataSize;
-			pContext->pData = pBuf + sizeof(SMCT_INSIDE_MESSAGE);
-			memcpy(pContext->pData, &this->m_szBuf[0], nDataSize);
+			pContext->nDataSize = 0;
+			pContext->pData = pNewMessage;
+
 			SMessagePacket sMessagePacket;
-			sMessagePacket.nType = eMCT_INSIDE_MESSAGE;
-			sMessagePacket.nDataSize = sizeof(SMCT_INSIDE_MESSAGE);
+			sMessagePacket.nType = eMCT_RECV_SOCKET_DATA;
+			sMessagePacket.nDataSize = sizeof(SMCT_RECV_SOCKET_DATA);
 			sMessagePacket.pData = pContext;
 
 			CLogicRunnable::Inst()->sendInsideMessage(sMessagePacket);
@@ -385,15 +424,25 @@ namespace core
 		}
 		else
 		{
-			char* pBuf = new char[sizeof(SMCT_INSIDE_MESSAGE)+nDataSize];
-			SMCT_INSIDE_MESSAGE* pContext = reinterpret_cast<SMCT_INSIDE_MESSAGE*>(pBuf);
+			google::protobuf::Message* pNewMessage = create_protobuf_message(pMessage->GetTypeName());
+			if (nullptr == pMessage)
+				return false;
+
+			pNewMessage->CopyFrom(*pMessage);
+
+			SMCT_RECV_SOCKET_DATA* pContext = new SMCT_RECV_SOCKET_DATA();
+			pContext->nSocketID = 0;
+			pContext->nSessionID = 0;
+			pContext->nFromID = 0;
+			pContext->nToID = nToServiceID;
+			pContext->nTargetType = (uint8_t)eMTT_Service;
 			pContext->nMessageType = eMT_TO_GATE;
-			pContext->nDataSize = nDataSize;
-			pContext->pData = pBuf + sizeof(SMCT_INSIDE_MESSAGE);
-			memcpy(pContext->pData, &this->m_szBuf[0], nDataSize);
+			pContext->nDataSize = 0;
+			pContext->pData = pNewMessage;
+
 			SMessagePacket sMessagePacket;
-			sMessagePacket.nType = eMCT_INSIDE_MESSAGE;
-			sMessagePacket.nDataSize = sizeof(SMCT_INSIDE_MESSAGE);
+			sMessagePacket.nType = eMCT_RECV_SOCKET_DATA;
+			sMessagePacket.nDataSize = sizeof(SMCT_RECV_SOCKET_DATA);
 			sMessagePacket.pData = pContext;
 
 			CLogicRunnable::Inst()->sendInsideMessage(sMessagePacket);
@@ -404,55 +453,55 @@ namespace core
 
 	void CTransporter::onRequestMessageTimeout(uint64_t nContext)
 	{
-		auto iter = this->m_mapResponseWaitInfo.find(nContext);
-		if (iter == this->m_mapResponseWaitInfo.end())
+		auto iter = this->m_mapPendingResponseInfo.find(nContext);
+		if (iter == this->m_mapPendingResponseInfo.end())
 		{
 			PrintWarning("iter == this->m_mapProtoBufResponseInfo.end() session_id: "UINT64FMT, nContext);
 			return;
 		}
 
-		SResponseWaitInfo* pResponseWaitInfo = iter->second;
-		if (nullptr == pResponseWaitInfo)
+		SPendingResponseInfo* pPendingResponseInfo = iter->second;
+		if (nullptr == pPendingResponseInfo)
 		{
-			PrintWarning("nullptr == pResponseInfo session_id: "UINT64FMT, nContext);
+			PrintWarning("nullptr == pPendingResponseInfo session_id: "UINT64FMT, nContext);
 			return;
 		}
 
-		pResponseWaitInfo->callback(nullptr, eRRT_TIME_OUT);
+		pPendingResponseInfo->callback(nullptr, eRRT_TIME_OUT);
 		
-		this->m_mapResponseWaitInfo.erase(iter);
-		SAFE_DELETE(pResponseWaitInfo);
+		this->m_mapPendingResponseInfo.erase(iter);
+		SAFE_DELETE(pPendingResponseInfo);
 	}
 
-	SResponseWaitInfo* CTransporter::getResponseWaitInfo(uint64_t nSessionID, bool bErase)
+	SPendingResponseInfo* CTransporter::getPendingResponseInfo(uint64_t nSessionID, bool bErase)
 	{
-		auto iter = this->m_mapResponseWaitInfo.find(nSessionID);
-		if (iter == this->m_mapResponseWaitInfo.end())
+		auto iter = this->m_mapPendingResponseInfo.find(nSessionID);
+		if (iter == this->m_mapPendingResponseInfo.end())
 			return nullptr;
 
-		SResponseWaitInfo* pResponseWaitInfo = iter->second;
+		SPendingResponseInfo* pPendingResponseInfo = iter->second;
 		if (bErase)
-			this->m_mapResponseWaitInfo.erase(iter);
+			this->m_mapPendingResponseInfo.erase(iter);
 
-		return pResponseWaitInfo;
+		return pPendingResponseInfo;
 	}
 
-	SResponseWaitInfo* CTransporter::addResponseWaitInfo(uint64_t nSessionID, uint64_t nToID, const std::string& szMessageName, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback)
+	SPendingResponseInfo* CTransporter::addPendingResponseInfo(uint64_t nSessionID, uint64_t nToID, const std::string& szMessageName, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback)
 	{
-		auto iter = this->m_mapResponseWaitInfo.find(nSessionID);
-		DebugAstEx(iter == this->m_mapResponseWaitInfo.end(), nullptr);
+		auto iter = this->m_mapPendingResponseInfo.find(nSessionID);
+		DebugAstEx(iter == this->m_mapPendingResponseInfo.end(), nullptr);
 
-		SResponseWaitInfo* pResponseWaitInfo = new SResponseWaitInfo();
-		pResponseWaitInfo->callback = nullptr;
-		pResponseWaitInfo->nSessionID = nSessionID;
-		pResponseWaitInfo->nToID = nToID;
-		pResponseWaitInfo->szMessageName = szMessageName;
-		pResponseWaitInfo->nBeginTime = base::getGmtTime();
-		pResponseWaitInfo->tickTimeout.setCallback(std::bind(&CTransporter::onRequestMessageTimeout, this, std::placeholders::_1));
-		CBaseApp::Inst()->registerTicker(CTicker::eTT_Logic, 0, &pResponseWaitInfo->tickTimeout, CCoreApp::Inst()->getInvokeTimeout(), 0, nSessionID);
+		SPendingResponseInfo* pPendingResponseInfo = new SPendingResponseInfo();
+		pPendingResponseInfo->callback = nullptr;
+		pPendingResponseInfo->nSessionID = nSessionID;
+		pPendingResponseInfo->nToID = nToID;
+		pPendingResponseInfo->szMessageName = szMessageName;
+		pPendingResponseInfo->nBeginTime = base::getGmtTime();
+		pPendingResponseInfo->tickTimeout.setCallback(std::bind(&CTransporter::onRequestMessageTimeout, this, std::placeholders::_1));
+		CBaseApp::Inst()->registerTicker(CTicker::eTT_Logic, 0, &pPendingResponseInfo->tickTimeout, CCoreApp::Inst()->getInvokeTimeout(), 0, nSessionID);
 
-		this->m_mapResponseWaitInfo[pResponseWaitInfo->nSessionID] = pResponseWaitInfo;
+		this->m_mapPendingResponseInfo[pPendingResponseInfo->nSessionID] = pPendingResponseInfo;
 
-		return pResponseWaitInfo;
+		return pPendingResponseInfo;
 	}
 }

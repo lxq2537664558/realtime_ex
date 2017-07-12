@@ -8,6 +8,7 @@
 #include "actor_base_impl.h"
 
 #include "libCoreCommon/base_app.h"
+#include "libBaseCommon/base_time.h"
 
 
 namespace core
@@ -39,11 +40,30 @@ namespace core
 
 	void CActorScheduler::run()
 	{
-		std::list<CActorBaseImpl*> listWorkActorBase;
-		listWorkActorBase.swap(this->m_listWorkActorBase);
-		for (auto iter = listWorkActorBase.begin(); iter != listWorkActorBase.end(); ++iter)
+		int64_t nCurTime = base::getGmtTime();
+		for (auto iter = this->m_mapPendingActorBase.begin(); iter != this->m_mapPendingActorBase.end();)
 		{
-			(*iter)->process();
+			CActorBaseImpl* pActorBaseImpl = iter->second;
+			if (pActorBaseImpl == nullptr)
+			{
+				++iter;
+				continue;
+			}
+
+			if (!pActorBaseImpl->onPendingTimer(nCurTime))
+			{
+				++iter;
+				continue;
+			}
+
+			this->m_mapPendingActorBase.erase(iter++);
+		}
+
+		std::map<uint64_t, CActorBaseImpl*> mapWorkActorBase;
+		mapWorkActorBase.swap(this->m_mapWorkActorBase);
+		for (auto iter = mapWorkActorBase.begin(); iter != mapWorkActorBase.end(); ++iter)
+		{
+			iter->second->process();
 		}
 	}
 
@@ -69,12 +89,20 @@ namespace core
 
 	void CActorScheduler::addWorkActorBase(CActorBaseImpl* pBaseActorImpl)
 	{
-		DebugAst(pBaseActorImpl != nullptr && pBaseActorImpl->getState() != CActorBaseImpl::eABS_Pending);
+		DebugAst(pBaseActorImpl != nullptr);
 
-		if (pBaseActorImpl->getState() == CActorBaseImpl::eABS_Working)
-			return;
-
-		this->m_listWorkActorBase.push_back(pBaseActorImpl);
+		if (pBaseActorImpl->getState() == CActorBaseImpl::eABS_Normal || pBaseActorImpl->getState() == CActorBaseImpl::eABS_RecvPending)
+			this->m_mapWorkActorBase[pBaseActorImpl->getID()] = pBaseActorImpl;
 	}
 
+	void CActorScheduler::addPendingActorBase(CActorBaseImpl* pActorBase)
+	{
+		DebugAst(pActorBase != nullptr);
+
+		DebugAst(pActorBase->getState() == CActorBaseImpl::eABS_Normal);
+
+		this->m_mapPendingActorBase[pActorBase->getID()] = pActorBase;
+
+		pActorBase->setState(CActorBaseImpl::eABS_Pending);
+	}
 }

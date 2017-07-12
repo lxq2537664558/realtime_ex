@@ -117,21 +117,21 @@ namespace core
 
 			switch (sMessagePacket.nType)
 			{
-			case eMCT_INSIDE_MESSAGE:
+			case eMCT_RECV_SOCKET_DATA:
 				{
-					SMCT_INSIDE_MESSAGE* pContext = reinterpret_cast<SMCT_INSIDE_MESSAGE*>(sMessagePacket.pData);
+					SMCT_RECV_SOCKET_DATA* pContext = reinterpret_cast<SMCT_RECV_SOCKET_DATA*>(sMessagePacket.pData);
 					if (pContext == nullptr)
 					{
-						PrintWarning("context == nullptr type: eMCT_INSIDE_MESSAGE");
+						PrintWarning("context == nullptr type: eMCT_RECV_SOCKET_DATA");
 						continue;
 					}
 					if (pContext->pData == nullptr)
 					{
-						PrintWarning("pContext->pData == nullptr type: eMCT_INSIDE_MESSAGE");
+						PrintWarning("pContext->pData == nullptr type: eMCT_RECV_SOCKET_DATA");
 						continue;
 					}
 					
-					CCoreApp::Inst()->getMessageDispatcher()->dispatch(0, CCoreApp::Inst()->getNodeBaseInfo().nID, pContext->nMessageType, pContext->pData, pContext->nDataSize);
+					CCoreApp::Inst()->getMessageDispatcher()->dispatch(0, CCoreApp::Inst()->getNodeBaseInfo().nID, pContext->nMessageType, reinterpret_cast<google::protobuf::Message*>(pContext->pData), pContext);
 					char* pBuf = reinterpret_cast<char*>(sMessagePacket.pData);
 					SAFE_DELETE_ARRAY(pBuf);
 				}
@@ -250,7 +250,9 @@ namespace core
 						PrintWarning("pContext->pBaseConnection == nullptr type: eMCT_RECV_SOCKET_DATA socket_id: %d", pContext->nSocketID);
 						continue;
 					}
-					pBaseConnection->onDispatch(pContext->nMessageType, pContext->pData, pContext->nDataSize);
+
+					pBaseConnection->onDispatch(pContext->nMessageType, pContext->pData, pContext->nDataSize, pContext);
+
 					char* pBuf = reinterpret_cast<char*>(sMessagePacket.pData);
 					SAFE_DELETE_ARRAY(pBuf);
 				}
@@ -284,6 +286,8 @@ namespace core
 				}
 			}
 		}
+
+		CCoreApp::Inst()->getActorScheduler()->run();
 
 // 		PROFILING_BEGIN(CBaseApp::Inst()->onProcess)
 // 			CBaseApp::Inst()->onProcess();

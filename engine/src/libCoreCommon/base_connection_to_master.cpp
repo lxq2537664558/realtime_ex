@@ -47,7 +47,7 @@ namespace core
 		CCoreApp::Inst()->setCoreConnectionToMaster(nullptr);
 	}
 
-	void CBaseConnectionToMaster::onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize)
+	void CBaseConnectionToMaster::onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize, const void* pContext)
 	{
 		DebugAst(nMessageType == eMT_SYSTEM);
 
