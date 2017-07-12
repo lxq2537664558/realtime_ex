@@ -162,6 +162,9 @@
     <ClInclude Include="service_base_impl.h">
       <Filter>src\service_base</Filter>
     </ClInclude>
+    <ClInclude Include="service_base_mgr.h">
+      <Filter>src\service_base</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="base_object.cpp">
@@ -267,6 +270,9 @@
       <Filter>src\service_base</Filter>
     </ClCompile>
     <ClCompile Include="service_base_impl.cpp">
+      <Filter>src\service_base</Filter>
+    </ClCompile>
+    <ClCompile Include="service_base_mgr.cpp">
       <Filter>src\service_base</Filter>
     </ClCompile>
   </ItemGroup>

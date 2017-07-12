@@ -53,6 +53,7 @@
     <ClInclude Include="node_connection_factory.h" />
     <ClInclude Include="actor_scheduler.h" />
     <ClInclude Include="service_base_impl.h" />
+    <ClInclude Include="service_base_mgr.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="ticker_runnable.h" />
     <ClInclude Include="transporter.h" />
@@ -88,6 +89,7 @@
     <ClCompile Include="actor_scheduler.cpp" />
     <ClCompile Include="service_base.cpp" />
     <ClCompile Include="service_base_impl.cpp" />
+    <ClCompile Include="service_base_mgr.cpp" />
     <ClCompile Include="service_invoker.cpp" />
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="ticker.cpp" />
