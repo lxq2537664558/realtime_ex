@@ -22,6 +22,9 @@ namespace core
 		bool					invoke(EMessageTargetType eType, uint64_t nSessionID, uint64_t nFromID, uint64_t nToID, const google::protobuf::Message* pMessage);
 		bool					response(EMessageTargetType eType, uint64_t nSessionID, uint8_t nResult, uint64_t nToID, const google::protobuf::Message* pMessage);
 		
+		bool					invoke_a(EMessageTargetType eType, uint64_t nSessionID, uint64_t nFromActorID, uint64_t nToID, const google::protobuf::Message* pMessage);
+		bool					response_a(EMessageTargetType eType, uint64_t nSessionID, uint8_t nResult, uint64_t nToID, const google::protobuf::Message* pMessage);
+
 		bool					forward(EMessageTargetType eType, uint64_t nSessionID, uint64_t nFromID, uint64_t nToID, const google::protobuf::Message* pMessage);
 		
 		bool					send(uint64_t nSessionID, uint16_t nToServiceID, const google::protobuf::Message* pMessage);

@@ -30,7 +30,7 @@ namespace core
 	{
 		DebugAstEx(pMessage != nullptr, false);
 
-		return CCoreApp::Inst()->getActorScheduler()->invoke(eType, 0, this->getID(), nID, pMessage);
+		return CCoreApp::Inst()->getTransporter()->invoke_a(eType, 0, this->getID(), nID, pMessage);
 	}
 
 	bool CActorBase::send(const SClientSessionInfo& sClientSessionInfo, const google::protobuf::Message* pMessage)
@@ -94,7 +94,7 @@ namespace core
 	{
 		uint64_t nSessionID = CCoreApp::Inst()->getTransporter()->genSessionID();
 
-		if (!CCoreApp::Inst()->getActorScheduler()->invoke(eType, nSessionID, this->getID(), nID, pMessage))
+		if (!CCoreApp::Inst()->getTransporter()->invoke_a(eType, nSessionID, this->getID(), nID, pMessage))
 			return false;
 
 		SResponseWaitInfo* pResponseWaitInfo = this->m_pActorBaseImpl->addResponseWaitInfo(nSessionID, nCoroutineID, nID, pMessage->GetTypeName(), callback);

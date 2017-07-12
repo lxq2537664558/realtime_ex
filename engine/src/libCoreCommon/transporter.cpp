@@ -166,6 +166,78 @@ namespace core
 		return true;
 	}
 
+	bool CTransporter::invoke_a(EMessageTargetType eType, uint64_t nSessionID, uint64_t nFromActorID, uint64_t nToID, const google::protobuf::Message* pMessage)
+	{
+		if (eType == eMTT_Actor)
+		{
+			CActorBaseImpl* pToActorBaseImpl = CCoreApp::Inst()->getActorScheduler()->getActorBase(nToID);
+			if (pToActorBaseImpl != nullptr)
+			{
+				google::protobuf::Message* pNewMessage = create_protobuf_message(pMessage->GetTypeName());
+				if (nullptr == pMessage)
+					return false;
+
+				pNewMessage->CopyFrom(*pMessage);
+
+				SActorMessagePacket sActorMessagePacket;
+				sActorMessagePacket.nData = nFromActorID;
+				sActorMessagePacket.nSessionID = nSessionID;
+				sActorMessagePacket.nType = eMT_REQUEST;
+				sActorMessagePacket.pMessage = pNewMessage;
+
+				pToActorBaseImpl->getChannel()->send(sActorMessagePacket);
+
+				CCoreApp::Inst()->getActorScheduler()->addWorkActorBase(pToActorBaseImpl);
+
+				return true;
+			}
+			else
+			{
+				return this->invoke(eMTT_Actor, nSessionID, nFromActorID, nToID, pMessage);
+			}
+		}
+		else
+		{
+			return this->invoke(eMTT_Service, nSessionID, nFromActorID, nToID, pMessage);
+		}
+	}
+
+	bool CTransporter::response_a(EMessageTargetType eType, uint64_t nSessionID, uint8_t nResult, uint64_t nToID, const google::protobuf::Message* pMessage)
+	{
+		if (eType == eMTT_Actor)
+		{
+			CActorBaseImpl* pToActorBaseImpl = CCoreApp::Inst()->getActorScheduler()->getActorBase(nToID);
+			if (pToActorBaseImpl != nullptr)
+			{
+				google::protobuf::Message* pNewMessage = create_protobuf_message(pMessage->GetTypeName());
+				if (nullptr == pMessage)
+					return false;
+
+				pNewMessage->CopyFrom(*pMessage);
+
+				SActorMessagePacket sActorMessagePacket;
+				sActorMessagePacket.nData = nResult;
+				sActorMessagePacket.nSessionID = nSessionID;
+				sActorMessagePacket.nType = eMT_RESPONSE;
+				sActorMessagePacket.pMessage = pNewMessage;
+
+				pToActorBaseImpl->getChannel()->send(sActorMessagePacket);
+
+				CCoreApp::Inst()->getActorScheduler()->addWorkActorBase(pToActorBaseImpl);
+
+				return true;
+			}
+			else
+			{
+				return this->response(eMTT_Actor, nSessionID, nResult, nToID, pMessage);
+			}
+		}
+		else
+		{
+			return this->response(eMTT_Service, nSessionID, nResult, nToID, pMessage);
+		}
+	}
+
 	bool CTransporter::forward(EMessageTargetType eType, uint64_t nSessionID, uint64_t nFromID, uint64_t nToID, const google::protobuf::Message* pMessage)
 	{
 		DebugAstEx(pMessage != nullptr, false);

@@ -19,9 +19,6 @@ namespace core
 		CActorBaseImpl*		createActorBase(CActorBase* pActor);
 		void				destroyActorBase(CActorBaseImpl* pActorBase);
 
-		bool				invoke(EMessageTargetType eType, uint64_t nSessionID, uint64_t nFromActorID, uint64_t nToID, const google::protobuf::Message* pMessage);
-		bool				response(EMessageTargetType eType, uint64_t nSessionID, uint8_t nResult, uint64_t nToID, const google::protobuf::Message* pMessage);
-
 		CActorBaseImpl*		getActorBase(uint64_t nID) const;
 
 		void				addWorkActorBase(CActorBaseImpl* pActorBase);
