@@ -1,13 +1,6 @@
 namespace core
 {
 	template<class T>
-	CServiceMessageRegistry<T>::CServiceMessageRegistry(uint16_t nServiceID)
-		: m_nServiceID(nServiceID)
-	{
-
-	}
-
-	template<class T>
 	void CServiceMessageRegistry<T>::registerMessageHandler(const std::string& szMessageName, void(T::*handler)(SSessionInfo, const google::protobuf::Message*))
 	{
 		DebugAst(handler != nullptr);

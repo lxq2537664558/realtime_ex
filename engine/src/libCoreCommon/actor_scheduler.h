@@ -7,10 +7,11 @@
 
 namespace core
 {
+	class CServiceBaseImpl;
 	class CActorScheduler
 	{
 	public:
-		CActorScheduler();
+		CActorScheduler(CServiceBaseImpl* pServiceBaseImpl);
 		~CActorScheduler();
 
 		bool				init();
@@ -27,9 +28,9 @@ namespace core
 	
 	private:
 		uint64_t								m_nNextActorID;
+		CServiceBaseImpl*						m_pServiceBaseImpl;
 		std::map<uint64_t, CActorBaseImpl*>		m_mapActorBase;
 		std::map<uint64_t, CActorBaseImpl*>		m_mapWorkActorBase;
 		std::map<uint64_t, CActorBaseImpl*>		m_mapPendingActorBase;
-		std::vector<char>						m_vecBuf;
 	};
 }

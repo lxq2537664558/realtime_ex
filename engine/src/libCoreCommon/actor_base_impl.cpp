@@ -4,6 +4,7 @@
 #include "service_base.h"
 #include "coroutine.h"
 #include "core_app.h"
+#include "service_base_impl.h"
 
 #include "libCoreCommon/base_app.h"
 #include "libBaseCommon/defer.h"
@@ -13,10 +14,11 @@
 
 namespace core
 {
-	CActorBaseImpl::CActorBaseImpl(uint64_t nID, CActorBase* pActorBase)
+	CActorBaseImpl::CActorBaseImpl(uint64_t nID, CActorBase* pActorBase, CServiceBaseImpl* pServiceBaseImpl)
 		: m_channel(_DEFAULT_CHANNEL_CAP)
 		, m_nID(nID)
 		, m_pActorBase(pActorBase)
+		, m_pServiceBaseImpl(pServiceBaseImpl)
 		, m_pSyncPendingResponseInfo(nullptr)
 		, m_eState(eABS_Normal)
 	{
@@ -50,6 +52,16 @@ namespace core
 	void CActorBaseImpl::setState(EActorBaseState eState)
 	{
 		this->m_eState = eState;
+	}
+
+	void CActorBaseImpl::registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
+	{
+		CCoreApp::Inst()->registerTicker(CTicker::eTT_Actor, this->getID(), pTicker, nStartTime, nIntervalTime, nContext);
+	}
+
+	void CActorBaseImpl::unregisterTicker(CTicker* pTicker)
+	{
+		CCoreApp::Inst()->unregisterTicker(pTicker);
 	}
 
 	void CActorBaseImpl::process()
@@ -87,7 +99,7 @@ namespace core
 		}
 
 		if (!this->m_channel.empty() && this->m_eState == eABS_Normal)
-			CCoreApp::Inst()->getActorScheduler()->addWorkActorBase(this);
+			this->m_pServiceBaseImpl->getActorScheduler()->addWorkActorBase(this);
 	}
 
 	void CActorBaseImpl::dispatch(const SActorMessagePacket& sActorMessagePacket)
@@ -96,22 +108,16 @@ namespace core
 		if (sActorMessagePacket.nType == eMT_REQUEST)
 		{
 			auto pMessage = std::shared_ptr<google::protobuf::Message>(sActorMessagePacket.pMessage);
-			auto iter = s_mapMessageHandlerInfo.find(pMessage->GetTypeName());
-			if (iter != s_mapMessageHandlerInfo.end())
+			auto callback = this->m_pServiceBaseImpl->getActorMessageHandler(pMessage->GetTypeName());
+			if (callback != nullptr)
 			{
 				SSessionInfo sSessionInfo;
 				sSessionInfo.nFromID = sActorMessagePacket.nData;
 				sSessionInfo.nSessionID = sActorMessagePacket.nSessionID;
 				sSessionInfo.eTargetType = eMTT_Actor;
 
-				auto& vecMessageHandlerInfo = iter->second;
-				for (size_t k = 0; k < vecMessageHandlerInfo.size(); ++k)
-				{
-					auto& callback = vecMessageHandlerInfo[k];
-
-					uint64_t nCoroutineID = coroutine::create(0, [&callback, this, pMessage, sSessionInfo](uint64_t){ callback(this->m_pActorBase, sSessionInfo, pMessage.get()); });
-					coroutine::resume(nCoroutineID, 0);
-				}
+				uint64_t nCoroutineID = coroutine::create(0, [&callback, this, pMessage, sSessionInfo](uint64_t){ callback(this->m_pActorBase, sSessionInfo, pMessage.get()); });
+				coroutine::resume(nCoroutineID, 0);
 			}
 		}
 		else if (sActorMessagePacket.nType == eMT_RESPONSE)
@@ -157,17 +163,11 @@ namespace core
 			sClientSessionInfo.nSessionID = sActorMessagePacket.nSessionID;
 			auto pMessage = std::shared_ptr<google::protobuf::Message>(sActorMessagePacket.pMessage);
 
-			auto iter = s_mapForwardMessageHandlerInfo.find(pMessage->GetTypeName());
-			if (iter != s_mapForwardMessageHandlerInfo.end())
+			auto callback = this->m_pServiceBaseImpl->getActorForwardHandler(pMessage->GetTypeName());
+			if (callback != nullptr)
 			{
-				auto& vecForwardHandlerInfo = iter->second;
-				for (size_t k = 0; k < vecForwardHandlerInfo.size(); ++k)
-				{
-					auto& callback = vecForwardHandlerInfo[k];
-
-					uint64_t nCoroutineID = coroutine::create(0, [&callback, this, pMessage, sClientSessionInfo](uint64_t){ callback(this->m_pActorBase, sClientSessionInfo, pMessage.get()); });
-					coroutine::resume(nCoroutineID, 0);
-				}
+				uint64_t nCoroutineID = coroutine::create(0, [&callback, this, pMessage, sClientSessionInfo](uint64_t){ callback(this->m_pActorBase, sClientSessionInfo, pMessage.get()); });
+				coroutine::resume(nCoroutineID, 0);
 			}
 		}
 	}
@@ -235,7 +235,7 @@ namespace core
 			pPendingResponseInfo->szMessageName = szMessageName;
 			pPendingResponseInfo->nBeginTime = base::getGmtTime();
 			pPendingResponseInfo->tickTimeout.setCallback(std::bind(&CActorBaseImpl::onRequestMessageTimeout, this, std::placeholders::_1));
-			CBaseApp::Inst()->registerTicker(CTicker::eTT_Logic, 0, &pPendingResponseInfo->tickTimeout, CCoreApp::Inst()->getInvokeTimeout(), 0, nSessionID);
+			this->registerTicker(&pPendingResponseInfo->tickTimeout, CCoreApp::Inst()->getInvokeTimeout(), 0, nSessionID);
 
 			this->m_mapPendingResponseInfo[pPendingResponseInfo->nSessionID] = pPendingResponseInfo;
 
@@ -256,7 +256,7 @@ namespace core
 			this->m_pSyncPendingResponseInfo->szMessageName = szMessageName;
 			this->m_pSyncPendingResponseInfo->nBeginTime = base::getGmtTime();
 
-			CCoreApp::Inst()->getActorScheduler()->addPendingActorBase(this);
+			this->m_pServiceBaseImpl->getActorScheduler()->addPendingActorBase(this);
 
 			return this->m_pSyncPendingResponseInfo;
 		}
@@ -294,22 +294,8 @@ namespace core
 		
 		this->setPendingResponseMessage(eRRT_TIME_OUT, nullptr);
 		
-		CCoreApp::Inst()->getActorScheduler()->addWorkActorBase(this);
+		this->m_pServiceBaseImpl->getActorScheduler()->addWorkActorBase(this);
 
 		return true;
 	}
-
-	void CActorBaseImpl::registerMessageHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SSessionInfo, const google::protobuf::Message*)>& handler)
-	{
-		s_mapMessageHandlerInfo[szMessageName].push_back(handler);
-	}
-
-	void CActorBaseImpl::registerForwardMessageHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SClientSessionInfo, const google::protobuf::Message*)>& handler)
-	{
-		s_mapForwardMessageHandlerInfo[szMessageName].push_back(handler);
-	}
-
-	std::map<std::string, std::vector<std::function<void(CActorBase*, SClientSessionInfo, const google::protobuf::Message*)>>> CActorBaseImpl::s_mapForwardMessageHandlerInfo;
-
-	std::map<std::string, std::vector<std::function<void(CActorBase*, SSessionInfo, const google::protobuf::Message*)>>> CActorBaseImpl::s_mapMessageHandlerInfo;
 }

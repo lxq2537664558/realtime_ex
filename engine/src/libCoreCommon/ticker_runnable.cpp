@@ -87,7 +87,7 @@ namespace core
 	{
 		DebugAstEx(pTicker != nullptr, false);
 		DebugAstEx(!pTicker->isRegister(), false);
-		DebugAstEx(nType == CTicker::eTT_Logic || nType == CTicker::eTT_Net, false);
+		DebugAstEx(nType == CTicker::eTT_Service || nType == CTicker::eTT_Net, false);
 
 		CCoreTickerNode* pCoreTickerNode = new CCoreTickerNode();
 		pCoreTickerNode->Value.m_pTicker = pTicker;
@@ -260,7 +260,7 @@ namespace core
 		sMessagePacket.nDataSize = 0;
 
 		// 发送到消息队列，另外消息队列取出定时器对象的时候如果发现是一次性定时器，需要反注册
-		if (pCoreTickerNode->Value.m_nType == CTicker::eTT_Logic)
+		if (pCoreTickerNode->Value.m_nType == CTicker::eTT_Service)
 			CLogicRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
 		else
 			CNetRunnable::Inst()->getMessageQueue()->send(sMessagePacket);

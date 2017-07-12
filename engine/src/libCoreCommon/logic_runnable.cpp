@@ -6,13 +6,15 @@
 #include "base_connection_mgr.h"
 #include "base_connection.h"
 #include "ticker_runnable.h"
+#include "net_runnable.h"
+#include "service_base.h"
+#include "service_base_impl.h"
 
 #include "libBaseCommon/debug_helper.h"
 #include "libBaseCommon/base_time.h"
 #include "libBaseCommon/profiling.h"
 
 #include <algorithm>
-#include "net_runnable.h"
 
 // 放这里为了调试或者看dump的时候方便
 core::CLogicRunnable*	g_pLogicRunnable;
@@ -160,10 +162,10 @@ namespace core
 
 					for (size_t i = 0; i < vecServiceBase.size(); ++i)
 					{
-						if (vecServiceBase[i]->m_eState != eSRS_Normal)
+						if (vecServiceBase[i]->m_pServiceBaseImpl->getRunState() != eSRS_Normal)
 							continue;
 
-						vecServiceBase[i]->m_eState = eSRS_Quitting;
+						vecServiceBase[i]->m_pServiceBaseImpl->setRunState(eSRS_Quitting);
 						vecServiceBase[i]->onQuit();
 					}
 				}
@@ -175,7 +177,8 @@ namespace core
 					
 					for (size_t i = 0; i < vecServiceBase.size(); ++i)
 					{
-						  vecServiceBase[i]->onFrame();
+						vecServiceBase[i]->m_pServiceBaseImpl->run();
+						vecServiceBase[i]->onFrame();
 					}
 
 					bool bQuit = true;

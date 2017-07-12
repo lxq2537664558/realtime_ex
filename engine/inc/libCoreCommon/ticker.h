@@ -23,7 +23,8 @@ namespace core
 		{
 			eTT_None	= 0,
 			eTT_Net		= 1,
-			eTT_Logic	= 2,
+			eTT_Service	= 2,
+			eTT_Actor	= 3,
 		};
 
 	public:

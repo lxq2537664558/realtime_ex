@@ -498,7 +498,7 @@ namespace core
 		pPendingResponseInfo->szMessageName = szMessageName;
 		pPendingResponseInfo->nBeginTime = base::getGmtTime();
 		pPendingResponseInfo->tickTimeout.setCallback(std::bind(&CTransporter::onRequestMessageTimeout, this, std::placeholders::_1));
-		CBaseApp::Inst()->registerTicker(CTicker::eTT_Logic, 0, &pPendingResponseInfo->tickTimeout, CCoreApp::Inst()->getInvokeTimeout(), 0, nSessionID);
+		CBaseApp::Inst()->registerTicker(CTicker::eTT_Service, 0, &pPendingResponseInfo->tickTimeout, CCoreApp::Inst()->getInvokeTimeout(), 0, nSessionID);
 
 		this->m_mapPendingResponseInfo[pPendingResponseInfo->nSessionID] = pPendingResponseInfo;
 

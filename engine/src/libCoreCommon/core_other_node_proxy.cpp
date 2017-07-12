@@ -90,7 +90,7 @@ namespace core
 		}
 
 		if (bConnect && bMaster)
-			CCoreApp::Inst()->registerTicker(CTicker::eTT_Logic, 0, sNodeProxyInfo.pTicker.get(), _CHECK_CONNECT_TIME, _CHECK_CONNECT_TIME, 0);
+			CCoreApp::Inst()->registerTicker(CTicker::eTT_Service, 0, sNodeProxyInfo.pTicker.get(), _CHECK_CONNECT_TIME, _CHECK_CONNECT_TIME, 0);
 
 		PrintInfo("add proxy node node_id: %d node_name: %s", sNodeBaseInfo.nID, sNodeBaseInfo.szName.c_str());
 	}

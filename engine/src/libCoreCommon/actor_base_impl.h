@@ -12,7 +12,7 @@ namespace core
 {
 	typedef base::CCircleQueue<SActorMessagePacket, false> CChannel;
 
-	class CActorBase;
+	class CServiceBaseImpl;
 	class CActorBaseImpl :
 		public base::noncopyable
 	{
@@ -25,12 +25,15 @@ namespace core
 		};
 
 	public:
-		CActorBaseImpl(uint64_t nID, CActorBase* pActorBase);
+		CActorBaseImpl(uint64_t nID, CActorBase* pActorBase, CServiceBaseImpl* pServiceBaseImpl);
 		~CActorBaseImpl();
 
 		uint64_t				getID() const;
 		EActorBaseState			getState() const;
 		void					setState(EActorBaseState eState);
+
+		void					registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
+		void					unregisterTicker(CTicker* pTicker);
 
 		void					process();
 		CChannel*				getChannel();
@@ -43,25 +46,19 @@ namespace core
 
 		bool					onPendingTimer(int64_t nCurTime);
 
-		void					dispatch(const SActorMessagePacket& sActorMessagePacket);
-
-		static void				registerMessageHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SSessionInfo, const google::protobuf::Message*)>& handler);
-		static void				registerForwardMessageHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SClientSessionInfo, const google::protobuf::Message*)>& handler);
-		
 	private:
 		void					onRequestMessageTimeout(uint64_t nContext);
+		void					dispatch(const SActorMessagePacket& sActorMessagePacket);
 
 	private:
 		uint64_t									m_nID;
 		CActorBase*									m_pActorBase;
+		CServiceBaseImpl*							m_pServiceBaseImpl;
 		CChannel									m_channel;
 		EActorBaseState								m_eState;
 		std::map<uint64_t, SPendingResponseInfo*>	m_mapPendingResponseInfo;
 		SPendingResponseInfo*						m_pSyncPendingResponseInfo;	// 同步调用
 		uint8_t										m_nPendingResponseResult;
 		google::protobuf::Message*					m_pPendingResponseMessage;
-		
-		static std::map<std::string, std::vector<std::function<void(CActorBase*, SSessionInfo, const google::protobuf::Message*)>>>			s_mapMessageHandlerInfo;
-		static std::map<std::string, std::vector<std::function<void(CActorBase*, SClientSessionInfo, const google::protobuf::Message*)>>>	s_mapForwardMessageHandlerInfo;
 	};
 }

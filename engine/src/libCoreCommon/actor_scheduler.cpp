@@ -6,17 +6,17 @@
 #include "core_app.h"
 #include "core_common_define.h"
 #include "actor_base_impl.h"
+#include "service_base_impl.h"
 
 #include "libCoreCommon/base_app.h"
 #include "libBaseCommon/base_time.h"
 
-
 namespace core
 {
-	CActorScheduler::CActorScheduler()
+	CActorScheduler::CActorScheduler(CServiceBaseImpl* pServiceBaseImpl)
 		: m_nNextActorID(1)
+		, m_pServiceBaseImpl(pServiceBaseImpl)
 	{
-		this->m_vecBuf.resize(UINT16_MAX);
 	}
 
 	CActorScheduler::~CActorScheduler()
@@ -71,8 +71,8 @@ namespace core
 	{
 		DebugAstEx(pActorBase != nullptr, nullptr);
 
-		CActorBaseImpl* pActorBaseImpl = new CActorBaseImpl(this->m_nNextActorID++, pActorBase);
-
+		CActorBaseImpl* pActorBaseImpl = new CActorBaseImpl(this->m_nNextActorID++, pActorBase, this->m_pServiceBaseImpl);
+		
 		this->m_mapActorBase[pActorBaseImpl->getID()] = pActorBaseImpl;
 
 		return pActorBaseImpl;

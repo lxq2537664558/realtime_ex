@@ -11,9 +11,12 @@
 namespace core
 {
 	class CActorBaseImpl;
+	class CServiceBase;
 	class CActorBase :
 		public CBaseObject
 	{
+		friend class CServiceBase;
+
 	protected:
 		CActorBase();
 		virtual ~CActorBase();
@@ -23,6 +26,17 @@ namespace core
 		virtual void		onDestroy() { }
 
 		uint64_t			getID() const;
+
+		/**
+		@brief: 注册定时器
+		nStartTime 第一次触发定时器的时间
+		nIntervalTime 第一次触发定时器后接下来定时器触发的间隔时间，如果该值是0就表示这个定时器只触发一次
+		*/
+		void				registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
+		/**
+		@brief: 反注册定时器
+		*/
+		void				unregisterTicker(CTicker* pTicker);
 
 		/*
 		给某一个目标发送一个消息
@@ -61,11 +75,6 @@ namespace core
 		广播消息给客户端
 		*/
 		static bool			broadcast(const std::vector<SClientSessionInfo>& vecClientSessionInfo, const google::protobuf::Message* pMessage);
-
-		static void			registerMessageHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SSessionInfo, const google::protobuf::Message*)>& handler);
-		static void			registerForwardHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SClientSessionInfo, const google::protobuf::Message*)>& handler);
-
-		static CActorBase*	createActor(const std::string& szClassName, void* pContext);
 
 	private:
 		bool				invoke(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, uint64_t nCoroutineID, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback);

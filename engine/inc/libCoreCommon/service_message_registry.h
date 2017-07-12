@@ -13,7 +13,7 @@ namespace core
 		typedef void(T::*funForwardHandler)(SClientSessionInfo, const google::protobuf::Message*);
 
 	public:
-		CServiceMessageRegistry(uint16_t nServiceID);
+		CServiceMessageRegistry();
 		~CServiceMessageRegistry();
 
 		inline void	registerMessageHandler(const std::string& szMessageName, void(T::*handler)(SSessionInfo, const google::protobuf::Message*));
@@ -44,7 +44,7 @@ namespace core
 			core::CServiceMessageRegistry<Class>::forward(this, sClientSessionInfo, pMessage);\
 		}
 
-#define REGISTER_SERVICE_MESSAGE_HANDLER(Class, name, handler)	do { core::CServiceMessageRegistry<Class>::registerMessageHandler(name, (core::CServiceMessageRegistry<Class>::funMessageHandler)handler); core::CBaseApp::Inst()->registerMessageHandler(this->getServiceID(), name, std::bind(&Class::onDefaultServiceMessageHandler, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)); } while(0)
-#define REGISTER_SERVICE_FORWARD_HANDLER(Class, name, handler)	do { core::CServiceMessageRegistry<Class>::registerForwardHandler(name, (core::CServiceMessageRegistry<Class>::funForwardHandler)handler); core::CBaseApp::Inst()->registerForwardHandler(this->getServiceID(), name, std::bind(&Class::onDefaultServiceForwardHandler, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)); } while(0)
+#define REGISTER_SERVICE_MESSAGE_HANDLER(pServiceBase, Class, name, handler)	do { core::CServiceMessageRegistry<Class>::registerMessageHandler(name, (core::CServiceMessageRegistry<Class>::funMessageHandler)handler); pServiceBase->registerServiceMessageHandler(name, std::bind(&Class::onDefaultServiceMessageHandler, this, std::placeholders::_1, std::placeholders::_2)); } while(0)
+#define REGISTER_SERVICE_FORWARD_HANDLER(pServiceBase, Class, name, handler)	do { core::CServiceMessageRegistry<Class>::registerForwardHandler(name, (core::CServiceMessageRegistry<Class>::funForwardHandler)handler); pServiceBase->registerServiceForwardHandler(name, std::bind(&Class::onDefaultServiceForwardHandler, this, std::placeholders::_1, std::placeholders::_2)); } while(0)
 
 #include "service_message_registry.inl"

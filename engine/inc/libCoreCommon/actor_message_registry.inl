@@ -1,17 +1,11 @@
 namespace core
 {
 	template<class T>
-	std::map<std::string, typename CActorMessageRegistry<T>::funMessageHandler> CActorMessageRegistry<T>::s_mapMessageHandler;
-
-	template<class T>
-	std::map<std::string, typename CActorMessageRegistry<T>::funForwardHandler> CActorMessageRegistry<T>::s_mapForwardHandler;
-
-	template<class T>
 	void CActorMessageRegistry<T>::registerMessageHandler(const std::string& szMessageName, void(T::*handler)(CActorBase*, SSessionInfo, const google::protobuf::Message*))
 	{
 		DebugAst(handler != nullptr);
 
-		s_mapMessageHandler[szMessageName] = handler;
+		m_mapMessageHandler[szMessageName] = handler;
 	}
 
 	template<class T>
@@ -19,7 +13,7 @@ namespace core
 	{
 		DebugAst(handler != nullptr);
 
-		s_mapForwardHandler[szMessageName] = handler;
+		m_mapForwardHandler[szMessageName] = handler;
 	}
 
 	template<class T>
@@ -27,8 +21,8 @@ namespace core
 	{
 		DebugAst(pMessage != nullptr);
 
-		auto iter = s_mapMessageHandler.find(pMessage->GetTypeName());
-		if (iter == s_mapMessageHandler.end())
+		auto iter = m_mapMessageHandler.find(pMessage->GetTypeName());
+		if (iter == m_mapMessageHandler.end())
 			return;
 
 		funMessageHandler handler = iter->second;
@@ -41,8 +35,8 @@ namespace core
 	{
 		DebugAst(pMessage != nullptr);
 
-		auto iter = s_mapForwardHandler.find(pMessage->GetTypeName());
-		if (iter == s_mapForwardHandler.end())
+		auto iter = m_mapForwardHandler.find(pMessage->GetTypeName());
+		if (iter == m_mapForwardHandler.end())
 			return;
 
 		funForwardHandler handler = iter->second;

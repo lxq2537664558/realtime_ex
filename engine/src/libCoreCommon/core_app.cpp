@@ -32,6 +32,7 @@
 #include "message_command.h"
 
 #include "tinyxml2/tinyxml2.h"
+#include "service_base_impl.h"
 
 #define _DEFAULT_HEARTBEAT_LIMIT	3
 #define _DEFAULT_HEARTBEAT_TIME		10
@@ -382,7 +383,7 @@ namespace core
 		}
 
 		this->m_tickerQPS.setCallback(std::bind(&CCoreApp::onQPS, this, std::placeholders::_1));
-		this->registerTicker(CTicker::eTT_Logic, 0, &this->m_tickerQPS, 1000, 1000, 0);
+		this->registerTicker(CTicker::eTT_Service, 0, &this->m_tickerQPS, 1000, 1000, 0);
 
 		if (!CNetRunnable::Inst()->init(nMaxConnectionCount))
 		{
@@ -410,14 +411,20 @@ namespace core
 			CServiceBase* pServiceBase = dynamic_cast<CServiceBase*>(CBaseObject::createObject(szClassName));
 			if (nullptr == pServiceBase)
 			{
-				PrintWarning("create service %s", szName.c_str());
+				PrintWarning("create service_base %s error", szName.c_str());
+				return false;
+			}
+			pServiceBase->m_pServiceBaseImpl = new CServiceBaseImpl();
+			if (!pServiceBase->m_pServiceBaseImpl->init(nID))
+			{
+				PrintWarning("create service_base_impl %s error", szName.c_str());
 				return false;
 			}
 			PrintInfo("create service %s ok", szName.c_str());
 			if (!pServiceBase->onInit())
 				return false;
 			
-			pServiceBase->m_eState = eSRS_Normal;
+			pServiceBase->m_pServiceBaseImpl->m_eState = eSRS_Normal;
 
 			this->m_vecServiceBase.push_back(pServiceBase);
 		}

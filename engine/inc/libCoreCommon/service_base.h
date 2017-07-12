@@ -21,7 +21,9 @@ namespace core
 	};
 
 	class CLogicRunnable;
+	class CActorBase;
 	class CCoreApp;
+	class CServiceBaseImpl;
 	/**
 	@brief: 服务基础类
 	*/
@@ -36,56 +38,73 @@ namespace core
 		virtual ~CServiceBase();
 
 		/**
+		@brief: 获取服务ID
+		*/
+		const SServiceBaseInfo&	getServiceBaseInfo() const;
+		/**
 		@brief: 注册定时器
 		nStartTime 第一次触发定时器的时间
 		nIntervalTime 第一次触发定时器后接下来定时器触发的间隔时间，如果该值是0就表示这个定时器只触发一次
 		*/
-		void				registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
+		void					registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
 		/**
 		@brief: 反注册定时器
 		*/
-		void				unregisterTicker(CTicker* pTicker);
+		void					unregisterTicker(CTicker* pTicker);
+
 		/**
-		@brief: 注册普通节点消息
+		@brief: 注册普通服务消息
 		*/
-		void				registerMessageHandler(const std::string& szMessageName, const std::function<void(SSessionInfo, google::protobuf::Message*)>& callback);
+		void					registerServiceMessageHandler(const std::string& szMessageName, const std::function<void(SSessionInfo, google::protobuf::Message*)>& callback);
 		/**
-		@brief: 注册经网关节点转发客户端的消息
+		@brief: 注册经网关服务转发客户端的服务消息
 		*/
-		void				registerForwardHandler(const std::string& szMessageName, const std::function<void(SClientSessionInfo, google::protobuf::Message*)>& callback);
+		void					registerServiceForwardHandler(const std::string& szMessageName, const std::function<void(SClientSessionInfo, google::protobuf::Message*)>& callback);
+		
+		/**
+		@brief: 注册普通actor消息
+		*/
+		void					registerActorMessageHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SSessionInfo, const google::protobuf::Message*)>& callback);
+		/**
+		@brief: 注册经网关服务转发客户端的actor消息
+		*/
+		void					registerActorForwardHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SClientSessionInfo, const google::protobuf::Message*)>& callback);
+
 		/**
 		@brief: 获取服务调用器
 		*/
-		CServiceInvoker*	getServiceInvoker() const;
+		CServiceInvoker*		getServiceInvoker() const;
+		/**
+		@brief: 创建actor
+		*/
+		CActorBase*				createActor(const std::string& szClassName, void* pContext);
 		/*
 		@brief: 获取配置文件名
 		*/
-		const std::string&	getConfigFileName() const;
+		const std::string&		getConfigFileName() const;
 		/*
 		@brief: 获取写buf对象，的主要用于消息打包
 		*/
-		base::CWriteBuf&	getWriteBuf() const;
+		base::CWriteBuf&		getWriteBuf() const;
 		/*
 		@brief: 获取QPS
 		*/
-		uint32_t			getQPS() const;
+		uint32_t				getQPS() const;
 		/*
 		@brief: 获取运行状态
 		*/
-		EServiceRunState	getState() const;
+		EServiceRunState		getState() const;
 		/*
 		@brief: 逻辑发出退出
 		*/
-		void				doQuit();
+		void					doQuit();
 
 	protected:
-		virtual bool		onInit() = 0;
-		virtual void		onFrame() { }
-		virtual void		onQuit() = 0;
+		virtual bool			onInit() = 0;
+		virtual void			onFrame() { }
+		virtual void			onQuit() = 0;
 
 	private:
-		EServiceRunState	m_eState;
-		uint16_t			m_nServiceID;
-		CServiceInvoker*	m_pServiceInvoker;
+		CServiceBaseImpl*	m_pServiceBaseImpl;
 	};
 }

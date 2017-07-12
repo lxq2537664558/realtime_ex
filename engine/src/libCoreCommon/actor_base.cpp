@@ -26,6 +26,16 @@ namespace core
 		return this->m_pActorBaseImpl->getID();
 	}
 
+	void CActorBase::registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
+	{
+		this->m_pActorBaseImpl->registerTicker(pTicker, nStartTime, nIntervalTime, nContext);
+	}
+
+	void CActorBase::unregisterTicker(CTicker* pTicker)
+	{
+		this->m_pActorBaseImpl->unregisterTicker(pTicker);
+	}
+
 	bool CActorBase::send(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage)
 	{
 		DebugAstEx(pMessage != nullptr, false);
@@ -48,29 +58,6 @@ namespace core
 		CServiceInvoker::response(sSessionInfo, pMessage);
 	}
 
-	CActorBase* CActorBase::createActor(const std::string& szClassName, void* pContext)
-	{
-		CActorBase* pActorBase = dynamic_cast<CActorBase*>(CBaseObject::createObject(szClassName));
-		DebugAstEx(pActorBase != nullptr, nullptr);
-
-		pActorBase->m_pActorBaseImpl = CCoreApp::Inst()->getActorScheduler()->createActorBase(pActorBase);
-		if (pActorBase->m_pActorBaseImpl == nullptr)
-		{
-			pActorBase->del();
-			return nullptr;
-		}
-
-		if (!pActorBase->onInit(pContext))
-		{
-			pActorBase->del();
-			return nullptr;
-		}
-
-		PrintInfo("create actor id: "UINT64FMT, pActorBase->getID());
-
-		return pActorBase;
-	}
-
 	void CActorBase::release()
 	{
 		this->onDestroy();
@@ -78,16 +65,6 @@ namespace core
 		PrintInfo("destroy actor id: "UINT64FMT, this->getID());
 
 		this->del();
-	}
-
-	void CActorBase::registerMessageHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SSessionInfo, const google::protobuf::Message*)>& handler)
-	{
-		CActorBaseImpl::registerMessageHandler(szMessageName, handler);
-	}
-
-	void CActorBase::registerForwardHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SClientSessionInfo, const google::protobuf::Message*)>& handler)
-	{
-		CActorBaseImpl::registerForwardMessageHandler(szMessageName, handler);
 	}
 
 	bool CActorBase::invoke(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, uint64_t nCoroutineID, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback)
