@@ -17,12 +17,13 @@ namespace core
 
 		bool	init();
 		void	send(const SMessagePacket& sMessagePacket);
-		void	recv(std::vector<SMessagePacket>& vecMessagePacket, bool bWait);
+		void	recv(std::vector<SMessagePacket>& vecMessagePacket);
+
+		bool	empty();
 
 	private:
 		base::CCircleQueue<SMessagePacket, false>	
 								m_queue;
 		std::mutex				m_lock;
-		std::condition_variable	m_cond;
 	};
 }

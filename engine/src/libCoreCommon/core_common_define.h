@@ -28,6 +28,6 @@ namespace core
 	{
 		eBCT_ConnectionToMaster			= 10,
 		eBCT_ConnectionFromOtherNode	= 11,
-		eBCT_ConnectionToOtherNode		= 12,
+		eBCT_ConnectionOtherNode		= 12,
 	};
 }

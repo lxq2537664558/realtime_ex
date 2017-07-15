@@ -4,6 +4,7 @@
 #include "ticker.h"
 #include "service_invoker.h"
 #include "base_object.h"
+#include "actor_id_converter.h"
 
 #include "libBaseCommon/buf_file.h"
 
@@ -20,9 +21,7 @@ namespace core
 		eSRS_Quit = 3,		// 最终退出
 	};
 
-	class CLogicRunnable;
 	class CActorBase;
-	class CCoreApp;
 	class CServiceBaseImpl;
 	/**
 	@brief: 服务基础类
@@ -30,9 +29,8 @@ namespace core
 	class CServiceBase :
 		public CBaseObject
 	{
-		friend class CLogicRunnable;
-		friend class CCoreApp;
-
+		friend class CServiceBaseImpl;
+		
 	public:
 		CServiceBase();
 		virtual ~CServiceBase();
@@ -41,6 +39,16 @@ namespace core
 		@brief: 获取服务ID
 		*/
 		const SServiceBaseInfo&	getServiceBaseInfo() const;
+
+		/**
+		@brief: 设置actorid转换器
+		*/
+		void					setActorIDConverter(CActorIDConverter* pActorIDConverter);
+		/**
+		@brief: 获取actorid转换器
+		*/
+		CActorIDConverter*		getActorIDConverter() const;
+
 		/**
 		@brief: 注册定时器
 		nStartTime 第一次触发定时器的时间

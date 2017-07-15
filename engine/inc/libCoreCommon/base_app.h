@@ -38,15 +38,6 @@ namespace core
 		@brief: 反注册定时器
 		*/
 		void						unregisterTicker(CTicker* pTicker);
-		/**
-		@brief: 注册普通的服务回调
-		*/
-		void						registerCallback(uint16_t nServiceID, const std::string& szMessageName, const std::function<void(SSessionInfo, google::protobuf::Message*)>& callback);
-		/**
-		@brief: 注册网关服务过来的服务回调
-		*/
-		void						registerGateForwardCallback(uint16_t nServiceID, const std::string& szMessageName, const std::function<void(SClientSessionInfo, google::protobuf::Message*)>& callback);
-
 		/*
 		@brief: 获取连接管理器
 		*/
@@ -55,11 +46,6 @@ namespace core
 		@brief: 根据服务ID获取服务
 		*/
 		CServiceBase*				getServiceBase(uint16_t nServiceID) const;
-		/**
-		@brief: 获取服务列表
-		*/
-		const std::vector<CServiceBase*>
-									getServiceBase() const;
 		/**
 		@brief: 获取本节点基本信息
 		*/

@@ -84,10 +84,4 @@ namespace core
 
 		return iterCallback->second;
 	}
-
-	void CCoreMessageRegistry::onConnectToMaster()
-	{
-		CBaseConnectionToMaster* pCoreConnectionToMaster = CCoreApp::Inst()->getConnectionToMaster();
-		DebugAst(nullptr != pCoreConnectionToMaster);
-	}
 }

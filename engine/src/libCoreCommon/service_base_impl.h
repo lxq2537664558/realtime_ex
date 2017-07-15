@@ -1,13 +1,16 @@
 #pragma once
-#include "libBaseCommon/circle_queue.h"
 
 #include "core_common.h"
 #include "core_common_define.h"
 #include "service_base.h"
 #include "actor_scheduler.h"
 #include "service_invoker.h"
+#include "logic_message_queue.h"
+#include "message_dispatcher.h"
 
 #include <map>
+#include <atomic>
+
 
 namespace core
 {
@@ -21,7 +24,8 @@ namespace core
 		CServiceBaseImpl();
 		~CServiceBaseImpl();
 
-		bool					init(uint16_t nServiceID);
+		bool					init(const SServiceBaseInfo& sServiceBaseInfo, CServiceBase* pServiceBase);
+		CServiceBase*			getServiceBase() const;
 
 		const SServiceBaseInfo&	getServiceBaseInfo() const;
 
@@ -30,6 +34,15 @@ namespace core
 
 		CServiceInvoker*		getServiceInvoker() const;
 		CActorScheduler*		getActorScheduler() const;
+		CLogicMessageQueue*		getMessageQueue() const;
+		CMessageDispatcher*		getMessageDispatcher() const;
+
+		void					setActorIDConverter(CActorIDConverter* pActorIDConverter);
+		CActorIDConverter*		getActorIDConverter() const;
+
+		bool					isWorking() const;
+
+		void					setWorking(bool bFlag);
 		
 		void					registerServiceMessageHandler(const std::string& szMessageName, const std::function<void(SSessionInfo, google::protobuf::Message*)>& callback);
 		void					registerServiceForwardHandler(const std::string& szMessageName, const std::function<void(SClientSessionInfo, google::protobuf::Message*)>& callback);
@@ -38,34 +51,38 @@ namespace core
 		void					registerActorForwardHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SClientSessionInfo, const google::protobuf::Message*)>& callback);
 		
 		std::function<void(SSessionInfo, google::protobuf::Message*)>&
-							getServiceMessageHandler(const std::string& szMessageName);
+								getServiceMessageHandler(const std::string& szMessageName);
 		std::function<void(SClientSessionInfo, google::protobuf::Message*)>&
-							getServiceForwardHandler(const std::string& szMessageName);
+								getServiceForwardHandler(const std::string& szMessageName);
 
 		std::function<void(CActorBase*, SSessionInfo, google::protobuf::Message*)>&
-							getActorMessageHandler(const std::string& szMessageName);
+								getActorMessageHandler(const std::string& szMessageName);
 		std::function<void(CActorBase*, SClientSessionInfo, google::protobuf::Message*)>&
-							getActorForwardHandler(const std::string& szMessageName);
+								getActorForwardHandler(const std::string& szMessageName);
 
-		const std::string&	getConfigFileName() const;
+		const std::string&		getConfigFileName() const;
 		
-		base::CWriteBuf&	getWriteBuf() const;
+		base::CWriteBuf&		getWriteBuf() const;
 		
-		uint32_t			getQPS() const;
+		uint32_t				getQPS() const;
 		
-		EServiceRunState	getRunState() const;
-		void				setRunState(EServiceRunState eState);
+		EServiceRunState		getRunState() const;
+		void					setRunState(EServiceRunState eState);
 		
-		void				doQuit();
+		void					doQuit();
 
-		void				run();
+		void					run();
 
 	private:
-		uint16_t			m_nServiceID;
+		SServiceBaseInfo	m_sServiceBaseInfo;
 		CServiceBase*		m_pServiceBase;
 		EServiceRunState	m_eState;
 		CServiceInvoker*	m_pServiceInvoker;
 		CActorScheduler*	m_pActorScheduler;
+		CLogicMessageQueue*	m_pMessageQueue;
+		CMessageDispatcher*	m_pMessageDispatcher;
+		CActorIDConverter*	m_pActorIDConverter;
+		std::atomic<bool>	m_bWorking;
 
 		std::map<std::string, std::function<void(SSessionInfo, google::protobuf::Message*)>>		
 							m_mapServiceMessageHandler;

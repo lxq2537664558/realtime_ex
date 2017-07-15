@@ -61,12 +61,12 @@ namespace core
 		template<class T>
 		inline uint32_t		sync_call(uint16_t nServiceID, const google::protobuf::Message* pMessage, std::shared_ptr<T>& pResponseMessage);
 
-		void				release();
-
 		/*
 		通过请求的session响应请求
 		*/
-		static void			response(const SSessionInfo& sSessionInfo, const google::protobuf::Message* pMessage);
+		void				response(const SSessionInfo& sSessionInfo, const google::protobuf::Message* pMessage);
+
+		void				release();
 		/*
 		发送消息给客户端
 		*/

@@ -31,7 +31,7 @@ namespace core
 
 	void CBaseConnectionOtherNode::onConnect()
 	{
-		if (this->getType() == eBCT_ConnectionToOtherNode)
+		if (this->getType() == eBCT_ConnectionOtherNode)
 		{
 			// 同步节点名字
 			smt_notify_node_base_info netMsg;
@@ -64,87 +64,73 @@ namespace core
 
 	void CBaseConnectionOtherNode::onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize, const void* pContext)
 	{
-		if (nMessageType == eMT_SYSTEM)
+		DebugAst(nMessageType == eMT_SYSTEM);
+
+		const message_header* pHeader = reinterpret_cast<const message_header*>(pData);
+		DebugAst(nSize > sizeof(message_header));
+
+		switch (pHeader->nMessageID)
 		{
-			const message_header* pHeader = reinterpret_cast<const message_header*>(pData);
-			DebugAst(nSize > sizeof(message_header));
-
-			switch (pHeader->nMessageID)
+		case eSMT_notify_node_base_info:
 			{
-			case eSMT_notify_node_base_info:
+				DebugAst(this->getNodeID() == 0);
+
+				smt_notify_node_base_info netMsg;
+				netMsg.unpack(pData, nSize);
+
+				CCoreApp::Inst()->getCoreOtherNodeProxy()->addNodeProxyInfo(netMsg.sNodeBaseInfo, netMsg.vecServiceBaseInfo, false);
+
+				if (!CCoreApp::Inst()->getCoreOtherNodeProxy()->addBaseConnectionOtherNodeByNodeID(netMsg.sNodeBaseInfo.nID, this))
 				{
-					DebugAst(this->getNodeID() == 0);
+					this->shutdown(base::eNCCT_Force, "dup node connection");
+					return;
+				}
 
-					smt_notify_node_base_info netMsg;
-					netMsg.unpack(pData, nSize);
+				this->m_nNodeID = netMsg.sNodeBaseInfo.nID;
 
-					CCoreApp::Inst()->getCoreOtherNodeProxy()->addNodeProxyInfo(netMsg.sNodeBaseInfo, netMsg.vecServiceBaseInfo, false);
+				smt_notify_ack_node_base_info netMsg1;
+				netMsg1.nNodeID = CCoreApp::Inst()->getNodeBaseInfo().nID;
+				base::CWriteBuf& writeBuf = CCoreApp::Inst()->getWriteBuf();
+				netMsg1.pack(writeBuf);
+				this->send(eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
 
-					if (!CCoreApp::Inst()->getCoreOtherNodeProxy()->addBaseConnectionOtherNodeByNodeID(netMsg.sNodeBaseInfo.nID, this))
+				auto& callback = CCoreApp::Inst()->getServiceConnectCallback();
+				if (callback != nullptr)
+				{
+					std::vector<SServiceBaseInfo> vecServiceBaseInfo;
+					CCoreApp::Inst()->getCoreOtherNodeProxy()->getServiceBaseInfoByNodeID(this->getNodeID(), vecServiceBaseInfo);
+					for (size_t i = 0; i < vecServiceBaseInfo.size(); ++i)
 					{
-						this->shutdown(base::eNCCT_Force, "dup node connection");
-						return;
-					}
-
-					this->m_nNodeID = netMsg.sNodeBaseInfo.nID;
-
-					smt_notify_ack_node_base_info netMsg1;
-					netMsg1.nNodeID = CCoreApp::Inst()->getNodeBaseInfo().nID;
-					base::CWriteBuf& writeBuf = CCoreApp::Inst()->getWriteBuf();
-					netMsg1.pack(writeBuf);
-					this->send(eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
-
-					auto& callback = CCoreApp::Inst()->getServiceConnectCallback();
-					if (callback != nullptr)
-					{
-						std::vector<SServiceBaseInfo> vecServiceBaseInfo;
-						CCoreApp::Inst()->getCoreOtherNodeProxy()->getServiceBaseInfoByNodeID(this->getNodeID(), vecServiceBaseInfo);
-						for (size_t i = 0; i < vecServiceBaseInfo.size(); ++i)
-						{
-							callback(vecServiceBaseInfo[i].nID);
-						}
+						callback(vecServiceBaseInfo[i].nID);
 					}
 				}
-				break;
+			}
+			break;
 
-			case eSMT_notify_ack_node_base_info:
+		case eSMT_notify_ack_node_base_info:
+			{
+				smt_notify_ack_node_base_info netMsg;
+				netMsg.unpack(pData, nSize);
+
+				if (!CCoreApp::Inst()->getCoreOtherNodeProxy()->addBaseConnectionOtherNodeByNodeID(netMsg.nNodeID, this))
 				{
-					smt_notify_ack_node_base_info netMsg;
-					netMsg.unpack(pData, nSize);
+					this->shutdown(base::eNCCT_Force, "dup node connection");
+					return;
+				}
 
-					if (!CCoreApp::Inst()->getCoreOtherNodeProxy()->addBaseConnectionOtherNodeByNodeID(netMsg.nNodeID, this))
+				this->m_nNodeID = netMsg.nNodeID;
+				auto& callback = CCoreApp::Inst()->getServiceConnectCallback();
+				if (callback != nullptr) 
+				{
+					std::vector<SServiceBaseInfo> vecServiceBaseInfo;
+					CCoreApp::Inst()->getCoreOtherNodeProxy()->getServiceBaseInfoByNodeID(this->getNodeID(), vecServiceBaseInfo);
+					for (size_t i = 0; i < vecServiceBaseInfo.size(); ++i)
 					{
-						this->shutdown(base::eNCCT_Force, "dup node connection");
-						return;
-					}
-
-					this->m_nNodeID = netMsg.nNodeID;
-					auto& callback = CCoreApp::Inst()->getServiceConnectCallback();
-					if (callback != nullptr) 
-					{
-						std::vector<SServiceBaseInfo> vecServiceBaseInfo;
-						CCoreApp::Inst()->getCoreOtherNodeProxy()->getServiceBaseInfoByNodeID(this->getNodeID(), vecServiceBaseInfo);
-						for (size_t i = 0; i < vecServiceBaseInfo.size(); ++i)
-						{
-							callback(vecServiceBaseInfo[i].nID);
-						}
+						callback(vecServiceBaseInfo[i].nID);
 					}
 				}
-				break;
 			}
-
-			return;
-		}
-		else
-		{
-			// 如果连节点名字都没有上报就发送其他包过来了，肯定非法，直接踢掉
-			if (this->getNodeID() == 0)
-			{
-				this->shutdown(base::eNCCT_Force, "invalid connection");
-				return;
-			}
-
-			CCoreApp::Inst()->getMessageDispatcher()->dispatch(this->getID(), this->getNodeID(), nMessageType, reinterpret_cast<const google::protobuf::Message*>(pData), reinterpret_cast<const SMCT_RECV_SOCKET_DATA*>(pContext));
+			break;
 		}
 	}
 

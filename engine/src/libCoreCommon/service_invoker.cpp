@@ -10,8 +10,8 @@
 
 namespace core
 {
-	CServiceInvoker::CServiceInvoker(uint16_t nServiceID)
-		: m_nServiceID(nServiceID)
+	CServiceInvoker::CServiceInvoker(CServiceBaseImpl* pServiceBaseImpl)
+		: m_pServiceBaseImpl(pServiceBaseImpl)
 	{
 
 	}
@@ -30,21 +30,21 @@ namespace core
 	{
 		DebugAstEx(pMessage != nullptr, false);
 
-		return CCoreApp::Inst()->getTransporter()->invoke(eType, 0, this->m_nServiceID, nID, pMessage);
+		return CCoreApp::Inst()->getTransporter()->invoke(this->m_pServiceBaseImpl, eType, 0, this->m_pServiceBaseImpl->getServiceBaseInfo().nID, nID, pMessage);
 	}
 
 	bool CServiceInvoker::forward(EMessageTargetType eType, uint64_t nID, uint64_t nSessionID, const google::protobuf::Message* pMessage)
 	{
 		DebugAstEx(pMessage != nullptr, false);
 
-		return CCoreApp::Inst()->getTransporter()->forward(eType, nSessionID, this->m_nServiceID, nID, pMessage);
+		return CCoreApp::Inst()->getTransporter()->forward(this->m_pServiceBaseImpl, eType, nSessionID, this->m_pServiceBaseImpl->getServiceBaseInfo().nID, nID, pMessage);
 	}
 
 	void CServiceInvoker::response(const SSessionInfo& sSessionInfo, const google::protobuf::Message* pMessage)
 	{
 		DebugAst(pMessage != nullptr);
 
-		bool bRet = CCoreApp::Inst()->getTransporter()->response(sSessionInfo.eTargetType, sSessionInfo.nSessionID, eRRT_OK, sSessionInfo.nFromID, pMessage);
+		bool bRet = CCoreApp::Inst()->getTransporter()->response(this->m_pServiceBaseImpl, sSessionInfo.eTargetType, sSessionInfo.nSessionID, eRRT_OK, sSessionInfo.nFromID, pMessage);
 		DebugAst(bRet);
 	}
 
@@ -78,7 +78,7 @@ namespace core
 	bool CServiceInvoker::invoke(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback)
 	{
 		uint64_t nSessionID = CCoreApp::Inst()->getTransporter()->genSessionID();
-		if (!CCoreApp::Inst()->getTransporter()->invoke(eType, nSessionID, this->m_nServiceID, nID, pMessage))
+		if (!CCoreApp::Inst()->getTransporter()->invoke(this->m_pServiceBaseImpl, eType, nSessionID, this->m_pServiceBaseImpl->getServiceBaseInfo().nID, nID, pMessage))
 			return false;
 
 		SPendingResponseInfo* pPendingResponseInfo = CCoreApp::Inst()->getTransporter()->addPendingResponseInfo(nSessionID, nID, pMessage->GetTypeName(), callback);

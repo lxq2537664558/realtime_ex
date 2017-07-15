@@ -64,7 +64,7 @@ namespace core
 
 			char szBuf[64] = { 0 };
 			base::crt::snprintf(szBuf, _countof(szBuf), "%d", sNodeProxyInfo.sNodeBaseInfo.nID);
-			CCoreApp::Inst()->getBaseConnectionMgr()->connect(sNodeProxyInfo.sNodeBaseInfo.szHost, sNodeProxyInfo.sNodeBaseInfo.nPort, eBCT_ConnectionToOtherNode, szBuf, sNodeProxyInfo.sNodeBaseInfo.nSendBufSize, sNodeProxyInfo.sNodeBaseInfo.nRecvBufSize, nullptr);
+			CCoreApp::Inst()->getBaseConnectionMgr()->connect(sNodeProxyInfo.sNodeBaseInfo.szHost, sNodeProxyInfo.sNodeBaseInfo.nPort, eBCT_ConnectionOtherNode, szBuf, sNodeProxyInfo.sNodeBaseInfo.nSendBufSize, sNodeProxyInfo.sNodeBaseInfo.nRecvBufSize, nullptr);
 		});
 
 		for (size_t i = 0; i < vecServiceBaseInfo.size(); ++i)

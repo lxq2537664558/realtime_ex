@@ -67,7 +67,7 @@ namespace core
 		CActorBase* pActorBase = dynamic_cast<CActorBase*>(CBaseObject::createObject(szClassName));
 		DebugAstEx(pActorBase != nullptr, nullptr);
 
-		pActorBase->m_pActorBaseImpl = CCoreApp::Inst()->getActorScheduler()->createActorBase(pActorBase);
+		pActorBase->m_pActorBaseImpl = this->m_pServiceBaseImpl->getActorScheduler()->createActorBase(pActorBase);
 		if (pActorBase->m_pActorBaseImpl == nullptr)
 		{
 			pActorBase->del();

@@ -121,6 +121,7 @@ namespace core
 		uint16_t	nID;
 		std::string	szName;			// 服务名字
 		std::string	szType;			// 服务类型（比如gate, gas）
+		std::string szClassName;	// 类名字
 	};
 
 	struct SClientSessionInfo

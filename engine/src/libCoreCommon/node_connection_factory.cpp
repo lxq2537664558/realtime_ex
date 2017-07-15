@@ -23,8 +23,7 @@ namespace core
 				return pBaseConnectionToMaster;
 			}
 			break;
-		case eBCT_ConnectionFromOtherNode:
-		case eBCT_ConnectionToOtherNode:
+		case eBCT_ConnectionOtherNode:
 			{
 				CBaseConnectionOtherNode* pBaseConnectionOtherNode = new CBaseConnectionOtherNode();
 				if (!pBaseConnectionOtherNode->init(nType, szContext))

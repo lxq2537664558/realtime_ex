@@ -26,8 +26,6 @@ namespace core
 		std::function<void(SClientSessionInfo, google::protobuf::Message*)>&
 				getGateForwardCallback(uint16_t nServiceID, const std::string& szMessageName);
 
-		void	onConnectToMaster();
-
 	private:
 		struct SServiceRegistryInfo
 		{

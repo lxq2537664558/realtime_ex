@@ -19,8 +19,7 @@ namespace core
 		bool				init();
 		CLogicMessageQueue*	getMessageQueue() const;
 		CBaseConnectionMgr*	getBaseConnectionMgr() const;
-		void				sendInsideMessage(const SMessagePacket& sMessagePacket);
-		void				recvInsideMessage(std::vector<SMessagePacket>& vecMessagePacket);
+		
 		void				release();
 
 	private:
@@ -29,9 +28,7 @@ namespace core
 		virtual void		onDestroy();
 
 	private:
-		base::CThreadBase*							m_pThreadBase;
-		CLogicMessageQueue*							m_pMessageQueue;
-		base::CCircleQueue<SMessagePacket, false>	m_insideQueue;
-		CBaseConnectionMgr*							m_pBaseConnectionMgr;
+		base::CThreadBase*	m_pThreadBase;
+		CBaseConnectionMgr*	m_pBaseConnectionMgr;
 	};
 }

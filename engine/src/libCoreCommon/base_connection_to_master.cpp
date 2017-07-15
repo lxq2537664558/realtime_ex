@@ -38,8 +38,6 @@ namespace core
 		this->send(eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
 
 		CCoreApp::Inst()->setCoreConnectionToMaster(this);
-
-		CCoreApp::Inst()->getCoreMessageRegistry()->onConnectToMaster();
 	}
 
 	void CBaseConnectionToMaster::onDisconnect()

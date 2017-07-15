@@ -102,6 +102,7 @@ namespace core
 		, m_nHeartbeatTime(0)
 		, m_nSamplingTime(_DEFAULT_SAMPLING_TIME)
 		, m_nQPS(0)
+		, m_pServiceBaseMgr(nullptr)
 	{
 	}
 
@@ -150,9 +151,9 @@ namespace core
 		return CLogicRunnable::Inst()->getBaseConnectionMgr();
 	}
 
-	const std::vector<CServiceBase*> CCoreApp::getServiceBase() const
+	CServiceBaseMgr* CCoreApp::getServiceBaseMgr() const
 	{
-		return this->m_vecServiceBase;
+		return this->m_pServiceBaseMgr;
 	}
 
 	bool CCoreApp::isOwnerService(uint16_t nServiceID) const
@@ -366,6 +367,7 @@ namespace core
 			sServiceBaseInfo.nID = (uint16_t)pServiceInfoXML->UnsignedAttribute("service_id");
 			sServiceBaseInfo.szName = pServiceInfoXML->Attribute("service_name");
 			sServiceBaseInfo.szType = pServiceInfoXML->Attribute("service_type");
+			sServiceBaseInfo.szClassName = pServiceInfoXML->Attribute("service_class_name");
 			this->m_vecServiceBaseInfo.push_back(sServiceBaseInfo);
 		}
 		
@@ -385,6 +387,13 @@ namespace core
 		this->m_tickerQPS.setCallback(std::bind(&CCoreApp::onQPS, this, std::placeholders::_1));
 		this->registerTicker(CTicker::eTT_Service, 0, &this->m_tickerQPS, 1000, 1000, 0);
 
+		this->m_pServiceBaseMgr = new CServiceBaseMgr();
+		if (!this->m_pServiceBaseMgr->init(this->m_vecServiceBaseInfo))
+		{
+			PrintWarning("this->m_pServiceBaseMgr->init(this->m_vecServiceBaseInfo)");
+			return false;
+		}
+
 		if (!CNetRunnable::Inst()->init(nMaxConnectionCount))
 		{
 			PrintWarning("CNetRunnable::Inst()->init(nMaxConnectionCount)");
@@ -401,32 +410,6 @@ namespace core
 		{
 			PrintWarning("CTickerRunnable::Inst()->init()");
 			return false;
-		}
-
-		for (tinyxml2::XMLElement* pServiceInfoXML = pNodeInfoXML->FirstChildElement("service_info"); pServiceInfoXML != nullptr; pServiceInfoXML = pServiceInfoXML->NextSiblingElement("service_info"))
-		{
-			uint16_t nID = (uint16_t)pServiceInfoXML->UnsignedAttribute("service_id");
-			std::string szName = pServiceInfoXML->Attribute("service_name");
-			std::string szClassName = pServiceInfoXML->Attribute("service_class_name");
-			CServiceBase* pServiceBase = dynamic_cast<CServiceBase*>(CBaseObject::createObject(szClassName));
-			if (nullptr == pServiceBase)
-			{
-				PrintWarning("create service_base %s error", szName.c_str());
-				return false;
-			}
-			pServiceBase->m_pServiceBaseImpl = new CServiceBaseImpl();
-			if (!pServiceBase->m_pServiceBaseImpl->init(nID))
-			{
-				PrintWarning("create service_base_impl %s error", szName.c_str());
-				return false;
-			}
-			PrintInfo("create service %s ok", szName.c_str());
-			if (!pServiceBase->onInit())
-				return false;
-			
-			pServiceBase->m_pServiceBaseImpl->m_eState = eSRS_Normal;
-
-			this->m_vecServiceBase.push_back(pServiceBase);
 		}
 
 		SAFE_DELETE(pConfigXML);
@@ -535,16 +518,6 @@ namespace core
 		return this->m_pCoreOtherNodeProxy;
 	}
 
-	CCoreMessageRegistry* CCoreApp::getCoreMessageRegistry() const
-	{
-		return this->m_pCoreMessageRegistry;
-	}
-
-	CMessageDispatcher* CCoreApp::getMessageDispatcher() const
-	{
-		return this->m_pMessageDispatcher;
-	}
-
 	void CCoreApp::setActorIDConverter(CActorIDConverter* pActorIDConverter)
 	{
 		DebugAst(pActorIDConverter != nullptr);
@@ -555,11 +528,6 @@ namespace core
 	CActorIDConverter* CCoreApp::getActorIDConverter() const
 	{
 		return this->m_pActorIDConverter;
-	}
-
-	CActorScheduler* CCoreApp::getActorScheduler() const
-	{
-		return this->m_pActorScheduler;
 	}
 
 	uint32_t CCoreApp::getInvokeTimeout() const

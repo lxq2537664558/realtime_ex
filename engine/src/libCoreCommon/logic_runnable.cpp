@@ -25,15 +25,12 @@ namespace core
 {
 	CLogicRunnable::CLogicRunnable()
 		: m_pThreadBase(nullptr)
-		, m_pMessageQueue(nullptr)
-		, m_insideQueue(_DEFAULT_MESSAGE_QUEUE)
 		, m_pBaseConnectionMgr(nullptr)
 	{
 	}
 
 	CLogicRunnable::~CLogicRunnable()
 	{
-		SAFE_DELETE(this->m_pMessageQueue);
 		SAFE_DELETE(this->m_pBaseConnectionMgr);
 		SAFE_RELEASE(this->m_pThreadBase);
 	}
@@ -48,10 +45,6 @@ namespace core
 
 	bool CLogicRunnable::init()
 	{
-		this->m_pMessageQueue = new CLogicMessageQueue();
-		if (!this->m_pMessageQueue->init())
-			return false;
-
 		this->m_pBaseConnectionMgr = new CBaseConnectionMgr();
 		if (!this->m_pBaseConnectionMgr->init())
 			return false;
@@ -66,33 +59,9 @@ namespace core
 		g_pLogicRunnable = nullptr;
 	}
 
-	CLogicMessageQueue* CLogicRunnable::getMessageQueue() const
-	{
-		return this->m_pMessageQueue;
-	}
-
 	CBaseConnectionMgr* CLogicRunnable::getBaseConnectionMgr() const
 	{
 		return this->m_pBaseConnectionMgr;
-	}
-
-	void CLogicRunnable::sendInsideMessage(const SMessagePacket& sMessagePacket)
-	{
-		PROFILING_GUARD(CLogicRunnable::sendInsideMessage);
-		
-		this->m_insideQueue.send(sMessagePacket);
-	}
-
-	void CLogicRunnable::recvInsideMessage(std::vector<SMessagePacket>& vecMessagePacket)
-	{
-		PROFILING_GUARD(CLogicRunnable::recvInsideMessage);
-		vecMessagePacket.clear();
-
-		SMessagePacket sMessagePacket;
-		while (this->m_insideQueue.recv(sMessagePacket))
-		{
-			vecMessagePacket.push_back(sMessagePacket);
-		}
 	}
 
 	bool CLogicRunnable::onInit()
@@ -109,44 +78,55 @@ namespace core
 	{
 		int64_t nBeginTime = base::getProcessPassTime();
 
-		static std::vector<SMessagePacket> vecMessagePacket;
+// 		static std::vector<SMessagePacket> vecMessagePacket;
+// 
+// 		this->recvInsideMessage(vecMessagePacket);
+// 
+// 		for (auto iter = vecMessagePacket.begin(); iter != vecMessagePacket.end(); ++iter)
+// 		{
+// 			const SMessagePacket& sMessagePacket = *iter;
+// 
+// 			switch (sMessagePacket.nType)
+// 			{
+// 			case eMCT_RECV_SOCKET_DATA:
+// 				{
+// 					SMCT_RECV_SOCKET_DATA* pContext = reinterpret_cast<SMCT_RECV_SOCKET_DATA*>(sMessagePacket.pData);
+// 					if (pContext == nullptr)
+// 					{
+// 						PrintWarning("context == nullptr type: eMCT_RECV_SOCKET_DATA");
+// 						continue;
+// 					}
+// 					if (pContext->pData == nullptr)
+// 					{
+// 						PrintWarning("pContext->pData == nullptr type: eMCT_RECV_SOCKET_DATA");
+// 						continue;
+// 					}
+// 					
+// 					CCoreApp::Inst()->getMessageDispatcher()->dispatch(0, CCoreApp::Inst()->getNodeBaseInfo().nID, pContext->nMessageType, reinterpret_cast<google::protobuf::Message*>(pContext->pData), pContext);
+// 					char* pBuf = reinterpret_cast<char*>(sMessagePacket.pData);
+// 					SAFE_DELETE_ARRAY(pBuf);
+// 				}
+// 				break;
+// 
+// 			default:
+// 				{
+// 					PrintWarning("invalid type: %d", sMessagePacket.nType);
+// 				}
+// 			}
+// 		}
 
-		this->recvInsideMessage(vecMessagePacket);
-
-		for (auto iter = vecMessagePacket.begin(); iter != vecMessagePacket.end(); ++iter)
+		CServiceBaseImpl* pServiceBaseImpl = CCoreApp::Inst()->getServiceBaseMgr()->getWorkServiceBase();
+		if (nullptr == pServiceBaseImpl)
 		{
-			const SMessagePacket& sMessagePacket = *iter;
-
-			switch (sMessagePacket.nType)
-			{
-			case eMCT_RECV_SOCKET_DATA:
-				{
-					SMCT_RECV_SOCKET_DATA* pContext = reinterpret_cast<SMCT_RECV_SOCKET_DATA*>(sMessagePacket.pData);
-					if (pContext == nullptr)
-					{
-						PrintWarning("context == nullptr type: eMCT_RECV_SOCKET_DATA");
-						continue;
-					}
-					if (pContext->pData == nullptr)
-					{
-						PrintWarning("pContext->pData == nullptr type: eMCT_RECV_SOCKET_DATA");
-						continue;
-					}
-					
-					CCoreApp::Inst()->getMessageDispatcher()->dispatch(0, CCoreApp::Inst()->getNodeBaseInfo().nID, pContext->nMessageType, reinterpret_cast<google::protobuf::Message*>(pContext->pData), pContext);
-					char* pBuf = reinterpret_cast<char*>(sMessagePacket.pData);
-					SAFE_DELETE_ARRAY(pBuf);
-				}
-				break;
-
-			default:
-				{
-					PrintWarning("invalid type: %d", sMessagePacket.nType);
-				}
-			}
+			PrintWarning("nullptr == pServiceBaseImpl");
+			return true;
 		}
 
-		this->m_pMessageQueue->recv(vecMessagePacket,  true);
+		static std::vector<SMessagePacket> vecMessagePacket;
+		pServiceBaseImpl->getMessageQueue()->recv(vecMessagePacket);
+		pServiceBaseImpl->setWorking(true);
+
+		Defer(CCoreApp::Inst()->getServiceBaseMgr()->addWorkServiceBase(pServiceBaseImpl));
 
 		for (auto iter = vecMessagePacket.begin(); iter != vecMessagePacket.end(); ++iter)
 		{
@@ -156,47 +136,17 @@ namespace core
 			{
 			case eMCT_QUIT:
 				{
-					const std::vector<CServiceBase*>& vecServiceBase = CCoreApp::Inst()->getServiceBase();
-					if (vecServiceBase.empty())
-						return false;
-
-					for (size_t i = 0; i < vecServiceBase.size(); ++i)
+					if (pServiceBaseImpl->getRunState() == eSRS_Normal)
 					{
-						if (vecServiceBase[i]->m_pServiceBaseImpl->getRunState() != eSRS_Normal)
-							continue;
-
-						vecServiceBase[i]->m_pServiceBaseImpl->setRunState(eSRS_Quitting);
-						vecServiceBase[i]->onQuit();
+						pServiceBaseImpl->setRunState(eSRS_Quitting);
+						pServiceBaseImpl->doQuit();
 					}
 				}
 				break;
 
 			case eMCT_FRAME:
 				{
-					const std::vector<CServiceBase*>& vecServiceBase = CCoreApp::Inst()->getServiceBase();
-					
-					for (size_t i = 0; i < vecServiceBase.size(); ++i)
-					{
-						vecServiceBase[i]->m_pServiceBaseImpl->run();
-						vecServiceBase[i]->onFrame();
-					}
-
-					bool bQuit = true;
-					for (size_t i = 0; i < vecServiceBase.size(); ++i)
-					{
-						if (vecServiceBase[i]->getState() != eSRS_Quit)
-						{
-							bQuit = false;
-							break;
-						}
-					}
-					if (bQuit)
-					{
-						CNetRunnable::Inst()->quit();
-						CTickerRunnable::Inst()->quit();
-
-						return false;
-					}
+					pServiceBaseImpl->run();
 				}
 				break;
 
@@ -254,7 +204,44 @@ namespace core
 						continue;
 					}
 
-					pBaseConnection->onDispatch(pContext->nMessageType, pContext->pData, pContext->nDataSize, pContext);
+					if (pContext->nMessageType != eMT_SYSTEM)
+					{
+						pServiceBaseImpl->getMessageDispatcher()->dispatch(0, CCoreApp::Inst()->getNodeBaseInfo().nID, pContext->nMessageType, reinterpret_cast<google::protobuf::Message*>(pContext->pData), pContext);
+					}
+					else
+					{
+						if (pBaseConnection->getType() == eBCT_ConnectionOtherNode)
+						{
+							CBaseConnectionOtherNode* pBaseConnectionOtherNode = dynamic_cast<CBaseConnectionOtherNode*>(pBaseConnection);
+							if (nullptr == pBaseConnectionOtherNode)
+							{
+								pBaseConnection->shutdown(base::eNCCT_Force, "invalid connection");
+								continue;
+							}
+							if (pBaseConnectionOtherNode->getNodeID() == 0)
+							{
+								pBaseConnection->shutdown(base::eNCCT_Force, "invalid connection");
+								continue;
+							}
+						}
+
+						pBaseConnection->onDispatch(pContext->nMessageType, pContext->pData, pContext->nDataSize, pContext);
+					}
+					char* pBuf = reinterpret_cast<char*>(sMessagePacket.pData);
+					SAFE_DELETE_ARRAY(pBuf);
+				}
+				break;
+
+			case eMCT_INSIDE_DATA:
+				{
+					SMCT_RECV_SOCKET_DATA* pContext = reinterpret_cast<SMCT_RECV_SOCKET_DATA*>(sMessagePacket.pData);
+					if (pContext == nullptr)
+					{
+						PrintWarning("context == nullptr type: eMCT_INSIDE_DATA");
+						continue;
+					}
+					
+					pServiceBaseImpl->getMessageDispatcher()->dispatch(0, CCoreApp::Inst()->getNodeBaseInfo().nID, pContext->nMessageType, reinterpret_cast<google::protobuf::Message*>(pContext->pData), pContext);
 
 					char* pBuf = reinterpret_cast<char*>(sMessagePacket.pData);
 					SAFE_DELETE_ARRAY(pBuf);
@@ -289,8 +276,6 @@ namespace core
 				}
 			}
 		}
-
-		CCoreApp::Inst()->getActorScheduler()->run();
 
 // 		PROFILING_BEGIN(CBaseApp::Inst()->onProcess)
 // 			CBaseApp::Inst()->onProcess();

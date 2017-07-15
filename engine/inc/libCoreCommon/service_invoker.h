@@ -9,11 +9,12 @@
 
 namespace core
 {
+	class CServiceBaseImpl;
 	class CServiceInvoker :
 		public base::noncopyable
 	{
 	public:
-		CServiceInvoker(uint16_t nServiceID);
+		CServiceInvoker(CServiceBaseImpl* pServiceBaseImpl);
 		~CServiceInvoker();
 
 		bool				init();
@@ -30,17 +31,17 @@ namespace core
 
 		bool				forward(EMessageTargetType eType, uint64_t nID, uint64_t nSessionID, const google::protobuf::Message* pMessage);
 		
+		void				response(const SSessionInfo& sSessionInfo, const google::protobuf::Message* pMessage);
+
 		static bool			send(const SClientSessionInfo& sClientSessionInfo, const google::protobuf::Message* pMessage);
 
 		static bool			broadcast(const std::vector<SClientSessionInfo>& vecClientSessionInfo, const google::protobuf::Message* pMessage);
-
-		static void			response(const SSessionInfo& sSessionInfo, const google::protobuf::Message* pMessage);
 
 	private:
 		bool				invoke(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback);
 	
 	private:
-		uint16_t	m_nServiceID;
+		CServiceBaseImpl*	m_pServiceBaseImpl;
 	};
 }
 

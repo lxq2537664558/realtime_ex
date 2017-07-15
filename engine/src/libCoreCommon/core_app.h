@@ -13,6 +13,7 @@
 #include "actor_id_converter.h"
 #include "base_connection_to_master.h"
 #include "node_connection_factory.h"
+#include "service_base_mgr.h"
 
 namespace core
 {
@@ -33,16 +34,12 @@ namespace core
 
 		CBaseConnectionMgr*			getBaseConnectionMgr() const;
 
-		const std::vector<CServiceBase*>
-									getServiceBase() const;
+		CServiceBaseMgr*			getServiceBaseMgr() const;
 
 		bool						isOwnerService(uint16_t nServiceID) const;
 
 		CTransporter*				getTransporter() const;
 		CCoreOtherNodeProxy*		getCoreOtherNodeProxy() const;
-		CCoreMessageRegistry*		getCoreMessageRegistry() const;
-		CActorScheduler*			getActorScheduler() const;
-		CMessageDispatcher*			getMessageDispatcher() const;
 		void						setActorIDConverter(CActorIDConverter* pActorIDConverter);
 		CActorIDConverter*			getActorIDConverter() const;
 
@@ -98,14 +95,11 @@ namespace core
 		uint32_t							m_nHeartbeatTime;
 		uint32_t							m_nQPS;
 		CTicker								m_tickerQPS;
-		std::vector<CServiceBase*>			m_vecServiceBase;
+		CServiceBaseMgr*					m_pServiceBaseMgr;
 
 		CTicker								m_tickCheckConnectMaster;
 		CTransporter*						m_pTransporter;
-		CCoreMessageRegistry*				m_pCoreMessageRegistry;
-		CActorScheduler*					m_pActorScheduler;
 		CCoreOtherNodeProxy*				m_pCoreOtherNodeProxy;
-		CMessageDispatcher*					m_pMessageDispatcher;
 		CNodeConnectionFactory*				m_pNodeConnectionFactory;
 		CActorIDConverter*					m_pActorIDConverter;
 		CBaseConnectionToMaster*			m_pServiceConnectionToMaster;

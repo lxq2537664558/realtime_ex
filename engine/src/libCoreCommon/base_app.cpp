@@ -22,6 +22,7 @@
 #include "base_app.h"
 #include "core_app.h"
 #include "core_connection_mgr.h"
+#include "service_base_mgr.h"
 
 // 放这里为了调试或者看dump的时候方便
 core::CBaseApp* g_pCoreApp = nullptr;
@@ -58,29 +59,23 @@ namespace core
 		CCoreApp::Inst()->unregisterTicker(pTicker);
 	}
 
-	void CBaseApp::registerCallback(uint16_t nServiceID, const std::string& szMessageName, const std::function<void(SSessionInfo, google::protobuf::Message*)>& callback)
-	{
-		CCoreApp::Inst()->getCoreMessageRegistry()->registerCallback(nServiceID, szMessageName, callback);
-	}
-
-	void CBaseApp::registerGateForwardCallback(uint16_t nServiceID, const std::string& szMessageName, const std::function<void(SClientSessionInfo, google::protobuf::Message*)>& callback)
-	{
-		CCoreApp::Inst()->getCoreMessageRegistry()->registerGateForwardCallback(nServiceID, szMessageName, callback);
-	}
-
 	CBaseConnectionMgr*	CBaseApp::getBaseConnectionMgr() const
 	{
 		return CCoreApp::Inst()->getBaseConnectionMgr();
 	}
 
-	const std::vector<CServiceBase*> CBaseApp::getServiceBase() const
-	{
-		return CCoreApp::Inst()->getServiceBase();
-	}
-
 	const SNodeBaseInfo& CBaseApp::getNodeBaseInfo() const
 	{
 		return CCoreApp::Inst()->getNodeBaseInfo();
+	}
+
+	CServiceBase* CBaseApp::getServiceBase(uint16_t nServiceID) const
+	{
+		CServiceBaseImpl* pServiceBaseImpl = CCoreApp::Inst()->getServiceBaseMgr()->getServiceBase(nServiceID);
+		if (pServiceBaseImpl == nullptr)
+			return nullptr;
+
+		return pServiceBaseImpl->getServiceBase();
 	}
 
 	uint16_t CBaseApp::getServiceID(const std::string& szName) const

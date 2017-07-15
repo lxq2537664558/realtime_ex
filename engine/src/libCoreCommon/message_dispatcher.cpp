@@ -6,6 +6,7 @@
 #include "actor_base_impl.h"
 #include "core_app.h"
 #include "message_command.h"
+#include "service_base_impl.h"
 
 #include "libBaseCommon/debug_helper.h"
 #include "libBaseCommon/defer.h"
@@ -15,6 +16,7 @@
 namespace core
 {
 	CMessageDispatcher::CMessageDispatcher()
+		: m_pServiceBaseImpl(nullptr)
 	{
 
 	}
@@ -24,8 +26,12 @@ namespace core
 
 	}
 
-	bool CMessageDispatcher::init()
+	bool CMessageDispatcher::init(CServiceBaseImpl* pServiceBaseImpl)
 	{
+		DebugAstEx(pServiceBaseImpl != nullptr, false);
+
+		this->m_pServiceBaseImpl = pServiceBaseImpl;
+
 		return true;
 	}
 
@@ -39,7 +45,7 @@ namespace core
 			{
 				google::protobuf::Message* pMessage = reinterpret_cast<google::protobuf::Message*>(pContext->pData);
 
-				CActorBaseImpl* pActorBase = CCoreApp::Inst()->getActorScheduler()->getActorBase(pContext->nToID);
+				CActorBaseImpl* pActorBase = this->m_pServiceBaseImpl->getActorScheduler()->getActorBase(pContext->nToID);
 				if (nullptr == pActorBase)
 				{
 					SAFE_DELETE(pMessage);
@@ -52,13 +58,13 @@ namespace core
 				sActorMessagePacket.pMessage = pMessage;
 				pActorBase->getChannel()->send(sActorMessagePacket);
 
-				CCoreApp::Inst()->getActorScheduler()->addWorkActorBase(pActorBase);
+				this->m_pServiceBaseImpl->getActorScheduler()->addWorkActorBase(pActorBase);
 			}
 			else
 			{
 				auto pMessage = std::unique_ptr<google::protobuf::Message>(reinterpret_cast<google::protobuf::Message*>(pContext->pData));
 
-				auto& callback = CCoreApp::Inst()->getCoreMessageRegistry()->getCallback((uint16_t)pContext->nToID, pMessage->GetTypeName());
+				auto& callback = this->m_pServiceBaseImpl->getServiceMessageHandler(pMessage->GetTypeName());
 				if (callback == nullptr)
 				{
 					PrintWarning("CMessageDispatcher::dispatch error unknown request message name %s", pMessage->GetTypeName().c_str());
@@ -78,7 +84,7 @@ namespace core
 			{
 				google::protobuf::Message* pMessage = reinterpret_cast<google::protobuf::Message*>(pContext->pData);
 
-				CActorBaseImpl* pActorBase = CCoreApp::Inst()->getActorScheduler()->getActorBase(pContext->nToID);
+				CActorBaseImpl* pActorBase = this->m_pServiceBaseImpl->getActorScheduler()->getActorBase(pContext->nToID);
 				if (nullptr == pActorBase)
 				{
 					SAFE_DELETE(pMessage);
@@ -94,13 +100,13 @@ namespace core
 					sActorMessagePacket.pMessage = pMessage;
 					pActorBase->getChannel()->send(sActorMessagePacket);
 
-					CCoreApp::Inst()->getActorScheduler()->addWorkActorBase(pActorBase);
+					this->m_pServiceBaseImpl->getActorScheduler()->addWorkActorBase(pActorBase);
 				}
 				else
 				{
 					pActorBase->setPendingResponseMessage((uint8_t)pContext->nFromID, pMessage);
 
-					CCoreApp::Inst()->getActorScheduler()->addWorkActorBase(pActorBase);
+					this->m_pServiceBaseImpl->getActorScheduler()->addWorkActorBase(pActorBase);
 				}
 			}
 			else
@@ -127,7 +133,7 @@ namespace core
 			{
 				google::protobuf::Message* pMessage = reinterpret_cast<google::protobuf::Message*>(pContext->pData);
 
-				CActorBaseImpl* pActorBase = CCoreApp::Inst()->getActorScheduler()->getActorBase(pContext->nToID);
+				CActorBaseImpl* pActorBase = this->m_pServiceBaseImpl->getActorScheduler()->getActorBase(pContext->nToID);
 				if (nullptr == pActorBase)
 				{
 					SAFE_DELETE(pMessage);
@@ -141,13 +147,13 @@ namespace core
 				sActorMessagePacket.pMessage = pMessage;
 				pActorBase->getChannel()->send(sActorMessagePacket);
 
-				CCoreApp::Inst()->getActorScheduler()->addWorkActorBase(pActorBase);
+				this->m_pServiceBaseImpl->getActorScheduler()->addWorkActorBase(pActorBase);
 			}
 			else
 			{
 				auto pMessage = std::unique_ptr<google::protobuf::Message>(reinterpret_cast<google::protobuf::Message*>(pContext->pData));
 
-				auto& callback = CCoreApp::Inst()->getCoreMessageRegistry()->getGateForwardCallback((uint16_t)pContext->nToID, pMessage->GetTypeName());
+				auto& callback = this->m_pServiceBaseImpl->getServiceForwardHandler(pMessage->GetTypeName());
 				if (callback == nullptr)
 				{
 					PrintWarning("CMessageDispatcher::dispatch error unknown gate forward message name %s", pMessage->GetTypeName().c_str());
