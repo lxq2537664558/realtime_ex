@@ -37,7 +37,6 @@
     <ClInclude Include="core_connection_monitor.h" />
     <ClInclude Include="base_connection_other_node.h" />
     <ClInclude Include="base_connection_to_master.h" />
-    <ClInclude Include="core_message_registry.h" />
     <ClInclude Include="core_other_node_proxy.h" />
     <ClInclude Include="core_common_define.h" />
     <ClInclude Include="coroutine_impl.h" />
@@ -71,7 +70,6 @@
     <ClCompile Include="core_connection_monitor.cpp" />
     <ClCompile Include="base_connection_other_node.cpp" />
     <ClCompile Include="base_connection_to_master.cpp" />
-    <ClCompile Include="core_message_registry.cpp" />
     <ClCompile Include="core_other_node_proxy.cpp" />
     <ClCompile Include="coroutine.cpp" />
     <ClCompile Include="coroutine_impl.cpp" />

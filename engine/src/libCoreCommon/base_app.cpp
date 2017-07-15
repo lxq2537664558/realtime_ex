@@ -83,21 +83,6 @@ namespace core
 		return CCoreApp::Inst()->getCoreOtherNodeProxy()->getServiceID(szName);
 	}
 
-	void CBaseApp::setServiceConnectCallback(const std::function<void(uint16_t)>& callback)
-	{
-		CCoreApp::Inst()->setServiceConnectCallback(callback);
-	}
-
-	void CBaseApp::setServiceDisconnectCallback(const std::function<void(uint16_t)>& callback)
-	{
-		CCoreApp::Inst()->setServiceDisconnectCallback(callback);
-	}
-
-	void CBaseApp::setActorIDConverter(CActorIDConverter* pActorIDConverter)
-	{
-		CCoreApp::Inst()->setActorIDConverter(pActorIDConverter);
-	}
-
 	const std::string& CBaseApp::getConfigFileName() const
 	{
 		return CCoreApp::Inst()->getConfigFileName();

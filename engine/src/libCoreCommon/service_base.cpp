@@ -42,6 +42,16 @@ namespace core
 		this->m_pServiceBaseImpl->registerActorForwardHandler(szMessageName, callback);
 	}
 
+	void CServiceBase::setServiceConnectCallback(const std::function<void(uint16_t)>& callback)
+	{
+		this->m_pServiceBaseImpl->setServiceConnectCallback(callback);
+	}
+
+	void CServiceBase::setServiceDisconnectCallback(const std::function<void(uint16_t)>& callback)
+	{
+		this->m_pServiceBaseImpl->setServiceDisconnectCallback(callback);
+	}
+
 	void CServiceBase::registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
 	{
 		this->m_pServiceBaseImpl->registerTicker(pTicker, nStartTime, nIntervalTime, nContext);

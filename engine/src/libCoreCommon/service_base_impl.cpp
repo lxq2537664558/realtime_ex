@@ -85,4 +85,24 @@ namespace core
 	{
 		this->m_bWorking.store(bFlag, std::memory_order_relaxed);
 	}
+
+	void CServiceBaseImpl::setServiceConnectCallback(const std::function<void(uint16_t)>& callback)
+	{
+		this->m_fnServiceConnectCallback = callback;
+	}
+
+	void CServiceBaseImpl::setServiceDisconnectCallback(const std::function<void(uint16_t)>& callback)
+	{
+		this->m_fnServiceDisconnectCallback = callback;
+	}
+
+	std::function<void(uint16_t)>& CServiceBaseImpl::getServiceConnectCallback()
+	{
+		return this->m_fnServiceConnectCallback;
+	}
+
+	std::function<void(uint16_t)>& CServiceBaseImpl::getServiceDisconnectCallback()
+	{
+		return this->m_fnServiceDisconnectCallback;
+	}
 }

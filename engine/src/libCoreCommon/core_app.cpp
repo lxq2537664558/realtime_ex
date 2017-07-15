@@ -518,18 +518,6 @@ namespace core
 		return this->m_pCoreOtherNodeProxy;
 	}
 
-	void CCoreApp::setActorIDConverter(CActorIDConverter* pActorIDConverter)
-	{
-		DebugAst(pActorIDConverter != nullptr);
-
-		this->m_pActorIDConverter = pActorIDConverter;
-	}
-
-	CActorIDConverter* CCoreApp::getActorIDConverter() const
-	{
-		return this->m_pActorIDConverter;
-	}
-
 	uint32_t CCoreApp::getInvokeTimeout() const
 	{
 		return this->m_nInvokTimeout;
@@ -538,25 +526,5 @@ namespace core
 	uint32_t CCoreApp::getThroughput() const
 	{
 		return this->m_nThroughput;
-	}
-
-	void CCoreApp::setServiceConnectCallback(const std::function<void(uint16_t)>& callback)
-	{
-		this->m_fnServiceConnectCallback = callback;
-	}
-
-	void CCoreApp::setServiceDisconnectCallback(const std::function<void(uint16_t)>& callback)
-	{
-		this->m_fnServiceDisconnectCallback = callback;
-	}
-
-	std::function<void(uint16_t)>& CCoreApp::getServiceConnectCallback()
-	{
-		return this->m_fnServiceConnectCallback;
-	}
-
-	std::function<void(uint16_t)>& CCoreApp::getServiceDisconnectCallback()
-	{
-		return this->m_fnServiceDisconnectCallback;
 	}
 }

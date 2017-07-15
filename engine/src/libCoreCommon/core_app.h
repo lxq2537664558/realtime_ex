@@ -7,7 +7,6 @@
 #include "service_base.h"
 #include "transporter.h"
 #include "core_other_node_proxy.h"
-#include "core_message_registry.h"
 #include "actor_scheduler.h"
 #include "message_dispatcher.h"
 #include "actor_id_converter.h"
@@ -40,9 +39,7 @@ namespace core
 
 		CTransporter*				getTransporter() const;
 		CCoreOtherNodeProxy*		getCoreOtherNodeProxy() const;
-		void						setActorIDConverter(CActorIDConverter* pActorIDConverter);
-		CActorIDConverter*			getActorIDConverter() const;
-
+		
 		CBaseConnectionToMaster*	getConnectionToMaster() const;
 		void						setCoreConnectionToMaster(CBaseConnectionToMaster* pCoreConnectionToMaster);
 
@@ -54,13 +51,6 @@ namespace core
 		uint32_t					getInvokeTimeout() const;
 
 		uint32_t					getThroughput() const;
-
-		void						setServiceConnectCallback(const std::function<void(uint16_t)>& callback);
-		void						setServiceDisconnectCallback(const std::function<void(uint16_t)>& callback);
-		std::function<void(uint16_t)>&
-									getServiceConnectCallback();
-		std::function<void(uint16_t)>&
-									getServiceDisconnectCallback();
 
 		const std::string&			getConfigFileName() const;
 		
@@ -101,7 +91,6 @@ namespace core
 		CTransporter*						m_pTransporter;
 		CCoreOtherNodeProxy*				m_pCoreOtherNodeProxy;
 		CNodeConnectionFactory*				m_pNodeConnectionFactory;
-		CActorIDConverter*					m_pActorIDConverter;
 		CBaseConnectionToMaster*			m_pServiceConnectionToMaster;
 		SNodeBaseInfo						m_sNodeBaseInfo;
 		std::vector<SServiceBaseInfo>		m_vecServiceBaseInfo;
@@ -109,8 +98,5 @@ namespace core
 		uint16_t							m_nMasterPort;
 		uint32_t							m_nInvokTimeout;
 		uint32_t							m_nThroughput;
-
-		std::function<void(uint16_t)>		m_fnServiceConnectCallback;
-		std::function<void(uint16_t)>		m_fnServiceDisconnectCallback;
 	};
 }

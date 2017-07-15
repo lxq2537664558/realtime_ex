@@ -16,6 +16,8 @@ namespace core
 		bool				init(const std::vector<SServiceBaseInfo>& vecServiceBaseInfo);
 
 		CServiceBaseImpl*	getServiceBase(uint16_t nID) const;
+		const std::vector<CServiceBaseImpl*>&
+							getServiceBase() const;
 
 		void				sendMessage(uint16_t nToServiceID, const SMessagePacket& sMessagePacket);
 
@@ -24,6 +26,7 @@ namespace core
 
 	private:
 		std::map<uint16_t, CServiceBaseImpl*>	m_mapServiceBase;
+		std::vector<CServiceBaseImpl*>			m_vecServiceBase;
 
 		std::list<CServiceBaseImpl*>			m_listWorkServiceBase;
 		std::set<uint16_t>						m_setWorkServiceBaseID;

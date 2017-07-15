@@ -60,6 +60,13 @@ namespace core
 		std::function<void(CActorBase*, SClientSessionInfo, google::protobuf::Message*)>&
 								getActorForwardHandler(const std::string& szMessageName);
 
+		void					setServiceConnectCallback(const std::function<void(uint16_t)>& callback);
+		void					setServiceDisconnectCallback(const std::function<void(uint16_t)>& callback);
+		std::function<void(uint16_t)>&
+								getServiceConnectCallback();
+		std::function<void(uint16_t)>&
+								getServiceDisconnectCallback();
+
 		const std::string&		getConfigFileName() const;
 		
 		base::CWriteBuf&		getWriteBuf() const;
@@ -93,5 +100,10 @@ namespace core
 							m_mapActorMessageHandler;
 		std::map<std::string, std::function<void(CActorBase*, SClientSessionInfo, const google::protobuf::Message*)>>
 							m_mapActorForwardHandler;
+
+		std::function<void(uint16_t)>
+							m_fnServiceConnectCallback;
+		std::function<void(uint16_t)>
+							m_fnServiceDisconnectCallback;
 	};
 }

@@ -123,9 +123,6 @@
     <ClInclude Include="core_connection_monitor.h">
       <Filter>src\framework</Filter>
     </ClInclude>
-    <ClInclude Include="core_message_registry.h">
-      <Filter>src\framework</Filter>
-    </ClInclude>
     <ClInclude Include="core_other_node_proxy.h">
       <Filter>src\framework</Filter>
     </ClInclude>
@@ -231,9 +228,6 @@
       <Filter>src\framework</Filter>
     </ClCompile>
     <ClCompile Include="core_connection_monitor.cpp">
-      <Filter>src\framework</Filter>
-    </ClCompile>
-    <ClCompile Include="core_message_registry.cpp">
       <Filter>src\framework</Filter>
     </ClCompile>
     <ClCompile Include="core_other_node_proxy.cpp">

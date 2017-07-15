@@ -33,6 +33,7 @@ namespace core
 
 			PrintInfo("create service %s ok", sServiceBaseInfo.szName.c_str());
 			
+			this->m_vecServiceBase.push_back(pServiceBaseImpl);
 			this->m_mapServiceBase[pServiceBaseImpl->getServiceBaseInfo().nID] = pServiceBaseImpl;
 		}
 
@@ -46,6 +47,11 @@ namespace core
 			return nullptr;
 
 		return iter->second;
+	}
+
+	const std::vector<CServiceBaseImpl*>& CServiceBaseMgr::getServiceBase() const
+	{
+		return this->m_vecServiceBase;
 	}
 
 	void CServiceBaseMgr::sendMessage(uint16_t nToServiceID, const SMessagePacket& sMessagePacket)

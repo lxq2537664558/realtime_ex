@@ -7,10 +7,12 @@
 #include "core_common.h"
 #include "message_command.h"
 #include "logic_runnable.h"
+#include "protobuf_helper.h"
 
 #include "libBaseCommon/debug_helper.h"
 #include "libBaseCommon/base_time.h"
 #include "libBaseCommon/profiling.h"
+
 
 namespace core
 {

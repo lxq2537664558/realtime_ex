@@ -54,18 +54,6 @@ namespace core
 		@brief: 根据节点名字获取节点id
 		*/
 		uint16_t					getServiceID(const std::string& szName) const;
-		/**
-		@brief: 设置全局的服务连接成功回调
-		*/
-		void						setServiceConnectCallback(const std::function<void(uint16_t)>& callback);
-		/**
-		@brief: 设置全局的服务连接断开回调
-		*/
-		void						setServiceDisconnectCallback(const std::function<void(uint16_t)>& callback);
-		/**
-		@brief: 设置actorid转换器
-		*/
-		void						setActorIDConverter(CActorIDConverter* pActorIDConverter);
 		/*
 		@brief: 获取配置文件名
 		*/

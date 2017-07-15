@@ -79,6 +79,15 @@ namespace core
 		void					registerActorForwardHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SClientSessionInfo, const google::protobuf::Message*)>& callback);
 
 		/**
+		@brief: 设置全局的服务连接成功回调
+		*/
+		void					setServiceConnectCallback(const std::function<void(uint16_t)>& callback);
+		/**
+		@brief: 设置全局的服务连接断开回调
+		*/
+		void					setServiceDisconnectCallback(const std::function<void(uint16_t)>& callback);
+
+		/**
 		@brief: 获取服务调用器
 		*/
 		CServiceInvoker*		getServiceInvoker() const;
