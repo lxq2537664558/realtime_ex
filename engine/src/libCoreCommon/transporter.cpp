@@ -73,6 +73,13 @@ namespace core
 		else
 		{
 			nToServiceID = (uint16_t)nToID;
+			CServiceIDConverter* pServiceIDConverter = pServiceBaseImpl->getServiceIDConverter();
+			if (pServiceIDConverter != nullptr)
+			{
+				std::string szServiceType = CCoreApp::Inst()->getCoreOtherNodeProxy()->getServiceType(nToServiceID);
+				nToServiceID = pServiceIDConverter->convert(szServiceType, nToServiceID);
+				DebugAstEx(nToServiceID != 0, false);
+			}
 		}
 
 		if (!CCoreApp::Inst()->isOwnerService(nToServiceID))
@@ -146,6 +153,13 @@ namespace core
 		else
 		{
 			nToServiceID = (uint16_t)nToID;
+			CServiceIDConverter* pServiceIDConverter = pServiceBaseImpl->getServiceIDConverter();
+			if (pServiceIDConverter != nullptr)
+			{
+				std::string szServiceType = CCoreApp::Inst()->getCoreOtherNodeProxy()->getServiceType(nToServiceID);
+				nToServiceID = pServiceIDConverter->convert(szServiceType, nToServiceID);
+				DebugAstEx(nToServiceID != 0, false);
+			}
 		}
 
 		if (!CCoreApp::Inst()->isOwnerService(nToServiceID))
@@ -296,6 +310,13 @@ namespace core
 		else
 		{
 			nToServiceID = (uint16_t)nToID;
+			CServiceIDConverter* pServiceIDConverter = pServiceBaseImpl->getServiceIDConverter();
+			if (pServiceIDConverter != nullptr)
+			{
+				std::string szServiceType = CCoreApp::Inst()->getCoreOtherNodeProxy()->getServiceType(nToServiceID);
+				nToServiceID = pServiceIDConverter->convert(szServiceType, nToServiceID);
+				DebugAstEx(nToServiceID != 0, false);
+			}
 		}
 
 		if (!CCoreApp::Inst()->isOwnerService(nToServiceID))

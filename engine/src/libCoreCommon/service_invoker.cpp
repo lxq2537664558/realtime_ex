@@ -33,6 +33,20 @@ namespace core
 		return CCoreApp::Inst()->getTransporter()->invoke(this->m_pServiceBaseImpl, eType, 0, this->m_pServiceBaseImpl->getServiceID(), nID, pMessage);
 	}
 
+	bool CServiceInvoker::broadcast(const std::string& szServiceType, const google::protobuf::Message* pMessage)
+	{
+		DebugAstEx(pMessage != nullptr, false);
+
+		std::vector<uint16_t> vecServiceID;
+		CCoreApp::Inst()->getCoreOtherNodeProxy()->getServiceIDByTypeName(szServiceType, vecServiceID);
+		for (size_t i = 0; i < vecServiceID.size(); ++i)
+		{
+			this->send(eMTT_Service, vecServiceID[i], pMessage);
+		}
+
+		return true;
+	}
+
 	bool CServiceInvoker::forward(EMessageTargetType eType, uint64_t nID, uint64_t nSessionID, const google::protobuf::Message* pMessage)
 	{
 		DebugAstEx(pMessage != nullptr, false);

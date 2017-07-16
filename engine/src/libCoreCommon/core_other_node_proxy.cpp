@@ -62,9 +62,7 @@ namespace core
 			if (sNodeProxyInfo.sNodeBaseInfo.nPort == 0 || sNodeProxyInfo.sNodeBaseInfo.szHost.empty())
 				return;
 
-			char szBuf[64] = { 0 };
-			base::crt::snprintf(szBuf, _countof(szBuf), "%d", sNodeProxyInfo.sNodeBaseInfo.nID);
-			CCoreApp::Inst()->getBaseConnectionMgr()->connect(sNodeProxyInfo.sNodeBaseInfo.szHost, sNodeProxyInfo.sNodeBaseInfo.nPort, eBCT_ConnectionOtherNode, szBuf, sNodeProxyInfo.sNodeBaseInfo.nSendBufSize, sNodeProxyInfo.sNodeBaseInfo.nRecvBufSize, nullptr);
+			CCoreApp::Inst()->getBaseConnectionMgr()->connect(sNodeProxyInfo.sNodeBaseInfo.szHost, sNodeProxyInfo.sNodeBaseInfo.nPort, eBCT_ConnectionToOtherNode, "", sNodeProxyInfo.sNodeBaseInfo.nSendBufSize, sNodeProxyInfo.sNodeBaseInfo.nRecvBufSize, default_client_message_parser);
 		});
 
 		for (size_t i = 0; i < vecServiceBaseInfo.size(); ++i)
@@ -89,7 +87,7 @@ namespace core
 			}
 		}
 
-		if (bConnect && bMaster)
+		if (bConnect)
 			CCoreApp::Inst()->registerTicker(CTicker::eTT_Service, 0, 0, sNodeProxyInfo.pTicker.get(), _CHECK_CONNECT_TIME, _CHECK_CONNECT_TIME, 0);
 
 		PrintInfo("add proxy node node_id: %d node_name: %s", sNodeBaseInfo.nID, sNodeBaseInfo.szName.c_str());
@@ -215,5 +213,44 @@ namespace core
 			return nullptr;
 
 		return iter->second.pBaseConnectionOtherNode;
+	}
+
+	CBaseConnectionToMaster* CCoreOtherNodeProxy::getBaseConnectionToMaster() const
+	{
+		if (this->m_vecBaseConnectionToMaster.empty())
+			return nullptr;
+
+		size_t pos = this->m_vecBaseConnectionToMaster.size() % CCoreApp::Inst()->getNodeID();
+		return this->m_vecBaseConnectionToMaster[pos];
+	}
+
+	bool CCoreOtherNodeProxy::addBaseConnectionToMaster(CBaseConnectionToMaster* pBaseConnectionToMaster)
+	{
+		DebugAstEx(pBaseConnectionToMaster != nullptr, false);
+
+		for (size_t i = 0; i < this->m_vecBaseConnectionToMaster.size(); ++i)
+		{
+			if (this->m_vecBaseConnectionToMaster[i]->getMasterID() == pBaseConnectionToMaster->getMasterID())
+			{
+				PrintWarning("dup master master_id: %d", pBaseConnectionToMaster->getMasterID());
+				return false;
+			}
+		}
+
+		this->m_vecBaseConnectionToMaster.push_back(pBaseConnectionToMaster);
+
+		return true;
+	}
+
+	void CCoreOtherNodeProxy::delBaseConnectionToMaster(uint16_t nMasterID)
+	{
+		for (size_t i = 0; i < this->m_vecBaseConnectionToMaster.size(); ++i)
+		{
+			if (this->m_vecBaseConnectionToMaster[i]->getMasterID() == nMasterID)
+			{
+				this->m_vecBaseConnectionToMaster.erase(this->m_vecBaseConnectionToMaster.begin() + i);
+				break;
+			}
+		}
 	}
 }

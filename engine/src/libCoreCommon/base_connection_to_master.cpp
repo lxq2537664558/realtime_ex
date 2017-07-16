@@ -7,6 +7,7 @@
 namespace core
 {
 	CBaseConnectionToMaster::CBaseConnectionToMaster()
+		: m_nMasterID(0)
 	{
 
 	}
@@ -26,23 +27,19 @@ namespace core
 		delete this;
 	}
 
+	uint16_t CBaseConnectionToMaster::getMasterID() const
+	{
+		return this->m_nMasterID;
+	}
+
 	void CBaseConnectionToMaster::onConnect()
 	{
-		smt_register_node_base_info netMsg;
-		netMsg.sNodeBaseInfo = CCoreApp::Inst()->getNodeBaseInfo();
-		netMsg.vecServiceBaseInfo = CCoreApp::Inst()->getServiceBaseInfo();
-
-		base::CWriteBuf& writeBuf = CBaseApp::Inst()->getWriteBuf();
-		netMsg.pack(writeBuf);
-		
-		this->send(eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
-
-		CCoreApp::Inst()->setCoreConnectionToMaster(this);
 	}
 
 	void CBaseConnectionToMaster::onDisconnect()
 	{
-		CCoreApp::Inst()->setCoreConnectionToMaster(nullptr);
+		if (this->m_nMasterID != 0)
+			CCoreApp::Inst()->getCoreOtherNodeProxy()->delBaseConnectionToMaster(this->m_nMasterID);
 	}
 
 	void CBaseConnectionToMaster::onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize, const void* pContext)
@@ -52,7 +49,24 @@ namespace core
 		const message_header* pHeader = reinterpret_cast<const message_header*>(pData);
 		DebugAst(nSize > sizeof(message_header));
 
-		if (pHeader->nMessageID == eSMT_sync_node_base_info)
+		if (pHeader->nMessageID == eSMT_sync_master_info)
+		{
+			smt_sync_master_info netMsg;
+			netMsg.unpack(pData, nSize);
+
+			this->m_nMasterID = netMsg.nMasterID;
+			CCoreApp::Inst()->getCoreOtherNodeProxy()->addBaseConnectionToMaster(this);
+
+			smt_register_node_base_info netMsg1;
+			netMsg1.sNodeBaseInfo = CCoreApp::Inst()->getNodeBaseInfo();
+			netMsg1.vecServiceBaseInfo = CCoreApp::Inst()->getServiceBaseInfo();
+
+			base::CWriteBuf& writeBuf = CBaseApp::Inst()->getWriteBuf();
+			netMsg1.pack(writeBuf);
+
+			this->send(eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
+		}
+		else if (pHeader->nMessageID == eSMT_sync_node_base_info)
 		{
 			smt_sync_node_base_info netMsg;
 			netMsg.unpack(pData, nSize);

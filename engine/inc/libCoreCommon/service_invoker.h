@@ -21,8 +21,8 @@ namespace core
 
 		bool				send(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage);
 
-		bool				broadcast(uint16_t nServiceType, const google::protobuf::Message* pMessage);
-		
+		bool				broadcast(const std::string& szServiceType, const google::protobuf::Message* pMessage);
+
 		template<class T>
 		inline bool			async_call(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback);
 

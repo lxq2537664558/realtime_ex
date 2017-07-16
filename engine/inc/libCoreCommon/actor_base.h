@@ -44,6 +44,11 @@ namespace core
 		bool				send(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage);
 
 		/*
+		给某一个类型的服务广播消息
+		*/
+		bool				broadcast(const std::string& szServiceType, const google::protobuf::Message* pMessage);
+
+		/*
 		异步的调用远程的接口，通过callback来拿到响应结果
 		*/
 		template<class T>

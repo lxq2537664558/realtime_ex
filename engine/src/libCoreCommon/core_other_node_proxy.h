@@ -6,6 +6,7 @@
 
 #include "core_common.h"
 #include "base_connection_other_node.h"
+#include "base_connection_to_master.h"
 
 #include <map>
 #include <vector>
@@ -28,6 +29,8 @@ namespace core
 		void							delNodeProxyInfo(uint16_t nID);
 
 		uint16_t						getServiceID(const std::string& szName) const;
+		std::string						getServiceType(uint16_t nServiceID) const;
+		bool							getServiceIDByTypeName(const std::string& szName, std::vector<uint16_t>& vecServiceID) const;
 		
 		const SServiceBaseInfo*			getServiceBaseInfoByServiceID(uint16_t nServiceID) const;
 		bool							getServiceBaseInfoByNodeID(uint16_t nNodeID, std::vector<SServiceBaseInfo>& vecServiceBaseInfo) const;
@@ -37,6 +40,10 @@ namespace core
 		bool							addBaseConnectionOtherNodeByNodeID(uint16_t nNodeID, CBaseConnectionOtherNode* pBaseConnectionOtherNode);
 		void							delBaseConnectionOtherNodeByNodeID(uint16_t nNodeID);
 		
+		CBaseConnectionToMaster*		getBaseConnectionToMaster() const;
+		bool							addBaseConnectionToMaster(CBaseConnectionToMaster* pBaseConnectionToMaster);
+		void							delBaseConnectionToMaster(uint16_t nMasterID);
+
 	private:
 		struct SNodeProxyInfo
 		{
@@ -55,7 +62,12 @@ namespace core
 		std::map<uint16_t, SNodeProxyInfo>		m_mapNodeProxyInfo;
 		std::map<uint16_t, SServiceProxyInfo>	m_mapServiceProxyInfo;
 		std::map<std::string, uint16_t>			m_mapServiceName;
-		std::map<std::string, uint32_t>			m_mapConnectServiceName;
-		std::map<std::string, uint32_t>			m_mapConnectServiceType;
+		std::map<std::string, std::vector<uint16_t>>
+												m_mapServiceIDByServiceType;
+		std::vector<CBaseConnectionToMaster*>	m_vecBaseConnectionToMaster;
+		CTicker									m_tickCheckConnectMaster;
+
+		std::map<std::string, uint32_t>			m_mapConnectServiceName;	// 需要被连接的服务名字
+		std::map<std::string, uint32_t>			m_mapConnectServiceType;	// 需要被连接的服务类型
 	};
 }

@@ -488,16 +488,6 @@ namespace core
 		return this->m_nQPS;
 	}
 
-	CBaseConnectionToMaster* CCoreApp::getConnectionToMaster() const
-	{
-		return this->m_pServiceConnectionToMaster;
-	}
-
-	void CCoreApp::setCoreConnectionToMaster(CBaseConnectionToMaster* pCoreConnectionToMaster)
-	{
-		this->m_pServiceConnectionToMaster = pCoreConnectionToMaster;
-	}
-
 	const SNodeBaseInfo& CCoreApp::getNodeBaseInfo() const
 	{
 		return this->m_sNodeBaseInfo;

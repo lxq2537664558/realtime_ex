@@ -162,6 +162,9 @@
     <ClInclude Include="service_base_mgr.h">
       <Filter>src\service_base</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreCommon\service_id_converter.h">
+      <Filter>inc\service_base</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="base_object.cpp">

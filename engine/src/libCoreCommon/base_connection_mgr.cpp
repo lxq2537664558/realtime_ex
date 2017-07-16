@@ -123,6 +123,11 @@ namespace core
 		CNetRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
 	}
 
+	void CBaseConnectionMgr::connect_s(const std::string& szHost, uint16_t nPort, uint32_t nSendBufferSize, uint32_t nRecvBufferSize)
+	{
+		this->connect(szHost, nPort, eBCT_ConnectionToOtherNode, "", nSendBufferSize, nRecvBufferSize, default_client_message_parser);
+	}
+
 	void CBaseConnectionMgr::listen(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser)
 	{
 		SMCT_REQUEST_SOCKET_CONNECT* pContext = new SMCT_REQUEST_SOCKET_CONNECT();

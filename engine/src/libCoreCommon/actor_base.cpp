@@ -43,6 +43,11 @@ namespace core
 		return CCoreApp::Inst()->getTransporter()->invoke_a(this->m_pActorBaseImpl->getServiceBase(), eType, 0, this->getID(), nID, pMessage);
 	}
 
+	bool CActorBase::broadcast(const std::string& szServiceType, const google::protobuf::Message* pMessage)
+	{
+		return this->m_pActorBaseImpl->getServiceBase()->getServiceInvoker()->broadcast(szServiceType, pMessage);
+	}
+
 	bool CActorBase::send(const SClientSessionInfo& sClientSessionInfo, const google::protobuf::Message* pMessage)
 	{
 		return CServiceInvoker::send(sClientSessionInfo, pMessage);

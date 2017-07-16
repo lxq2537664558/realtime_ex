@@ -43,6 +43,9 @@ namespace core
 		void					setActorIDConverter(CActorIDConverter* pActorIDConverter);
 		CActorIDConverter*		getActorIDConverter() const;
 
+		void					setServiceIDConverter(CServiceIDConverter* pServiceIDConverter);
+		CServiceIDConverter*	getServiceIDConverter() const;
+
 		void					registerServiceMessageHandler(const std::string& szMessageName, const std::function<void(SSessionInfo, google::protobuf::Message*)>& callback);
 		void					registerServiceForwardHandler(const std::string& szMessageName, const std::function<void(SClientSessionInfo, google::protobuf::Message*)>& callback);
 		
@@ -75,27 +78,28 @@ namespace core
 		EServiceRunState		getRunState() const;
 		
 	private:
-		SServiceBaseInfo	m_sServiceBaseInfo;
-		CServiceBase*		m_pServiceBase;
-		EServiceRunState	m_eRunState;
-		CServiceInvoker*	m_pServiceInvoker;
-		CActorScheduler*	m_pActorScheduler;
-		CMessageDispatcher*	m_pMessageDispatcher;
-		CActorIDConverter*	m_pActorIDConverter;
+		SServiceBaseInfo		m_sServiceBaseInfo;
+		CServiceBase*			m_pServiceBase;
+		EServiceRunState		m_eRunState;
+		CServiceInvoker*		m_pServiceInvoker;
+		CActorScheduler*		m_pActorScheduler;
+		CMessageDispatcher*		m_pMessageDispatcher;
+		CActorIDConverter*		m_pActorIDConverter;
+		CServiceIDConverter*	m_pServiceIDConverter;
 		
 		std::map<std::string, std::function<void(SSessionInfo, google::protobuf::Message*)>>		
-							m_mapServiceMessageHandler;
+								m_mapServiceMessageHandler;
 		std::map<std::string, std::function<void(SClientSessionInfo, google::protobuf::Message*)>>	
-							m_mapServiceForwardHandler;
+								m_mapServiceForwardHandler;
 
 		std::map<std::string, std::function<void(CActorBase*, SSessionInfo, const google::protobuf::Message*)>>
-							m_mapActorMessageHandler;
+								m_mapActorMessageHandler;
 		std::map<std::string, std::function<void(CActorBase*, SClientSessionInfo, const google::protobuf::Message*)>>
-							m_mapActorForwardHandler;
+								m_mapActorForwardHandler;
 
 		std::function<void(uint16_t)>
-							m_fnServiceConnectCallback;
+								m_fnServiceConnectCallback;
 		std::function<void(uint16_t)>
-							m_fnServiceDisconnectCallback;
+								m_fnServiceDisconnectCallback;
 	};
 }

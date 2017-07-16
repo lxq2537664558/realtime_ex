@@ -56,6 +56,10 @@ namespace core
 		if (!this->m_pBaseConnectionMgr->init())
 			return false;
 
+		const SNodeBaseInfo& sNodeBaseInfo = CCoreApp::Inst()->getNodeBaseInfo();
+
+		this->m_pBaseConnectionMgr->listen(sNodeBaseInfo.szHost, sNodeBaseInfo.nPort, eBCT_ConnectionFromOtherNode, "", sNodeBaseInfo.nSendBufSize, sNodeBaseInfo.nRecvBufSize, default_client_message_parser);
+
 		this->m_pThreadBase = base::CThreadBase::createNew(this);
 		return nullptr != this->m_pThreadBase;
 	}
@@ -235,7 +239,7 @@ namespace core
 
 				if (pContext->nMessageType != eMT_SYSTEM)
 				{
-					if (pBaseConnection->getType() == eBCT_ConnectionOtherNode)
+					if (pBaseConnection->getType() == eBCT_ConnectionToOtherNode)
 					{
 						CBaseConnectionOtherNode* pBaseConnectionOtherNode = dynamic_cast<CBaseConnectionOtherNode*>(pBaseConnection);
 						if (nullptr == pBaseConnectionOtherNode)

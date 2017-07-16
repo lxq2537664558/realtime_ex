@@ -5,6 +5,7 @@
 #include "service_invoker.h"
 #include "base_object.h"
 #include "actor_id_converter.h"
+#include "service_id_converter.h"
 
 #include "libBaseCommon/buf_file.h"
 
@@ -42,13 +43,13 @@ namespace core
 		const SServiceBaseInfo&	getServiceBaseInfo() const;
 
 		/**
-		@brief: 设置actorid转换器
+		@brief: 设置actor_id转换器
 		*/
 		void					setActorIDConverter(CActorIDConverter* pActorIDConverter);
 		/**
-		@brief: 获取actorid转换器
+		@brief: 设置service_id转换器
 		*/
-		CActorIDConverter*		getActorIDConverter() const;
+		void					setServiceIDConverter(CServiceIDConverter* pServiceIDConverter);
 
 		/**
 		@brief: 注册定时器

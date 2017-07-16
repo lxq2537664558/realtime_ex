@@ -40,9 +40,6 @@ namespace core
 		CTransporter*				getTransporter() const;
 		CCoreOtherNodeProxy*		getCoreOtherNodeProxy() const;
 		
-		CBaseConnectionToMaster*	getConnectionToMaster() const;
-		void						setCoreConnectionToMaster(CBaseConnectionToMaster* pCoreConnectionToMaster);
-
 		const SNodeBaseInfo&		getNodeBaseInfo() const;
 		uint16_t					getNodeID() const;
 		const std::vector<SServiceBaseInfo>&
@@ -88,11 +85,9 @@ namespace core
 		CTicker								m_tickerQPS;
 		CServiceBaseMgr*					m_pServiceBaseMgr;
 
-		CTicker								m_tickCheckConnectMaster;
 		CTransporter*						m_pTransporter;
 		CCoreOtherNodeProxy*				m_pCoreOtherNodeProxy;
 		CNodeConnectionFactory*				m_pNodeConnectionFactory;
-		CBaseConnectionToMaster*			m_pServiceConnectionToMaster;
 		SNodeBaseInfo						m_sNodeBaseInfo;
 		std::vector<SServiceBaseInfo>		m_vecServiceBaseInfo;
 		std::string							m_szMasterHost;

@@ -21,6 +21,6 @@ namespace core
 		uint16_t			getNodeID() const;
 
 	private:
-		uint16_t	m_nNodeID;
+		uint16_t				m_nNodeID;
 	};
 }

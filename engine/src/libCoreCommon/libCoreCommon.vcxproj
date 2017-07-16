@@ -26,6 +26,7 @@
     <ClInclude Include="..\..\inc\libCoreCommon\protobuf_helper.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\proto_system.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\service_base.h" />
+    <ClInclude Include="..\..\inc\libCoreCommon\service_id_converter.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\service_invoker.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\service_message_registry.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\ticker.h" />

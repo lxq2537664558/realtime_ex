@@ -31,7 +31,7 @@ namespace core
 
 	void CBaseConnectionOtherNode::onConnect()
 	{
-		if (this->getType() == eBCT_ConnectionOtherNode)
+		if (this->getType() == eBCT_ConnectionToOtherNode)
 		{
 			// 同步节点名字
 			smt_notify_node_base_info netMsg;
