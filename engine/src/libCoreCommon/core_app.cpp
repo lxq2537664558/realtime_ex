@@ -136,9 +136,9 @@ namespace core
 		return true;
 	}
 
-	void CCoreApp::registerTicker(uint32_t nType, uint64_t nFrom, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
+	void CCoreApp::registerTicker(uint8_t nType, uint16_t nFromServiceID, uint64_t nFromActorID, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
 	{
-		CTickerRunnable::Inst()->registerTicker(nType, nFrom, pTicker, nStartTime, nIntervalTime, nContext);
+		CTickerRunnable::Inst()->registerTicker(nType, nFromServiceID, nFromActorID, pTicker, nStartTime, nIntervalTime, nContext);
 	}
 
 	void CCoreApp::unregisterTicker(CTicker* pTicker)
@@ -385,7 +385,7 @@ namespace core
 		}
 
 		this->m_tickerQPS.setCallback(std::bind(&CCoreApp::onQPS, this, std::placeholders::_1));
-		this->registerTicker(CTicker::eTT_Service, 0, &this->m_tickerQPS, 1000, 1000, 0);
+		this->registerTicker(CTicker::eTT_Service, 0, 0, &this->m_tickerQPS, 1000, 1000, 0);
 
 		this->m_pServiceBaseMgr = new CServiceBaseMgr();
 		if (!this->m_pServiceBaseMgr->init(this->m_vecServiceBaseInfo))
@@ -501,6 +501,11 @@ namespace core
 	const SNodeBaseInfo& CCoreApp::getNodeBaseInfo() const
 	{
 		return this->m_sNodeBaseInfo;
+	}
+
+	uint16_t CCoreApp::getNodeID() const
+	{
+		return this->m_sNodeBaseInfo.nID;
 	}
 
 	const std::vector<SServiceBaseInfo>& CCoreApp::getServiceBaseInfo() const

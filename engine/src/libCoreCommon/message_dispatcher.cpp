@@ -35,9 +35,12 @@ namespace core
 		return true;
 	}
 
-	void CMessageDispatcher::dispatch(uint64_t nFromSocketID, uint16_t nFromNodeID, uint8_t nMessageType, const google::protobuf::Message* pMessage, const SMCT_RECV_SOCKET_DATA* pContext)
+	void CMessageDispatcher::dispatch(uint64_t nFromSocketID, uint16_t nFromNodeID, const SMCT_RECV_SOCKET_DATA* pContext)
 	{
-		DebugAst(pMessage != nullptr && pContext != nullptr);
+		DebugAst(pContext != nullptr);
+		uint8_t nMessageType = pContext->nMessageType;
+		const google::protobuf::Message* pMessage = reinterpret_cast<const google::protobuf::Message*>(pContext->pData);
+		DebugAst(pMessage);
 
 		if (nMessageType == eMT_REQUEST)
 		{
@@ -45,20 +48,20 @@ namespace core
 			{
 				google::protobuf::Message* pMessage = reinterpret_cast<google::protobuf::Message*>(pContext->pData);
 
-				CActorBaseImpl* pActorBase = this->m_pServiceBaseImpl->getActorScheduler()->getActorBase(pContext->nToID);
-				if (nullptr == pActorBase)
+				CActorBaseImpl* pActorBaseImpl = this->m_pServiceBaseImpl->getActorScheduler()->getActorBase(pContext->nToActorID);
+				if (nullptr == pActorBaseImpl)
 				{
 					SAFE_DELETE(pMessage);
 					return;
 				}
 				SActorMessagePacket sActorMessagePacket;
-				sActorMessagePacket.nData = pContext->nFromID;
+				sActorMessagePacket.nData = pContext->nData;
 				sActorMessagePacket.nSessionID = pContext->nSessionID;
 				sActorMessagePacket.nType = eMT_REQUEST;
 				sActorMessagePacket.pMessage = pMessage;
-				pActorBase->getChannel()->send(sActorMessagePacket);
+				pActorBaseImpl->getChannel()->send(sActorMessagePacket);
 
-				this->m_pServiceBaseImpl->getActorScheduler()->addWorkActorBase(pActorBase);
+				this->m_pServiceBaseImpl->getActorScheduler()->addWorkActorBase(pActorBaseImpl);
 			}
 			else
 			{
@@ -73,7 +76,7 @@ namespace core
 
 				SSessionInfo sSessionInfo;
 				sSessionInfo.eTargetType = eMTT_Service;
-				sSessionInfo.nFromID = pContext->nFromID;
+				sSessionInfo.nFromID = pContext->nData;
 				sSessionInfo.nSessionID = pContext->nSessionID;
 				callback(sSessionInfo, pMessage.get());
 			}
@@ -84,29 +87,29 @@ namespace core
 			{
 				google::protobuf::Message* pMessage = reinterpret_cast<google::protobuf::Message*>(pContext->pData);
 
-				CActorBaseImpl* pActorBase = this->m_pServiceBaseImpl->getActorScheduler()->getActorBase(pContext->nToID);
-				if (nullptr == pActorBase)
+				CActorBaseImpl* pActorBaseImpl = this->m_pServiceBaseImpl->getActorScheduler()->getActorBase(pContext->nToActorID);
+				if (nullptr == pActorBaseImpl)
 				{
 					SAFE_DELETE(pMessage);
 					return;
 				}
 
-				if (pContext->nSessionID != pActorBase->getPendingResponseSessionID())
+				if (pContext->nSessionID != pActorBaseImpl->getPendingResponseSessionID())
 				{
 					SActorMessagePacket sActorMessagePacket;
-					sActorMessagePacket.nData = pContext->nFromID;
+					sActorMessagePacket.nData = pContext->nData;
 					sActorMessagePacket.nSessionID = pContext->nSessionID;
 					sActorMessagePacket.nType = eMT_RESPONSE;
 					sActorMessagePacket.pMessage = pMessage;
-					pActorBase->getChannel()->send(sActorMessagePacket);
+					pActorBaseImpl->getChannel()->send(sActorMessagePacket);
 
-					this->m_pServiceBaseImpl->getActorScheduler()->addWorkActorBase(pActorBase);
+					this->m_pServiceBaseImpl->getActorScheduler()->addWorkActorBase(pActorBaseImpl);
 				}
 				else
 				{
-					pActorBase->setPendingResponseMessage((uint8_t)pContext->nFromID, pMessage);
+					pActorBaseImpl->setPendingResponseMessage((uint8_t)pContext->nData, pMessage);
 
-					this->m_pServiceBaseImpl->getActorScheduler()->addWorkActorBase(pActorBase);
+					this->m_pServiceBaseImpl->getActorScheduler()->addWorkActorBase(pActorBaseImpl);
 				}
 			}
 			else
@@ -117,13 +120,13 @@ namespace core
 				if (nullptr == pPendingResponseInfo)
 					return;
 
-				if (pContext->nFromID == eRRT_OK)
+				if (pContext->nData == eRRT_OK)
 				{
 					pPendingResponseInfo->callback(pMessage.get(), eRRT_OK);
 				}
 				else
 				{
-					pPendingResponseInfo->callback(nullptr, (EResponseResultType)pContext->nFromID);
+					pPendingResponseInfo->callback(nullptr, (EResponseResultType)pContext->nData);
 				}
 			}
 		}
@@ -133,21 +136,21 @@ namespace core
 			{
 				google::protobuf::Message* pMessage = reinterpret_cast<google::protobuf::Message*>(pContext->pData);
 
-				CActorBaseImpl* pActorBase = this->m_pServiceBaseImpl->getActorScheduler()->getActorBase(pContext->nToID);
-				if (nullptr == pActorBase)
+				CActorBaseImpl* pActorBaseImpl = this->m_pServiceBaseImpl->getActorScheduler()->getActorBase(pContext->nToActorID);
+				if (nullptr == pActorBaseImpl)
 				{
 					SAFE_DELETE(pMessage);
 					return;
 				}
 
 				SActorMessagePacket sActorMessagePacket;
-				sActorMessagePacket.nData = pContext->nFromID;
+				sActorMessagePacket.nData = pContext->nData;
 				sActorMessagePacket.nSessionID = pContext->nSessionID;
 				sActorMessagePacket.nType = eMT_GATE_FORWARD;
 				sActorMessagePacket.pMessage = pMessage;
-				pActorBase->getChannel()->send(sActorMessagePacket);
+				pActorBaseImpl->getChannel()->send(sActorMessagePacket);
 
-				this->m_pServiceBaseImpl->getActorScheduler()->addWorkActorBase(pActorBase);
+				this->m_pServiceBaseImpl->getActorScheduler()->addWorkActorBase(pActorBaseImpl);
 			}
 			else
 			{
@@ -161,7 +164,7 @@ namespace core
 				}
 
 				SClientSessionInfo sClientSessionInfo;
-				sClientSessionInfo.nGateServiceID = (uint16_t)pContext->nFromID;
+				sClientSessionInfo.nGateServiceID = (uint16_t)pContext->nData;
 				sClientSessionInfo.nSessionID = pContext->nSessionID;
 
 				callback(sClientSessionInfo, pMessage.get());

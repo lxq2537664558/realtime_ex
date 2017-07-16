@@ -33,7 +33,7 @@ namespace core
 		nStartTime 第一次触发定时器的时间
 		nIntervalTime 第一次触发定时器后接下来定时器触发的间隔时间，如果该值是0就表示这个定时器只触发一次
 		*/
-		void						registerTicker(uint32_t nType, uint64_t nFrom, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
+		void						registerTicker(uint8_t nType, uint16_t nFromServiceID, uint64_t nFromActorID, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
 		/**
 		@brief: 反注册定时器
 		*/
@@ -50,6 +50,10 @@ namespace core
 		@brief: 获取本节点基本信息
 		*/
 		const SNodeBaseInfo&		getNodeBaseInfo() const;
+		/**
+		@brief: 获取本节点基本信息
+		*/
+		uint16_t					getNodeID() const;
 		/**
 		@brief: 根据节点名字获取节点id
 		*/

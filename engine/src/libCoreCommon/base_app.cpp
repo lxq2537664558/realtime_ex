@@ -49,9 +49,9 @@ namespace core
 		return CCoreApp::Inst()->run(argc, argv, szConfig);
 	}
 
-	void CBaseApp::registerTicker(uint32_t nType, uint64_t nFrom, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
+	void CBaseApp::registerTicker(uint8_t nType, uint16_t nFromServiceID, uint64_t nFromActorID, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
 	{
-		CCoreApp::Inst()->registerTicker(nType, nFrom, pTicker, nStartTime, nIntervalTime, nContext);
+		CCoreApp::Inst()->registerTicker(nType, nFromServiceID, nFromActorID, pTicker, nStartTime, nIntervalTime, nContext);
 	}
 
 	void CBaseApp::unregisterTicker(CTicker* pTicker)
@@ -67,6 +67,11 @@ namespace core
 	const SNodeBaseInfo& CBaseApp::getNodeBaseInfo() const
 	{
 		return CCoreApp::Inst()->getNodeBaseInfo();
+	}
+
+	uint16_t CBaseApp::getNodeID() const
+	{
+		return CCoreApp::Inst()->getNodeID();
 	}
 
 	CServiceBase* CBaseApp::getServiceBase(uint16_t nServiceID) const

@@ -22,8 +22,8 @@ namespace core
 		bool	empty();
 
 	private:
-		base::CCircleQueue<SMessagePacket, false>	
-								m_queue;
-		std::mutex				m_lock;
+		base::CCircleQueue<SMessagePacket, false>	m_queue;
+		std::mutex									m_lock;
+		std::condition_variable						m_cond;
 	};
 }

@@ -93,7 +93,7 @@ namespace core
 				this->m_nNodeID = netMsg.sNodeBaseInfo.nID;
 
 				smt_notify_ack_node_base_info netMsg1;
-				netMsg1.nNodeID = CCoreApp::Inst()->getNodeBaseInfo().nID;
+				netMsg1.nNodeID = CCoreApp::Inst()->getNodeID();
 				base::CWriteBuf& writeBuf = CCoreApp::Inst()->getWriteBuf();
 				netMsg1.pack(writeBuf);
 				this->send(eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());

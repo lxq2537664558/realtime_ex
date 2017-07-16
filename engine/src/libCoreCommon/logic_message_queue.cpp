@@ -28,6 +28,9 @@ namespace core
 		std::unique_lock<std::mutex> guard(this->m_lock);
 
 		this->m_queue.send(sMessagePacket);
+
+		if (this->m_queue.size() == 1)
+			this->m_cond.notify_one();
 	}
 
 	void CLogicMessageQueue::recv(std::vector<SMessagePacket>& vecMessagePacket)
@@ -37,6 +40,11 @@ namespace core
 
 		std::unique_lock<std::mutex> guard(this->m_lock);
 		
+		while (this->m_queue.empty())
+		{
+			this->m_cond.wait(guard);
+		}
+
 		SMessagePacket sMessagePacket;
 		while (this->m_queue.recv(sMessagePacket))
 		{
@@ -48,6 +56,6 @@ namespace core
 	{
 		std::unique_lock<std::mutex> guard(this->m_lock);
 
-		return this->m_queue.size();
+		return this->m_queue.size() == 0;
 	}
 }

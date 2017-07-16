@@ -48,7 +48,7 @@ namespace core
 		request_cookice* pCookice = reinterpret_cast<request_cookice*>(this->m_szBuf[0]);
 		pCookice->nSessionID = nSessionID;
 		pCookice->nFromID = nFromID;
-		pCookice->nToID = nToID;
+		pCookice->nToActorID = nToID;
 		pCookice->nTargetType = (uint8_t)eType;
 		pCookice->nMessageNameLen = (uint16_t)szMessageName.size();
 		base::crt::strcpy(pCookice->szMessageName, szMessageName.size() + 1, szMessageName.c_str());
@@ -93,19 +93,20 @@ namespace core
 
 			SMCT_RECV_SOCKET_DATA* pContext = new SMCT_RECV_SOCKET_DATA();
 			pContext->nSessionID = nSessionID;
-			pContext->nFromID = nFromID;
-			pContext->nToID = nToID;
+			pContext->nData = nFromID;
+			pContext->nToActorID = nToID;
+			pContext->nToServiceID = nToServiceID;
 			pContext->nTargetType = (uint8_t)eType;
 			pContext->nMessageType = eMT_REQUEST;
 			pContext->nDataSize = 0;
 			pContext->pData = pNewMessage;
 
 			SMessagePacket sMessagePacket;
-			sMessagePacket.nType = eMCT_INSIDE_DATA;
+			sMessagePacket.nType = eMCT_RECV_SOCKET_DATA;
 			sMessagePacket.nDataSize = sizeof(SMCT_RECV_SOCKET_DATA);
 			sMessagePacket.pData = pContext;
 
-			CCoreApp::Inst()->getServiceBaseMgr()->sendMessage(nToServiceID, sMessagePacket);
+			CLogicRunnable::Inst()->sendInsideMessage(sMessagePacket);
 		}
 
 		return true;
@@ -119,7 +120,7 @@ namespace core
 
 		response_cookice* pCookice = reinterpret_cast<response_cookice*>(this->m_szBuf[0]);
 		pCookice->nSessionID = nSessionID;
-		pCookice->nToID = nToID;
+		pCookice->nToActorID = nToID;
 		pCookice->nResult = nResult;
 		pCookice->nTargetType = (uint8_t)eType;
 		pCookice->nMessageNameLen = (uint16_t)szMessageName.size();
@@ -166,19 +167,20 @@ namespace core
 			SMCT_RECV_SOCKET_DATA* pContext = new SMCT_RECV_SOCKET_DATA();
 			pContext->nSocketID = 0;
 			pContext->nSessionID = nSessionID;
-			pContext->nFromID = nResult;
-			pContext->nToID = nToID;
+			pContext->nData = nResult;
+			pContext->nToActorID = nToID;
+			pContext->nToServiceID = nToServiceID;
 			pContext->nTargetType = (uint8_t)eType;
 			pContext->nMessageType = eMT_RESPONSE;
 			pContext->nDataSize = 0;
 			pContext->pData = pNewMessage;
 
 			SMessagePacket sMessagePacket;
-			sMessagePacket.nType = eMCT_INSIDE_DATA;
+			sMessagePacket.nType = eMCT_RECV_SOCKET_DATA;
 			sMessagePacket.nDataSize = sizeof(SMCT_RECV_SOCKET_DATA);
 			sMessagePacket.pData = pContext;
 
-			CCoreApp::Inst()->getServiceBaseMgr()->sendMessage(nToServiceID, sMessagePacket);
+			CLogicRunnable::Inst()->sendInsideMessage(sMessagePacket);
 		}
 
 		return true;
@@ -268,7 +270,7 @@ namespace core
 
 		gate_forward_cookice* pCookice = reinterpret_cast<gate_forward_cookice*>(this->m_szBuf[0]);
 		pCookice->nSessionID = nSessionID;
-		pCookice->nToID = nToID;
+		pCookice->nToActorID = nToID;
 		pCookice->nFromID = nFromID;
 		pCookice->nTargetType = (uint8_t)eType;
 		pCookice->nMessageNameLen = (uint16_t)szMessageName.size();
@@ -315,19 +317,20 @@ namespace core
 			SMCT_RECV_SOCKET_DATA* pContext = new SMCT_RECV_SOCKET_DATA();
 			pContext->nSocketID = 0;
 			pContext->nSessionID = nSessionID;
-			pContext->nFromID = nFromID;
-			pContext->nToID = nToID;
+			pContext->nData = nFromID;
+			pContext->nToActorID = nToID;
+			pContext->nToServiceID = nToServiceID;
 			pContext->nTargetType = (uint8_t)eType;
 			pContext->nMessageType = eMT_GATE_FORWARD;
 			pContext->nDataSize = 0;
 			pContext->pData = pNewMessage;
 
 			SMessagePacket sMessagePacket;
-			sMessagePacket.nType = eMCT_INSIDE_DATA;
+			sMessagePacket.nType = eMCT_RECV_SOCKET_DATA;
 			sMessagePacket.nDataSize = sizeof(SMCT_RECV_SOCKET_DATA);
 			sMessagePacket.pData = pContext;
 
-			CCoreApp::Inst()->getServiceBaseMgr()->sendMessage(nToServiceID, sMessagePacket);
+			CLogicRunnable::Inst()->sendInsideMessage(sMessagePacket);
 		}
 
 		return true;
@@ -372,19 +375,20 @@ namespace core
 			SMCT_RECV_SOCKET_DATA* pContext = new SMCT_RECV_SOCKET_DATA();
 			pContext->nSocketID = 0;
 			pContext->nSessionID = nSessionID;
-			pContext->nFromID = 0;
-			pContext->nToID = nToServiceID;
+			pContext->nData = 0;
+			pContext->nToActorID = 0;
+			pContext->nToServiceID = nToServiceID;
 			pContext->nTargetType = (uint8_t)eMTT_Service;
 			pContext->nMessageType = eMT_TO_GATE;
 			pContext->nDataSize = 0;
 			pContext->pData = pNewMessage;
 
 			SMessagePacket sMessagePacket;
-			sMessagePacket.nType = eMCT_INSIDE_DATA;
+			sMessagePacket.nType = eMCT_RECV_SOCKET_DATA;
 			sMessagePacket.nDataSize = sizeof(SMCT_RECV_SOCKET_DATA);
 			sMessagePacket.pData = pContext;
 
-			CCoreApp::Inst()->getServiceBaseMgr()->sendMessage(nToServiceID, sMessagePacket);
+			CLogicRunnable::Inst()->sendInsideMessage(sMessagePacket);
 		}
 
 		return true;
@@ -436,19 +440,20 @@ namespace core
 			SMCT_RECV_SOCKET_DATA* pContext = new SMCT_RECV_SOCKET_DATA();
 			pContext->nSocketID = 0;
 			pContext->nSessionID = 0;
-			pContext->nFromID = 0;
-			pContext->nToID = nToServiceID;
+			pContext->nData = 0;
+			pContext->nToActorID = 0;
+			pContext->nToServiceID = nToServiceID;
 			pContext->nTargetType = (uint8_t)eMTT_Service;
 			pContext->nMessageType = eMT_TO_GATE;
 			pContext->nDataSize = 0;
 			pContext->pData = pNewMessage;
 
 			SMessagePacket sMessagePacket;
-			sMessagePacket.nType = eMCT_INSIDE_DATA;
+			sMessagePacket.nType = eMCT_RECV_SOCKET_DATA;
 			sMessagePacket.nDataSize = sizeof(SMCT_RECV_SOCKET_DATA);
 			sMessagePacket.pData = pContext;
 
-			CCoreApp::Inst()->getServiceBaseMgr()->sendMessage(nToServiceID, sMessagePacket);
+			CLogicRunnable::Inst()->sendInsideMessage(sMessagePacket);
 		}
 
 		return true;
@@ -501,7 +506,7 @@ namespace core
 		pPendingResponseInfo->szMessageName = szMessageName;
 		pPendingResponseInfo->nBeginTime = base::getGmtTime();
 		pPendingResponseInfo->tickTimeout.setCallback(std::bind(&CTransporter::onRequestMessageTimeout, this, std::placeholders::_1));
-		CBaseApp::Inst()->registerTicker(CTicker::eTT_Service, 0, &pPendingResponseInfo->tickTimeout, CCoreApp::Inst()->getInvokeTimeout(), 0, nSessionID);
+		CBaseApp::Inst()->registerTicker(CTicker::eTT_Service, 0, 0, &pPendingResponseInfo->tickTimeout, CCoreApp::Inst()->getInvokeTimeout(), 0, nSessionID);
 
 		this->m_mapPendingResponseInfo[pPendingResponseInfo->nSessionID] = pPendingResponseInfo;
 

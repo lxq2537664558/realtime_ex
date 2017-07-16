@@ -19,7 +19,6 @@ namespace core
 		eMCT_NOTIFY_SOCKET_CONNECT_FAIL,
 		eMCT_SEND_SOCKET_DATA,
 		eMCT_RECV_SOCKET_DATA,
-		eMCT_INSIDE_DATA,
 		eMCT_BROADCAST_SOCKET_DATA1,
 		eMCT_BROADCAST_SOCKET_DATA2,
 		eMCT_TICKER,
@@ -90,8 +89,9 @@ namespace core
 	{
 		uint64_t	nSocketID;
 		uint64_t	nSessionID;
-		uint64_t	nFromID;
-		uint64_t	nToID;
+		uint64_t	nData;
+		uint64_t	nToActorID;
+		uint16_t	nToServiceID;
 		uint8_t		nTargetType;
 		uint8_t		nMessageType;
 		uint16_t	nDataSize;

@@ -83,7 +83,7 @@ namespace core
 		return true;
 	}
 
-	bool CTickerRunnable::registerTicker(uint32_t nType, uint64_t nFrom, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
+	bool CTickerRunnable::registerTicker(uint8_t nType, uint16_t nFromServiceID, uint64_t nFromActorID, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
 	{
 		DebugAstEx(pTicker != nullptr, false);
 		DebugAstEx(!pTicker->isRegister(), false);
@@ -100,7 +100,8 @@ namespace core
 		pTicker->m_nContext = nContext;
 		pTicker->m_pCoreContext = pCoreTickerNode;
 		pTicker->m_nType = nType;
-		pTicker->m_nFrom = nFrom;
+		pTicker->m_nServiceID = nFromServiceID;
+		pTicker->m_nActorID = nFromActorID;
 
 		std::unique_lock<base::spin_lock> lock(this->m_lock);
 		this->insertTicker(pCoreTickerNode);
@@ -260,7 +261,7 @@ namespace core
 		sMessagePacket.nDataSize = 0;
 
 		// 发送到消息队列，另外消息队列取出定时器对象的时候如果发现是一次性定时器，需要反注册
-		if (pCoreTickerNode->Value.m_nType == CTicker::eTT_Service)
+		if (pCoreTickerNode->Value.m_nType == CTicker::eTT_Service || pCoreTickerNode->Value.m_nType == CTicker::eTT_Actor)
 			CLogicRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
 		else
 			CNetRunnable::Inst()->getMessageQueue()->send(sMessagePacket);

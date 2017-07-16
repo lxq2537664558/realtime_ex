@@ -17,7 +17,7 @@ namespace core
 
 		bool init(CServiceBaseImpl* pServiceBaseImpl);
 
-		void dispatch(uint64_t nFromSocketID, uint16_t nFromNodeID, uint8_t nMessageType, const google::protobuf::Message* pMessage, const SMCT_RECV_SOCKET_DATA* pContext);
+		void dispatch(uint64_t nFromSocketID, uint16_t nFromNodeID, const SMCT_RECV_SOCKET_DATA* pContext);
 
 	private:
 		CServiceBaseImpl*	m_pServiceBaseImpl;

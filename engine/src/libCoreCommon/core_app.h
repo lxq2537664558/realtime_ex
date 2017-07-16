@@ -28,7 +28,7 @@ namespace core
 
 		bool						run(int32_t argc, char** argv, const char* szConfig);
 		
-		void						registerTicker(uint32_t nType, uint64_t nFrom, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
+		void						registerTicker(uint8_t nType, uint16_t nFromServiceID, uint64_t nFromActorID, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
 		void						unregisterTicker(CTicker* pTicker);
 
 		CBaseConnectionMgr*			getBaseConnectionMgr() const;
@@ -44,6 +44,7 @@ namespace core
 		void						setCoreConnectionToMaster(CBaseConnectionToMaster* pCoreConnectionToMaster);
 
 		const SNodeBaseInfo&		getNodeBaseInfo() const;
+		uint16_t					getNodeID() const;
 		const std::vector<SServiceBaseInfo>&
 									getServiceBaseInfo() const;
 

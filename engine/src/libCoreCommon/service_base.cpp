@@ -12,6 +12,11 @@ namespace core
 
 	}
 
+	uint16_t CServiceBase::getServiceID() const
+	{
+		return this->m_pServiceBaseImpl->getServiceID();
+	}
+
 	const SServiceBaseInfo& CServiceBase::getServiceBaseInfo() const
 	{
 		return this->m_pServiceBaseImpl->getServiceBaseInfo();

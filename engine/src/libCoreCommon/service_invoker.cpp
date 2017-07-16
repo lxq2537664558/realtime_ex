@@ -30,14 +30,14 @@ namespace core
 	{
 		DebugAstEx(pMessage != nullptr, false);
 
-		return CCoreApp::Inst()->getTransporter()->invoke(this->m_pServiceBaseImpl, eType, 0, this->m_pServiceBaseImpl->getServiceBaseInfo().nID, nID, pMessage);
+		return CCoreApp::Inst()->getTransporter()->invoke(this->m_pServiceBaseImpl, eType, 0, this->m_pServiceBaseImpl->getServiceID(), nID, pMessage);
 	}
 
 	bool CServiceInvoker::forward(EMessageTargetType eType, uint64_t nID, uint64_t nSessionID, const google::protobuf::Message* pMessage)
 	{
 		DebugAstEx(pMessage != nullptr, false);
 
-		return CCoreApp::Inst()->getTransporter()->forward(this->m_pServiceBaseImpl, eType, nSessionID, this->m_pServiceBaseImpl->getServiceBaseInfo().nID, nID, pMessage);
+		return CCoreApp::Inst()->getTransporter()->forward(this->m_pServiceBaseImpl, eType, nSessionID, this->m_pServiceBaseImpl->getServiceID(), nID, pMessage);
 	}
 
 	void CServiceInvoker::response(const SSessionInfo& sSessionInfo, const google::protobuf::Message* pMessage)
@@ -78,7 +78,7 @@ namespace core
 	bool CServiceInvoker::invoke(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback)
 	{
 		uint64_t nSessionID = CCoreApp::Inst()->getTransporter()->genSessionID();
-		if (!CCoreApp::Inst()->getTransporter()->invoke(this->m_pServiceBaseImpl, eType, nSessionID, this->m_pServiceBaseImpl->getServiceBaseInfo().nID, nID, pMessage))
+		if (!CCoreApp::Inst()->getTransporter()->invoke(this->m_pServiceBaseImpl, eType, nSessionID, this->m_pServiceBaseImpl->getServiceID(), nID, pMessage))
 			return false;
 
 		SPendingResponseInfo* pPendingResponseInfo = CCoreApp::Inst()->getTransporter()->addPendingResponseInfo(nSessionID, nID, pMessage->GetTypeName(), callback);

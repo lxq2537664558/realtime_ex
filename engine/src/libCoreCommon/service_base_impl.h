@@ -9,8 +9,6 @@
 #include "message_dispatcher.h"
 
 #include <map>
-#include <atomic>
-
 
 namespace core
 {
@@ -25,8 +23,14 @@ namespace core
 		~CServiceBaseImpl();
 
 		bool					init(const SServiceBaseInfo& sServiceBaseInfo, CServiceBase* pServiceBase);
+		void					quit();
+		void					run();
+
+		void					doQuit();
+
 		CServiceBase*			getServiceBase() const;
 
+		uint16_t				getServiceID() const;
 		const SServiceBaseInfo&	getServiceBaseInfo() const;
 
 		void					registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
@@ -34,16 +38,11 @@ namespace core
 
 		CServiceInvoker*		getServiceInvoker() const;
 		CActorScheduler*		getActorScheduler() const;
-		CLogicMessageQueue*		getMessageQueue() const;
 		CMessageDispatcher*		getMessageDispatcher() const;
 
 		void					setActorIDConverter(CActorIDConverter* pActorIDConverter);
 		CActorIDConverter*		getActorIDConverter() const;
 
-		bool					isWorking() const;
-
-		void					setWorking(bool bFlag);
-		
 		void					registerServiceMessageHandler(const std::string& szMessageName, const std::function<void(SSessionInfo, google::protobuf::Message*)>& callback);
 		void					registerServiceForwardHandler(const std::string& szMessageName, const std::function<void(SClientSessionInfo, google::protobuf::Message*)>& callback);
 		
@@ -74,23 +73,16 @@ namespace core
 		uint32_t				getQPS() const;
 		
 		EServiceRunState		getRunState() const;
-		void					setRunState(EServiceRunState eState);
 		
-		void					doQuit();
-
-		void					run();
-
 	private:
 		SServiceBaseInfo	m_sServiceBaseInfo;
 		CServiceBase*		m_pServiceBase;
-		EServiceRunState	m_eState;
+		EServiceRunState	m_eRunState;
 		CServiceInvoker*	m_pServiceInvoker;
 		CActorScheduler*	m_pActorScheduler;
-		CLogicMessageQueue*	m_pMessageQueue;
 		CMessageDispatcher*	m_pMessageDispatcher;
 		CActorIDConverter*	m_pActorIDConverter;
-		std::atomic<bool>	m_bWorking;
-
+		
 		std::map<std::string, std::function<void(SSessionInfo, google::protobuf::Message*)>>		
 							m_mapServiceMessageHandler;
 		std::map<std::string, std::function<void(SClientSessionInfo, google::protobuf::Message*)>>	

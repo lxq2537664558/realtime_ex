@@ -35,8 +35,9 @@ namespace core
 		CServiceBase();
 		virtual ~CServiceBase();
 
+		uint16_t				getServiceID() const;
 		/**
-		@brief: 获取服务ID
+		@brief: 获取服务基础信息
 		*/
 		const SServiceBaseInfo&	getServiceBaseInfo() const;
 

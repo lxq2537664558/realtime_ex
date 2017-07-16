@@ -77,6 +77,7 @@ enum EMessageType
 	eMT_GATE_FORWARD		= 5,		// 客户端通过网关服务转发给其他服务消息
 	eMT_TO_GATE				= 6,		// 其他服务通过网关服务转发客户端消息
 	eMT_CLIENT				= 7,		// 客户端消息
+	eMT_TICKER				= 8,		// 定时器
 };
 
 namespace core
@@ -151,7 +152,8 @@ namespace core
 	{
 		uint64_t	nSessionID;
 		uint64_t	nFromID;
-		uint64_t	nToID;
+		uint64_t	nToActorID;
+		uint16_t	nToServiceID;
 		uint8_t		nTargetType;
 		uint16_t	nMessageNameLen;
 		char		szMessageName[1];
@@ -178,7 +180,8 @@ namespace core
 	{
 		uint64_t	nSessionID;
 		uint64_t	nFromID;
-		uint64_t	nToID;
+		uint64_t	nToActorID;
+		uint16_t	nToServiceID;
 		uint8_t		nTargetType;
 		uint16_t	nMessageNameLen;
 		char		szMessageName[1];
@@ -187,7 +190,8 @@ namespace core
 	struct response_cookice
 	{
 		uint64_t	nSessionID;
-		uint64_t	nToID;
+		uint64_t	nToActorID;
+		uint16_t	nToServiceID;
 		uint8_t		nResult;
 		uint8_t		nTargetType;
 		uint16_t	nMessageNameLen;

@@ -218,8 +218,9 @@ namespace core
 			pContext = new SMCT_RECV_SOCKET_DATA();
 			pContext->nSocketID = this->getID();
 			pContext->nSessionID = pCookice->nSessionID;
-			pContext->nFromID = pCookice->nFromID;
-			pContext->nToID = pCookice->nToID;
+			pContext->nData = pCookice->nFromID;
+			pContext->nToActorID = pCookice->nToActorID;
+			pContext->nToServiceID = pCookice->nToServiceID;
 			pContext->nTargetType = pCookice->nTargetType;
 			pContext->nMessageType = eMT_REQUEST;
 			pContext->nDataSize = nSize;
@@ -246,8 +247,9 @@ namespace core
 			pContext = new SMCT_RECV_SOCKET_DATA();
 			pContext->nSocketID = this->getID();
 			pContext->nSessionID = pCookice->nSessionID;
-			pContext->nFromID = pCookice->nResult;
-			pContext->nToID = pCookice->nToID;
+			pContext->nData = pCookice->nResult;
+			pContext->nToActorID = pCookice->nToActorID;
+			pContext->nToServiceID = pCookice->nToServiceID;
 			pContext->nTargetType = pCookice->nTargetType;
 			pContext->nMessageType = eMT_RESPONSE;
 			pContext->nDataSize = nSize;
@@ -274,8 +276,9 @@ namespace core
 			pContext = new SMCT_RECV_SOCKET_DATA();
 			pContext->nSocketID = this->getID();
 			pContext->nSessionID = pCookice->nSessionID;
-			pContext->nFromID = pCookice->nFromID;
-			pContext->nToID = pCookice->nToID;
+			pContext->nData = pCookice->nFromID;
+			pContext->nToActorID = pCookice->nToActorID;
+			pContext->nToServiceID = pCookice->nToServiceID;
 			pContext->nTargetType = pCookice->nTargetType;
 			pContext->nMessageType = eMT_GATE_FORWARD;
 			pContext->nDataSize = nSize;
@@ -287,8 +290,9 @@ namespace core
 			pContext = reinterpret_cast<SMCT_RECV_SOCKET_DATA*>(pBuf);
 			pContext->nSocketID = this->getID();
 			pContext->nSessionID = 0;
-			pContext->nFromID = 0;
-			pContext->nToID = 0;
+			pContext->nData = 0;
+			pContext->nToActorID = 0;
+			pContext->nToServiceID = 0;
 			pContext->nTargetType = 0;
 			pContext->nMessageType = nMessageType;
 			pContext->nDataSize = nSize;

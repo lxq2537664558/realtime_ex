@@ -6,10 +6,9 @@
 namespace core
 {
 	CServiceBaseImpl::CServiceBaseImpl()
-		: m_eState(eSRS_Start)
+		: m_eRunState(eSRS_Start)
 		, m_pServiceInvoker(nullptr)
 		, m_pActorScheduler(nullptr)
-		, m_bWorking(false)
 	{
 
 	}
@@ -32,14 +31,32 @@ namespace core
 		if (!this->m_pServiceBase->onInit())
 			return false;
 
-		this->m_eState = eSRS_Normal;
+		this->m_eRunState = eSRS_Normal;
 
 		return true;
+	}
+
+	void CServiceBaseImpl::quit()
+	{
+		DebugAst(this->m_eRunState == eSRS_Normal);
+
+		this->m_eRunState = eSRS_Quitting;
+		this->m_pServiceBase->onQuit();
 	}
 
 	CServiceBase* CServiceBaseImpl::getServiceBase() const
 	{
 		return this->m_pServiceBase;
+	}
+
+	uint16_t CServiceBaseImpl::getServiceID() const
+	{
+		return this->m_sServiceBaseInfo.nID;
+	}
+
+	const SServiceBaseInfo& CServiceBaseImpl::getServiceBaseInfo() const
+	{
+		return this->m_sServiceBaseInfo;
 	}
 
 	void CServiceBaseImpl::registerServiceMessageHandler(const std::string& szMessageName, const std::function<void(SSessionInfo, google::protobuf::Message*)>& callback)
@@ -54,7 +71,7 @@ namespace core
 
 	void CServiceBaseImpl::registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
 	{
-		CCoreApp::Inst()->registerTicker(CTicker::eTT_Service, this->getServiceBaseInfo().nID, pTicker, nStartTime, nIntervalTime, nContext);
+		CCoreApp::Inst()->registerTicker(CTicker::eTT_Service, this->getServiceBaseInfo().nID, 0, pTicker, nStartTime, nIntervalTime, nContext);
 	}
 
 	void CServiceBaseImpl::unregisterTicker(CTicker* pTicker)
@@ -64,9 +81,9 @@ namespace core
 
 	void CServiceBaseImpl::doQuit()
 	{
-		DebugAst(this->m_eState == eSRS_Quitting);
+		DebugAst(this->m_eRunState == eSRS_Quitting);
 
-		this->m_eState = eSRS_Quit;
+		this->m_eRunState = eSRS_Quit;
 	}
 
 	void CServiceBaseImpl::run()
@@ -74,16 +91,6 @@ namespace core
 		this->m_pActorScheduler->run();
 		
 		this->m_pServiceBase->onFrame();
-	}
-
-	bool CServiceBaseImpl::isWorking() const
-	{
-		return this->m_bWorking.load(std::memory_order_relaxed);
-	}
-
-	void CServiceBaseImpl::setWorking(bool bFlag)
-	{
-		this->m_bWorking.store(bFlag, std::memory_order_relaxed);
 	}
 
 	void CServiceBaseImpl::setServiceConnectCallback(const std::function<void(uint16_t)>& callback)

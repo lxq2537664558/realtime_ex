@@ -19,18 +19,8 @@ namespace core
 		const std::vector<CServiceBaseImpl*>&
 							getServiceBase() const;
 
-		void				sendMessage(uint16_t nToServiceID, const SMessagePacket& sMessagePacket);
-
-		CServiceBaseImpl*	getWorkServiceBase();
-		void				addWorkServiceBase(CServiceBaseImpl* pServiceBaseImpl);
-
 	private:
 		std::map<uint16_t, CServiceBaseImpl*>	m_mapServiceBase;
 		std::vector<CServiceBaseImpl*>			m_vecServiceBase;
-
-		std::list<CServiceBaseImpl*>			m_listWorkServiceBase;
-		std::set<uint16_t>						m_setWorkServiceBaseID;
-		std::mutex								m_lock;
-		std::condition_variable					m_cond;
 	};
 }

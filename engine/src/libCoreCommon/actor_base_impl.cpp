@@ -5,6 +5,7 @@
 #include "coroutine.h"
 #include "core_app.h"
 #include "service_base_impl.h"
+#include "ticker_runnable.h"
 
 #include "libCoreCommon/base_app.h"
 #include "libBaseCommon/defer.h"
@@ -56,7 +57,7 @@ namespace core
 
 	void CActorBaseImpl::registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
 	{
-		CCoreApp::Inst()->registerTicker(CTicker::eTT_Actor, this->getID(), pTicker, nStartTime, nIntervalTime, nContext);
+		CCoreApp::Inst()->registerTicker(CTicker::eTT_Actor, this->m_pServiceBaseImpl->getServiceID(), this->getID(), pTicker, nStartTime, nIntervalTime, nContext);
 	}
 
 	void CActorBaseImpl::unregisterTicker(CTicker* pTicker)
@@ -169,6 +170,25 @@ namespace core
 				uint64_t nCoroutineID = coroutine::create(0, [&callback, this, pMessage, sClientSessionInfo](uint64_t){ callback(this->m_pActorBase, sClientSessionInfo, pMessage.get()); });
 				coroutine::resume(nCoroutineID, 0);
 			}
+		}
+		else if (sActorMessagePacket.nType == eMT_TICKER)
+		{
+			CCoreTickerNode* pCoreTickerNode = reinterpret_cast<CCoreTickerNode*>(sActorMessagePacket.nSessionID);
+			if (pCoreTickerNode == nullptr)
+			{
+				PrintWarning("pCoreTickerNode == nullptr type: eMCT_TICKER");
+				return;
+			}
+
+			if (pCoreTickerNode->Value.m_pTicker == nullptr)
+			{
+				pCoreTickerNode->Value.release();
+				return;
+			}
+
+			CTicker* pTicker = pCoreTickerNode->Value.m_pTicker;
+			pTicker->getCallback()(pTicker->getContext());
+			pCoreTickerNode->Value.release();
 		}
 	}
 
