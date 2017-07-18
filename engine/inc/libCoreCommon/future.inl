@@ -39,7 +39,7 @@ namespace core
 	}
 
 	template<class T>
-	std::shared_ptr<T> CFuture<T>::getValue()
+	T* CFuture<T>::getValue()
 	{
 		return this->m_pContext->val;
 	}
@@ -73,7 +73,7 @@ namespace core
 	}
 
 	template<class T>
-	void CFuture<T>::then(const std::function<void(T*, uint32_t)>& fn)
+	void CFuture<T>::then(const std::function<void(const T*, uint32_t)>& fn)
 	{
 		if (this->m_pContext == nullptr || fn == nullptr)
 			return;
@@ -81,7 +81,7 @@ namespace core
 		this->m_pContext->callback = fn;
 
 		if (this->m_pContext->bReady && this->m_pContext->nErrorCode == 0)
-			this->m_pContext->callback(this->m_pContext->val.get(), this->m_pContext->nErrorCode);
+			this->m_pContext->callback(this->m_pContext->val, this->m_pContext->nErrorCode);
 	}
 
 	template<class T>
@@ -109,12 +109,12 @@ namespace core
 			sNewFuture.m_pContext->callback = pContext->callback;
 			// 在回调完成后如果返回的future已经准备好，并且回调函数也已经设置好了，就回调他，不然就没有机会回调了
 			if (sNewFuture.m_pContext->bReady && sNewFuture.m_pContext->callback != nullptr)
-				sNewFuture.m_pContext->callback(sNewFuture.m_pContext->val.get(), sNewFuture.m_pContext->nErrorCode);
+				sNewFuture.m_pContext->callback(sNewFuture.m_pContext->val, sNewFuture.m_pContext->nErrorCode);
 		};
 
 		// 在调用then时future已经可用了
 		if (this->m_pContext->bReady)
-			this->m_pContext->callback(this->m_pContext->val.get(), this->m_pContext->nErrorCode);
+			this->m_pContext->callback(this->m_pContext->val, this->m_pContext->nErrorCode);
 		
 		return CFuture<ValueType>(pContext);
 	}

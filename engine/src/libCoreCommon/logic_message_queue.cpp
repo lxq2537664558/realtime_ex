@@ -17,11 +17,6 @@ namespace core
 	{
 	}
 
-	bool CLogicMessageQueue::init()
-	{
-		return true;
-	}
-
 	void CLogicMessageQueue::send(const SMessagePacket& sMessagePacket)
 	{
 		PROFILING_GUARD(CLogicMessageQueue::send);

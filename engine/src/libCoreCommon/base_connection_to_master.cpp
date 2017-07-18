@@ -59,9 +59,9 @@ namespace core
 
 			smt_register_node_base_info netMsg1;
 			netMsg1.sNodeBaseInfo = CCoreApp::Inst()->getNodeBaseInfo();
-			netMsg1.vecServiceBaseInfo = CCoreApp::Inst()->getServiceBaseInfo();
+			netMsg1.vecServiceBaseInfo = CCoreApp::Inst()->getServiceBaseMgr()->getServiceBaseInfo();
 
-			base::CWriteBuf& writeBuf = CBaseApp::Inst()->getWriteBuf();
+			base::CWriteBuf& writeBuf = CCoreApp::Inst()->getWriteBuf();
 			netMsg1.pack(writeBuf);
 
 			this->send(eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());

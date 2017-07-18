@@ -76,7 +76,7 @@ namespace core
 
 	CServiceBase* CBaseApp::getServiceBase(uint16_t nServiceID) const
 	{
-		CServiceBaseImpl* pServiceBaseImpl = CCoreApp::Inst()->getServiceBaseMgr()->getServiceBase(nServiceID);
+		CServiceBaseImpl* pServiceBaseImpl = CCoreApp::Inst()->getServiceBaseMgr()->getServiceBaseByID(nServiceID);
 		if (pServiceBaseImpl == nullptr)
 			return nullptr;
 
@@ -91,11 +91,6 @@ namespace core
 	const std::string& CBaseApp::getConfigFileName() const
 	{
 		return CCoreApp::Inst()->getConfigFileName();
-	}
-
-	base::CWriteBuf& CBaseApp::getWriteBuf() const
-	{
-		return CCoreApp::Inst()->getWriteBuf();
 	}
 
 	void CBaseApp::doQuit()

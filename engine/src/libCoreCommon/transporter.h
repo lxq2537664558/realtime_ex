@@ -17,8 +17,6 @@ namespace core
 		CTransporter();
 		~CTransporter();
 
-		bool					init();
-
 		bool					invoke(CServiceBaseImpl* pServiceBaseImpl, EMessageTargetType eType, uint64_t nSessionID, uint64_t nFromID, uint64_t nToID, const google::protobuf::Message* pMessage);
 		bool					response(CServiceBaseImpl* pServiceBaseImpl, EMessageTargetType eType, uint64_t nSessionID, uint8_t nResult, uint64_t nToID, const google::protobuf::Message* pMessage);
 		

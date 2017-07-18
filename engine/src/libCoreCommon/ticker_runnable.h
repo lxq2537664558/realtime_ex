@@ -65,8 +65,6 @@ namespace core
 		CTickerRunnable();
 		virtual ~CTickerRunnable();
 
-		static CTickerRunnable*	Inst();
-
 		bool			init();
 
 		bool			registerTicker(uint8_t nType, uint16_t nFromServiceID, uint64_t nFromActorID, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);

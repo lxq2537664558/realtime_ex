@@ -44,9 +44,11 @@ namespace core
 		*/
 		virtual void		del();
 
+		
+		static void			registerClassInfo();
 
-		static void			registClassInfo(const std::string& szClassName, uint32_t nObjectSize, uint32_t nBatchCount, funCreateBaseObject pfCreateBaseObject, funDestroyBaseObject pfDestroyBaseObject);
-		static void			unRegistClassInfo();
+		static void			registerClassInfo(const std::string& szClassName, uint32_t nObjectSize, uint32_t nBatchCount, funCreateBaseObject pfCreateBaseObject, funDestroyBaseObject pfDestroyBaseObject);
+		static void			unRegisterClassInfo();
 
 		static SClassInfo*	getClassInfo(uint32_t nClassID);
 		static uint32_t		getClassID(const std::string& szClassName);
@@ -55,7 +57,7 @@ namespace core
 		static CBaseObject*	createObject(uint32_t nClassID);
 
 	private:
-		static std::map<uint32_t, SClassInfo>	s_mapClassInfo;
+		static std::map<uint32_t, SClassInfo>*	s_mapClassInfo;
 
 	private:
 		bool m_bDel;	// 这个Del标记主要是用来标记某一个基础对象是否需要被删除，这么做为了删除对象在一个地方统一进行，在当前流程中只是打一个标记，这样可以避免很多野指针问题，但是在编写类似获取对象的函数时需要把这个bDel标记考虑进去
@@ -75,7 +77,6 @@ public:\
 	friend void					Destroy##Class(core::CBaseObject* pObject);\
 	virtual const char*			getClassName() const;\
 	virtual uint32_t			getClassID() const;\
-	static void					registClassInfo();
 
 #define DEFINE_OBJECT(Class, nBatchCount)\
 	const char* Class::s_szClassName = _GET_CLASS_NAME(Class);\
@@ -97,10 +98,14 @@ public:\
 	{\
 		return s_nClassID;\
 	}\
-	void Class::registClassInfo()\
+	struct S##Class##Register\
 	{\
-		auto pfCreateBaseObject = std::bind(&create##Class, std::placeholders::_1);\
-		auto pfDestroyBaseObject = std::bind(&destroy##Class, std::placeholders::_1);\
-		core::CBaseObject::registClassInfo(s_szClassName, sizeof(Class), nBatchCount, pfCreateBaseObject, pfDestroyBaseObject);\
-	}\
-	Class::registClassInfo()
+		S##Class##Register()\
+		{\
+			CBaseObject::registerClassInfo();\
+			auto pfCreateBaseObject = std::bind(&create##Class, std::placeholders::_1);\
+			auto pfDestroyBaseObject = std::bind(&destroy##Class, std::placeholders::_1);\
+			core::CBaseObject::registerClassInfo(Class::s_szClassName, sizeof(Class), nBatchCount, pfCreateBaseObject, pfDestroyBaseObject);\
+		}\
+	};\
+	S##Class##Register s_##Class##Register;

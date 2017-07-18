@@ -15,8 +15,8 @@
 
 namespace core
 {
-	CMessageDispatcher::CMessageDispatcher()
-		: m_pServiceBaseImpl(nullptr)
+	CMessageDispatcher::CMessageDispatcher(CServiceBaseImpl* pServiceBaseImpl)
+		: m_pServiceBaseImpl(pServiceBaseImpl)
 	{
 
 	}
@@ -24,15 +24,6 @@ namespace core
 	CMessageDispatcher::~CMessageDispatcher()
 	{
 
-	}
-
-	bool CMessageDispatcher::init(CServiceBaseImpl* pServiceBaseImpl)
-	{
-		DebugAstEx(pServiceBaseImpl != nullptr, false);
-
-		this->m_pServiceBaseImpl = pServiceBaseImpl;
-
-		return true;
 	}
 
 	void CMessageDispatcher::dispatch(uint64_t nFromSocketID, uint16_t nFromNodeID, const SMCT_RECV_SOCKET_DATA* pContext)

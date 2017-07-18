@@ -26,19 +26,12 @@ namespace core
 	CTickerRunnable::CTickerRunnable()
 		: m_pThreadBase(nullptr)
 	{
+		this->m_nLogicTime = base::getGmtTime();
 	}
 
 	CTickerRunnable::~CTickerRunnable()
 	{
 		SAFE_RELEASE(this->m_pThreadBase);
-	}
-
-	CTickerRunnable* CTickerRunnable::Inst()
-	{
-		if (g_pTickerRunnable == nullptr)
-			g_pTickerRunnable = new CTickerRunnable();
-
-		return g_pTickerRunnable;
 	}
 
 	bool CTickerRunnable::init()
@@ -47,14 +40,9 @@ namespace core
 		return nullptr != this->m_pThreadBase;
 	}
 
-	void CTickerRunnable::release()
-	{
-		delete g_pTickerRunnable;
-		g_pTickerRunnable = nullptr;
-	}
-
 	bool CTickerRunnable::onInit()
 	{
+		
 		return true;
 	}
 
@@ -73,7 +61,7 @@ namespace core
 		sMessagePacket.pData = nullptr;
 		sMessagePacket.nDataSize = 0;
 
-		CLogicRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
+		CCoreApp::Inst()->getLogicRunnable()->getMessageQueue()->send(sMessagePacket);
 
 		int64_t nEndTime = base::getGmtTime();
 		int64_t nDeltaTime = nEndTime - nCurTime;
@@ -173,7 +161,9 @@ namespace core
 			uint32_t nPos = (uint32_t)(this->m_nLogicTime&__TIME_NEAR_MASK);
 			auto& listTicker = this->m_listNearTicker[nPos];
 			this->m_vecTempTickerNode.clear();
-			this->m_lock.lock();
+
+			std::unique_lock<base::spin_lock> lock(this->m_lock);
+			
 			while (!listTicker.empty())
 			{
 				CCoreTickerNode* pCoreTickerNode = listTicker.getHead();
@@ -194,7 +184,6 @@ namespace core
 			}
 
 			this->cascadeTicker();
-			this->m_lock.lock();
 		}
 	}
 
@@ -262,9 +251,9 @@ namespace core
 
 		// 发送到消息队列，另外消息队列取出定时器对象的时候如果发现是一次性定时器，需要反注册
 		if (pCoreTickerNode->Value.m_nType == CTicker::eTT_Service || pCoreTickerNode->Value.m_nType == CTicker::eTT_Actor)
-			CLogicRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
+			CCoreApp::Inst()->getLogicRunnable()->getMessageQueue()->send(sMessagePacket);
 		else
-			CNetRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
+			CCoreApp::Inst()->getNetRunnable()->getMessageQueue()->send(sMessagePacket);
 	}
 
 	CCoreTickerInfo::CCoreTickerInfo()
@@ -275,6 +264,11 @@ namespace core
 		this->m_nIntervalTime = 0;
 		this->m_nType = CTicker::eTT_None;
 		this->m_nRef = 1;
+	}
+
+	CCoreTickerInfo::~CCoreTickerInfo()
+	{
+		DebugAst(this->m_nRef == 0);
 	}
 
 	void CCoreTickerInfo::addRef()

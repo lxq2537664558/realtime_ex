@@ -22,7 +22,7 @@ namespace core
 		CServiceBaseImpl();
 		~CServiceBaseImpl();
 
-		bool					init(const SServiceBaseInfo& sServiceBaseInfo, CServiceBase* pServiceBase);
+		bool					init(CServiceBase* pServiceBase, const SServiceBaseInfo& sServiceBaseInfo);
 		void					quit();
 		void					run();
 
@@ -46,20 +46,20 @@ namespace core
 		void					setServiceIDConverter(CServiceIDConverter* pServiceIDConverter);
 		CServiceIDConverter*	getServiceIDConverter() const;
 
-		void					registerServiceMessageHandler(const std::string& szMessageName, const std::function<void(SSessionInfo, google::protobuf::Message*)>& callback);
-		void					registerServiceForwardHandler(const std::string& szMessageName, const std::function<void(SClientSessionInfo, google::protobuf::Message*)>& callback);
+		void					registerServiceMessageHandler(const std::string& szMessageName, const std::function<void(SSessionInfo, const google::protobuf::Message*)>& callback);
+		void					registerServiceForwardHandler(const std::string& szMessageName, const std::function<void(SClientSessionInfo, const google::protobuf::Message*)>& callback);
 		
 		void					registerActorMessageHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SSessionInfo, const google::protobuf::Message*)>& callback);
 		void					registerActorForwardHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SClientSessionInfo, const google::protobuf::Message*)>& callback);
 		
-		std::function<void(SSessionInfo, google::protobuf::Message*)>&
+		std::function<void(SSessionInfo, const google::protobuf::Message*)>&
 								getServiceMessageHandler(const std::string& szMessageName);
-		std::function<void(SClientSessionInfo, google::protobuf::Message*)>&
+		std::function<void(SClientSessionInfo, const google::protobuf::Message*)>&
 								getServiceForwardHandler(const std::string& szMessageName);
 
-		std::function<void(CActorBase*, SSessionInfo, google::protobuf::Message*)>&
+		std::function<void(CActorBase*, SSessionInfo, const google::protobuf::Message*)>&
 								getActorMessageHandler(const std::string& szMessageName);
-		std::function<void(CActorBase*, SClientSessionInfo, google::protobuf::Message*)>&
+		std::function<void(CActorBase*, SClientSessionInfo, const google::protobuf::Message*)>&
 								getActorForwardHandler(const std::string& szMessageName);
 
 		void					setServiceConnectCallback(const std::function<void(uint16_t)>& callback);
@@ -69,12 +69,6 @@ namespace core
 		std::function<void(uint16_t)>&
 								getServiceDisconnectCallback();
 
-		const std::string&		getConfigFileName() const;
-		
-		base::CWriteBuf&		getWriteBuf() const;
-		
-		uint32_t				getQPS() const;
-		
 		EServiceRunState		getRunState() const;
 		
 	private:
@@ -87,9 +81,9 @@ namespace core
 		CActorIDConverter*		m_pActorIDConverter;
 		CServiceIDConverter*	m_pServiceIDConverter;
 		
-		std::map<std::string, std::function<void(SSessionInfo, google::protobuf::Message*)>>		
+		std::map<std::string, std::function<void(SSessionInfo, const google::protobuf::Message*)>>
 								m_mapServiceMessageHandler;
-		std::map<std::string, std::function<void(SClientSessionInfo, google::protobuf::Message*)>>	
+		std::map<std::string, std::function<void(SClientSessionInfo, const google::protobuf::Message*)>>
 								m_mapServiceForwardHandler;
 
 		std::map<std::string, std::function<void(CActorBase*, SSessionInfo, const google::protobuf::Message*)>>

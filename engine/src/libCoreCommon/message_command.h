@@ -19,6 +19,7 @@ namespace core
 		eMCT_NOTIFY_SOCKET_CONNECT_FAIL,
 		eMCT_SEND_SOCKET_DATA,
 		eMCT_RECV_SOCKET_DATA,
+		eMCT_INSIDE_DATA,
 		eMCT_BROADCAST_SOCKET_DATA1,
 		eMCT_BROADCAST_SOCKET_DATA2,
 		eMCT_TICKER,
@@ -45,7 +46,7 @@ namespace core
 		uint32_t			nType;
 		uint32_t			nSendBufferSize;
 		uint32_t			nRecvBufferSize;
-		MessageParser		mssageParser;
+		MessageParser		messageParser;
 	};
 
 	struct SMCT_REQUEST_SOCKET_SHUTDOWN

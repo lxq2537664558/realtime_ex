@@ -37,8 +37,7 @@ namespace core
 	{
 		DebugAstEx(pMessage != nullptr, false);
 
-		std::vector<uint16_t> vecServiceID;
-		CCoreApp::Inst()->getCoreOtherNodeProxy()->getServiceIDByTypeName(szServiceType, vecServiceID);
+		const std::vector<uint16_t> vecServiceID = CCoreApp::Inst()->getCoreOtherNodeProxy()->getServiceIDByTypeName(szServiceType);
 		for (size_t i = 0; i < vecServiceID.size(); ++i)
 		{
 			this->send(eMTT_Service, vecServiceID[i], pMessage);

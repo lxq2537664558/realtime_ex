@@ -1,13 +1,14 @@
 #include "stdafx.h"
 #include "base_connection.h"
 #include "base_connection_mgr.h"
-#include "base_app.h"
 #include "core_common.h"
 #include "message_command.h"
 #include "net_runnable.h"
+#include "core_app.h"
 
 #include "libBaseCommon/debug_helper.h"
 #include "libBaseCommon/base_time.h"
+
 
 
 #define _HEART_BEAT_TIME 5000
@@ -52,7 +53,7 @@ namespace core
 		sMessagePacket.pData = pContext;
 		sMessagePacket.nDataSize = sizeof(SMCT_SEND_SOCKET_DATA) + nSize;
 
-		CNetRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
+		CCoreApp::Inst()->getNetRunnable()->getMessageQueue()->send(sMessagePacket);
 	}
 
 	void CBaseConnection::send(uint8_t nMessageType, const void* pData, uint16_t nSize, const void* pExtraBuf, uint16_t nExtraSize)
@@ -73,7 +74,7 @@ namespace core
 		sMessagePacket.pData = pContext;
 		sMessagePacket.nDataSize = sizeof(SMCT_SEND_SOCKET_DATA) + nSize + nExtraSize;
 
-		CNetRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
+		CCoreApp::Inst()->getNetRunnable()->getMessageQueue()->send(sMessagePacket);
 	}
 
 	void CBaseConnection::shutdown(base::ENetConnecterCloseType eType, const std::string& szMsg)
@@ -88,7 +89,7 @@ namespace core
 		sMessagePacket.pData = pContext;
 		sMessagePacket.nDataSize = sizeof(SMCT_REQUEST_SOCKET_SHUTDOWN);
 
-		CNetRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
+		CCoreApp::Inst()->getNetRunnable()->getMessageQueue()->send(sMessagePacket);
 	}
 
 	void CBaseConnection::enableHeartbeat(bool bEnable)
@@ -102,7 +103,7 @@ namespace core
 		sMessagePacket.pData = pContext;
 		sMessagePacket.nDataSize = sizeof(SMCT_ENABLE_HEARTBEAT);
 
-		CNetRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
+		CCoreApp::Inst()->getNetRunnable()->getMessageQueue()->send(sMessagePacket);
 	}
 
 	uint64_t CBaseConnection::getID() const

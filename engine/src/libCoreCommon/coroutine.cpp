@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "coroutine.h"
 #include "coroutine_impl.h"
 #include "coroutine_mgr.h"
@@ -6,100 +7,103 @@
 
 namespace core
 {
-	void resume(uint64_t nID, uint64_t nContext)
+	namespace coroutine
 	{
-		CCoroutineImpl* pCoroutineImpl = getCoroutineMgr()->getCoroutine(nID);
-		if (nullptr == pCoroutineImpl)
-			return;
+		void resume(uint64_t nID, uint64_t nContext)
+		{
+			CCoroutineImpl* pCoroutineImpl = getCoroutineMgr()->getCoroutine(nID);
+			if (nullptr == pCoroutineImpl)
+				return;
 
-		pCoroutineImpl->resume(nContext);
-	}
+			pCoroutineImpl->resume(nContext);
+		}
 
-	uint64_t yield()
-	{
-		return getCoroutineMgr()->getCurrentCoroutine()->yield();
-	}
+		uint64_t yield()
+		{
+			return getCoroutineMgr()->getCurrentCoroutine()->yield();
+		}
 
-	uint32_t getState(uint64_t nID)
-	{
-		CCoroutineImpl* pCoroutineImpl = getCoroutineMgr()->getCoroutine(nID);
-		if (nullptr == pCoroutineImpl)
-			return eCS_DEAD;
+		uint32_t getState(uint64_t nID)
+		{
+			CCoroutineImpl* pCoroutineImpl = getCoroutineMgr()->getCoroutine(nID);
+			if (nullptr == pCoroutineImpl)
+				return eCS_DEAD;
 
-		return pCoroutineImpl->getState();
-	}
+			return pCoroutineImpl->getState();
+		}
 
-	uint64_t getCurrentID()
-	{
-		CCoroutineImpl* pCoroutineImpl = getCoroutineMgr()->getCurrentCoroutine();
-		if (nullptr == pCoroutineImpl)
-			return 0;
+		uint64_t getCurrentID()
+		{
+			CCoroutineImpl* pCoroutineImpl = getCoroutineMgr()->getCurrentCoroutine();
+			if (nullptr == pCoroutineImpl)
+				return 0;
 
-		return pCoroutineImpl->getCoroutineID();
-	}
+			return pCoroutineImpl->getCoroutineID();
+		}
 
-	uint64_t create(uint32_t nStackSize, const std::function<void(uint64_t)>& fn)
-	{
-		CCoroutineImpl* pCoroutineImpl = getCoroutineMgr()->createCoroutine(nStackSize, fn);
-		if (nullptr == pCoroutineImpl)
-			return 0;
+		uint64_t create(uint32_t nStackSize, const std::function<void(uint64_t)>& fn)
+		{
+			CCoroutineImpl* pCoroutineImpl = getCoroutineMgr()->createCoroutine(nStackSize, fn);
+			if (nullptr == pCoroutineImpl)
+				return 0;
 
-		return pCoroutineImpl->getCoroutineID();
-	}
+			return pCoroutineImpl->getCoroutineID();
+		}
 
-	void close(uint64_t nID)
-	{
-		CCoroutineMgr* pCoroutineMgr = getCoroutineMgr();
-		CCoroutineImpl* pCoroutineImpl = pCoroutineMgr->getCurrentCoroutine();
-		if (nullptr == pCoroutineImpl)
-			return;
+		void close(uint64_t nID)
+		{
+			CCoroutineMgr* pCoroutineMgr = getCoroutineMgr();
+			CCoroutineImpl* pCoroutineImpl = pCoroutineMgr->getCurrentCoroutine();
+			if (nullptr == pCoroutineImpl)
+				return;
 
-		DebugAst(pCoroutineImpl->getCoroutineID() != nID);
+			DebugAst(pCoroutineImpl->getCoroutineID() != nID);
 
-		pCoroutineImpl = pCoroutineMgr->getCoroutine(nID);
-		if (nullptr == pCoroutineImpl)
-			return;
-	}
+			pCoroutineImpl = pCoroutineMgr->getCoroutine(nID);
+			if (nullptr == pCoroutineImpl)
+				return;
+		}
 
-	void setLocalData(uint64_t nID, const char* szName, uint64_t nData)
-	{
-		CCoroutineImpl* pCoroutineImpl = getCoroutineMgr()->getCoroutine(nID);
-		if (nullptr == pCoroutineImpl)
-			return;
+		void setLocalData(uint64_t nID, const char* szName, uint64_t nData)
+		{
+			CCoroutineImpl* pCoroutineImpl = getCoroutineMgr()->getCoroutine(nID);
+			if (nullptr == pCoroutineImpl)
+				return;
 
-		pCoroutineImpl->setLocalData(szName, nData);
-	}
+			pCoroutineImpl->setLocalData(szName, nData);
+		}
 
-	bool getLocalData(uint64_t nID, const char* szName, uint64_t& nData)
-	{
-		CCoroutineImpl* pCoroutineImpl = getCoroutineMgr()->getCoroutine(nID);
-		if (nullptr == pCoroutineImpl)
-			return false;
+		bool getLocalData(uint64_t nID, const char* szName, uint64_t& nData)
+		{
+			CCoroutineImpl* pCoroutineImpl = getCoroutineMgr()->getCoroutine(nID);
+			if (nullptr == pCoroutineImpl)
+				return false;
 
-		return pCoroutineImpl->getLocalData(szName, nData);
-	}
+			return pCoroutineImpl->getLocalData(szName, nData);
+		}
 
-	void delLocalData(uint64_t nID, const char* szName)
-	{
-		CCoroutineImpl* pCoroutineImpl = getCoroutineMgr()->getCoroutine(nID);
-		if (nullptr == pCoroutineImpl)
-			return;
+		void delLocalData(uint64_t nID, const char* szName)
+		{
+			CCoroutineImpl* pCoroutineImpl = getCoroutineMgr()->getCoroutine(nID);
+			if (nullptr == pCoroutineImpl)
+				return;
 
-		pCoroutineImpl->delLocalData(szName);
-	}
+			pCoroutineImpl->delLocalData(szName);
+		}
 
-	void init(uint32_t nStackSize)
-	{
-		getCoroutineMgr()->init(nStackSize);
-	}
+		void init(uint32_t nStackSize)
+		{
+			getCoroutineMgr()->init(nStackSize);
+		}
 
-	uint32_t getCoroutineCount()
-	{
-		return getCoroutineMgr()->getCoroutineCount();
-	}
+		uint32_t getCoroutineCount()
+		{
+			return getCoroutineMgr()->getCoroutineCount();
+		}
 
-	uint64_t getTotalStackSize()
-	{
-		return getCoroutineMgr()->getTotalStackSize();
+		uint64_t getTotalStackSize()
+		{
+			return getCoroutineMgr()->getTotalStackSize();
+		}
 	}
 }

@@ -18,7 +18,7 @@ namespace core
 	CActorBase::~CActorBase()
 	{
 		if (this->m_pActorBaseImpl != nullptr)
-			this->m_pActorBaseImpl->getServiceBase()->getActorScheduler()->destroyActorBase(this->m_pActorBaseImpl);
+			this->m_pActorBaseImpl->getServiceBaseImpl()->getActorScheduler()->destroyActorBase(this->m_pActorBaseImpl);
 	}
 
 	uint64_t CActorBase::getID() const
@@ -40,12 +40,12 @@ namespace core
 	{
 		DebugAstEx(pMessage != nullptr, false);
 
-		return CCoreApp::Inst()->getTransporter()->invoke_a(this->m_pActorBaseImpl->getServiceBase(), eType, 0, this->getID(), nID, pMessage);
+		return CCoreApp::Inst()->getTransporter()->invoke_a(this->m_pActorBaseImpl->getServiceBaseImpl(), eType, 0, this->getID(), nID, pMessage);
 	}
 
 	bool CActorBase::broadcast(const std::string& szServiceType, const google::protobuf::Message* pMessage)
 	{
-		return this->m_pActorBaseImpl->getServiceBase()->getServiceInvoker()->broadcast(szServiceType, pMessage);
+		return this->m_pActorBaseImpl->getServiceBaseImpl()->getServiceInvoker()->broadcast(szServiceType, pMessage);
 	}
 
 	bool CActorBase::send(const SClientSessionInfo& sClientSessionInfo, const google::protobuf::Message* pMessage)
@@ -60,7 +60,7 @@ namespace core
 
 	void CActorBase::response(const SSessionInfo& sSessionInfo, const google::protobuf::Message* pMessage)
 	{
-		this->m_pActorBaseImpl->getServiceBase()->getServiceInvoker()->response(sSessionInfo, pMessage);
+		this->m_pActorBaseImpl->getServiceBaseImpl()->getServiceInvoker()->response(sSessionInfo, pMessage);
 	}
 
 	void CActorBase::release()
@@ -76,7 +76,7 @@ namespace core
 	{
 		uint64_t nSessionID = CCoreApp::Inst()->getTransporter()->genSessionID();
 
-		if (!CCoreApp::Inst()->getTransporter()->invoke_a(this->m_pActorBaseImpl->getServiceBase(), eType, nSessionID, this->getID(), nID, pMessage))
+		if (!CCoreApp::Inst()->getTransporter()->invoke_a(this->m_pActorBaseImpl->getServiceBaseImpl(), eType, nSessionID, this->getID(), nID, pMessage))
 			return false;
 
 		SPendingResponseInfo* pPendingResponseInfo = this->m_pActorBaseImpl->addPendingResponseInfo(nSessionID, nCoroutineID, nID, pMessage->GetTypeName(), callback);

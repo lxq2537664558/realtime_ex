@@ -27,12 +27,12 @@ namespace core
 
 	}
 
-	void CServiceBase::registerServiceMessageHandler(const std::string& szMessageName, const std::function<void(SSessionInfo, google::protobuf::Message*)>& callback)
+	void CServiceBase::registerServiceMessageHandler(const std::string& szMessageName, const std::function<void(SSessionInfo, const google::protobuf::Message*)>& callback)
 	{
 		this->m_pServiceBaseImpl->registerServiceMessageHandler(szMessageName, callback);
 	}
 
-	void CServiceBase::registerServiceForwardHandler(const std::string& szMessageName, const std::function<void(SClientSessionInfo, google::protobuf::Message*)>& callback)
+	void CServiceBase::registerServiceForwardHandler(const std::string& szMessageName, const std::function<void(SClientSessionInfo, const google::protobuf::Message*)>& callback)
 	{
 		this->m_pServiceBaseImpl->registerServiceForwardHandler(szMessageName, callback);
 	}
@@ -89,12 +89,9 @@ namespace core
 			return nullptr;
 		}
 
-		if (!pActorBase->onInit(pContext))
-		{
-			pActorBase->del();
-			return nullptr;
-		}
-
+		uint64_t nCoroutineID = coroutine::create(0, [pActorBase, pContext](uint64_t){ pActorBase->onInit(pContext); });
+		coroutine::resume(nCoroutineID, 0);
+		
 		PrintInfo("create actor id: "UINT64FMT, pActorBase->getID());
 
 		return pActorBase;

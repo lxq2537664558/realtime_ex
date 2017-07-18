@@ -29,6 +29,9 @@ namespace core
 		, m_insideQueue(_DEFAULT_MESSAGE_QUEUE)
 		, m_pBaseConnectionMgr(nullptr)
 	{
+		this->m_pMessageQueue = new CLogicMessageQueue();
+
+		this->m_pBaseConnectionMgr = new CBaseConnectionMgr();
 	}
 
 	CLogicRunnable::~CLogicRunnable()
@@ -38,36 +41,14 @@ namespace core
 		SAFE_RELEASE(this->m_pThreadBase);
 	}
 
-	CLogicRunnable* CLogicRunnable::Inst()
-	{
-		if (g_pLogicRunnable == nullptr)
-			g_pLogicRunnable = new CLogicRunnable();
-
-		return g_pLogicRunnable;
-	}
-
 	bool CLogicRunnable::init()
 	{
-		this->m_pMessageQueue = new CLogicMessageQueue();
-		if (!this->m_pMessageQueue->init())
-			return false;
-
-		this->m_pBaseConnectionMgr = new CBaseConnectionMgr();
-		if (!this->m_pBaseConnectionMgr->init())
-			return false;
-
 		const SNodeBaseInfo& sNodeBaseInfo = CCoreApp::Inst()->getNodeBaseInfo();
 
 		this->m_pBaseConnectionMgr->listen(sNodeBaseInfo.szHost, sNodeBaseInfo.nPort, eBCT_ConnectionFromOtherNode, "", sNodeBaseInfo.nSendBufSize, sNodeBaseInfo.nRecvBufSize, default_client_message_parser);
 
 		this->m_pThreadBase = base::CThreadBase::createNew(this);
 		return nullptr != this->m_pThreadBase;
-	}
-
-	void CLogicRunnable::release()
-	{
-		delete g_pLogicRunnable;
-		g_pLogicRunnable = nullptr;
 	}
 
 	CLogicMessageQueue* CLogicRunnable::getMessageQueue() const
@@ -174,8 +155,8 @@ namespace core
 				}
 				if (bQuit)
 				{
-					CNetRunnable::Inst()->quit();
-					CTickerRunnable::Inst()->quit();
+					CCoreApp::Inst()->getNetRunnable()->quit();
+					CCoreApp::Inst()->getTickerRunnable()->quit();
 
 					return false;
 				}
@@ -254,7 +235,7 @@ namespace core
 						}
 					}
 
-					CServiceBaseImpl* pServiceBaseImpl = CCoreApp::Inst()->getServiceBaseMgr()->getServiceBase(pContext->nToServiceID);
+					CServiceBaseImpl* pServiceBaseImpl = CCoreApp::Inst()->getServiceBaseMgr()->getServiceBaseByID(pContext->nToServiceID);
 					if (pServiceBaseImpl == nullptr)
 					{
 						PrintWarning("pServiceBaseImpl == nullptr type: eMCT_RECV_SOCKET_DATA");
@@ -267,6 +248,29 @@ namespace core
 				{
 					pBaseConnection->onDispatch(pContext->nMessageType, pContext->pData, pContext->nDataSize, pContext);
 				}
+				char* pBuf = reinterpret_cast<char*>(sMessagePacket.pData);
+				SAFE_DELETE_ARRAY(pBuf);
+			}
+			break;
+
+		case eMCT_INSIDE_DATA:
+			{
+				PROFILING_GUARD(eMCT_INSIDE_DATA)
+				SMCT_RECV_SOCKET_DATA* pContext = reinterpret_cast<SMCT_RECV_SOCKET_DATA*>(sMessagePacket.pData);
+				if (pContext == nullptr)
+				{
+					PrintWarning("context == nullptr type: eMCT_RECV_SOCKET_DATA");
+					return true;
+				}
+
+				CServiceBaseImpl* pServiceBaseImpl = CCoreApp::Inst()->getServiceBaseMgr()->getServiceBaseByID(pContext->nToServiceID);
+				if (pServiceBaseImpl == nullptr)
+				{
+					PrintWarning("pServiceBaseImpl == nullptr type: eMCT_RECV_SOCKET_DATA");
+					return true;
+				}
+
+				pServiceBaseImpl->getMessageDispatcher()->dispatch(0, CCoreApp::Inst()->getNodeID(), pContext);
 				char* pBuf = reinterpret_cast<char*>(sMessagePacket.pData);
 				SAFE_DELETE_ARRAY(pBuf);
 			}
@@ -297,7 +301,7 @@ namespace core
 				else
 				{
 					CTicker* pTicker = pCoreTickerNode->Value.m_pTicker;
-					CServiceBaseImpl* pServiceBaseImpl = CCoreApp::Inst()->getServiceBaseMgr()->getServiceBase(pTicker->getServiceID());
+					CServiceBaseImpl* pServiceBaseImpl = CCoreApp::Inst()->getServiceBaseMgr()->getServiceBaseByID(pTicker->getServiceID());
 					if (pServiceBaseImpl == nullptr)
 					{
 						PrintWarning("pServiceBaseImpl == nullptr type: eMCT_TICKER");

@@ -7,7 +7,7 @@
 
 namespace core
 {
-	std::map<uint32_t, SClassInfo> CBaseObject::s_mapClassInfo;
+	std::map<uint32_t, SClassInfo>* CBaseObject::s_mapClassInfo;
 
 	CBaseObject::CBaseObject()
 		: m_bDel(false)
@@ -19,37 +19,44 @@ namespace core
 
 	}
 
+	void CBaseObject::registerClassInfo()
+	{
+		if (s_mapClassInfo == nullptr)
+			s_mapClassInfo = new std::map<uint32_t, SClassInfo>();
+	}
+
 	void CBaseObject::del()
 	{
 		this->m_bDel = true;
 	}
 
-	void CBaseObject::registClassInfo(const std::string& szClassName, uint32_t nObjectSize, uint32_t nBatchCount, funCreateBaseObject pfCreateBaseObject, funDestroyBaseObject pfDestroyBaseObject)
+	void CBaseObject::registerClassInfo(const std::string& szClassName, uint32_t nObjectSize, uint32_t nBatchCount, funCreateBaseObject pfCreateBaseObject, funDestroyBaseObject pfDestroyBaseObject)
 	{
 		uint32_t nClassID = CBaseObject::getClassID(szClassName);
-		DebugAst(s_mapClassInfo.find(nClassID) == s_mapClassInfo.end());
-		SClassInfo& classInfo = s_mapClassInfo[nClassID];
+		DebugAst(s_mapClassInfo->find(nClassID) == s_mapClassInfo->end());
+		SClassInfo& classInfo = (*s_mapClassInfo)[nClassID];
 		classInfo.szClassName = szClassName;
 		classInfo.nClassID = nClassID;
 		classInfo.pfCreateBaseObject = pfCreateBaseObject;
 		classInfo.pfDestroyBaseObject = pfDestroyBaseObject;
 		classInfo.pFixMemoryPool = new CFixMemoryPool(nObjectSize, nBatchCount);
-		PrintInfo("CBaseObject::registClassInfo %s", szClassName.c_str());
 	}
 
-	void CBaseObject::unRegistClassInfo()
+	void CBaseObject::unRegisterClassInfo()
 	{
-		for (auto iter = s_mapClassInfo.begin(); iter != s_mapClassInfo.end(); ++iter)
+		for (auto iter = s_mapClassInfo->begin(); iter != s_mapClassInfo->end(); ++iter)
 		{
 			SClassInfo& classInfo = iter->second;
 			SAFE_DELETE(classInfo.pFixMemoryPool);
 		}
+
+		SAFE_DELETE(s_mapClassInfo);
 	}
 
 	SClassInfo* CBaseObject::getClassInfo(uint32_t nClassID)
 	{
-		auto iter = s_mapClassInfo.find(nClassID);
-		if (iter == s_mapClassInfo.end())
+		auto iter = s_mapClassInfo->find(nClassID);
+		if (iter == s_mapClassInfo->end())
 			return nullptr;
 
 		return &iter->second;

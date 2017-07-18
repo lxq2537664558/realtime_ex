@@ -26,9 +26,6 @@
 #include "monitor.h"
 #include "base_connection_mgr.h"
 #include "base_connection.h"
-#include "ticker_runnable.h"
-#include "net_runnable.h"
-#include "logic_runnable.h"
 #include "message_command.h"
 
 #include "tinyxml2/tinyxml2.h"
@@ -37,6 +34,7 @@
 #define _DEFAULT_HEARTBEAT_LIMIT	3
 #define _DEFAULT_HEARTBEAT_TIME		10
 #define _DEFAULT_SAMPLING_TIME		1000
+#define _DEFAULT_INVOKE_TIMEOUT	30*1000
 
 #ifndef _WIN32
 // 环境变量
@@ -98,12 +96,19 @@ namespace core
 		, m_nQuiting(0)
 		, m_nTotalSamplingTime(0)
 		, m_nCycleCount(0)
-		, m_nHeartbeatLimit(0)
-		, m_nHeartbeatTime(0)
+		, m_nHeartbeatLimit(_DEFAULT_HEARTBEAT_LIMIT)
+		, m_nHeartbeatTime(_DEFAULT_HEARTBEAT_TIME)
 		, m_nSamplingTime(_DEFAULT_SAMPLING_TIME)
+		, m_nInvokeTimeout(_DEFAULT_INVOKE_TIMEOUT)
 		, m_nQPS(0)
 		, m_pServiceBaseMgr(nullptr)
+		, m_pLogicRunnable(nullptr)
+		, m_pNetRunnable(nullptr)
+		, m_pTickerRunnable(nullptr)
+		, m_pTransporter(nullptr)
+		, m_pCoreOtherNodeProxy(nullptr)
 	{
+
 	}
 
 	CCoreApp::~CCoreApp()
@@ -129,6 +134,10 @@ namespace core
 		if (!this->init())
 			return false;
 
+		this->m_pLogicRunnable->join();
+		this->m_pTickerRunnable->join();
+		this->m_pNetRunnable->join();
+
 		this->destroy();
 
 		base::uninitProcessExceptionHander();
@@ -138,33 +147,22 @@ namespace core
 
 	void CCoreApp::registerTicker(uint8_t nType, uint16_t nFromServiceID, uint64_t nFromActorID, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
 	{
-		CTickerRunnable::Inst()->registerTicker(nType, nFromServiceID, nFromActorID, pTicker, nStartTime, nIntervalTime, nContext);
+		this->m_pTickerRunnable->registerTicker(nType, nFromServiceID, nFromActorID, pTicker, nStartTime, nIntervalTime, nContext);
 	}
 
 	void CCoreApp::unregisterTicker(CTicker* pTicker)
 	{
-		CTickerRunnable::Inst()->unregisterTicker(pTicker);
+		this->m_pTickerRunnable->unregisterTicker(pTicker);
 	}
 
 	CBaseConnectionMgr* CCoreApp::getBaseConnectionMgr() const
 	{
-		return CLogicRunnable::Inst()->getBaseConnectionMgr();
+		return this->m_pLogicRunnable->getBaseConnectionMgr();
 	}
 
 	CServiceBaseMgr* CCoreApp::getServiceBaseMgr() const
 	{
 		return this->m_pServiceBaseMgr;
-	}
-
-	bool CCoreApp::isOwnerService(uint16_t nServiceID) const
-	{
-		for (size_t i = 0; i < this->m_vecServiceBaseInfo.size(); ++i)
-		{
-			if (this->m_vecServiceBaseInfo[i].nID == nServiceID)
-				return true;
-		}
-		
-		return false;
 	}
 
 	const std::string& CCoreApp::getConfigFileName() const
@@ -314,16 +312,16 @@ namespace core
 
 		base::debugLog(pLogXML->IntAttribute("debug") != 0);
 
+		this->m_pTickerRunnable = new CTickerRunnable();
+		this->m_pNetRunnable = new CNetRunnable();
+		this->m_pLogicRunnable = new CLogicRunnable();
+
 		bool bProfiling = false;
 		tinyxml2::XMLElement* pProfilingXML = pBaseInfoXML->FirstChildElement("profiling");
 		if (pProfilingXML != nullptr)
 		{
 			this->m_nSamplingTime = (uint32_t)pProfilingXML->IntAttribute("sampling_time");
 			bProfiling = true;
-		}
-		else
-		{
-			this->m_nSamplingTime = _DEFAULT_SAMPLING_TIME;
 		}
 		
 		if (!base::initProfiling(bProfiling))
@@ -360,16 +358,6 @@ namespace core
 		this->m_sNodeBaseInfo.nPort = (uint16_t)pNodeInfoXML->UnsignedAttribute("port");
 		this->m_sNodeBaseInfo.nRecvBufSize = pNodeInfoXML->UnsignedAttribute("recv_buf_size");
 		this->m_sNodeBaseInfo.nSendBufSize = pNodeInfoXML->UnsignedAttribute("send_buf_size");
-
-		for (tinyxml2::XMLElement* pServiceInfoXML = pNodeInfoXML->FirstChildElement("service_info"); pServiceInfoXML != nullptr; pServiceInfoXML = pServiceInfoXML->NextSiblingElement("service_info"))
-		{
-			SServiceBaseInfo sServiceBaseInfo;
-			sServiceBaseInfo.nID = (uint16_t)pServiceInfoXML->UnsignedAttribute("service_id");
-			sServiceBaseInfo.szName = pServiceInfoXML->Attribute("service_name");
-			sServiceBaseInfo.szType = pServiceInfoXML->Attribute("service_type");
-			sServiceBaseInfo.szClassName = pServiceInfoXML->Attribute("service_class_name");
-			this->m_vecServiceBaseInfo.push_back(sServiceBaseInfo);
-		}
 		
 		// 加载服务连接心跳信息
 		tinyxml2::XMLElement* pHeartbeatXML = pBaseInfoXML->FirstChildElement("heartbeat");
@@ -378,37 +366,41 @@ namespace core
 			this->m_nHeartbeatLimit = pHeartbeatXML->UnsignedAttribute("heartbeat_limit");
 			this->m_nHeartbeatTime = pHeartbeatXML->UnsignedAttribute("heartbeat_time");
 		}
-		else
-		{
-			this->m_nHeartbeatLimit = _DEFAULT_HEARTBEAT_LIMIT;
-			this->m_nHeartbeatTime = _DEFAULT_HEARTBEAT_TIME;
-		}
 
 		this->m_tickerQPS.setCallback(std::bind(&CCoreApp::onQPS, this, std::placeholders::_1));
 		this->registerTicker(CTicker::eTT_Service, 0, 0, &this->m_tickerQPS, 1000, 1000, 0);
 
+		this->m_pTransporter = new CTransporter();
+
 		this->m_pServiceBaseMgr = new CServiceBaseMgr();
-		if (!this->m_pServiceBaseMgr->init(this->m_vecServiceBaseInfo))
+		if (!this->m_pServiceBaseMgr->init(pNodeInfoXML))
 		{
-			PrintWarning("this->m_pServiceBaseMgr->init(this->m_vecServiceBaseInfo)");
+			PrintWarning("this->m_pServiceBaseMgr->init(pNodeInfoXML)");
 			return false;
 		}
 
-		if (!CNetRunnable::Inst()->init(nMaxConnectionCount))
+		this->m_pCoreOtherNodeProxy = new CCoreOtherNodeProxy();
+		if (!this->m_pCoreOtherNodeProxy->init(pRootXML))
 		{
-			PrintWarning("CNetRunnable::Inst()->init(nMaxConnectionCount)");
+			PrintWarning("this->m_pCoreOtherNodeProxy->init(pRootXML)");
 			return false;
 		}
 
-		if (!CLogicRunnable::Inst()->init())
+		if (!this->m_pNetRunnable->init(nMaxConnectionCount))
 		{
-			PrintWarning("CLogicRunnable::Inst()->init()");
+			PrintWarning("this->m_pNetRunnable->init(nMaxConnectionCount)");
 			return false;
 		}
 
-		if (!CTickerRunnable::Inst()->init())
+		if (!this->m_pLogicRunnable->init())
 		{
-			PrintWarning("CTickerRunnable::Inst()->init()");
+			PrintWarning("this->m_pLogicRunnable->init()");
+			return false;
+		}
+
+		if (!this->m_pTickerRunnable->init())
+		{
+			PrintWarning("this->m_pTickerRunnable->init()");
 			return false;
 		}
 
@@ -423,15 +415,15 @@ namespace core
 	{
 		PrintInfo("CCoreApp::destroy");
 
-		CLogicRunnable::Inst()->join();
-		CNetRunnable::Inst()->join();
-		CTickerRunnable::Inst()->join();
+		SAFE_DELETE(this->m_pLogicRunnable);
+		SAFE_DELETE(this->m_pTickerRunnable);
+		SAFE_DELETE(this->m_pNetRunnable);
 
-		CNetRunnable::Inst()->release();
-		CLogicRunnable::Inst()->release();
-		CTickerRunnable::Inst()->release();
+		SAFE_DELETE(this->m_pCoreOtherNodeProxy);
+		SAFE_DELETE(this->m_pServiceBaseMgr);
+		SAFE_DELETE(this->m_pTransporter);
 
-		CBaseObject::unRegistClassInfo();
+		CBaseObject::unRegisterClassInfo();
 
 		uninitMonitor();
 		base::uninitProfiling();
@@ -455,7 +447,7 @@ namespace core
 		sMessagePacket.pData = nullptr;
 		sMessagePacket.nDataSize = 0;
 
-		CLogicRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
+		this->m_pLogicRunnable->getMessageQueue()->send(sMessagePacket);
 	}
 
 	uint32_t CCoreApp::getHeartbeatLimit() const
@@ -498,11 +490,6 @@ namespace core
 		return this->m_sNodeBaseInfo.nID;
 	}
 
-	const std::vector<SServiceBaseInfo>& CCoreApp::getServiceBaseInfo() const
-	{
-		return this->m_vecServiceBaseInfo;
-	}
-
 	CTransporter* CCoreApp::getTransporter() const
 	{
 		return this->m_pTransporter;
@@ -513,9 +500,24 @@ namespace core
 		return this->m_pCoreOtherNodeProxy;
 	}
 
+	CNetRunnable* CCoreApp::getNetRunnable() const
+	{
+		return this->m_pNetRunnable;
+	}
+
+	CTickerRunnable* CCoreApp::getTickerRunnable() const
+	{
+		return this->m_pTickerRunnable;
+	}
+
+	CLogicRunnable* CCoreApp::getLogicRunnable() const
+	{
+		return this->m_pLogicRunnable;
+	}
+
 	uint32_t CCoreApp::getInvokeTimeout() const
 	{
-		return this->m_nInvokTimeout;
+		return this->m_nInvokeTimeout;
 	}
 
 	uint32_t CCoreApp::getThroughput() const

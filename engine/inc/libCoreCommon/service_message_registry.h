@@ -1,4 +1,7 @@
 #pragma once
+
+#include "libBaseCommon/debug_helper.h"
+
 #include "protobuf_helper.h"
 
 #include <map>
@@ -13,8 +16,8 @@ namespace core
 		typedef void(T::*funForwardHandler)(SClientSessionInfo, const google::protobuf::Message*);
 
 	public:
-		CServiceMessageRegistry();
-		~CServiceMessageRegistry();
+		CServiceMessageRegistry() { }
+		virtual ~CServiceMessageRegistry() { }
 
 		inline void	registerMessageHandler(const std::string& szMessageName, void(T::*handler)(SSessionInfo, const google::protobuf::Message*));
 
@@ -28,7 +31,6 @@ namespace core
 		inline void	forward(T* pObject, SClientSessionInfo& sClientSessionInfo, const google::protobuf::Message* pMessage);
 
 	private:
-		uint16_t									m_nServiceID;
 		std::map<std::string, funMessageHandler>	m_mapMessageHandler;
 		std::map<std::string, funForwardHandler>	m_mapForwardHandler;
 	};

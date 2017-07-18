@@ -20,7 +20,7 @@ namespace core
 		int64_t		nBeginTime;	// 发送时间
 		std::string	szMessageName;	// 消息ID
 		
-		std::function<void(google::protobuf::Message*, uint32_t)>
+		std::function<void(const google::protobuf::Message*, uint32_t)>
 					callback;
 	};
 

@@ -12,10 +12,8 @@ namespace core
 	class CMessageDispatcher
 	{
 	public:
-		CMessageDispatcher();
+		CMessageDispatcher(CServiceBaseImpl* pServiceBaseImpl);
 		~CMessageDispatcher();
-
-		bool init(CServiceBaseImpl* pServiceBaseImpl);
 
 		void dispatch(uint64_t nFromSocketID, uint16_t nFromNodeID, const SMCT_RECV_SOCKET_DATA* pContext);
 

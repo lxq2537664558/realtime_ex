@@ -16,10 +16,10 @@ namespace core
 	// 这样做保证了关服前做一些需要比较长的时间来确认一些事的行为，比如数据存储
 	enum EServiceRunState
 	{
-		eSRS_Start = 0,		// 启动状态
-		eSRS_Normal = 1,	// 正常状态
-		eSRS_Quitting = 2,	// 退出中
-		eSRS_Quit = 3,		// 最终退出
+		eSRS_Start		= 0,	// 启动状态
+		eSRS_Normal		= 1,	// 正常状态
+		eSRS_Quitting	= 2,	// 退出中
+		eSRS_Quit		= 3,	// 最终退出
 	};
 
 	class CActorBase;
@@ -65,11 +65,11 @@ namespace core
 		/**
 		@brief: 注册普通服务消息
 		*/
-		void					registerServiceMessageHandler(const std::string& szMessageName, const std::function<void(SSessionInfo, google::protobuf::Message*)>& callback);
+		void					registerServiceMessageHandler(const std::string& szMessageName, const std::function<void(SSessionInfo, const google::protobuf::Message*)>& callback);
 		/**
 		@brief: 注册经网关服务转发客户端的服务消息
 		*/
-		void					registerServiceForwardHandler(const std::string& szMessageName, const std::function<void(SClientSessionInfo, google::protobuf::Message*)>& callback);
+		void					registerServiceForwardHandler(const std::string& szMessageName, const std::function<void(SClientSessionInfo, const google::protobuf::Message*)>& callback);
 		
 		/**
 		@brief: 注册普通actor消息
@@ -98,25 +98,15 @@ namespace core
 		*/
 		CActorBase*				createActor(const std::string& szClassName, void* pContext);
 		/*
-		@brief: 获取配置文件名
-		*/
-		const std::string&		getConfigFileName() const;
-		/*
-		@brief: 获取写buf对象，的主要用于消息打包
-		*/
-		base::CWriteBuf&		getWriteBuf() const;
-		/*
-		@brief: 获取QPS
-		*/
-		uint32_t				getQPS() const;
-		/*
 		@brief: 获取运行状态
 		*/
-		EServiceRunState		getState() const;
+		EServiceRunState		getRunState() const;
 		/*
 		@brief: 逻辑发出退出
 		*/
 		void					doQuit();
+		
+		void					release();
 
 	protected:
 		virtual bool			onInit() = 0;

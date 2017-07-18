@@ -28,6 +28,8 @@ namespace core
 		, m_nLastCheckTime(0)
 		, m_nTotalSamplingTime(0)
 	{
+		this->m_pMessageQueue = new CNetMessageQueue();
+		this->m_pCoreConnectionMgr = new CCoreConnectionMgr();
 	}
 
 	CNetRunnable::~CNetRunnable()
@@ -37,21 +39,8 @@ namespace core
 		SAFE_RELEASE(this->m_pThreadBase);
 	}
 
-	CNetRunnable* CNetRunnable::Inst()
-	{
-		if (g_pNetRunnable == nullptr)
-			g_pNetRunnable = new CNetRunnable();
-
-		return g_pNetRunnable;
-	}
-
 	bool CNetRunnable::init(uint32_t nMaxSocketCount)
 	{
-		this->m_pMessageQueue = new CNetMessageQueue();
-		if (!this->m_pMessageQueue->init())
-			return false;
-
-		this->m_pCoreConnectionMgr = new CCoreConnectionMgr();
 		if (!this->m_pCoreConnectionMgr->init(nMaxSocketCount))
 			return false;
 
@@ -59,12 +48,6 @@ namespace core
 
 		this->m_pThreadBase = base::CThreadBase::createNew(this);
 		return nullptr != this->m_pThreadBase;
-	}
-
-	void CNetRunnable::release()
-	{
-		delete g_pNetRunnable;
-		g_pNetRunnable = nullptr;
 	}
 
 	CCoreConnectionMgr* CNetRunnable::getCoreConnectionMgr() const
@@ -125,7 +108,7 @@ namespace core
 						PrintWarning("context == nullptr type: eMCT_REQUEST_SOCKET_CONNECT");
 						continue;
 					}
-					this->m_pCoreConnectionMgr->connect(pContext->szHost, pContext->nPort, pContext->nType, pContext->szContext, pContext->nSendBufferSize, pContext->nSendBufferSize, pContext->mssageParser);
+					this->m_pCoreConnectionMgr->connect(pContext->szHost, pContext->nPort, pContext->nType, pContext->szContext, pContext->nSendBufferSize, pContext->nSendBufferSize, pContext->messageParser);
 					SAFE_DELETE(pContext);
 				}
 				break;

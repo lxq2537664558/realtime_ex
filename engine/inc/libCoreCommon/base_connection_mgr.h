@@ -68,17 +68,29 @@ namespace core
 		*/
 		void							broadcast(std::vector<uint64_t>& vecSocketID, uint8_t nMessageType, const void* pData, uint16_t nSize);
 		/**
-		@brief: 设置全局的连接成功回调
+		@brief: 添加全局的连接成功回调
 		*/
-		void							setConnectCallback(std::function<void(CBaseConnection*)> funConnect);
+		void							addConnectCallback(const std::string& szKey, std::function<void(CBaseConnection*)> callback);
 		/**
-		@brief: 设置全局的连接断开回调
+		@brief: 删除全局的连接成功回调
 		*/
-		void							setDisconnectCallback(std::function<void(CBaseConnection*)> funDisconnect);
+		void							delConnectCallback(const std::string& szKey);
 		/**
-		@brief: 设置全局的主动发起连接被失败回调
+		@brief: 添加全局的连接断开回调
 		*/
-		void							setConnectFailCallback(std::function<void(const std::string&)> funConnectFail);
+		void							addDisconnectCallback(const std::string& szKey, std::function<void(CBaseConnection*)> callback);/**
+		/**
+		@brief: 删除全局的连接断开回调
+		*/
+		void							delDisconnectCallback(const std::string& szKey);
+		/**
+		@brief: 添加全局的主动发起连接被失败回调
+		*/
+		void							addConnectFailCallback(const std::string& szKey, std::function<void(const std::string&)> callback);
+		/**
+		@brief: 删除全局的主动发起连接被失败回调
+		*/
+		void							delConnectFailCallback(const std::string& szKey);
 
 	private:
 		void							onConnect(uint64_t nSocketID, const std::string& szContext, uint32_t nType, const SNetAddr& sLocalAddr, const SNetAddr& sRemoteAddr);
@@ -86,11 +98,11 @@ namespace core
 		void							onConnectFail(const std::string& szContext);
 
 	private:
-		std::map<uint64_t, CBaseConnection*>						m_mapBaseConnectionByID;
-		std::map<uint32_t, std::map<uint64_t, CBaseConnection*>>	m_mapBaseConnectionByType;
-		std::map<uint32_t, CBaseConnectionFactory*>					m_mapBaseConnectionFactory;
-		std::function<void(CBaseConnection*)>						m_funConnect;
-		std::function<void(CBaseConnection*)>						m_funDisconnect;
-		std::function<void(const std::string&)>						m_funConnectFail;
+		std::map<uint64_t, CBaseConnection*>							m_mapBaseConnectionByID;
+		std::map<uint32_t, std::map<uint64_t, CBaseConnection*>>		m_mapBaseConnectionByType;
+		std::map<uint32_t, CBaseConnectionFactory*>						m_mapBaseConnectionFactory;
+		std::map<std::string, std::function<void(CBaseConnection*)>>	m_mapConnectCalback;
+		std::map<std::string, std::function<void(CBaseConnection*)>>	m_mapDisconnectCallback;
+		std::map<std::string, std::function<void(const std::string&)>>	m_mapConnectFailCallback;
 	};
 }

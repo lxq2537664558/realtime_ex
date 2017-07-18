@@ -63,7 +63,7 @@ namespace core
 	}
 
 	template<class T>
-	void CPromise<T>::setValue(std::shared_ptr<T> val, uint32_t nErrorCode /* = 0 */)
+	void CPromise<T>::setValue(T* val, uint32_t nErrorCode /* = 0 */)
 	{
 		if (this->m_pFutureContext == nullptr)
 			return;
@@ -82,6 +82,6 @@ namespace core
 		if (this->m_pFutureContext->callback == nullptr)
 			return;
 
-		this->m_pFutureContext->callback(val.get(), nErrorCode);
+		this->m_pFutureContext->callback(val, nErrorCode);
 	}
 }

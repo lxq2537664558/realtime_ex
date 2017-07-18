@@ -13,6 +13,9 @@
 #include "base_connection_to_master.h"
 #include "node_connection_factory.h"
 #include "service_base_mgr.h"
+#include "logic_runnable.h"
+#include "net_runnable.h"
+#include "ticker_runnable.h"
 
 namespace core
 {
@@ -35,16 +38,15 @@ namespace core
 
 		CServiceBaseMgr*			getServiceBaseMgr() const;
 
-		bool						isOwnerService(uint16_t nServiceID) const;
-
 		CTransporter*				getTransporter() const;
 		CCoreOtherNodeProxy*		getCoreOtherNodeProxy() const;
+
+		CNetRunnable*				getNetRunnable() const;
+		CLogicRunnable*				getLogicRunnable() const;
+		CTickerRunnable*			getTickerRunnable() const;
 		
 		const SNodeBaseInfo&		getNodeBaseInfo() const;
 		uint16_t					getNodeID() const;
-		const std::vector<SServiceBaseInfo>&
-									getServiceBaseInfo() const;
-
 
 		uint32_t					getInvokeTimeout() const;
 
@@ -84,15 +86,17 @@ namespace core
 		uint32_t							m_nQPS;
 		CTicker								m_tickerQPS;
 		CServiceBaseMgr*					m_pServiceBaseMgr;
+		CNetRunnable*						m_pNetRunnable;
+		CLogicRunnable*						m_pLogicRunnable;
+		CTickerRunnable*					m_pTickerRunnable;
 
 		CTransporter*						m_pTransporter;
 		CCoreOtherNodeProxy*				m_pCoreOtherNodeProxy;
 		CNodeConnectionFactory*				m_pNodeConnectionFactory;
 		SNodeBaseInfo						m_sNodeBaseInfo;
-		std::vector<SServiceBaseInfo>		m_vecServiceBaseInfo;
 		std::string							m_szMasterHost;
 		uint16_t							m_nMasterPort;
-		uint32_t							m_nInvokTimeout;
+		uint32_t							m_nInvokeTimeout;
 		uint32_t							m_nThroughput;
 	};
 }

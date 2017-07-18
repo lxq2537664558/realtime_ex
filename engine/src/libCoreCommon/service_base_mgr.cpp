@@ -13,11 +13,17 @@ namespace core
 
 	}
 
-	bool CServiceBaseMgr::init(const std::vector<SServiceBaseInfo>& vecServiceBaseInfo)
+	bool CServiceBaseMgr::init(tinyxml2::XMLElement* pNodeInfoXML)
 	{
-		for (size_t i = 0; i < vecServiceBaseInfo.size(); ++i)
+		DebugAstEx(pNodeInfoXML != nullptr, false);
+
+		for (tinyxml2::XMLElement* pServiceInfoXML = pNodeInfoXML->FirstChildElement("service_info"); pServiceInfoXML != nullptr; pServiceInfoXML = pServiceInfoXML->NextSiblingElement("service_info"))
 		{
-			const SServiceBaseInfo& sServiceBaseInfo = vecServiceBaseInfo[i];
+			SServiceBaseInfo sServiceBaseInfo;
+			sServiceBaseInfo.nID = (uint16_t)pServiceInfoXML->UnsignedAttribute("service_id");
+			sServiceBaseInfo.szName = pServiceInfoXML->Attribute("service_name");
+			sServiceBaseInfo.szType = pServiceInfoXML->Attribute("service_type");
+			sServiceBaseInfo.szClassName = pServiceInfoXML->Attribute("service_class_name");
 			CServiceBase* pServiceBase = dynamic_cast<CServiceBase*>(CBaseObject::createObject(sServiceBaseInfo.szClassName));
 			if (nullptr == pServiceBase)
 			{
@@ -25,22 +31,23 @@ namespace core
 				return false;
 			}
 			CServiceBaseImpl* pServiceBaseImpl = new CServiceBaseImpl();
-			if (!pServiceBaseImpl->init(sServiceBaseInfo, pServiceBase))
+			if (!pServiceBaseImpl->init(pServiceBase, sServiceBaseInfo))
 			{
 				PrintWarning("create service_base %s error", sServiceBaseInfo.szName.c_str());
 				return false;
 			}
 
 			PrintInfo("create service %s ok", sServiceBaseInfo.szName.c_str());
-			
+
 			this->m_vecServiceBase.push_back(pServiceBaseImpl);
-			this->m_mapServiceBase[pServiceBaseImpl->getServiceBaseInfo().nID] = pServiceBaseImpl;
+			this->m_vecServiceBaseInfo.push_back(sServiceBaseInfo);
+			this->m_mapServiceBase[pServiceBaseImpl->getServiceID()] = pServiceBaseImpl;
 		}
 
 		return true;
 	}
 
-	CServiceBaseImpl* CServiceBaseMgr::getServiceBase(uint16_t nID) const
+	CServiceBaseImpl* CServiceBaseMgr::getServiceBaseByID(uint16_t nID) const
 	{
 		auto iter = this->m_mapServiceBase.find(nID);
 		if (iter == this->m_mapServiceBase.end())
@@ -49,8 +56,33 @@ namespace core
 		return iter->second;
 	}
 
+	CServiceBaseImpl* CServiceBaseMgr::getServiceBaseByName(const std::string& szName) const
+	{
+		auto iter = this->m_mapServiceName.find(szName);
+		if (iter == this->m_mapServiceName.end())
+			return nullptr;
+
+		return this->getServiceBaseByID(iter->second);
+	}
+
 	const std::vector<CServiceBaseImpl*>& CServiceBaseMgr::getServiceBase() const
 	{
 		return this->m_vecServiceBase;
+	}
+
+	const std::vector<SServiceBaseInfo>& CServiceBaseMgr::getServiceBaseInfo() const
+	{
+		return this->m_vecServiceBaseInfo;
+	}
+
+	bool CServiceBaseMgr::isOwnerService(uint16_t nServiceID) const
+	{
+		for (size_t i = 0; i < this->m_vecServiceBaseInfo.size(); ++i)
+		{
+			if (this->m_vecServiceBaseInfo[i].nID == nServiceID)
+				return true;
+		}
+
+		return false;
 	}
 }

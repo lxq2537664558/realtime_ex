@@ -32,8 +32,6 @@ namespace core
 		void				broadcast(uint32_t nType, uint8_t nMessageType, const void* pData, uint16_t nSize, const std::vector<uint64_t>* vecExcludeID);
 		
 		void				destroyCoreConnection(uint64_t nSocketID);
-		std::vector<CBaseConnection*>
-							getBaseConnection(uint32_t nType) const;
 		CCoreConnection*	getCoreConnectionByID(uint64_t nID) const;
 		uint32_t			getCoreConnectionCount(uint32_t nType) const;
 

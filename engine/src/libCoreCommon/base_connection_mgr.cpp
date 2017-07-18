@@ -20,19 +20,49 @@ namespace core
 
 	}
 
-	void CBaseConnectionMgr::setConnectCallback(std::function<void(CBaseConnection*)> funConnect)
+	void CBaseConnectionMgr::addConnectCallback(const std::string& szKey, std::function<void(CBaseConnection*)> callback)
 	{
-		this->m_funConnect = funConnect;
+		if (this->m_mapConnectCalback.find(szKey) != this->m_mapConnectCalback.end())
+		{
+			PrintWarning("dup connect callback key: %s", szKey.c_str());
+		}
+
+		this->m_mapConnectCalback[szKey] = callback;
 	}
 
-	void CBaseConnectionMgr::setDisconnectCallback(std::function<void(CBaseConnection*)> funDisconnect)
+	void CBaseConnectionMgr::delConnectCallback(const std::string& szKey)
 	{
-		this->m_funDisconnect = funDisconnect;
+		this->m_mapConnectCalback.erase(szKey);
 	}
 
-	void CBaseConnectionMgr::setConnectFailCallback(std::function<void(const std::string&)> funConnectFail)
+	void CBaseConnectionMgr::addDisconnectCallback(const std::string& szKey, std::function<void(CBaseConnection*)> callback)
 	{
-		this->m_funConnectFail = funConnectFail;
+		if (this->m_mapDisconnectCallback.find(szKey) != this->m_mapDisconnectCallback.end())
+		{
+			PrintWarning("dup disconnect callback key: %s", szKey.c_str());
+		}
+
+		this->m_mapDisconnectCallback[szKey] = callback;
+	}
+
+	void CBaseConnectionMgr::delDisconnectCallback(const std::string& szKey)
+	{
+		this->m_mapDisconnectCallback.erase(szKey);
+	}
+
+	void CBaseConnectionMgr::addConnectFailCallback(const std::string& szKey, std::function<void(const std::string&)> callback)
+	{
+		if (this->m_mapConnectFailCallback.find(szKey) != this->m_mapConnectFailCallback.end())
+		{
+			PrintWarning("dup connect fail callback key: %s", szKey.c_str());
+		}
+
+		this->m_mapConnectFailCallback[szKey] = callback;
+	}
+
+	void CBaseConnectionMgr::delConnectFailCallback(const std::string& szKey)
+	{
+		this->m_mapConnectFailCallback.erase(szKey);
 	}
 
 	void CBaseConnectionMgr::onConnect(uint64_t nSocketID, const std::string& szContext, uint32_t nType, const SNetAddr& sLocalAddr, const SNetAddr& sRemoteAddr)
@@ -59,8 +89,12 @@ namespace core
 
 		pBaseConnection->onConnect();
 
-		if (this->m_funConnect != nullptr)
-			this->m_funConnect(pBaseConnection);
+		for (auto iter = this->m_mapConnectCalback.begin(); iter != this->m_mapConnectCalback.end(); ++iter)
+		{
+			auto& callback = iter->second;
+			if (callback != nullptr)
+				callback(pBaseConnection);
+		}
 
 		SMCT_NOTIFY_SOCKET_CONNECT_ACK* pContext = new SMCT_NOTIFY_SOCKET_CONNECT_ACK();
 
@@ -71,7 +105,7 @@ namespace core
 		sMessagePacket.pData = pContext;
 		sMessagePacket.nDataSize = sizeof(SMCT_NOTIFY_SOCKET_CONNECT_ACK);
 
-		CNetRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
+		CCoreApp::Inst()->getNetRunnable()->getMessageQueue()->send(sMessagePacket);
 	}
 
 	void CBaseConnectionMgr::onDisconnect(uint64_t nSocketID)
@@ -92,16 +126,24 @@ namespace core
 
 		this->m_mapBaseConnectionByType[pBaseConnection->getType()].erase(nSocketID);
 
-		if (this->m_funDisconnect != nullptr)
-			this->m_funDisconnect(pBaseConnection);
+		for (auto iter = this->m_mapDisconnectCallback.begin(); iter != this->m_mapDisconnectCallback.end(); ++iter)
+		{
+			auto& callback = iter->second;
+			if (callback != nullptr)
+				callback(pBaseConnection);
+		}
 
 		SAFE_RELEASE(pBaseConnection);
 	}
 
 	void CBaseConnectionMgr::onConnectFail(const std::string& szContext)
 	{
-		if (this->m_funConnectFail != nullptr)
-			this->m_funConnectFail(szContext);
+		for (auto iter = this->m_mapConnectFailCallback.begin(); iter != this->m_mapConnectFailCallback.end(); ++iter)
+		{
+			auto& callback = iter->second;
+			if (callback != nullptr)
+				callback(szContext);
+		}
 	}
 
 	void CBaseConnectionMgr::connect(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, const MessageParser& messageParser)
@@ -113,14 +155,14 @@ namespace core
 		pContext->nType = nType;
 		pContext->nRecvBufferSize = nRecvBufferSize;
 		pContext->nSendBufferSize = nSendBufferSize;
-		pContext->mssageParser = messageParser;
+		pContext->messageParser = messageParser;
 
 		SMessagePacket sMessagePacket;
 		sMessagePacket.nType = eMCT_REQUEST_SOCKET_CONNECT;
 		sMessagePacket.pData = pContext;
 		sMessagePacket.nDataSize = sizeof(SMCT_REQUEST_SOCKET_CONNECT);
 
-		CNetRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
+		CCoreApp::Inst()->getNetRunnable()->getMessageQueue()->send(sMessagePacket);
 	}
 
 	void CBaseConnectionMgr::connect_s(const std::string& szHost, uint16_t nPort, uint32_t nSendBufferSize, uint32_t nRecvBufferSize)
@@ -130,21 +172,21 @@ namespace core
 
 	void CBaseConnectionMgr::listen(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser)
 	{
-		SMCT_REQUEST_SOCKET_CONNECT* pContext = new SMCT_REQUEST_SOCKET_CONNECT();
+		SMCT_REQUEST_SOCKET_LISTEN* pContext = new SMCT_REQUEST_SOCKET_LISTEN();
 		pContext->szHost = szHost;
 		pContext->nPort = nPort;
 		pContext->szContext = szContext;
 		pContext->nType = nType;
 		pContext->nRecvBufferSize = nRecvBufferSize;
 		pContext->nSendBufferSize = nSendBufferSize;
-		pContext->mssageParser = messageParser;
+		pContext->messageParser = messageParser;
 
 		SMessagePacket sMessagePacket;
-		sMessagePacket.nType = eMCT_REQUEST_SOCKET_CONNECT;
+		sMessagePacket.nType = eMCT_REQUEST_SOCKET_LISTEN;
 		sMessagePacket.pData = pContext;
-		sMessagePacket.nDataSize = sizeof(SMCT_REQUEST_SOCKET_CONNECT);
+		sMessagePacket.nDataSize = sizeof(SMCT_REQUEST_SOCKET_LISTEN);
 
-		CNetRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
+		CCoreApp::Inst()->getNetRunnable()->getMessageQueue()->send(sMessagePacket);
 	}
 
 	uint32_t CBaseConnectionMgr::getBaseConnectionCount(uint32_t nType) const
@@ -205,7 +247,7 @@ namespace core
 		sMessagePacket.pData = pContext;
 		sMessagePacket.nDataSize = sizeof(SMCT_BROADCAST_SOCKET_DATA2) + nSize;
 
-		CNetRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
+		CCoreApp::Inst()->getNetRunnable()->getMessageQueue()->send(sMessagePacket);
 	}
 
 	void CBaseConnectionMgr::broadcast(std::vector<uint64_t>& vecSocketID, uint8_t nMessageType, const void* pData, uint16_t nSize)
@@ -224,7 +266,7 @@ namespace core
 		sMessagePacket.pData = pContext;
 		sMessagePacket.nDataSize = sizeof(SMCT_BROADCAST_SOCKET_DATA1) + nSize;
 
-		CNetRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
+		CCoreApp::Inst()->getNetRunnable()->getMessageQueue()->send(sMessagePacket);
 	}
 
 	void CBaseConnectionMgr::setBaseConnectionFactory(uint32_t nType, CBaseConnectionFactory* pBaseConnectionFactory)

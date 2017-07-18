@@ -63,10 +63,6 @@ namespace core
 		*/
 		const std::string&			getConfigFileName() const;
 		/*
-		@brief: 获取写buf对象，的主要用于消息打包
-		*/
-		base::CWriteBuf&			getWriteBuf() const;
-		/*
 		@brief: 获取QPS
 		*/
 		uint32_t					getQPS() const;

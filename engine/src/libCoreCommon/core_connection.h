@@ -40,8 +40,6 @@ namespace core
 
 		void				shutdown(base::ENetConnecterCloseType eType, const std::string& szMsg);
 
-		CBaseConnection*	getBaseConnection() const;
-
 		uint32_t			getSendDataSize() const;
 		uint32_t			getRecvDataSize() const;
 

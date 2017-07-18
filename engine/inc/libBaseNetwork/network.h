@@ -55,27 +55,15 @@ namespace base
 
 #ifdef _WIN32
 
-#ifdef __BUILD_NETWORK_AS_DLL__
-#ifdef __BUILD_NETWORK__
-#	define __NETWORK_API__ __declspec(dllexport)
-#else
-#	define __NETWORK_API__ __declspec(dllimport)
-#endif
-#else
-#ifdef __BUILD_NETWORK__
-#	define __NETWORK_API__
-#else
-#	define __NETWORK_API__ extern
-#endif
-#endif
+#	ifdef __BUILD_BASE_NETWORK_DLL__
+#		define __NETWORK_API__ __declspec(dllexport)
+#	else
+#		define __NETWORK_API__ __declspec(dllimport)
+#	endif
 
 #else
 
-#ifdef __BUILD_NETWORK__
-#	define __NETWORK_API__
-#else
-#	define __NETWORK_API__ extern
-#endif
+#	define __BASE_COMMON_API__
 
 #endif
 

@@ -36,7 +36,7 @@ namespace core
 			// 同步节点名字
 			smt_notify_node_base_info netMsg;
 			netMsg.sNodeBaseInfo = CCoreApp::Inst()->getNodeBaseInfo();
-			netMsg.vecServiceBaseInfo = CCoreApp::Inst()->getServiceBaseInfo();
+			netMsg.vecServiceBaseInfo = CCoreApp::Inst()->getServiceBaseMgr()->getServiceBaseInfo();
 			base::CWriteBuf& writeBuf = CCoreApp::Inst()->getWriteBuf();
 			netMsg.pack(writeBuf);
 

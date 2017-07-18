@@ -7,12 +7,14 @@
 #include "base_app.h"
 #include "message_command.h"
 #include "logic_runnable.h"
+#include "core_app.h"
 
 #include "libBaseCommon/base_time.h"
 #include "libBaseCommon/logger.h"
 #include "libBaseCommon/profiling.h"
 
 #include <algorithm>
+
 
 namespace core
 {
@@ -41,7 +43,7 @@ namespace core
 		sMessagePacket.pData = pContext;
 		sMessagePacket.nDataSize = sizeof(SMCT_NOTIFY_SOCKET_CONNECT_FAIL);
 
-		CLogicRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
+		CCoreApp::Inst()->getLogicRunnable()->getMessageQueue()->send(sMessagePacket);
 
 		pCoreConnectionMgr->delActiveWaitConnecterHandler(this);
 	}
@@ -166,31 +168,6 @@ namespace core
 			return nullptr;
 
 		return iter->second;
-	}
-
-	std::vector<CBaseConnection*> CCoreConnectionMgr::getBaseConnection(uint32_t nType) const
-	{
-		auto iter = this->m_mapCoreConnectionByTypeID.find(nType);
-		if (iter == this->m_mapCoreConnectionByTypeID.end())
-			return std::vector<CBaseConnection*>();
-
-		std::vector<CBaseConnection*> vecBaseConnection;
-		auto& listCoreConnection = iter->second;
-		vecBaseConnection.reserve(listCoreConnection.size());
-		for (auto iter = listCoreConnection.begin(); iter != listCoreConnection.end(); ++iter)
-		{
-			CCoreConnection* pCoreConnection = *iter;
-			if (nullptr == pCoreConnection)
-				continue;
-
-			CBaseConnection* pBaseConnection = pCoreConnection->getBaseConnection();
-			if (nullptr == pBaseConnection)
-				continue;
-
-			vecBaseConnection.push_back(pBaseConnection);
-		}
-
-		return vecBaseConnection;
 	}
 
 	void CCoreConnectionMgr::broadcast(uint32_t nType, uint8_t nMessageType, const void* pData, uint16_t nSize, const std::vector<uint64_t>* vecExcludeID)

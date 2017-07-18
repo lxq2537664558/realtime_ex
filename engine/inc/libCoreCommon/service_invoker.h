@@ -1,9 +1,12 @@
 #pragma once
 #include "libBaseCommon/noncopyable.h"
+#include "libBaseCommon/debug_helper.h"
+
 #include "google/protobuf/message.h"
 
 #include "core_common.h"
 #include "future.h"
+#include "promise.h"
 
 #include <vector>
 

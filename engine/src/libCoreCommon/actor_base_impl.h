@@ -32,7 +32,7 @@ namespace core
 		EActorBaseState			getState() const;
 		void					setState(EActorBaseState eState);
 
-		CServiceBaseImpl*		getServiceBase() const;
+		CServiceBaseImpl*		getServiceBaseImpl() const;
 
 		void					registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
 		void					unregisterTicker(CTicker* pTicker);

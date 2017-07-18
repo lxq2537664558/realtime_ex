@@ -22,7 +22,7 @@ namespace core
 		virtual ~CActorBase();
 
 	public:
-		virtual bool		onInit(void* pContext) { return true; }
+		virtual void		onInit(void* pContext) { }
 		virtual void		onDestroy() { }
 
 		uint64_t			getID() const;

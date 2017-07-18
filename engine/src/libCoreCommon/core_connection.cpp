@@ -2,12 +2,11 @@
 #include "core_connection.h"
 #include "core_connection_mgr.h"
 #include "base_connection_mgr.h"
-#include "core_app.h"
-#include "base_app.h"
 #include "core_common.h"
 #include "message_command.h"
 #include "logic_runnable.h"
 #include "protobuf_helper.h"
+#include "core_app.h"
 
 #include "libBaseCommon/debug_helper.h"
 #include "libBaseCommon/base_time.h"
@@ -149,7 +148,7 @@ namespace core
 		sMessagePacket.pData = pContext;
 		sMessagePacket.nDataSize = sizeof(SMCT_NOTIFY_SOCKET_CONNECT);
 
-		CLogicRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
+		CCoreApp::Inst()->getLogicRunnable()->getMessageQueue()->send(sMessagePacket);
 
 		this->m_nState = eCCS_Connectting;
 	}
@@ -166,7 +165,7 @@ namespace core
 		sMessagePacket.pData = pContext;
 		sMessagePacket.nDataSize = sizeof(SMCT_NOTIFY_SOCKET_DISCONNECT);
 
-		CLogicRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
+		CCoreApp::Inst()->getLogicRunnable()->getMessageQueue()->send(sMessagePacket);
 
 		this->m_nState = eCCS_Disconnectting;
 		this->m_pNetConnecter = nullptr;
@@ -305,7 +304,7 @@ namespace core
 		sMessagePacket.pData = pContext;
 		sMessagePacket.nDataSize = sizeof(SMCT_RECV_SOCKET_DATA);
 
-		CLogicRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
+		CCoreApp::Inst()->getLogicRunnable()->getMessageQueue()->send(sMessagePacket);
 	}
 
 	void CCoreConnection::onHeartbeat(uint64_t nContext)

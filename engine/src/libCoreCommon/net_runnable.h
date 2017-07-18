@@ -16,8 +16,6 @@ namespace core
 		CNetRunnable();
 		virtual ~CNetRunnable();
 
-		static CNetRunnable*Inst();
-
 		bool				init(uint32_t nMaxSocketCount);
 		CCoreConnectionMgr*	getCoreConnectionMgr() const;
 		CNetMessageQueue*	getMessageQueue() const;

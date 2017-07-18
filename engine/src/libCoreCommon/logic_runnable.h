@@ -14,8 +14,6 @@ namespace core
 		CLogicRunnable();
 		virtual ~CLogicRunnable();
 
-		static CLogicRunnable*Inst();
-
 		bool				init();
 		CLogicMessageQueue*	getMessageQueue() const;
 		CBaseConnectionMgr*	getBaseConnectionMgr() const;

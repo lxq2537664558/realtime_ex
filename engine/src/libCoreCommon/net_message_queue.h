@@ -16,7 +16,6 @@ namespace core
 		CNetMessageQueue();
 		virtual ~CNetMessageQueue();
 
-		bool	init();
 		void	send(const SMessagePacket& sMessagePacket);
 		void	recv(std::vector<SMessagePacket>& vecMessagePacket);
 

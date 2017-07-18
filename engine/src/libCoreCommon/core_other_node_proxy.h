@@ -30,7 +30,8 @@ namespace core
 
 		uint16_t						getServiceID(const std::string& szName) const;
 		std::string						getServiceType(uint16_t nServiceID) const;
-		bool							getServiceIDByTypeName(const std::string& szName, std::vector<uint16_t>& vecServiceID) const;
+		std::string						getServiceName(uint16_t nServiceID) const;
+		const std::vector<uint16_t>&	getServiceIDByTypeName(const std::string& szName) const;
 		
 		const SServiceBaseInfo*			getServiceBaseInfoByServiceID(uint16_t nServiceID) const;
 		bool							getServiceBaseInfoByNodeID(uint16_t nNodeID, std::vector<SServiceBaseInfo>& vecServiceBaseInfo) const;
@@ -43,6 +44,10 @@ namespace core
 		CBaseConnectionToMaster*		getBaseConnectionToMaster() const;
 		bool							addBaseConnectionToMaster(CBaseConnectionToMaster* pBaseConnectionToMaster);
 		void							delBaseConnectionToMaster(uint16_t nMasterID);
+
+	private:
+		void							onCheckConnectMaster(uint64_t nContext);
+		void							onConnectRefuse(const std::string& szContext);
 
 	private:
 		struct SNodeProxyInfo
@@ -59,11 +64,23 @@ namespace core
 			CBaseConnectionOtherNode*		pBaseConnectionOtherNode;
 		};
 
+		struct SMasterInfo
+		{
+			uint16_t	nID;
+			std::string	szHost;
+			uint16_t	nPort;
+			bool		bActive;
+			CBaseConnectionToMaster*
+						pBaseConnectionToMaster;
+		};
+
 		std::map<uint16_t, SNodeProxyInfo>		m_mapNodeProxyInfo;
 		std::map<uint16_t, SServiceProxyInfo>	m_mapServiceProxyInfo;
 		std::map<std::string, uint16_t>			m_mapServiceName;
 		std::map<std::string, std::vector<uint16_t>>
 												m_mapServiceIDByServiceType;
+
+		std::map<uint16_t, SMasterInfo>			m_mapMasterInfo;
 		std::vector<CBaseConnectionToMaster*>	m_vecBaseConnectionToMaster;
 		CTicker									m_tickCheckConnectMaster;
 

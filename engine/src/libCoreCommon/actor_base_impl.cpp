@@ -55,6 +55,11 @@ namespace core
 		this->m_eState = eState;
 	}
 
+	CServiceBaseImpl* CActorBaseImpl::getServiceBaseImpl() const
+	{
+		return this->m_pServiceBaseImpl;
+	}
+
 	void CActorBaseImpl::registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
 	{
 		CCoreApp::Inst()->registerTicker(CTicker::eTT_Actor, this->m_pServiceBaseImpl->getServiceID(), this->getID(), pTicker, nStartTime, nIntervalTime, nContext);
@@ -248,7 +253,7 @@ namespace core
 			DebugAstEx(iter == this->m_mapPendingResponseInfo.end(), nullptr);
 
 			SPendingResponseInfo* pPendingResponseInfo = new SPendingResponseInfo();
-			pPendingResponseInfo->callback = nullptr;
+			pPendingResponseInfo->callback = callback;
 			pPendingResponseInfo->nSessionID = nSessionID;
 			pPendingResponseInfo->nCoroutineID = nCoroutineID;
 			pPendingResponseInfo->nToID = nToID;
