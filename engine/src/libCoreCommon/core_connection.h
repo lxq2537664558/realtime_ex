@@ -1,6 +1,7 @@
 #pragma once
 #include "libBaseNetwork/network.h"
 
+#include "ticker.h"
 #include "core_common.h"
 #include "core_connection_monitor.h"
 
@@ -21,7 +22,7 @@ namespace core
 			eCCS_None,
 			eCCS_Connectting,
 			eCCS_Connected,
-			eCCS_Disconnectting,
+			eCCS_Disconnected,
 		};
 
 	public:

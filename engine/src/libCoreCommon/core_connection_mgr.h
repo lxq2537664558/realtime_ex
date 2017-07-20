@@ -7,6 +7,7 @@
 #include <functional>
 
 #include "libBaseNetwork/network.h"
+#include "libBaseCommon/noncopyable.h"
 
 #include "core_connection.h"
 #include "core_common.h"
@@ -29,7 +30,7 @@ namespace core
 		bool				listen(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser);
 		void				update(int64_t nTime);
 
-		void				broadcast(uint32_t nType, uint8_t nMessageType, const void* pData, uint16_t nSize, const std::vector<uint64_t>* vecExcludeID);
+		void				broadcast(uint32_t nType, uint8_t nMessageType, const void* pData, uint16_t nSize, uint64_t* pExcludeID, uint16_t nExcludeIDCount);
 		
 		void				destroyCoreConnection(uint64_t nSocketID);
 		CCoreConnection*	getCoreConnectionByID(uint64_t nID) const;

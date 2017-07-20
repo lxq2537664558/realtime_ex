@@ -18,7 +18,20 @@ namespace core
 		return pProtoType->New();
 	}
 
-	google::protobuf::Message* unserialize_protobuf_message_from_buf(const std::string& szMessageName, const void* pData, uint16_t nSize)
+	google::protobuf::Message* clone_protobuf_message(const google::protobuf::Message* pMessage)
+	{
+		DebugAstEx(pMessage != nullptr, nullptr);
+
+		google::protobuf::Message* pNewMessage = create_protobuf_message(pMessage->GetTypeName());
+		if (nullptr == pNewMessage)
+			return nullptr;
+
+		pNewMessage->CopyFrom(*pMessage);
+
+		return pNewMessage;
+	}
+
+	google::protobuf::Message* unserialize_protobuf_message_from_buf(const std::string& szMessageName, const void* pData, uint32_t nSize)
 	{
 		DebugAstEx(pData != nullptr, nullptr);
 
@@ -35,7 +48,7 @@ namespace core
 		return pMessage;
 	}
 
-	int32_t serialize_protobuf_message_to_buf(const google::protobuf::Message* pMessage, void* pData, uint16_t nSize)
+	int32_t serialize_protobuf_message_to_buf(const google::protobuf::Message* pMessage, void* pData, uint32_t nSize)
 	{
 		DebugAstEx(pMessage != nullptr && pData != nullptr, -1);
 

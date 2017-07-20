@@ -23,7 +23,8 @@ namespace core
 			sServiceBaseInfo.nID = (uint16_t)pServiceInfoXML->UnsignedAttribute("service_id");
 			sServiceBaseInfo.szName = pServiceInfoXML->Attribute("service_name");
 			sServiceBaseInfo.szType = pServiceInfoXML->Attribute("service_type");
-			sServiceBaseInfo.szClassName = pServiceInfoXML->Attribute("service_class_name");
+			sServiceBaseInfo.szClassName = pServiceInfoXML->Attribute("class_name");
+			
 			CServiceBase* pServiceBase = dynamic_cast<CServiceBase*>(CBaseObject::createObject(sServiceBaseInfo.szClassName));
 			if (nullptr == pServiceBase)
 			{

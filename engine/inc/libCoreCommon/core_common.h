@@ -3,11 +3,8 @@
 #include <functional>
 #include <memory>
 
-#include "ticker.h"
-
-#include "libBaseNetwork/network.h"
-
 #include "google/protobuf/message.h"
+#include "libBaseCommon/base_function.h"
 
 #define _GET_MESSAGE_ID(szMessageName) (base::hash(szMessageName.c_str()))
 
@@ -83,7 +80,7 @@ enum EMessageType
 namespace core
 {
 	typedef std::function<int32_t(const char*, uint32_t, uint8_t&)>	MessageParser;	// 原生消息
-
+	
 	enum EMessageTargetType
 	{
 		eMTT_None		= 0,
@@ -145,7 +142,8 @@ namespace core
 				pMessage;
 	};
 
-	typedef std::function<void(uint64_t, const message_header*)> ClientCallback;	// 客户端消息处理函数类型
+	typedef std::function<void(uint64_t, const message_header*)>						ClientCallback;				// 客户端消息处理函数类型
+	typedef std::function<void(SSessionInfo, const void* pData, uint16_t nDataSize)>	NodeGlobalFilter;			// 全局的消息过滤器类型
 
 #pragma pack(push,1)
 	struct gate_forward_cookice

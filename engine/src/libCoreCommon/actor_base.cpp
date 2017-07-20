@@ -69,10 +69,10 @@ namespace core
 
 		PrintInfo("destroy actor id: "UINT64FMT, this->getID());
 
-		this->del();
+		CBaseObject::destroyObject(this);
 	}
 
-	bool CActorBase::invoke(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, uint64_t nCoroutineID, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback)
+	bool CActorBase::invoke(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, uint64_t nCoroutineID, const std::function<void(std::shared_ptr<google::protobuf::Message>&, uint32_t)>& callback)
 	{
 		uint64_t nSessionID = CCoreApp::Inst()->getTransporter()->genSessionID();
 

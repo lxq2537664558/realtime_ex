@@ -3,8 +3,11 @@
 #include "libBaseCommon/noncopyable.h"
 #include "libBaseCommon/noninheritable.h"
 
+#include "core_common.h"
+
 #include <atomic>
 #include <functional>
+
 
 namespace core
 {

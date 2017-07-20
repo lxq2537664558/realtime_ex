@@ -22,7 +22,7 @@ namespace core
 		CFuture<T>	getFuture();
 
 		uint64_t	getWaitCoroutineID() const;
-		void		setValue(T* val, uint32_t nErrorCode = 0);
+		void		setValue(std::shared_ptr<T>& val, uint32_t nErrorCode = 0);
 
 	private:
 		std::shared_ptr<SFutureContext<T>>	m_pFutureContext;

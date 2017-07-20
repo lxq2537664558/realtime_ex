@@ -167,7 +167,7 @@ namespace core
 
 	void CBaseConnectionMgr::connect_s(const std::string& szHost, uint16_t nPort, uint32_t nSendBufferSize, uint32_t nRecvBufferSize)
 	{
-		this->connect(szHost, nPort, eBCT_ConnectionToOtherNode, "", nSendBufferSize, nRecvBufferSize, default_client_message_parser);
+		this->connect(szHost, nPort, eBCT_ConnectionToOtherNode, "", nSendBufferSize, nRecvBufferSize, nullptr);
 	}
 
 	void CBaseConnectionMgr::listen(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser)
@@ -231,40 +231,53 @@ namespace core
 
 	void CBaseConnectionMgr::broadcast(uint32_t nType, uint8_t nMessageType, const void* pData, uint16_t nSize, const std::vector<uint64_t>* vecExcludeID)
 	{
-		SMCT_BROADCAST_SOCKET_DATA2* pContext = reinterpret_cast<SMCT_BROADCAST_SOCKET_DATA2*>(new char[sizeof(SMCT_BROADCAST_SOCKET_DATA2) + nSize]);
+		DebugAst(vecExcludeID == nullptr || vecExcludeID->size() <= UINT16_MAX);
+
+		char* szBuf = nullptr;
+		if (vecExcludeID != nullptr)
+			szBuf = new char[sizeof(SMCT_BROADCAST_SOCKET_DATA2) + nSize + sizeof(uint64_t)*vecExcludeID->size()];
+		else
+			szBuf = new char[sizeof(SMCT_BROADCAST_SOCKET_DATA2) + nSize];
+
+		SMCT_BROADCAST_SOCKET_DATA2* pContext = reinterpret_cast<SMCT_BROADCAST_SOCKET_DATA2*>(szBuf);
 		pContext->nType = nType;
 		pContext->nMessageType = nMessageType;
-		pContext->vecExcludeID = nullptr;
-		memcpy(pContext + 1, pData, nSize);
-		if (vecExcludeID != nullptr)
+		pContext->nExcludeIDCount = 0;
+		if (vecExcludeID != nullptr && !vecExcludeID->empty())
 		{
-			pContext->vecExcludeID = new std::vector<uint64_t>();
-			*pContext->vecExcludeID = *vecExcludeID;
+			pContext->nExcludeIDCount = (uint16_t)vecExcludeID->size();
+			memcpy(szBuf + sizeof(SMCT_BROADCAST_SOCKET_DATA2), &((*vecExcludeID)[0]), sizeof(uint64_t)*vecExcludeID->size());
 		}
+		memcpy(szBuf + sizeof(SMCT_BROADCAST_SOCKET_DATA2) + sizeof(uint64_t)*pContext->nExcludeIDCount, pData, nSize);
 
 		SMessagePacket sMessagePacket;
 		sMessagePacket.nType = eMCT_BROADCAST_SOCKET_DATA2;
 		sMessagePacket.pData = pContext;
-		sMessagePacket.nDataSize = sizeof(SMCT_BROADCAST_SOCKET_DATA2) + nSize;
-
+		if (vecExcludeID != nullptr)
+			sMessagePacket.nDataSize = (uint32_t)(sizeof(SMCT_BROADCAST_SOCKET_DATA2)+nSize + sizeof(uint64_t)*vecExcludeID->size());
+		else
+			sMessagePacket.nDataSize = (uint32_t)(sizeof(SMCT_BROADCAST_SOCKET_DATA2)+nSize);
 		CCoreApp::Inst()->getNetRunnable()->getMessageQueue()->send(sMessagePacket);
 	}
 
 	void CBaseConnectionMgr::broadcast(std::vector<uint64_t>& vecSocketID, uint8_t nMessageType, const void* pData, uint16_t nSize)
 	{
-		if (vecSocketID.empty())
-			return;
+		DebugAst(vecSocketID.size() <= UINT16_MAX);
 
-		SMCT_BROADCAST_SOCKET_DATA1* pContext = reinterpret_cast<SMCT_BROADCAST_SOCKET_DATA1*>(new char[sizeof(SMCT_BROADCAST_SOCKET_DATA1) + nSize]);
+		char* szBuf = new char[sizeof(SMCT_BROADCAST_SOCKET_DATA1) + nSize + sizeof(uint64_t)*vecSocketID.size()];
+		SMCT_BROADCAST_SOCKET_DATA1* pContext = reinterpret_cast<SMCT_BROADCAST_SOCKET_DATA1*>(szBuf);
 		pContext->nMessageType = nMessageType;
-		pContext->vecSocketID = new std::vector<uint64_t>();
-		*pContext->vecSocketID = vecSocketID;
-		memcpy(pContext + 1, pData, nSize);
-
+		pContext->nSocketIDCount = (uint16_t)vecSocketID.size();
+		if (!vecSocketID.empty())
+		{
+			memcpy(szBuf + sizeof(SMCT_BROADCAST_SOCKET_DATA1), &vecSocketID[0], sizeof(uint64_t)*vecSocketID.size());
+		}
+		memcpy(szBuf + sizeof(SMCT_BROADCAST_SOCKET_DATA1) + sizeof(uint64_t)*pContext->nSocketIDCount, pData, nSize);
+		
 		SMessagePacket sMessagePacket;
 		sMessagePacket.nType = eMCT_BROADCAST_SOCKET_DATA1;
 		sMessagePacket.pData = pContext;
-		sMessagePacket.nDataSize = sizeof(SMCT_BROADCAST_SOCKET_DATA1) + nSize;
+		sMessagePacket.nDataSize = (uint32_t)(sizeof(SMCT_BROADCAST_SOCKET_DATA1) + nSize + sizeof(uint64_t)*vecSocketID.size());
 
 		CCoreApp::Inst()->getNetRunnable()->getMessageQueue()->send(sMessagePacket);
 	}

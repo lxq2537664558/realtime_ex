@@ -1,12 +1,31 @@
-<!--����������-->
+﻿<!--服务器配置-->
 <root>
-	<!--���������Ϣ-->
-	<base_info work_path = "./conf/" connections = "100000">
-		<log async = "1" path = "./log/" debug = "0"/>
+	<!--服务基本信息-->
+	<base_info work_path = "./conf/" connections = "2000">
+		<log async = "0" path = "./log/" debug = "1"/>
 		<profiling sampling_time = "1000"/>
 		<heartbeat heartbeat_limit = "100000" heartbeat_time = "10000"/>
 		<time year = "2013" month = "4" day = "27" hour = "23" minute = "57" second = "0" enable = "0"/>
 	</base_info>
 	
-	<host_info host = "127.0.0.1" port = "10000" send_buf_size = "102400" recv_buf_size = "102400"/>
+	<!--节点信息-->
+	<node_info node_id = "2" node_name = "test_master_1">
+		
+	</node_info>
+	
+	<!--本节点需要连接的服务-->
+	<connect_service_info>
+		<!--如果需要连接所有某一个类型的服务，用*通配-->
+		<!--<service_info service_name = "gas_1" servie_type = "gas" invoke_timeout = "10000"/>-->
+	</connect_service_info>
+	
+	<!--连接master地址-->
+	<!--
+	<monster_info>
+		<master id = "1" host = "127.0.0.1" port = "10000"/>
+		<master id = "2" host = "127.0.0.1" port = "10001"/>
+	<monster_info/>
+	-->
+	
+	<master id = "1" host = "127.0.0.1" port = "10001"/>
 </root>

@@ -41,7 +41,7 @@ namespace core
 	template<class T>
 	T* CFuture<T>::getValue()
 	{
-		return this->m_pContext->val;
+		return this->m_pContext->val.get();
 	}
 
 	template<class T>
@@ -81,7 +81,7 @@ namespace core
 		this->m_pContext->callback = fn;
 
 		if (this->m_pContext->bReady && this->m_pContext->nErrorCode == 0)
-			this->m_pContext->callback(this->m_pContext->val, this->m_pContext->nErrorCode);
+			this->m_pContext->callback(this->m_pContext->val.get(), this->m_pContext->nErrorCode);
 	}
 
 	template<class T>
@@ -96,7 +96,7 @@ namespace core
 		pContext->bReady = false;
 		pContext->nErrorCode = 0;
 
-		this->m_pContext->callback = [fn, pContext](T* val, uint32_t nErrorCode)->void
+		this->m_pContext->callback = [fn, pContext](const T* val, uint32_t nErrorCode)->void
 		{
 			CFuture<ValueType> sNewFuture = fn(val, nErrorCode);
 			if (sNewFuture.m_pContext == nullptr)
@@ -109,12 +109,12 @@ namespace core
 			sNewFuture.m_pContext->callback = pContext->callback;
 			// 在回调完成后如果返回的future已经准备好，并且回调函数也已经设置好了，就回调他，不然就没有机会回调了
 			if (sNewFuture.m_pContext->bReady && sNewFuture.m_pContext->callback != nullptr)
-				sNewFuture.m_pContext->callback(sNewFuture.m_pContext->val, sNewFuture.m_pContext->nErrorCode);
+				sNewFuture.m_pContext->callback(sNewFuture.m_pContext->val.get(), sNewFuture.m_pContext->nErrorCode);
 		};
 
 		// 在调用then时future已经可用了
 		if (this->m_pContext->bReady)
-			this->m_pContext->callback(this->m_pContext->val, this->m_pContext->nErrorCode);
+			this->m_pContext->callback(this->m_pContext->val.get(), this->m_pContext->nErrorCode);
 		
 		return CFuture<ValueType>(pContext);
 	}

@@ -32,13 +32,14 @@
     <ClInclude Include="..\..\inc\libCoreCommon\ticker.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\when_all.h" />
     <ClInclude Include="actor_base_impl.h" />
+    <ClInclude Include="class_info_mgr.h" />
     <ClInclude Include="core_app.h" />
     <ClInclude Include="core_connection.h" />
     <ClInclude Include="core_connection_mgr.h" />
     <ClInclude Include="core_connection_monitor.h" />
     <ClInclude Include="base_connection_other_node.h" />
     <ClInclude Include="base_connection_to_master.h" />
-    <ClInclude Include="core_other_node_proxy.h" />
+    <ClInclude Include="service_registry_proxy.h" />
     <ClInclude Include="core_common_define.h" />
     <ClInclude Include="coroutine_impl.h" />
     <ClInclude Include="coroutine_mgr.h" />
@@ -65,13 +66,15 @@
     <ClCompile Include="base_connection_mgr.cpp" />
     <ClCompile Include="base_app.cpp" />
     <ClCompile Include="base_object.cpp" />
+    <ClCompile Include="class_info_mgr.cpp" />
     <ClCompile Include="core_app.cpp" />
     <ClCompile Include="core_connection.cpp" />
     <ClCompile Include="core_connection_mgr.cpp" />
     <ClCompile Include="core_connection_monitor.cpp" />
     <ClCompile Include="base_connection_other_node.cpp" />
     <ClCompile Include="base_connection_to_master.cpp" />
-    <ClCompile Include="core_other_node_proxy.cpp" />
+    <ClCompile Include="protobuf_helper.cpp" />
+    <ClCompile Include="service_registry_proxy.cpp" />
     <ClCompile Include="coroutine.cpp" />
     <ClCompile Include="coroutine_impl.cpp" />
     <ClCompile Include="coroutine_mgr.cpp" />
@@ -84,7 +87,6 @@
     <ClCompile Include="net_message_queue.cpp" />
     <ClCompile Include="net_runnable.cpp" />
     <ClCompile Include="node_connection_factory.cpp" />
-    <ClCompile Include="protobuf_helper.cpp" />
     <ClCompile Include="actor_scheduler.cpp" />
     <ClCompile Include="service_base.cpp" />
     <ClCompile Include="service_base_impl.cpp" />
@@ -150,14 +152,19 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;__BUILD_CORE_COMMON_DLL__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>../../inc;../../inc/libCoreCommon;../../../3rd/tinyxml2/include;../../../3rd/protobuf/include;</AdditionalIncludeDirectories>
       <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <DisableSpecificWarnings>
+      </DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>..\..\..\3rd\tinyxml2\lib\win32\$(Configuration);..\..\..\3rd\protobuf\lib\win32\$(Configuration);$(OutDir);</AdditionalLibraryDirectories>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;libBaseCommon.lib;libBaseNetwork.lib;tinyxml2.lib;libprotobuf.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>

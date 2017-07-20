@@ -9,11 +9,11 @@ namespace core
 	struct SFutureContext
 	{
 		std::function<void(const T*, uint32_t)>
-					callback;
-		bool		bReady;
-		uint64_t	nCoroutineID;
-		uint32_t	nErrorCode;
-		T*			val;
+							callback;
+		bool				bReady;
+		uint64_t			nCoroutineID;
+		uint32_t			nErrorCode;
+		std::shared_ptr<T>	val;	// 这里需要用shared_ptr，因为有when_all 这个需要把收到的消息先暂存
 	};
 
 	template<class T>

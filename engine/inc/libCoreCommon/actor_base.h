@@ -5,6 +5,7 @@
 #include "coroutine.h"
 #include "core_common.h"
 #include "future.h"
+#include "ticker.h"
 
 #include <memory>
 
@@ -71,7 +72,7 @@ namespace core
 		*/
 		void				response(const SSessionInfo& sSessionInfo, const google::protobuf::Message* pMessage);
 
-		void				release();
+		virtual void		release();
 		/*
 		发送消息给客户端
 		*/
@@ -82,7 +83,7 @@ namespace core
 		static bool			broadcast(const std::vector<SClientSessionInfo>& vecClientSessionInfo, const google::protobuf::Message* pMessage);
 
 	private:
-		bool				invoke(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, uint64_t nCoroutineID, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback);
+		bool				invoke(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, uint64_t nCoroutineID, const std::function<void(std::shared_ptr<google::protobuf::Message>&, uint32_t)>& callback);
 
 	private:
 		CActorBaseImpl*	m_pActorBaseImpl;

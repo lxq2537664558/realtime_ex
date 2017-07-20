@@ -7,9 +7,9 @@ namespace core
 
 		auto pPromise = std::make_shared<CPromise<T>>();
 		
-		auto callback = [pPromise](const google::protobuf::Message* pResponseMessage, uint32_t nErrorCode)->void
+		auto callback = [pPromise](std::shared_ptr<google::protobuf::Message>& pResponseMessage, uint32_t nErrorCode)->void
 		{
-			pPromise->setValue(const_cast<T*>(reinterpret_cast<const T*>(pResponseMessage)), nErrorCode);
+			pPromise->setValue(std::dynamic_pointer_cast<T>(pResponseMessage), nErrorCode);
 		};
 
 		if (!this->invoke(eType, nID, pMessage, callback))
@@ -25,9 +25,9 @@ namespace core
 	{
 		DebugAstEx(pMessage != nullptr && callback != nullptr, false);
 
-		auto callback_ = [callback](const google::protobuf::Message* pResponseMessage, uint32_t nErrorCode)->void
+		auto callback_ = [callback](std::shared_ptr<google::protobuf::Message>& pResponseMessage, uint32_t nErrorCode)->void
 		{
-			callback(reinterpret_cast<const T*>(pResponseMessage), nErrorCode);
+			callback(pResponseMessage.get(), nErrorCode);
 		};
 
 		return this->invoke(eType, nID, pMessage, callback_);

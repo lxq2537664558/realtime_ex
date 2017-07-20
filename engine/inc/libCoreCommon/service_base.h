@@ -106,7 +106,7 @@ namespace core
 		*/
 		void					doQuit();
 		
-		void					release();
+		virtual void			release();
 
 	protected:
 		virtual bool			onInit() = 0;

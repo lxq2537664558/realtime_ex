@@ -3,6 +3,8 @@
 #include <stdint.h>
 #include <functional>
 
+#include "core_common.h"
+
 namespace core
 {
 	namespace coroutine

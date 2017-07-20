@@ -7,6 +7,9 @@
 
 #include "core_common.h"
 
+#include "libBaseCommon\noncopyable.h"
+#include "libBaseNetwork\network.h"
+
 namespace core
 {
 	class CBaseConnection;
@@ -101,6 +104,7 @@ namespace core
 		std::map<uint64_t, CBaseConnection*>							m_mapBaseConnectionByID;
 		std::map<uint32_t, std::map<uint64_t, CBaseConnection*>>		m_mapBaseConnectionByType;
 		std::map<uint32_t, CBaseConnectionFactory*>						m_mapBaseConnectionFactory;
+
 		std::map<std::string, std::function<void(CBaseConnection*)>>	m_mapConnectCalback;
 		std::map<std::string, std::function<void(CBaseConnection*)>>	m_mapDisconnectCallback;
 		std::map<std::string, std::function<void(const std::string&)>>	m_mapConnectFailCallback;

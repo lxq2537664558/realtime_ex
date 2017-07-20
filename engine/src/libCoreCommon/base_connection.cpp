@@ -43,10 +43,11 @@ namespace core
 	{
 		DebugAst(pData != nullptr);
 
-		SMCT_SEND_SOCKET_DATA* pContext = reinterpret_cast<SMCT_SEND_SOCKET_DATA*>(new char[sizeof(SMCT_SEND_SOCKET_DATA) + nSize]);
+		char* szBuf = new char[sizeof(SMCT_SEND_SOCKET_DATA) + nSize];
+		SMCT_SEND_SOCKET_DATA* pContext = reinterpret_cast<SMCT_SEND_SOCKET_DATA*>(szBuf);
 		pContext->nMessageType = nMessageType;
 		pContext->nSocketID = this->getID();
-		memcpy(pContext + 1, pData, nSize);
+		memcpy(szBuf + sizeof(SMCT_SEND_SOCKET_DATA), pData, nSize);
 
 		SMessagePacket sMessagePacket;
 		sMessagePacket.nType = eMCT_SEND_SOCKET_DATA;
@@ -63,11 +64,12 @@ namespace core
 		if (pExtraBuf == nullptr || nExtraSize == 0)
 			return this->send(nMessageType, pData, nSize);
 
-		SMCT_SEND_SOCKET_DATA* pContext = reinterpret_cast<SMCT_SEND_SOCKET_DATA*>(new char[sizeof(SMCT_SEND_SOCKET_DATA) + nSize + nExtraSize]);
+		char* szBuf = new char[sizeof(SMCT_SEND_SOCKET_DATA) + nSize];
+		SMCT_SEND_SOCKET_DATA* pContext = reinterpret_cast<SMCT_SEND_SOCKET_DATA*>(szBuf);
 		pContext->nMessageType = nMessageType;
 		pContext->nSocketID = this->getID();
-		memcpy(pContext + 1, pData, nSize);
-		memcpy(reinterpret_cast<char*>(pContext + 1) + nSize, pExtraBuf, nExtraSize);
+		memcpy(szBuf + sizeof(SMCT_SEND_SOCKET_DATA), pData, nSize);
+		memcpy(szBuf + sizeof(SMCT_SEND_SOCKET_DATA) + nSize, pExtraBuf, nExtraSize);
 
 		SMessagePacket sMessagePacket;
 		sMessagePacket.nType = eMCT_SEND_SOCKET_DATA;

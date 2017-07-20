@@ -57,6 +57,7 @@
       <AdditionalIncludeDirectories>../../inc/libBaseCommon;</AdditionalIncludeDirectories>
       <ExceptionHandling>Sync</ExceptionHandling>
       <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

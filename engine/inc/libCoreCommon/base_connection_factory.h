@@ -2,6 +2,8 @@
 
 #include "base_connection.h"
 
+#include "libBaseCommon\noncopyable.h"
+
 namespace core
 {
 	class CBaseConnectionFactory :

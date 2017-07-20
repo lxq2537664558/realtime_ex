@@ -25,7 +25,7 @@
 #include "service_base_mgr.h"
 
 // 放这里为了调试或者看dump的时候方便
-core::CBaseApp* g_pCoreApp = nullptr;
+core::CBaseApp* g_pBaseApp = nullptr;
 
 namespace core
 {
@@ -41,12 +41,12 @@ namespace core
 
 	CBaseApp*& CBaseApp::Inst()
 	{
-		return g_pCoreApp;
+		return g_pBaseApp;
 	}
 
-	bool CBaseApp::run(int32_t argc, char** argv, const char* szConfig)
+	bool CBaseApp::run(const std::string& szInstanceName, const std::string& szConfig)
 	{
-		return CCoreApp::Inst()->run(argc, argv, szConfig);
+		return CCoreApp::Inst()->run(szInstanceName, szConfig);
 	}
 
 	void CBaseApp::registerTicker(uint8_t nType, uint16_t nFromServiceID, uint64_t nFromActorID, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
@@ -85,7 +85,7 @@ namespace core
 
 	uint16_t CBaseApp::getServiceID(const std::string& szName) const
 	{
-		return CCoreApp::Inst()->getCoreOtherNodeProxy()->getServiceID(szName);
+		return CCoreApp::Inst()->getServiceRegistryProxy()->getServiceID(szName);
 	}
 
 	const std::string& CBaseApp::getConfigFileName() const
@@ -113,5 +113,10 @@ namespace core
 	void CBaseApp::debugLog(bool bEnable)
 	{
 		base::debugLog(bEnable);
+	}
+
+	base::CWriteBuf& CBaseApp::getWriteBuf() const
+	{
+		return CCoreApp::Inst()->getWriteBuf();
 	}
 }

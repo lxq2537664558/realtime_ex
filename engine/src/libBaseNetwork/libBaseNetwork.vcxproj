@@ -58,6 +58,7 @@
       <StringPooling>true</StringPooling>
       <SDLCheck>
       </SDLCheck>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

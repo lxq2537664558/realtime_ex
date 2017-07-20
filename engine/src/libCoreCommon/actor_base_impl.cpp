@@ -147,7 +147,7 @@ namespace core
 					uint8_t nResult = (uint8_t)sActorMessagePacket.nData;
 					if (sActorMessagePacket.nData == eRRT_OK)
 					{
-						uint64_t nCoroutineID = coroutine::create(0, [&pPendingResponseInfo, pMessage, nResult](uint64_t){ pPendingResponseInfo->callback(pMessage.get(), nResult); });
+						uint64_t nCoroutineID = coroutine::create(0, [&pPendingResponseInfo, pMessage, nResult](uint64_t){ pPendingResponseInfo->callback(pMessage, nResult); });
 						coroutine::resume(nCoroutineID, 0);
 					}
 					else
@@ -245,7 +245,7 @@ namespace core
 		this->m_channel.send(sActorMessagePacket);
 	}
 
-	SPendingResponseInfo* CActorBaseImpl::addPendingResponseInfo(uint64_t nSessionID, uint64_t nCoroutineID, uint64_t nToID, const std::string& szMessageName, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback)
+	SPendingResponseInfo* CActorBaseImpl::addPendingResponseInfo(uint64_t nSessionID, uint64_t nCoroutineID, uint64_t nToID, const std::string& szMessageName, const std::function<void(std::shared_ptr<google::protobuf::Message>&, uint32_t)>& callback)
 	{
 		if (nCoroutineID == 0)
 		{

@@ -45,7 +45,8 @@ namespace core
 	{
 		const SNodeBaseInfo& sNodeBaseInfo = CCoreApp::Inst()->getNodeBaseInfo();
 
-		this->m_pBaseConnectionMgr->listen(sNodeBaseInfo.szHost, sNodeBaseInfo.nPort, eBCT_ConnectionFromOtherNode, "", sNodeBaseInfo.nSendBufSize, sNodeBaseInfo.nRecvBufSize, default_client_message_parser);
+		if (!sNodeBaseInfo.szHost.empty())
+			this->m_pBaseConnectionMgr->listen(sNodeBaseInfo.szHost, sNodeBaseInfo.nPort, eBCT_ConnectionFromOtherNode, "", sNodeBaseInfo.nSendBufSize, sNodeBaseInfo.nRecvBufSize, nullptr);
 
 		this->m_pThreadBase = base::CThreadBase::createNew(this);
 		return nullptr != this->m_pThreadBase;
@@ -82,12 +83,12 @@ namespace core
 
 	bool CLogicRunnable::onInit()
 	{
-		return true;
+		return CBaseApp::Inst()->onInit();
 	}
 
 	void CLogicRunnable::onDestroy()
 	{
-
+		CBaseApp::Inst()->onDestroy();
 	}
 
 	bool CLogicRunnable::onProcess()
@@ -125,9 +126,6 @@ namespace core
 		case eMCT_QUIT:
 			{
 				const std::vector<CServiceBaseImpl*>& vecServiceBase = CCoreApp::Inst()->getServiceBaseMgr()->getServiceBase();
-				if (vecServiceBase.empty())
-					return false;
-
 				for (size_t i = 0; i < vecServiceBase.size(); ++i)
 				{
 					vecServiceBase[i]->quit();
@@ -143,8 +141,12 @@ namespace core
 				{
 					vecServiceBase[i]->run();
 				}
-
+				
 				bool bQuit = true;
+				
+				if (CBaseApp::Inst()->onProcess())
+					bQuit = false;
+
 				for (size_t i = 0; i < vecServiceBase.size(); ++i)
 				{
 					if (vecServiceBase[i]->getRunState() != eSRS_Quit)
@@ -214,7 +216,7 @@ namespace core
 				CBaseConnection* pBaseConnection = this->m_pBaseConnectionMgr->getBaseConnectionByID(pContext->nSocketID);
 				if (pBaseConnection == nullptr)
 				{
-					PrintWarning("pContext->pBaseConnection == nullptr type: eMCT_RECV_SOCKET_DATA socket_id: %d", pContext->nSocketID);
+					PrintWarning("pBaseConnection == nullptr type: eMCT_RECV_SOCKET_DATA socket_id: %d", pContext->nSocketID);
 					return true;
 				}
 
@@ -246,7 +248,7 @@ namespace core
 				}
 				else
 				{
-					pBaseConnection->onDispatch(pContext->nMessageType, pContext->pData, pContext->nDataSize, pContext);
+					pBaseConnection->onDispatch(pContext->nMessageType, pContext->pData, pContext->nDataSize);
 				}
 				char* pBuf = reinterpret_cast<char*>(sMessagePacket.pData);
 				SAFE_DELETE_ARRAY(pBuf);

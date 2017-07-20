@@ -8,7 +8,7 @@ namespace core
 		int32_t					pendingCount;
 
 		template<class T>
-		void onFuture(T* val, uint32_t)
+		void onFuture(const T* val, uint32_t)
 		{
 			if (--pendingCount == 0)
 			{

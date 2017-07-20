@@ -10,6 +10,7 @@
 namespace core
 {
 	class CBaseConnectionMgr;
+	class CLogicRunnable;
 	class CCoreApp;
 	/**
 	@brief: 基础框架类
@@ -17,6 +18,7 @@ namespace core
 	class CBaseApp
 	{
 		friend class CCoreApp;
+		friend class CLogicRunnable;
 		
 	public:
 		CBaseApp();
@@ -27,7 +29,7 @@ namespace core
 		/**
 		@brief: 启动框架
 		*/
-		bool						run(int32_t argc, char** argv, const char* szConfig);
+		bool						run(const std::string& szInstanceName, const std::string& szConfig);
 		/**
 		@brief: 注册定时器
 		nStartTime 第一次触发定时器的时间
@@ -42,6 +44,22 @@ namespace core
 		@brief: 获取连接管理器
 		*/
 		CBaseConnectionMgr*			getBaseConnectionMgr() const;
+		/**
+		@brief: 添加服务之间的前置过滤器
+		*/
+		void						addGlobalBeforeFilter(const std::string& szKey, NodeGlobalFilter callback);
+		/**
+		@brief: 删除服务之间的前置过滤器
+		*/
+		void						delGlobalBeforeFilter(const std::string& szKey);
+		/**
+		@brief: 添加服务之间的后置过滤器
+		*/
+		void						addGlobalAfterFilter(const std::string& szKey, NodeGlobalFilter callback);
+		/**
+		@brief: 删除服务之间的后置过滤器
+		*/
+		void						delGlobalAfterFilter(const std::string& szKey);
 		/*
 		@brief: 根据服务ID获取服务
 		*/
@@ -78,5 +96,14 @@ namespace core
 		@brief: 发起退出
 		*/
 		void						doQuit();
+		/**
+		@brief: 获取网络临时buf
+		*/
+		base::CWriteBuf&			getWriteBuf() const;
+
+	protected:
+		virtual bool				onInit() { return true; }
+		virtual bool				onProcess() { return true; }
+		virtual void				onDestroy() { }
 	};
 }

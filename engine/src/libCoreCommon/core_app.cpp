@@ -27,6 +27,7 @@
 #include "base_connection_mgr.h"
 #include "base_connection.h"
 #include "message_command.h"
+#include "class_info_mgr.h"
 
 #include "tinyxml2/tinyxml2.h"
 #include "service_base_impl.h"
@@ -106,7 +107,8 @@ namespace core
 		, m_pNetRunnable(nullptr)
 		, m_pTickerRunnable(nullptr)
 		, m_pTransporter(nullptr)
-		, m_pCoreOtherNodeProxy(nullptr)
+		, m_pServiceRegistryProxy(nullptr)
+		, m_pNodeConnectionFactory(nullptr)
 	{
 
 	}
@@ -116,17 +118,11 @@ namespace core
 
 	}
 
-	bool CCoreApp::run(int32_t argc, char** argv, const char* szConfig)
+	bool CCoreApp::run(const std::string& szInstanceName, const std::string& szConfig)
 	{
-		if (nullptr == szConfig)
-		{
-			fprintf(stderr, "nullptr == szConfig\n");
-			return false;
-		}
-
 		this->m_szConfig = szConfig;
 
-		base::setInstanceName(argv[0]);
+		base::setInstanceName(szInstanceName.c_str());
 
 		base::initProcessExceptionHander();
 		base::initThreadExceptionHander();
@@ -354,7 +350,8 @@ namespace core
 		// 加载节点基本信息
 		this->m_sNodeBaseInfo.nID = (uint16_t)nID;
 		this->m_sNodeBaseInfo.szName = pNodeInfoXML->Attribute("node_name");
-		this->m_sNodeBaseInfo.szHost = pNodeInfoXML->Attribute("host");
+		if (pNodeInfoXML->Attribute("host") != nullptr)
+			this->m_sNodeBaseInfo.szHost = pNodeInfoXML->Attribute("host");
 		this->m_sNodeBaseInfo.nPort = (uint16_t)pNodeInfoXML->UnsignedAttribute("port");
 		this->m_sNodeBaseInfo.nRecvBufSize = pNodeInfoXML->UnsignedAttribute("recv_buf_size");
 		this->m_sNodeBaseInfo.nSendBufSize = pNodeInfoXML->UnsignedAttribute("send_buf_size");
@@ -370,6 +367,11 @@ namespace core
 		this->m_tickerQPS.setCallback(std::bind(&CCoreApp::onQPS, this, std::placeholders::_1));
 		this->registerTicker(CTicker::eTT_Service, 0, 0, &this->m_tickerQPS, 1000, 1000, 0);
 
+		this->m_pNodeConnectionFactory = new CNodeConnectionFactory();
+		this->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionToMaster, this->m_pNodeConnectionFactory);
+		this->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionFromOtherNode, this->m_pNodeConnectionFactory);
+		this->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionToOtherNode, this->m_pNodeConnectionFactory);
+
 		this->m_pTransporter = new CTransporter();
 
 		this->m_pServiceBaseMgr = new CServiceBaseMgr();
@@ -379,8 +381,8 @@ namespace core
 			return false;
 		}
 
-		this->m_pCoreOtherNodeProxy = new CCoreOtherNodeProxy();
-		if (!this->m_pCoreOtherNodeProxy->init(pRootXML))
+		this->m_pServiceRegistryProxy = new CServiceRegistryProxy();
+		if (!this->m_pServiceRegistryProxy->init(pRootXML))
 		{
 			PrintWarning("this->m_pCoreOtherNodeProxy->init(pRootXML)");
 			return false;
@@ -419,12 +421,12 @@ namespace core
 		SAFE_DELETE(this->m_pTickerRunnable);
 		SAFE_DELETE(this->m_pNetRunnable);
 
-		SAFE_DELETE(this->m_pCoreOtherNodeProxy);
+		SAFE_DELETE(this->m_pServiceRegistryProxy);
 		SAFE_DELETE(this->m_pServiceBaseMgr);
 		SAFE_DELETE(this->m_pTransporter);
 
-		CBaseObject::unRegisterClassInfo();
-
+		CClassInfoMgr::Inst()->unRegisterClassInfo();
+		
 		uninitMonitor();
 		base::uninitProfiling();
 		base::uninitLog();
@@ -495,9 +497,9 @@ namespace core
 		return this->m_pTransporter;
 	}
 
-	CCoreOtherNodeProxy* CCoreApp::getCoreOtherNodeProxy() const
+	CServiceRegistryProxy* CCoreApp::getServiceRegistryProxy() const
 	{
-		return this->m_pCoreOtherNodeProxy;
+		return this->m_pServiceRegistryProxy;
 	}
 
 	CNetRunnable* CCoreApp::getNetRunnable() const
@@ -524,4 +526,5 @@ namespace core
 	{
 		return this->m_nThroughput;
 	}
+
 }

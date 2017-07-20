@@ -170,7 +170,7 @@ namespace core
 		return iter->second;
 	}
 
-	void CCoreConnectionMgr::broadcast(uint32_t nType, uint8_t nMessageType, const void* pData, uint16_t nSize, const std::vector<uint64_t>* vecExcludeID)
+	void CCoreConnectionMgr::broadcast(uint32_t nType, uint8_t nMessageType, const void* pData, uint16_t nSize, uint64_t* pExcludeID, uint16_t nExcludeIDCount)
 	{
 		auto iter = this->m_mapCoreConnectionByTypeID.find(nType);
 		if (iter == this->m_mapCoreConnectionByTypeID.end())
@@ -183,12 +183,12 @@ namespace core
 			if (nullptr == pCoreConnection)
 				continue;
 
-			if (vecExcludeID != nullptr)
+			if (pExcludeID != nullptr)
 			{
 				bool bMatch = false;
-				for (size_t i = 0; i < vecExcludeID->size(); ++i)
+				for (size_t i = 0; i < nExcludeIDCount; ++i)
 				{
-					if (vecExcludeID->at(i) == pCoreConnection->getID())
+					if (pExcludeID[i] == pCoreConnection->getID())
 					{
 						bMatch = true;
 						break;

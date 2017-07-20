@@ -167,8 +167,10 @@ namespace core
 
 		CCoreApp::Inst()->getLogicRunnable()->getMessageQueue()->send(sMessagePacket);
 
-		this->m_nState = eCCS_Disconnectting;
+		this->m_nState = eCCS_Disconnected;
 		this->m_pNetConnecter = nullptr;
+
+		CCoreApp::Inst()->getNetRunnable()->getCoreConnectionMgr()->destroyCoreConnection(this->getID());
 	}
 
 	void CCoreConnection::onConnectFail()
@@ -207,12 +209,9 @@ namespace core
 			const char* pMessageData = reinterpret_cast<const char*>(pCookice + 1) + pCookice->nMessageNameLen;
 			const std::string szMessageName = pCookice->szMessageName;
 
-			google::protobuf::Message* pMessage = create_protobuf_message(szMessageName);
-			if (nullptr == pMessage || !pMessage->ParseFromArray(pMessageData, nSize - sizeof(request_cookice) - pCookice->nMessageNameLen))
-			{
-				SAFE_DELETE(pMessage);
+			google::protobuf::Message* pMessage = unserialize_protobuf_message_from_buf(szMessageName, pMessageData, nSize - sizeof(request_cookice) - pCookice->nMessageNameLen);
+			if (nullptr == pMessage)
 				return;
-			}
 
 			pContext = new SMCT_RECV_SOCKET_DATA();
 			pContext->nSocketID = this->getID();
@@ -236,12 +235,9 @@ namespace core
 			const char* pMessageData = reinterpret_cast<const char*>(pCookice + 1) + pCookice->nMessageNameLen;
 			const std::string szMessageName = pCookice->szMessageName;
 
-			google::protobuf::Message* pMessage = create_protobuf_message(szMessageName);
-			if (nullptr == pMessage || !pMessage->ParseFromArray(pMessageData, nSize - sizeof(request_cookice) - pCookice->nMessageNameLen))
-			{
-				SAFE_DELETE(pMessage);
+			google::protobuf::Message* pMessage = unserialize_protobuf_message_from_buf(szMessageName, pMessageData, nSize - sizeof(response_cookice) - pCookice->nMessageNameLen);
+			if (nullptr == pMessage)
 				return;
-			}
 
 			pContext = new SMCT_RECV_SOCKET_DATA();
 			pContext->nSocketID = this->getID();
@@ -265,12 +261,9 @@ namespace core
 			const char* pMessageData = reinterpret_cast<const char*>(pCookice + 1) + pCookice->nMessageNameLen;
 			const std::string szMessageName = pCookice->szMessageName;
 
-			google::protobuf::Message* pMessage = create_protobuf_message(szMessageName);
-			if (nullptr == pMessage || !pMessage->ParseFromArray(pMessageData, nSize - sizeof(request_cookice) - pCookice->nMessageNameLen))
-			{
-				SAFE_DELETE(pMessage);
+			google::protobuf::Message* pMessage = unserialize_protobuf_message_from_buf(szMessageName, pMessageData, nSize - sizeof(gate_forward_cookice) - pCookice->nMessageNameLen);
+			if (nullptr == pMessage)
 				return;
-			}
 
 			pContext = new SMCT_RECV_SOCKET_DATA();
 			pContext->nSocketID = this->getID();

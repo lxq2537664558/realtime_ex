@@ -85,7 +85,7 @@ namespace core
 		pActorBase->m_pActorBaseImpl = this->m_pServiceBaseImpl->getActorScheduler()->createActorBase(pActorBase);
 		if (pActorBase->m_pActorBaseImpl == nullptr)
 		{
-			pActorBase->del();
+			SAFE_RELEASE(pActorBase);
 			return nullptr;
 		}
 
@@ -95,5 +95,10 @@ namespace core
 		PrintInfo("create actor id: "UINT64FMT, pActorBase->getID());
 
 		return pActorBase;
+	}
+
+	void CServiceBase::release()
+	{
+		CBaseObject::destroyObject(this);
 	}
 }

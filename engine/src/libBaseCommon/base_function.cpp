@@ -178,7 +178,7 @@ namespace base
 		return g_szInstanceName.c_str();
 	}
 
-	void setInstanceName(char* szName)
+	void setInstanceName(const char* szName)
 	{
 		if (szName == nullptr)
 			return;

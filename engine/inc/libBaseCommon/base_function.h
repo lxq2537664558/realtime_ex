@@ -19,7 +19,7 @@ namespace base
 	__BASE_COMMON_API__	uint32_t		crc32(const char* szBuf, uint32_t nBufSize);
 	
 	__BASE_COMMON_API__ const char*		getInstanceName();
-	__BASE_COMMON_API__ void			setInstanceName(char* szName);
+	__BASE_COMMON_API__ void			setInstanceName(const char* szName);
 	__BASE_COMMON_API__ void			setCurrentWorkPath(const char* szPath);
 	__BASE_COMMON_API__	const char*		getCurrentWorkPath();
 

@@ -105,7 +105,7 @@ namespace core
 			}
 			else
 			{
-				auto pMessage = std::unique_ptr<google::protobuf::Message>(reinterpret_cast<google::protobuf::Message*>(pContext->pData));
+				auto pMessage = std::shared_ptr<google::protobuf::Message>(reinterpret_cast<google::protobuf::Message*>(pContext->pData));
 				
 				auto pPendingResponseInfo = std::unique_ptr<SPendingResponseInfo>(CCoreApp::Inst()->getTransporter()->getPendingResponseInfo(pContext->nSessionID, true));
 				if (nullptr == pPendingResponseInfo)
@@ -113,7 +113,7 @@ namespace core
 
 				if (pContext->nData == eRRT_OK)
 				{
-					pPendingResponseInfo->callback(pMessage.get(), eRRT_OK);
+					pPendingResponseInfo->callback(pMessage, eRRT_OK);
 				}
 				else
 				{

@@ -16,11 +16,11 @@ namespace core
 
 		virtual void		onConnect();
 		virtual void		onDisconnect();
-		virtual void		onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize, const void* pContext);
+		virtual void		onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize);
 
 		uint16_t			getNodeID() const;
 
 	private:
-		uint16_t				m_nNodeID;
+		uint16_t	m_nNodeID;
 	};
 }

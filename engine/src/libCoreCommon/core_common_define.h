@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 
+#include "ticker.h"
 #include "core_common.h"
 
 #include "google\protobuf\message.h"
@@ -20,7 +21,7 @@ namespace core
 		int64_t		nBeginTime;	// 发送时间
 		std::string	szMessageName;	// 消息ID
 		
-		std::function<void(const google::protobuf::Message*, uint32_t)>
+		std::function<void(std::shared_ptr<google::protobuf::Message>, uint32_t)>
 					callback;
 	};
 

@@ -431,7 +431,7 @@ namespace base
 		disableSetUnhandledExceptionFilter();
 
 		// CtrlC屏蔽
-		SetConsoleCtrlHandler(breakCtrlC, true);
+		//SetConsoleCtrlHandler(breakCtrlC, true);
 
 #ifdef _DEBUG
 		// abort不弹出对话框

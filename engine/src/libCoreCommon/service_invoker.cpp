@@ -37,7 +37,7 @@ namespace core
 	{
 		DebugAstEx(pMessage != nullptr, false);
 
-		const std::vector<uint16_t> vecServiceID = CCoreApp::Inst()->getCoreOtherNodeProxy()->getServiceIDByTypeName(szServiceType);
+		const std::vector<uint16_t> vecServiceID = CCoreApp::Inst()->getServiceRegistryProxy()->getServiceIDByTypeName(szServiceType);
 		for (size_t i = 0; i < vecServiceID.size(); ++i)
 		{
 			this->send(eMTT_Service, vecServiceID[i], pMessage);
@@ -88,7 +88,7 @@ namespace core
 		return bRet;
 	}
 
-	bool CServiceInvoker::invoke(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback)
+	bool CServiceInvoker::invoke(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, const std::function<void(std::shared_ptr<google::protobuf::Message>&, uint32_t)>& callback)
 	{
 		uint64_t nSessionID = CCoreApp::Inst()->getTransporter()->genSessionID();
 		if (!CCoreApp::Inst()->getTransporter()->invoke(this->m_pServiceBaseImpl, eType, nSessionID, this->m_pServiceBaseImpl->getServiceID(), nID, pMessage))
