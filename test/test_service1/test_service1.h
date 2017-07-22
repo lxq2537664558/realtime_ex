@@ -27,9 +27,11 @@ private:
 
 	void					onTicker1(uint64_t nContext);
 	void					onTicker2(uint64_t nContext);
+	void					onTicker3(uint64_t nContext);
 
 private:
 	CTicker						m_ticker1;
 	CTicker						m_ticker2;
+	CTicker						m_ticker3;
 	std::map<uint32_t, bool>	m_mapConnectFlag;
 };

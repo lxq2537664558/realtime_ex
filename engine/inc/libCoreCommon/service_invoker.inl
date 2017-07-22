@@ -21,13 +21,13 @@ namespace core
 	}
 
 	template<class T>
-	bool CServiceInvoker::async_call(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback)
+	bool CServiceInvoker::async_call(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, const std::function<void(const T*, uint32_t)>& callback)
 	{
 		DebugAstEx(pMessage != nullptr && callback != nullptr, false);
 
 		auto callback_ = [callback](std::shared_ptr<google::protobuf::Message>& pResponseMessage, uint32_t nErrorCode)->void
 		{
-			callback(pResponseMessage.get(), nErrorCode);
+			callback(dynamic_cast<T*>(pResponseMessage.get()), nErrorCode);
 		};
 
 		return this->invoke(eType, nID, pMessage, callback_);

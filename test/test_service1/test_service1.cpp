@@ -12,6 +12,7 @@ CTestService1::CTestService1()
 {
 	this->m_ticker1.setCallback(std::bind(&CTestService1::onTicker1, this, std::placeholders::_1));
 	this->m_ticker2.setCallback(std::bind(&CTestService1::onTicker2, this, std::placeholders::_1));
+	this->m_ticker3.setCallback(std::bind(&CTestService1::onTicker3, this, std::placeholders::_1));
 	this->m_mapConnectFlag[2] = false;
 	this->m_mapConnectFlag[3] = false;
 }
@@ -120,6 +121,42 @@ void CTestService1::onTicker2(uint64_t nContext)
 	});
 }
 
+void CTestService1::onTicker3(uint64_t nContext)
+{
+	PrintInfo("CTestService1::onTicker3");
+
+	request_msg1 msg1;
+	msg1.set_id(100);
+	msg1.set_name("aaa");
+
+	this->getServiceInvoker()->async_call<response_msg1>(eMTT_Service, 2, &msg1, [this](const response_msg1* pMsg, uint32_t nErrorCode)
+	{
+		if (nErrorCode != eRRT_OK)
+		{
+			PrintInfo("CTestService1::onTicker1 response1 time out");
+			return;
+		}
+
+		PrintInfo("CTestService1::onTicker1 response1 id: %d name: %s", pMsg->id(), pMsg->name().c_str());
+
+		request_msg2 msg2;
+		msg2.set_id(pMsg->id());
+		msg2.set_name(pMsg->name());
+
+		this->getServiceInvoker()->async_call<response_msg2>(eMTT_Service, 3, &msg2, [this](const response_msg2* pMsg, uint32_t nErrorCode)
+		{
+			if (nErrorCode != eRRT_OK)
+			{
+				PrintInfo("CTestService1::onTicker1 response2 time out");
+				return;
+			}
+
+			PrintInfo("CTestService1::onTicker1 response2 id: %d name: %s", pMsg->id(), pMsg->name().c_str());
+		});
+
+	});
+}
+
 void CTestService1::onServiceConnect(uint32_t nServiceID)
 {
 	PrintInfo("ServiceConnect service_id: %d", nServiceID);
@@ -134,6 +171,7 @@ void CTestService1::onServiceConnect(uint32_t nServiceID)
 
 	this->registerTicker(&this->m_ticker1, 1000, 5000, 0);
 	this->registerTicker(&this->m_ticker2, 1000, 5000, 0);
+	this->registerTicker(&this->m_ticker3, 1000, 5000, 0);
 }
 
 void CTestService1::onServiceDisconnect(uint32_t nServiceID)
@@ -144,4 +182,5 @@ void CTestService1::onServiceDisconnect(uint32_t nServiceID)
 
 	this->unregisterTicker(&this->m_ticker1);
 	this->unregisterTicker(&this->m_ticker2);
+	this->unregisterTicker(&this->m_ticker3);
 }
