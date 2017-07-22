@@ -57,7 +57,7 @@ namespace core
 			this->m_nMasterID = netMsg.nMasterID;
 			if (!CCoreApp::Inst()->getServiceRegistryProxy()->addBaseConnectionToMaster(this))
 			{
-				this->shutdown(base::eNCCT_Force, "dup master connection");
+				this->shutdown(true, "dup master connection");
 				return;
 			}
 

@@ -125,18 +125,3 @@ void CServiceRegistry::delNode(uint32_t nNodeID)
 
 	PrintInfo("unregister node node_id: %d", nNodeID);
 }
-
-void CServiceRegistry::onNodeDisconnect(uint32_t nNodeID)
-{
-	auto iter = this->m_mapNodeInfo.find(nNodeID);
-	if (iter == this->m_mapNodeInfo.end())
-	{
-		PrintWarning("CServiceRegistry::onNodeDisconnect unknown node id: %d", nNodeID);
-		return;
-	}
-
-	SNodeInfo& sNodeInfo = iter->second;
-	sNodeInfo.pConnectionFromNode = nullptr;
-
-	PrintInfo("node disconnect node_id: %d", nNodeID);
-}

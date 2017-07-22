@@ -77,7 +77,7 @@ namespace core
 					{
 						char szBuf[256] = { 0 };
 						base::crt::snprintf(szBuf, _countof(szBuf), "parser message error %d", nParserSize);
-						this->shutdown(base::eNCCT_Force, szBuf);
+						this->shutdown(true, szBuf);
 						break;
 					}
 
@@ -95,7 +95,7 @@ namespace core
 					{
 						char szBuf[256] = { 0 };
 						base::crt::snprintf(szBuf, _countof(szBuf), "message size error message_type[%d]", pHeader->nMessageSize);
-						this->shutdown(base::eNCCT_Force, szBuf);
+						this->shutdown(true, szBuf);
 						break;
 					}
 
@@ -118,7 +118,7 @@ namespace core
 		{
 			char szBuf[1024] = { 0 };
 			base::crt::snprintf(szBuf, _countof(szBuf), "dispatch data error %s", exp.getInfo());
-			this->shutdown(base::eNCCT_Force, szBuf);
+			this->shutdown(true, szBuf);
 		}
 		// 这里不能catch ... 因为一旦这里捕获的如果逻辑代码中有存在不是异常安全的代码 轻则资源泄露，重则服务器没有在第一现场崩溃，等下跑了一段时间崩溃了
 
@@ -317,7 +317,7 @@ namespace core
 		
 		if (this->m_nSendHeartbeatCount > CCoreApp::Inst()->getHeartbeatLimit())
 		{
-			this->shutdown(base::eNCCT_Force, "heart beat time out");
+			this->shutdown(true, "heart beat time out");
 			return;
 		}
 		
@@ -394,13 +394,13 @@ namespace core
 		}
 	}
 
-	void CCoreConnection::shutdown(base::ENetConnecterCloseType eType, const std::string& szMsg)
+	void CCoreConnection::shutdown(bool bForce, const std::string& szMsg)
 	{
 		if (this->m_pNetConnecter)
 			return;
 
 		if (this->m_pNetConnecter != nullptr)
-			this->m_pNetConnecter->shutdown(eType, szMsg.c_str());
+			this->m_pNetConnecter->shutdown(bForce, szMsg.c_str());
 	}
 
 	uint32_t CCoreConnection::getSendDataSize() const

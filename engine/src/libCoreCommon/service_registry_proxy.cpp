@@ -139,7 +139,7 @@ namespace core
 		std::string szName = sNodeProxyInfo.sNodeBaseInfo.szName;
 		
 		if (sNodeProxyInfo.pBaseConnectionOtherNode != nullptr)
-			sNodeProxyInfo.pBaseConnectionOtherNode->shutdown(base::eNCCT_Force, "del node");
+			sNodeProxyInfo.pBaseConnectionOtherNode->shutdown(true, "del node");
 
 		for (size_t i = 0; i < sNodeProxyInfo.vecServiceBaseInfo.size(); ++i)
 		{
@@ -258,6 +258,8 @@ namespace core
 		}
 
 		sNodeProxyInfo.pBaseConnectionOtherNode = nullptr;
+
+		PrintInfo("other node disconnect node_id: %d node_name: %s", nNodeID, sNodeProxyInfo.sNodeBaseInfo.szName.c_str());
 	}
 
 	bool CServiceRegistryProxy::addBaseConnectionOtherNodeByNodeID(uint32_t nNodeID, CBaseConnectionOtherNode* pBaseConnectionOtherNode)
@@ -267,14 +269,14 @@ namespace core
 		auto iter = this->m_mapNodeProxyInfo.find(nNodeID);
 		if (iter == this->m_mapNodeProxyInfo.end())
 		{
-			PrintWarning("unknwon node node_id: %d remote_addr: %s %d", nNodeID, pBaseConnectionOtherNode->getRemoteAddr().szHost, pBaseConnectionOtherNode->getRemoteAddr().nPort);
+			PrintWarning("CServiceRegistryProxy::addBaseConnectionOtherNodeByNodeID unknwon node node_id: %d remote_addr: %s %d", nNodeID, pBaseConnectionOtherNode->getRemoteAddr().szHost, pBaseConnectionOtherNode->getRemoteAddr().nPort);
 			return false;
 		}
 
 		SNodeProxyInfo& sNodeProxyInfo = iter->second;
 		if (sNodeProxyInfo.pBaseConnectionOtherNode != nullptr)
 		{
-			PrintWarning("dup node connection node_id: %d remote_addr: %s %d", nNodeID, pBaseConnectionOtherNode->getRemoteAddr().szHost, pBaseConnectionOtherNode->getRemoteAddr().nPort);
+			PrintWarning("CServiceRegistryProxy::addBaseConnectionOtherNodeByNodeID dup node connection node_id: %d remote_addr: %s %d", nNodeID, pBaseConnectionOtherNode->getRemoteAddr().szHost, pBaseConnectionOtherNode->getRemoteAddr().nPort);
 			return false;
 		}
 
@@ -290,6 +292,7 @@ namespace core
 
 		sNodeProxyInfo.pBaseConnectionOtherNode = pBaseConnectionOtherNode;
 
+		PrintInfo("other node connect node_id: %d node_name: %s", nNodeID, sNodeProxyInfo.sNodeBaseInfo.szName.c_str());
 		return true;
 	}
 

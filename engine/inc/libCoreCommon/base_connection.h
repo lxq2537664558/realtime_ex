@@ -54,7 +54,7 @@ namespace core
 		/**
 		@brief: 关闭连接
 		*/
-		void					shutdown(base::ENetConnecterCloseType eType, const std::string& szMsg);
+		void					shutdown(bool bForce, const std::string& szMsg);
 		/**
 		@brief: 消息解析器
 		*/

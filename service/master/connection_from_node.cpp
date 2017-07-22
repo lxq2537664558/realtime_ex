@@ -48,7 +48,7 @@ void CConnectionFromNode::onConnect()
 void CConnectionFromNode::onDisconnect()
 {
 	if (this->m_nNodeID != 0)
-		CMasterApp::Inst()->getServiceRegistry()->onNodeDisconnect(this->m_nNodeID);
+		CMasterApp::Inst()->getServiceRegistry()->delNode(this->m_nNodeID);
 }
 
 void CConnectionFromNode::onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize)
@@ -67,7 +67,7 @@ void CConnectionFromNode::onDispatch(uint8_t nMessageType, const void* pData, ui
 		if (!CMasterApp::Inst()->getServiceRegistry()->addNode(this, netMsg.sNodeBaseInfo, netMsg.vecServiceBaseInfo))
 		{
 			this->m_nNodeID = 0;
-			this->shutdown(base::eNCCT_Force, "dup node connection");
+			this->shutdown(true, "dup node connection");
 			return;
 		}
 	}

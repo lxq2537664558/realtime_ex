@@ -38,7 +38,7 @@ namespace base
 			if (nEvent&eNET_Error)
 			{
 				// 这里可以大胆的强制关闭连接
-				this->shutdown(eNCCT_Force, "socket eNET_Error");
+				this->shutdown(true, "socket eNET_Error");
 				return;
 			}
 
@@ -122,13 +122,13 @@ namespace base
 			if (getsockopt(this->GetSocketID(), SOL_SOCKET, SO_ERROR, reinterpret_cast<char*>(&err), (socklen_t*)&len) < 0)
 			{
 				this->m_nFlag |= eNCF_ConnectFail;
-				this->shutdown(eNCCT_Force, "SO_ERROR getsockopt error %d", getLastError());
+				this->shutdown(true, "SO_ERROR getsockopt error %d", getLastError());
 				return;
 			}
 			if (err != 0)
 			{
 				this->m_nFlag |= eNCF_ConnectFail;
-				this->shutdown(eNCCT_Force, "SO_ERROR error %d", err);
+				this->shutdown(true, "SO_ERROR error %d", err);
 				return;
 			}
 		}
@@ -137,7 +137,7 @@ namespace base
 		if (this->getRemoteAddr() == this->getLocalAddr())
 		{
 			this->m_nFlag |= eNCF_ConnectFail;
-			this->shutdown(eNCCT_Force, "connect owner");
+			this->shutdown(true, "connect owner");
 			return;
 		}
 		this->m_eConnecterState = eNCS_Connected;
@@ -170,7 +170,10 @@ namespace base
 				this->printInfo("remote connection is close");
 				this->m_nFlag |= eNCF_CloseRecv;
 				this->m_eConnecterState = eNCS_Disconnecting;
-				this->close((this->m_nFlag&eNCF_CloseSend) != 0, false);
+
+				// 不用等逻辑层主动关闭，只要没有需要发送的数据的了，就关闭连接
+				if (this->m_pSendBuffer->getTailDataSize() != 0)
+					this->close();
 
 				break;
 			}
@@ -182,7 +185,7 @@ namespace base
 				if (getLastError() == NW_EINTR)
 					continue;
 
-				this->shutdown(eNCCT_Force, "recv data error");
+				this->shutdown(true, "recv data error");
 				break;
 			}
 			this->m_pRecvBuffer->push(nRet);
@@ -220,7 +223,7 @@ namespace base
 				if (getLastError() == NW_EINTR)
 					continue;
 
-				this->shutdown(eNCCT_Force, "send data error");
+				this->shutdown(true, "send data error");
 				break;
 			}
 			this->m_pSendBuffer->pop(nRet);
@@ -232,8 +235,8 @@ namespace base
 		if (nTotalDataSize != 0 && this->m_pSendBuffer->getTailDataSize() == 0 && this->m_pHandler != nullptr)
 			this->m_pHandler->onSendComplete(nTotalDataSize);
 		
-		if (this->m_nFlag&eNCF_CloseSend && this->m_pSendBuffer->getTailDataSize() == 0)
-			this->close((this->m_nFlag&(eNCF_CloseRecv|eNCCT_Force)) != 0, true);
+		if (this->m_eConnecterState == eNCS_Disconnecting && this->m_pSendBuffer->getTailDataSize() == 0)
+			this->close();
 	}
 
 	void CNetConnecter::flushSend()
@@ -358,7 +361,7 @@ namespace base
 				{
 					if (getLastError() != NW_EAGAIN && getLastError() != NW_EWOULDBLOCK)
 					{
-						this->shutdown(eNCCT_Force, "send data error");
+						this->shutdown(true, "send data error");
 						return false;
 					}
 
@@ -406,7 +409,7 @@ namespace base
 	直接closesocket时，此时发送跟接受都不行，对端会触发recv事件，数据大小为0
 	showdown时,此时发送不行，接收是可以的，对端会触发recv事件，数据大小为0
 	*/
-	void CNetConnecter::shutdown(ENetConnecterCloseType eType, const char* szFormat, ...)
+	void CNetConnecter::shutdown(bool bForce, const char* szFormat, ...)
 	{
 		DebugAst(szFormat != nullptr);
 
@@ -423,10 +426,9 @@ namespace base
 
 		this->m_eConnecterState = eNCS_Disconnecting;
 		this->m_nFlag |= eNCF_CloseSend;
-		if (eType == eNCCT_Grace)
-			this->m_nFlag |= eNCF_GraceClose;
-		if (eType == eNCCT_Force || this->m_pSendBuffer->getTailDataSize() == 0)
-			this->close(eType == eNCCT_Force || (this->m_nFlag&eNCF_CloseRecv), true);
+		
+		if (bForce || this->m_pSendBuffer->getTailDataSize() == 0)
+			this->close();
 	}
 
 	void CNetConnecter::setHandler(INetConnecterHandler* pHandler)

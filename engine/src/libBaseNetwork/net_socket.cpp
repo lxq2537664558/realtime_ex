@@ -77,21 +77,16 @@ namespace base
 		return true;
 	}
 
-	void CNetSocket::close(bool bRelease, bool bCloseSend)
+	void CNetSocket::close()
 	{
-		PrintInfo("CNetSocket::close socketid %d release: %d close_send: %d, wait_close: %d", this->m_nSocketID, bRelease, bCloseSend, this->m_bWaitClose);
+		PrintInfo("CNetSocket::close socketid %d wait_close: %d", this->m_nSocketID, this->m_bWaitClose);
 
 		if (this->m_bWaitClose)
 			return;
 
-		if (bCloseSend)
-			::shutdown(this->m_nSocketID, SD_SEND);
-
-		if (bRelease)
-		{
-			this->m_pNetEventLoop->addCloseSocket(this);
-			this->m_bWaitClose = true;
-		}
+		::shutdown(this->m_nSocketID, SD_SEND);
+		this->m_pNetEventLoop->addCloseSocket(this);
+		this->m_bWaitClose = true;
 	}
 
 	bool CNetSocket::nonblock()

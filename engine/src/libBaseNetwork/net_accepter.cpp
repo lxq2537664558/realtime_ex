@@ -192,6 +192,6 @@ namespace base
 
 	void CNetAccepter::shutdown()
 	{
-		this->close(true, false);
+		this->close();
 	}
 }

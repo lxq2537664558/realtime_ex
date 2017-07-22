@@ -124,7 +124,7 @@ namespace core
 					}
 					CCoreConnection* pCoreConnection = this->m_pCoreConnectionMgr->getCoreConnectionByID(pContext->nSocketID);
 					if (nullptr != pCoreConnection)
-						pCoreConnection->shutdown((base::ENetConnecterCloseType)pContext->nType, pContext->szMsg);
+						pCoreConnection->shutdown(pContext->nForce != 0, pContext->szMsg);
 
 					SAFE_DELETE(pContext);
 				}

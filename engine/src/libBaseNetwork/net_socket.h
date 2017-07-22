@@ -58,7 +58,7 @@ namespace base
 		uint32_t			getRecvBufferSize() const;
 
 	protected:
-		void				close(bool bRelease, bool bCloseSend);
+		void				close();
 
 	protected:
 		CNetEventLoop*	m_pNetEventLoop;

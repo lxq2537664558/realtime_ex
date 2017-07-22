@@ -16,7 +16,6 @@ public:
 
 	bool	addNode(CConnectionFromNode* pConnectionFromNode, const core::SNodeBaseInfo& sNodeBaseInfo, const std::vector<core::SServiceBaseInfo>& vecServiceBaseInfo);
 	void	delNode(uint32_t nNodeID);
-	void	onNodeDisconnect(uint32_t nNodeID);
 	
 private:
 	struct SNodeInfo

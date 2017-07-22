@@ -17,7 +17,6 @@ namespace base
 			eNCF_CloseSend		= 1<<1,
 			eNCF_DisableWrite	= 1<<2,
 			eNCF_ConnectFail	= 1<<3,
-			eNCF_GraceClose		= 1 << 4,
 		};
 
 	public:
@@ -33,7 +32,7 @@ namespace base
 
 		virtual bool				send(const void* pData, uint32_t nDataSize, bool bCache);
 		virtual void				setHandler(INetConnecterHandler* pHandler);
-		virtual void				shutdown(ENetConnecterCloseType eType, const char* szFormat, ...);
+		virtual void				shutdown(bool bForce, const char* szFormat, ...);
 		virtual const SNetAddr&		getLocalAddr() const;
 		virtual const SNetAddr&		getRemoteAddr() const;
 		virtual ENetConnecterType	getConnecterType() const;

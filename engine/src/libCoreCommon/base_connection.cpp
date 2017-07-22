@@ -79,11 +79,11 @@ namespace core
 		CCoreApp::Inst()->getNetRunnable()->getMessageQueue()->send(sMessagePacket);
 	}
 
-	void CBaseConnection::shutdown(base::ENetConnecterCloseType eType, const std::string& szMsg)
+	void CBaseConnection::shutdown(bool bForce, const std::string& szMsg)
 	{
 		SMCT_REQUEST_SOCKET_SHUTDOWN* pContext = new SMCT_REQUEST_SOCKET_SHUTDOWN();
 		pContext->nSocketID = this->getID();
-		pContext->nType = (uint32_t)eType;
+		pContext->nForce = bForce;
 		pContext->szMsg = szMsg;
 
 		SMessagePacket sMessagePacket;

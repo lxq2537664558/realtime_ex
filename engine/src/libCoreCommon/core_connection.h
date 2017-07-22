@@ -39,7 +39,7 @@ namespace core
 
 		uint32_t			getType() const;
 
-		void				shutdown(base::ENetConnecterCloseType eType, const std::string& szMsg);
+		void				shutdown(bool bForce, const std::string& szMsg);
 
 		uint32_t			getSendDataSize() const;
 		uint32_t			getRecvDataSize() const;

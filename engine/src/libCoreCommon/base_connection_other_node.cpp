@@ -86,7 +86,7 @@ namespace core
 
 				if (!CCoreApp::Inst()->getServiceRegistryProxy()->addBaseConnectionOtherNodeByNodeID(netMsg.sNodeBaseInfo.nID, this))
 				{
-					this->shutdown(base::eNCCT_Force, "dup node connection");
+					this->shutdown(true, "dup node connection");
 					return;
 				}
 
@@ -122,7 +122,7 @@ namespace core
 
 				if (!CCoreApp::Inst()->getServiceRegistryProxy()->addBaseConnectionOtherNodeByNodeID(netMsg.nNodeID, this))
 				{
-					this->shutdown(base::eNCCT_Force, "dup node connection");
+					this->shutdown(true, "dup node connection");
 					return;
 				}
 
