@@ -18,9 +18,9 @@ namespace core
 		virtual void		onDisconnect();
 		virtual void		onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize);
 
-		uint16_t			getNodeID() const;
+		uint32_t			getNodeID() const;
 
 	private:
-		uint16_t	m_nNodeID;
+		uint32_t	m_nNodeID;
 	};
 }

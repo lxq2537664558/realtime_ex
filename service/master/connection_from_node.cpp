@@ -31,7 +31,7 @@ void CConnectionFromNode::release()
 	delete this;
 }
 
-uint16_t CConnectionFromNode::getNodeID() const
+uint32_t CConnectionFromNode::getNodeID() const
 {
 	return this->m_nNodeID;
 }
@@ -47,7 +47,8 @@ void CConnectionFromNode::onConnect()
 
 void CConnectionFromNode::onDisconnect()
 {
-	CMasterApp::Inst()->getServiceRegistry()->delNode(this->m_nNodeID);
+	if (this->m_nNodeID != 0)
+		CMasterApp::Inst()->getServiceRegistry()->onNodeDisconnect(this->m_nNodeID);
 }
 
 void CConnectionFromNode::onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize)

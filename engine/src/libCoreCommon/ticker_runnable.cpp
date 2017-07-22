@@ -71,11 +71,11 @@ namespace core
 		return true;
 	}
 
-	bool CTickerRunnable::registerTicker(uint8_t nType, uint16_t nFromServiceID, uint64_t nFromActorID, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
+	bool CTickerRunnable::registerTicker(uint8_t nType, uint32_t nFromServiceID, uint64_t nFromActorID, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
 	{
 		DebugAstEx(pTicker != nullptr, false);
 		DebugAstEx(!pTicker->isRegister(), false);
-		DebugAstEx(nType == CTicker::eTT_Service || nType == CTicker::eTT_Net, false);
+		DebugAstEx(nType == CTicker::eTT_Service || nType == CTicker::eTT_Net || nType == CTicker::eTT_Actor, false);
 
 		CCoreTickerNode* pCoreTickerNode = new CCoreTickerNode();
 		pCoreTickerNode->Value.m_pTicker = pTicker;

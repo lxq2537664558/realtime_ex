@@ -45,12 +45,12 @@ namespace core
 					getCallback();
 
 		uint8_t		getType() const;
-		uint16_t	getServiceID() const;
+		uint32_t	getServiceID() const;
 		uint64_t	getActorID() const;
 
 	private:
 		uint8_t							m_nType;
-		uint16_t						m_nServiceID;
+		uint32_t						m_nServiceID;
 		uint64_t						m_nActorID;
 		void*							m_pCoreContext;		// 这块数据只会有逻辑线程去读
 		int64_t							m_nIntervalTime;	// 定时器运行的间隔时间

@@ -74,8 +74,6 @@ namespace core
 
 	void CCoroutineMgr::setCurrentCoroutine(CCoroutineImpl* pCoroutineImpl)
 	{
-		DebugAst(pCoroutineImpl != nullptr);
-
 		this->m_pCurrentCoroutine = pCoroutineImpl;
 	}
 

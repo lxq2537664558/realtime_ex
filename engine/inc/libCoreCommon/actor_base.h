@@ -23,7 +23,7 @@ namespace core
 		virtual ~CActorBase();
 
 	public:
-		virtual void		onInit(void* pContext) { }
+		virtual void		onInit(const std::string& szContext) { }
 		virtual void		onDestroy() { }
 
 		uint64_t			getID() const;

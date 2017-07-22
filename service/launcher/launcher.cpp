@@ -8,6 +8,7 @@
 #include "../../test/test_service1/test_service1.h"
 #include "../../test/test_service2/test_service2.h"
 #include "../../test/test_service3/test_service3.h"
+#include "../../test/test_actor1/test_actor_service1.h"
 
 int32_t main(int32_t argc, char* argv[])
 {
@@ -20,6 +21,8 @@ int32_t main(int32_t argc, char* argv[])
 	CTestService1::registerClassInfo();
 	CTestService2::registerClassInfo();
 	CTestService3::registerClassInfo();
+
+	CTestActorService1::registerClassInfo();
 
 	core::CBaseApp* pBaseApp = new core::CBaseApp();
 	pBaseApp->run(argv[0], argv[1]);

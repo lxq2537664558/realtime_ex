@@ -12,6 +12,8 @@ CTestService1::CTestService1()
 {
 	this->m_ticker1.setCallback(std::bind(&CTestService1::onTicker1, this, std::placeholders::_1));
 	this->m_ticker2.setCallback(std::bind(&CTestService1::onTicker2, this, std::placeholders::_1));
+	this->m_mapConnectFlag[2] = false;
+	this->m_mapConnectFlag[3] = false;
 }
 
 CTestService1::~CTestService1()
@@ -23,8 +25,8 @@ bool CTestService1::onInit()
 {
 	PrintInfo("CTestService1::onInit");
 
-	this->registerTicker(&this->m_ticker1, 1000, 5000, 0);
-	this->registerTicker(&this->m_ticker2, 1000, 5000, 0);
+	this->setServiceConnectCallback(std::bind(&CTestService1::onServiceConnect, this, std::placeholders::_1));
+	this->setServiceDisconnectCallback(std::bind(&CTestService1::onServiceDisconnect, this, std::placeholders::_1));
 
 	return true;
 }
@@ -67,6 +69,7 @@ void CTestService1::onTicker1(uint64_t nContext)
 		this->getServiceInvoker()->async_call(eMTT_Service, 3, &msg2, sFuture);
 
 		return sFuture;
+
 	}).then([this](const response_msg2* pMsg, uint32_t nErrorCode)
 	{
 		if (nErrorCode != eRRT_OK)
@@ -115,4 +118,30 @@ void CTestService1::onTicker2(uint64_t nContext)
 
 		PrintInfo("CTestService1::onTicker2 response id1: %d id2: %d name1: %s name2: %s", pMsg1->id(), pMsg2->id(), pMsg1->name().c_str(), pMsg2->name().c_str());
 	});
+}
+
+void CTestService1::onServiceConnect(uint32_t nServiceID)
+{
+	PrintInfo("ServiceConnect service_id: %d", nServiceID);
+
+	this->m_mapConnectFlag[nServiceID] = true;
+
+	for (auto iter = this->m_mapConnectFlag.begin(); iter != this->m_mapConnectFlag.end(); ++iter)
+	{
+		if (!iter->second)
+			return;
+	}
+
+	this->registerTicker(&this->m_ticker1, 1000, 5000, 0);
+	this->registerTicker(&this->m_ticker2, 1000, 5000, 0);
+}
+
+void CTestService1::onServiceDisconnect(uint32_t nServiceID)
+{
+	PrintInfo("ServiceDisconnect service_id: %d", nServiceID);
+
+	this->m_mapConnectFlag[nServiceID] = false;
+
+	this->unregisterTicker(&this->m_ticker1);
+	this->unregisterTicker(&this->m_ticker2);
 }

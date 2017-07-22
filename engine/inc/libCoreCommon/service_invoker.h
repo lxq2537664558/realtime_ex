@@ -32,8 +32,6 @@ namespace core
 		template<class T>
 		inline bool			async_call(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, CFuture<T>& sFuture);
 
-		bool				forward(EMessageTargetType eType, uint64_t nID, uint64_t nSessionID, const google::protobuf::Message* pMessage);
-		
 		void				response(const SSessionInfo& sSessionInfo, const google::protobuf::Message* pMessage);
 
 		static bool			send(const SClientSessionInfo& sClientSessionInfo, const google::protobuf::Message* pMessage);

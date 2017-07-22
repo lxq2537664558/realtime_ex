@@ -79,7 +79,7 @@ namespace base
 
 	void CNetSocket::close(bool bRelease, bool bCloseSend)
 	{
-		PrintInfo("CNetSocket::close socketid %d release: %d close_send: %d, wait_close", this->m_nSocketID, bRelease, bCloseSend, this->m_bWaitClose);
+		PrintInfo("CNetSocket::close socketid %d release: %d close_send: %d, wait_close: %d", this->m_nSocketID, bRelease, bCloseSend, this->m_bWaitClose);
 
 		if (this->m_bWaitClose)
 			return;

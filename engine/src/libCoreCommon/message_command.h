@@ -18,7 +18,9 @@ namespace core
 		eMCT_NOTIFY_SOCKET_CONNECT_FAIL,
 		eMCT_SEND_SOCKET_DATA,
 		eMCT_RECV_SOCKET_DATA,
-		eMCT_INSIDE_DATA,
+		eMCT_REQUEST,
+		eMCT_RESPONSE,
+		eMCT_GATE_FORWARD,
 		eMCT_BROADCAST_SOCKET_DATA1,
 		eMCT_BROADCAST_SOCKET_DATA2,
 		eMCT_TICKER,
@@ -69,7 +71,6 @@ namespace core
 		uint64_t nSocketID;
 	};
 
-	class CBaseConnection;
 	struct SMCT_NOTIFY_SOCKET_DISCONNECT
 	{
 		uint64_t nSocketID;
@@ -85,12 +86,42 @@ namespace core
 		uint64_t	nSocketID;
 		uint64_t	nSessionID;
 		uint64_t	nData;
-		uint64_t	nToActorID;
-		uint16_t	nToServiceID;
-		uint8_t		nTargetType;
+		uint64_t	nToID;
+		uint32_t	nToServiceID;
 		uint8_t		nMessageType;
 		uint16_t	nDataSize;
 		void*		pData;
+	};
+
+	struct SMCT_REQUEST
+	{
+		uint64_t	nSessionID;
+		uint64_t	nFromActorID;
+		uint32_t	nFromServiceID;
+		uint64_t	nToActorID;
+		uint32_t	nToServiceID;
+		google::protobuf::Message*
+					pMessage;
+	};
+
+	struct SMCT_RESPONSE
+	{
+		uint64_t	nSessionID;
+		uint64_t	nToActorID;
+		uint32_t	nToServiceID;
+		uint8_t		nResult;
+		google::protobuf::Message*
+					pMessage;
+	};
+
+	struct SMCT_GATE_FORWARD
+	{
+		uint64_t	nSessionID;
+		uint32_t	nFromServiceID;
+		uint64_t	nToActorID;
+		uint32_t	nToServiceID;
+		google::protobuf::Message*
+					pMessage;
 	};
 
 	struct SMCT_SEND_SOCKET_DATA

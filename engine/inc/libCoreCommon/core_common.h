@@ -83,9 +83,8 @@ namespace core
 	
 	enum EMessageTargetType
 	{
-		eMTT_None		= 0,
-		eMTT_Actor		= 1,
-		eMTT_Service	= 2,
+		eMTT_Actor		= 0,
+		eMTT_Service	= 1,
 	};
 
 	struct	SMessagePacket
@@ -98,6 +97,7 @@ namespace core
 	struct	SActorMessagePacket
 	{
 		uint8_t		nType;
+		uint32_t	nFromServiceID;
 		uint64_t	nData;
 		uint64_t	nSessionID;
 		google::protobuf::Message*		
@@ -106,7 +106,7 @@ namespace core
 
 	struct SNodeBaseInfo
 	{
-		uint16_t	nID;
+		uint32_t	nID;
 		std::string	szName;			// 节点名字
 		std::string	szHost;			// 服务器IP
 		uint16_t	nPort;			// 0表示该节点没有监听地址
@@ -116,7 +116,7 @@ namespace core
 
 	struct SServiceBaseInfo
 	{
-		uint16_t	nID;
+		uint32_t	nID;
 		std::string	szName;			// 服务名字
 		std::string	szType;			// 服务类型（比如gate, gas）
 		std::string szClassName;	// 类名字
@@ -124,15 +124,16 @@ namespace core
 
 	struct SClientSessionInfo
 	{
-		uint16_t	nGateServiceID;
+		uint32_t	nGateServiceID;
 		uint64_t	nSessionID;
 	};
 
 	struct SSessionInfo
 	{
-		uint64_t			nFromID;
+		uint32_t			nFromServiceID;
+		uint64_t			nFromActorID;
+		EMessageTargetType	eFromType;
 		uint64_t			nSessionID;
-		EMessageTargetType	eTargetType;
 	};
 
 	struct SSyncCallResultInfo
@@ -149,10 +150,9 @@ namespace core
 	struct gate_forward_cookice
 	{
 		uint64_t	nSessionID;
-		uint64_t	nFromID;
+		uint32_t	nFromServiceID;
 		uint64_t	nToActorID;
-		uint16_t	nToServiceID;
-		uint8_t		nTargetType;
+		uint32_t	nToServiceID;
 		uint16_t	nMessageNameLen;
 		char		szMessageName[1];
 	};
@@ -177,10 +177,10 @@ namespace core
 	struct request_cookice
 	{
 		uint64_t	nSessionID;
-		uint64_t	nFromID;
+		uint64_t	nFromActorID;
+		uint32_t	nFromServiceID;
 		uint64_t	nToActorID;
-		uint16_t	nToServiceID;
-		uint8_t		nTargetType;
+		uint32_t	nToServiceID;
 		uint16_t	nMessageNameLen;
 		char		szMessageName[1];
 	};
@@ -189,9 +189,8 @@ namespace core
 	{
 		uint64_t	nSessionID;
 		uint64_t	nToActorID;
-		uint16_t	nToServiceID;
+		uint32_t	nToServiceID;
 		uint8_t		nResult;
-		uint8_t		nTargetType;
 		uint16_t	nMessageNameLen;
 		char		szMessageName[1];
 	};

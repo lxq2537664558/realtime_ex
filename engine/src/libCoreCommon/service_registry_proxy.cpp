@@ -41,7 +41,7 @@ namespace core
 			for (tinyxml2::XMLElement* pMonsterXML = pMonsterInfoXML->FirstChildElement("master"); pMonsterXML != nullptr; pMonsterXML = pMonsterXML->NextSiblingElement("master"))
 			{
 				SMasterInfo sMasterInfo;
-				sMasterInfo.nID = (uint16_t)pMonsterXML->UnsignedAttribute("id");
+				sMasterInfo.nID = pMonsterXML->UnsignedAttribute("id");
 				sMasterInfo.szHost = pMonsterXML->Attribute("host");
 				sMasterInfo.nPort = (uint16_t)pMonsterXML->UnsignedAttribute("port");
 				sMasterInfo.pBaseConnectionToMaster = nullptr;
@@ -128,7 +128,7 @@ namespace core
 		PrintInfo("add proxy node node_id: %d node_name: %s", sNodeBaseInfo.nID, sNodeBaseInfo.szName.c_str());
 	}
 	
-	void CServiceRegistryProxy::delNodeProxyInfo(uint16_t nID)
+	void CServiceRegistryProxy::delNodeProxyInfo(uint32_t nID)
 	{
 		auto iter = this->m_mapNodeProxyInfo.find(nID);
 		if (iter == this->m_mapNodeProxyInfo.end())
@@ -150,7 +150,7 @@ namespace core
 		for (size_t i = 0; i < sNodeProxyInfo.vecServiceBaseInfo.size(); ++i)
 		{
 			const SServiceBaseInfo& sServiceBaseInfo = sNodeProxyInfo.vecServiceBaseInfo[i];
-			std::vector<uint16_t>& vecServiceID = this->m_mapServiceIDByServiceType[sServiceBaseInfo.szType];
+			std::vector<uint32_t>& vecServiceID = this->m_mapServiceIDByServiceType[sServiceBaseInfo.szType];
 			for (size_t j = 0; j < vecServiceID.size(); ++j)
 			{
 				if (vecServiceID[j] == sServiceBaseInfo.nID)
@@ -164,7 +164,7 @@ namespace core
 		PrintInfo("del proxy node node_id: %d node_name: %s", nID, szName.c_str());
 	}
 
-	uint16_t CServiceRegistryProxy::getServiceID(const std::string& szName) const
+	uint32_t CServiceRegistryProxy::getServiceID(const std::string& szName) const
 	{
 		auto iter = this->m_mapServiceName.find(szName);
 		if (iter == this->m_mapServiceName.end())
@@ -179,7 +179,7 @@ namespace core
 		return iter->second;
 	}
 
-	std::string CServiceRegistryProxy::getServiceType(uint16_t nServiceID) const
+	std::string CServiceRegistryProxy::getServiceType(uint32_t nServiceID) const
 	{
 		auto iter = this->m_mapServiceProxyInfo.find(nServiceID);
 		if (iter == this->m_mapServiceProxyInfo.end())
@@ -194,7 +194,7 @@ namespace core
 		return iter->second.sServiceBaseInfo.szType;
 	}
 
-	std::string CServiceRegistryProxy::getServiceName(uint16_t nServiceID) const
+	std::string CServiceRegistryProxy::getServiceName(uint32_t nServiceID) const
 	{
 		auto iter = this->m_mapServiceProxyInfo.find(nServiceID);
 		if (iter == this->m_mapServiceProxyInfo.end())
@@ -209,19 +209,19 @@ namespace core
 		return iter->second.sServiceBaseInfo.szName;
 	}
 
-	const std::vector<uint16_t>& CServiceRegistryProxy::getServiceIDByTypeName(const std::string& szName) const
+	const std::vector<uint32_t>& CServiceRegistryProxy::getServiceIDByTypeName(const std::string& szName) const
 	{
 		auto iter = this->m_mapServiceIDByServiceType.find(szName);
 		if (iter == this->m_mapServiceIDByServiceType.end())
 		{
-			static std::vector<uint16_t> vecEmpty;
+			static std::vector<uint32_t> vecEmpty;
 			return vecEmpty;
 		}
 		
 		return iter->second;
 	}
 
-	const SServiceBaseInfo* CServiceRegistryProxy::getServiceBaseInfoByServiceID(uint16_t nServiceID) const
+	const SServiceBaseInfo* CServiceRegistryProxy::getServiceBaseInfoByServiceID(uint32_t nServiceID) const
 	{
 		auto iter = this->m_mapServiceProxyInfo.find(nServiceID);
 		if (iter == this->m_mapServiceProxyInfo.end())
@@ -230,7 +230,7 @@ namespace core
 		return &iter->second.sServiceBaseInfo;
 	}
 
-	bool CServiceRegistryProxy::getServiceBaseInfoByNodeID(uint16_t nNodeID, std::vector<SServiceBaseInfo>& vecServiceBaseInfo) const
+	bool CServiceRegistryProxy::getServiceBaseInfoByNodeID(uint32_t nNodeID, std::vector<SServiceBaseInfo>& vecServiceBaseInfo) const
 	{
 		auto iter = this->m_mapNodeProxyInfo.find(nNodeID);
 		if (iter == this->m_mapNodeProxyInfo.end())
@@ -240,7 +240,7 @@ namespace core
 		return true;
 	}
 
-	void CServiceRegistryProxy::delBaseConnectionOtherNodeByNodeID(uint16_t nNodeID)
+	void CServiceRegistryProxy::delBaseConnectionOtherNodeByNodeID(uint32_t nNodeID)
 	{
 		auto iter = this->m_mapNodeProxyInfo.find(nNodeID);
 		if (iter == this->m_mapNodeProxyInfo.end())
@@ -260,7 +260,7 @@ namespace core
 		sNodeProxyInfo.pBaseConnectionOtherNode = nullptr;
 	}
 
-	bool CServiceRegistryProxy::addBaseConnectionOtherNodeByNodeID(uint16_t nNodeID, CBaseConnectionOtherNode* pBaseConnectionOtherNode)
+	bool CServiceRegistryProxy::addBaseConnectionOtherNodeByNodeID(uint32_t nNodeID, CBaseConnectionOtherNode* pBaseConnectionOtherNode)
 	{
 		DebugAstEx(pBaseConnectionOtherNode != nullptr, false);
 
@@ -293,7 +293,7 @@ namespace core
 		return true;
 	}
 
-	CBaseConnectionOtherNode* CServiceRegistryProxy::getBaseConnectionOtherNodeByNodeID(uint16_t nNodeID) const
+	CBaseConnectionOtherNode* CServiceRegistryProxy::getBaseConnectionOtherNodeByNodeID(uint32_t nNodeID) const
 	{
 		auto iter = this->m_mapNodeProxyInfo.find(nNodeID);
 		if (iter == this->m_mapNodeProxyInfo.end())
@@ -302,7 +302,7 @@ namespace core
 		return iter->second.pBaseConnectionOtherNode;
 	}
 
-	CBaseConnectionOtherNode* CServiceRegistryProxy::getBaseConnectionOtherNodeByServiceID(uint16_t nServiceID) const
+	CBaseConnectionOtherNode* CServiceRegistryProxy::getBaseConnectionOtherNodeByServiceID(uint32_t nServiceID) const
 	{
 		auto iter = this->m_mapServiceProxyInfo.find(nServiceID);
 		if (iter == this->m_mapServiceProxyInfo.end())
@@ -324,7 +324,7 @@ namespace core
 		return true;
 	}
 
-	void CServiceRegistryProxy::delBaseConnectionToMaster(uint16_t nMasterID)
+	void CServiceRegistryProxy::delBaseConnectionToMaster(uint32_t nMasterID)
 	{
 		auto iter = this->m_mapMasterInfo.find(nMasterID);
 		DebugAst(iter != this->m_mapMasterInfo.end());
@@ -358,7 +358,7 @@ namespace core
 		uint32_t nID = 0;
 		base::crt::atoui(szContext.c_str() + std::string("master").size(), nID);
 
-		auto iter = this->m_mapMasterInfo.find((uint16_t)nID);
+		auto iter = this->m_mapMasterInfo.find(nID);
 		DebugAst(iter != this->m_mapMasterInfo.end());
 
 		iter->second.bActive = false;

@@ -86,7 +86,7 @@ namespace core
 		return this->m_nType;
 	}
 
-	uint16_t CTicker::getServiceID() const
+	uint32_t CTicker::getServiceID() const
 	{
 		return this->m_nServiceID;
 	}

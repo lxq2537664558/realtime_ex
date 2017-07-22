@@ -2,34 +2,35 @@
 #include "libCoreCommon\service_base.h"
 #include "libCoreCommon\ticker.h"
 
+#include "test_actor1.h"
+
 #include <map>
 
 using namespace std;
 using namespace core;
 using namespace base;
 
-class CTestService1 :
+class CTestActorService1 :
 	public CServiceBase
 {
 	DECLARE_OBJECT(CTestService1)
 
 public:
-	CTestService1();
-	virtual ~CTestService1();
+	CTestActorService1();
+	virtual ~CTestActorService1();
 
 private:
-	virtual bool			onInit();
-	virtual void			onFrame();
-	virtual void			onQuit();
+	virtual bool	onInit();
+	virtual void	onFrame();
+	virtual void	onQuit();
 
-	void					onServiceConnect(uint32_t nServiceID);
-	void					onServiceDisconnect(uint32_t nServiceID);
-
-	void					onTicker1(uint64_t nContext);
-	void					onTicker2(uint64_t nContext);
+	void			onServiceConnect(uint32_t nServiceID);
+	void			onServiceDisconnect(uint32_t nServiceID);
 
 private:
 	CTicker						m_ticker1;
 	CTicker						m_ticker2;
 	std::map<uint32_t, bool>	m_mapConnectFlag;
+
+	CTestActor1*				m_pTestActor1;
 };

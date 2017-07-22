@@ -265,7 +265,7 @@ namespace base
 		/**
 		@brief: 推动网络事件循环器
 		*/
-		virtual void	update(int64_t nTime) = 0;
+		virtual void	update(uint32_t nTime) = 0;
 		/**
 		@brief: 在事件循环等待中唤醒等待
 		*/

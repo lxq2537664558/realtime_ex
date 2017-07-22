@@ -30,7 +30,7 @@ namespace base
 		virtual bool	init(uint32_t nMaxSocketCount);
 		virtual bool	listen(const SNetAddr& netAddr, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, INetAccepterHandler* pHandler);
 		virtual bool	connect(const SNetAddr& netAddr, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, INetConnecterHandler* pHandler);
-		virtual void	update(int64_t nTime);
+		virtual void	update(uint32_t nTime);
 		virtual void	wakeup();
 		virtual void	release();
 

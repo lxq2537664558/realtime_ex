@@ -12,6 +12,6 @@ namespace core
 		CServiceIDConverter() { }
 		virtual ~CServiceIDConverter() { }
 
-		virtual uint16_t convert(const std::string& szServiceType, uint16_t nServiceID) = 0;
+		virtual uint32_t convert(const std::string& szServiceType, uint32_t nServiceID) = 0;
 	};
 }

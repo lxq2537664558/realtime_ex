@@ -14,13 +14,13 @@ namespace core
 		virtual bool		init(uint32_t nType, const std::string& szContext);
 		virtual void		release();
 
-		uint16_t			getMasterID() const;
+		uint32_t			getMasterID() const;
 
 		virtual void		onConnect();
 		virtual void		onDisconnect();
 		virtual void		onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize);
 
 	private:
-		uint16_t	m_nMasterID;
+		uint32_t	m_nMasterID;
 	};
 }

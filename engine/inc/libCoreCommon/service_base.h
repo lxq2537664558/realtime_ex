@@ -36,7 +36,7 @@ namespace core
 		CServiceBase();
 		virtual ~CServiceBase();
 
-		uint16_t				getServiceID() const;
+		uint32_t				getServiceID() const;
 		/**
 		@brief: 获取服务基础信息
 		*/
@@ -83,11 +83,11 @@ namespace core
 		/**
 		@brief: 设置全局的服务连接成功回调
 		*/
-		void					setServiceConnectCallback(const std::function<void(uint16_t)>& callback);
+		void					setServiceConnectCallback(const std::function<void(uint32_t)>& callback);
 		/**
 		@brief: 设置全局的服务连接断开回调
 		*/
-		void					setServiceDisconnectCallback(const std::function<void(uint16_t)>& callback);
+		void					setServiceDisconnectCallback(const std::function<void(uint32_t)>& callback);
 
 		/**
 		@brief: 获取服务调用器
@@ -96,7 +96,7 @@ namespace core
 		/**
 		@brief: 创建actor
 		*/
-		CActorBase*				createActor(const std::string& szClassName, void* pContext);
+		CActorBase*				createActor(const std::string& szClassName, const std::string& szContext);
 		/*
 		@brief: 获取运行状态
 		*/

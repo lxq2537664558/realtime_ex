@@ -20,7 +20,14 @@ namespace core
 
 		uint64_t yield()
 		{
-			return getCoroutineMgr()->getCurrentCoroutine()->yield();
+			CCoroutineImpl* pCoroutineImpl = getCoroutineMgr()->getCurrentCoroutine();
+			if (pCoroutineImpl == nullptr)
+			{
+				PrintWarning("yield error invalid current coroutine");
+				return 0;
+			}
+
+			return pCoroutineImpl->yield();
 		}
 
 		uint32_t getState(uint64_t nID)

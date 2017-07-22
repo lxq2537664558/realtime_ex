@@ -46,7 +46,7 @@ namespace core
 
 	void CBaseConnectionOtherNode::onDisconnect()
 	{
-		if (!this->getNodeID() != 0)
+		if (this->getNodeID() != 0)
 		{
 			CCoreApp::Inst()->getServiceRegistryProxy()->delBaseConnectionOtherNodeByNodeID(this->getNodeID());
 			const std::vector<CServiceBaseImpl*>& vecServiceBase = CCoreApp::Inst()->getServiceBaseMgr()->getServiceBase();
@@ -146,7 +146,7 @@ namespace core
 		}
 	}
 
-	uint16_t CBaseConnectionOtherNode::getNodeID() const
+	uint32_t CBaseConnectionOtherNode::getNodeID() const
 	{
 		return this->m_nNodeID;
 	}

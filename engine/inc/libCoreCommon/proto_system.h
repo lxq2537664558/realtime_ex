@@ -93,7 +93,7 @@ message_begin(smt_unregister_node_base_info, eSMT_unregister_node_base_info)
 message_end
 
 message_begin(smt_sync_master_info, eSMT_sync_master_info)
-	uint16_t nMasterID;
+	uint32_t nMasterID;
 
 	void pack(base::CWriteBuf& writeBuf)
 	{
@@ -166,7 +166,7 @@ message_begin(smt_sync_node_base_info, eSMT_sync_node_base_info)
 message_end
 
 message_begin(smt_remove_node_base_info, eSMT_remove_node_base_info)
-	uint16_t nNodeID;
+	uint32_t nNodeID;
 
 	void pack(base::CWriteBuf& writeBuf)
 	{
@@ -238,7 +238,7 @@ message_begin(smt_notify_node_base_info, eSMT_notify_node_base_info)
 	message_end
 
 message_begin(smt_notify_ack_node_base_info, eSMT_notify_ack_node_base_info)
-	uint16_t nNodeID;
+	uint32_t nNodeID;
 
 	void pack(base::CWriteBuf& writeBuf)
 	{

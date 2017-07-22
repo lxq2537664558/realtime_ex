@@ -12,7 +12,7 @@ namespace core
 
 	}
 
-	uint16_t CServiceBase::getServiceID() const
+	uint32_t CServiceBase::getServiceID() const
 	{
 		return this->m_pServiceBaseImpl->getServiceID();
 	}
@@ -47,12 +47,12 @@ namespace core
 		this->m_pServiceBaseImpl->registerActorForwardHandler(szMessageName, callback);
 	}
 
-	void CServiceBase::setServiceConnectCallback(const std::function<void(uint16_t)>& callback)
+	void CServiceBase::setServiceConnectCallback(const std::function<void(uint32_t)>& callback)
 	{
 		this->m_pServiceBaseImpl->setServiceConnectCallback(callback);
 	}
 
-	void CServiceBase::setServiceDisconnectCallback(const std::function<void(uint16_t)>& callback)
+	void CServiceBase::setServiceDisconnectCallback(const std::function<void(uint32_t)>& callback)
 	{
 		this->m_pServiceBaseImpl->setServiceDisconnectCallback(callback);
 	}
@@ -77,7 +77,7 @@ namespace core
 		return this->m_pServiceBaseImpl->getServiceInvoker();
 	}
 
-	CActorBase* CServiceBase::createActor(const std::string& szClassName, void* pContext)
+	CActorBase* CServiceBase::createActor(const std::string& szClassName, const std::string& szContext)
 	{
 		CActorBase* pActorBase = dynamic_cast<CActorBase*>(CBaseObject::createObject(szClassName));
 		DebugAstEx(pActorBase != nullptr, nullptr);
@@ -89,7 +89,7 @@ namespace core
 			return nullptr;
 		}
 
-		uint64_t nCoroutineID = coroutine::create(0, [pActorBase, pContext](uint64_t){ pActorBase->onInit(pContext); });
+		uint64_t nCoroutineID = coroutine::create(0, [pActorBase, szContext](uint64_t){ pActorBase->onInit(szContext); });
 		coroutine::resume(nCoroutineID, 0);
 		
 		PrintInfo("create actor id: "UINT64FMT, pActorBase->getID());

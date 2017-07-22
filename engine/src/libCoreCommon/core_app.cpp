@@ -141,7 +141,7 @@ namespace core
 		return true;
 	}
 
-	void CCoreApp::registerTicker(uint8_t nType, uint16_t nFromServiceID, uint64_t nFromActorID, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
+	void CCoreApp::registerTicker(uint8_t nType, uint32_t nFromServiceID, uint64_t nFromActorID, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
 	{
 		this->m_pTickerRunnable->registerTicker(nType, nFromServiceID, nFromActorID, pTicker, nStartTime, nIntervalTime, nContext);
 	}
@@ -487,7 +487,7 @@ namespace core
 		return this->m_sNodeBaseInfo;
 	}
 
-	uint16_t CCoreApp::getNodeID() const
+	uint32_t CCoreApp::getNodeID() const
 	{
 		return this->m_sNodeBaseInfo.nID;
 	}
@@ -520,11 +520,6 @@ namespace core
 	uint32_t CCoreApp::getInvokeTimeout() const
 	{
 		return this->m_nInvokeTimeout;
-	}
-
-	uint32_t CCoreApp::getThroughput() const
-	{
-		return this->m_nThroughput;
 	}
 
 }

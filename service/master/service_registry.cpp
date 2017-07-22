@@ -24,7 +24,7 @@ bool CServiceRegistry::addNode(CConnectionFromNode* pConnectionFromNode, const c
 	auto iter = this->m_mapNodeInfo.find(sNodeBaseInfo.nID);
 	if (iter != this->m_mapNodeInfo.end())
 	{
-		PrintWarning("dup node id: %d", sNodeBaseInfo.nID);
+		PrintWarning("CServiceRegistry::addNode dup node id: %d", sNodeBaseInfo.nID);
 		return false;
 	}
 
@@ -33,13 +33,13 @@ bool CServiceRegistry::addNode(CConnectionFromNode* pConnectionFromNode, const c
 		const core::SServiceBaseInfo& sServiceBaseInfo = vecServiceBaseInfo[i];
 		if (this->m_setServiceName.find(sServiceBaseInfo.szName) != this->m_setServiceName.end())
 		{
-			PrintWarning("dup service name: %s node id: %d", sServiceBaseInfo.szName.c_str(), sNodeBaseInfo.nID);
+			PrintWarning("CServiceRegistry::addNode dup service name: %s node id: %d", sServiceBaseInfo.szName.c_str(), sNodeBaseInfo.nID);
 			return false;
 		}
 
 		if (this->m_setServiceID.find(sServiceBaseInfo.nID) != this->m_setServiceID.end())
 		{
-			PrintWarning("dup service id: %s node id: %d", sServiceBaseInfo.nID, sNodeBaseInfo.nID);
+			PrintWarning("CServiceRegistry::addNode dup service id: %s node id: %d", sServiceBaseInfo.nID, sNodeBaseInfo.nID);
 			return false;
 		}
 	}
@@ -95,11 +95,14 @@ bool CServiceRegistry::addNode(CConnectionFromNode* pConnectionFromNode, const c
 	return true;
 }
 
-void CServiceRegistry::delNode(uint16_t nNodeID)
+void CServiceRegistry::delNode(uint32_t nNodeID)
 {
 	auto iter = this->m_mapNodeInfo.find(nNodeID);
 	if (iter == this->m_mapNodeInfo.end())
+	{
+		PrintWarning("CServiceRegistry::delNode unknown node id: %d", nNodeID);
 		return;
+	}
 
 	const SNodeInfo& sNodeInfo = iter->second;
 
@@ -121,4 +124,19 @@ void CServiceRegistry::delNode(uint16_t nNodeID)
 	this->m_mapNodeInfo.erase(iter);
 
 	PrintInfo("unregister node node_id: %d", nNodeID);
+}
+
+void CServiceRegistry::onNodeDisconnect(uint32_t nNodeID)
+{
+	auto iter = this->m_mapNodeInfo.find(nNodeID);
+	if (iter == this->m_mapNodeInfo.end())
+	{
+		PrintWarning("CServiceRegistry::onNodeDisconnect unknown node id: %d", nNodeID);
+		return;
+	}
+
+	SNodeInfo& sNodeInfo = iter->second;
+	sNodeInfo.pConnectionFromNode = nullptr;
+
+	PrintInfo("node disconnect node_id: %d", nNodeID);
 }

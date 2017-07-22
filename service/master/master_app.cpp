@@ -50,7 +50,7 @@ bool CMasterApp::onInit()
 		return false;
 	}
 
-	this->m_nMasterID = (uint16_t)pMasterXML->UnsignedAttribute("id");
+	this->m_nMasterID = pMasterXML->UnsignedAttribute("id");
 
 	this->m_pNodeConnectionFactory = new CNodeConnectionFactory();
 	this->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionFromService, this->m_pNodeConnectionFactory);
@@ -83,7 +83,7 @@ CServiceRegistry* CMasterApp::getServiceRegistry() const
 	return this->m_pServiceRegistry;
 }
 
-uint16_t CMasterApp::getMasterID() const
+uint32_t CMasterApp::getMasterID() const
 {
 	return this->m_nMasterID;
 }

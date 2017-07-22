@@ -31,7 +31,7 @@ namespace core
 
 		bool						run(const std::string& szInstanceName, const std::string& szConfig);
 		
-		void						registerTicker(uint8_t nType, uint16_t nFromServiceID, uint64_t nFromActorID, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
+		void						registerTicker(uint8_t nType, uint32_t nFromServiceID, uint64_t nFromActorID, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
 		void						unregisterTicker(CTicker* pTicker);
 
 		CBaseConnectionMgr*			getBaseConnectionMgr() const;
@@ -51,11 +51,9 @@ namespace core
 		CTickerRunnable*			getTickerRunnable() const;
 		
 		const SNodeBaseInfo&		getNodeBaseInfo() const;
-		uint16_t					getNodeID() const;
+		uint32_t					getNodeID() const;
 
 		uint32_t					getInvokeTimeout() const;
-
-		uint32_t					getThroughput() const;
 
 		const std::string&			getConfigFileName() const;
 		
@@ -99,6 +97,5 @@ namespace core
 		CNodeConnectionFactory*				m_pNodeConnectionFactory;
 		SNodeBaseInfo						m_sNodeBaseInfo;
 		uint32_t							m_nInvokeTimeout;
-		uint32_t							m_nThroughput;
 	};
 }

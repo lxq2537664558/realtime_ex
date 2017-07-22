@@ -17,7 +17,7 @@ namespace core
 	}
 
 	template<class T>
-	uint16_t CServiceMessageRegistry<T>::getServiceID() const
+	uint32_t CServiceMessageRegistry<T>::getServiceID() const
 	{
 		return this->m_nServiceID;
 	}

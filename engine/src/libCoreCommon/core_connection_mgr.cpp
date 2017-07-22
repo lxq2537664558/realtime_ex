@@ -147,7 +147,7 @@ namespace core
 		return true;
 	}
 
-	void CCoreConnectionMgr::update(int64_t nTime)
+	void CCoreConnectionMgr::update(uint32_t nTime)
 	{
 		this->m_pNetEventLoop->update(nTime);
 	}

@@ -20,7 +20,7 @@ namespace core
 		for (tinyxml2::XMLElement* pServiceInfoXML = pNodeInfoXML->FirstChildElement("service_info"); pServiceInfoXML != nullptr; pServiceInfoXML = pServiceInfoXML->NextSiblingElement("service_info"))
 		{
 			SServiceBaseInfo sServiceBaseInfo;
-			sServiceBaseInfo.nID = (uint16_t)pServiceInfoXML->UnsignedAttribute("service_id");
+			sServiceBaseInfo.nID = pServiceInfoXML->UnsignedAttribute("service_id");
 			sServiceBaseInfo.szName = pServiceInfoXML->Attribute("service_name");
 			sServiceBaseInfo.szType = pServiceInfoXML->Attribute("service_type");
 			sServiceBaseInfo.szClassName = pServiceInfoXML->Attribute("class_name");
@@ -45,10 +45,25 @@ namespace core
 			this->m_mapServiceBase[pServiceBaseImpl->getServiceID()] = pServiceBaseImpl;
 		}
 
+		for (size_t k = 0; k < this->m_vecServiceBase.size(); ++k)
+		{
+			auto& callback = this->m_vecServiceBase[k]->getServiceConnectCallback();
+			if (callback == nullptr)
+				continue;
+
+			for (size_t i = 0; i < this->m_vecServiceBaseInfo.size(); ++i)
+			{
+				if (this->m_vecServiceBaseInfo[i].nID == this->m_vecServiceBase[k]->getServiceID())
+					continue;
+
+				callback(this->m_vecServiceBaseInfo[i].nID);
+			}
+		}
+
 		return true;
 	}
 
-	CServiceBaseImpl* CServiceBaseMgr::getServiceBaseByID(uint16_t nID) const
+	CServiceBaseImpl* CServiceBaseMgr::getServiceBaseByID(uint32_t nID) const
 	{
 		auto iter = this->m_mapServiceBase.find(nID);
 		if (iter == this->m_mapServiceBase.end())
@@ -76,7 +91,7 @@ namespace core
 		return this->m_vecServiceBaseInfo;
 	}
 
-	bool CServiceBaseMgr::isOwnerService(uint16_t nServiceID) const
+	bool CServiceBaseMgr::isOwnerService(uint32_t nServiceID) const
 	{
 		for (size_t i = 0; i < this->m_vecServiceBaseInfo.size(); ++i)
 		{

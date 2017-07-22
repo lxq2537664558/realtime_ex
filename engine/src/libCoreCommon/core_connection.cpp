@@ -197,7 +197,6 @@ namespace core
 
 		this->m_monitor.onRecv(nSize);
 
-		SMCT_RECV_SOCKET_DATA* pContext = nullptr;
 		if (nMessageType == eMT_REQUEST)
 		{
 			const request_cookice* pCookice = reinterpret_cast<const request_cookice*>(pData);
@@ -213,16 +212,21 @@ namespace core
 			if (nullptr == pMessage)
 				return;
 
-			pContext = new SMCT_RECV_SOCKET_DATA();
-			pContext->nSocketID = this->getID();
+			char* szBuf = new char[sizeof(SMCT_REQUEST)];
+			SMCT_REQUEST* pContext = reinterpret_cast<SMCT_REQUEST*>(szBuf);
 			pContext->nSessionID = pCookice->nSessionID;
-			pContext->nData = pCookice->nFromID;
+			pContext->nFromActorID = pCookice->nFromActorID;
+			pContext->nFromServiceID = pCookice->nFromServiceID;
 			pContext->nToActorID = pCookice->nToActorID;
 			pContext->nToServiceID = pCookice->nToServiceID;
-			pContext->nTargetType = pCookice->nTargetType;
-			pContext->nMessageType = eMT_REQUEST;
-			pContext->nDataSize = nSize;
-			pContext->pData = pMessage;
+			pContext->pMessage = pMessage;
+
+			SMessagePacket sMessagePacket;
+			sMessagePacket.nType = eMCT_REQUEST;
+			sMessagePacket.pData = pContext;
+			sMessagePacket.nDataSize = sizeof(SMCT_REQUEST);
+
+			CCoreApp::Inst()->getLogicRunnable()->getMessageQueue()->send(sMessagePacket);
 		}
 		else if (nMessageType == eMT_RESPONSE)
 		{
@@ -239,16 +243,20 @@ namespace core
 			if (nullptr == pMessage)
 				return;
 
-			pContext = new SMCT_RECV_SOCKET_DATA();
-			pContext->nSocketID = this->getID();
+			char* szBuf = new char[sizeof(SMCT_RESPONSE)];
+			SMCT_RESPONSE* pContext = reinterpret_cast<SMCT_RESPONSE*>(szBuf);
 			pContext->nSessionID = pCookice->nSessionID;
-			pContext->nData = pCookice->nResult;
 			pContext->nToActorID = pCookice->nToActorID;
 			pContext->nToServiceID = pCookice->nToServiceID;
-			pContext->nTargetType = pCookice->nTargetType;
-			pContext->nMessageType = eMT_RESPONSE;
-			pContext->nDataSize = nSize;
-			pContext->pData = pMessage;
+			pContext->nResult = pCookice->nResult;
+			pContext->pMessage = pMessage;
+
+			SMessagePacket sMessagePacket;
+			sMessagePacket.nType = eMCT_RESPONSE;
+			sMessagePacket.pData = pContext;
+			sMessagePacket.nDataSize = sizeof(SMCT_RESPONSE);
+
+			CCoreApp::Inst()->getLogicRunnable()->getMessageQueue()->send(sMessagePacket);
 		}
 		else if (nMessageType == eMT_GATE_FORWARD)
 		{
@@ -265,39 +273,41 @@ namespace core
 			if (nullptr == pMessage)
 				return;
 
-			pContext = new SMCT_RECV_SOCKET_DATA();
-			pContext->nSocketID = this->getID();
+			char* szBuf = new char[sizeof(SMCT_GATE_FORWARD)];
+			SMCT_GATE_FORWARD* pContext = reinterpret_cast<SMCT_GATE_FORWARD*>(szBuf);
 			pContext->nSessionID = pCookice->nSessionID;
-			pContext->nData = pCookice->nFromID;
+			pContext->nFromServiceID = pCookice->nFromServiceID;
 			pContext->nToActorID = pCookice->nToActorID;
 			pContext->nToServiceID = pCookice->nToServiceID;
-			pContext->nTargetType = pCookice->nTargetType;
-			pContext->nMessageType = eMT_GATE_FORWARD;
-			pContext->nDataSize = nSize;
-			pContext->pData = pMessage;
+			pContext->pMessage = pMessage;
+
+			SMessagePacket sMessagePacket;
+			sMessagePacket.nType = eMCT_GATE_FORWARD;
+			sMessagePacket.pData = pContext;
+			sMessagePacket.nDataSize = sizeof(SMCT_GATE_FORWARD);
+
+			CCoreApp::Inst()->getLogicRunnable()->getMessageQueue()->send(sMessagePacket);
 		}
 		else
 		{
 			char* pBuf = new char[sizeof(SMCT_RECV_SOCKET_DATA) + nSize];
-			pContext = reinterpret_cast<SMCT_RECV_SOCKET_DATA*>(pBuf);
+			SMCT_RECV_SOCKET_DATA* pContext = reinterpret_cast<SMCT_RECV_SOCKET_DATA*>(pBuf);
 			pContext->nSocketID = this->getID();
 			pContext->nSessionID = 0;
 			pContext->nData = 0;
-			pContext->nToActorID = 0;
-			pContext->nToServiceID = 0;
-			pContext->nTargetType = 0;
+			pContext->nToID = 0;
 			pContext->nMessageType = nMessageType;
 			pContext->nDataSize = nSize;
 			pContext->pData = pBuf + sizeof(SMCT_RECV_SOCKET_DATA);
 			memcpy(pContext->pData, pData, nSize);
+
+			SMessagePacket sMessagePacket;
+			sMessagePacket.nType = eMCT_RECV_SOCKET_DATA;
+			sMessagePacket.pData = pContext;
+			sMessagePacket.nDataSize = sizeof(SMCT_RECV_SOCKET_DATA);
+
+			CCoreApp::Inst()->getLogicRunnable()->getMessageQueue()->send(sMessagePacket);
 		}
-
-		SMessagePacket sMessagePacket;
-		sMessagePacket.nType = eMCT_RECV_SOCKET_DATA;
-		sMessagePacket.pData = pContext;
-		sMessagePacket.nDataSize = sizeof(SMCT_RECV_SOCKET_DATA);
-
-		CCoreApp::Inst()->getLogicRunnable()->getMessageQueue()->send(sMessagePacket);
 	}
 
 	void CCoreConnection::onHeartbeat(uint64_t nContext)

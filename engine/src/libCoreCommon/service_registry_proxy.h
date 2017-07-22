@@ -26,23 +26,23 @@ namespace core
 		bool							init(tinyxml2::XMLElement* pXMLElement);
 		
 		void							addNodeProxyInfo(const SNodeBaseInfo& sNodeBaseInfo, const std::vector<SServiceBaseInfo>& vecServiceBaseInfo, bool bMaster);
-		void							delNodeProxyInfo(uint16_t nID);
+		void							delNodeProxyInfo(uint32_t nID);
 
-		uint16_t						getServiceID(const std::string& szName) const;
-		std::string						getServiceType(uint16_t nServiceID) const;
-		std::string						getServiceName(uint16_t nServiceID) const;
-		const std::vector<uint16_t>&	getServiceIDByTypeName(const std::string& szName) const;
+		uint32_t						getServiceID(const std::string& szName) const;
+		std::string						getServiceType(uint32_t nServiceID) const;
+		std::string						getServiceName(uint32_t nServiceID) const;
+		const std::vector<uint32_t>&	getServiceIDByTypeName(const std::string& szName) const;
 		
-		const SServiceBaseInfo*			getServiceBaseInfoByServiceID(uint16_t nServiceID) const;
-		bool							getServiceBaseInfoByNodeID(uint16_t nNodeID, std::vector<SServiceBaseInfo>& vecServiceBaseInfo) const;
+		const SServiceBaseInfo*			getServiceBaseInfoByServiceID(uint32_t nServiceID) const;
+		bool							getServiceBaseInfoByNodeID(uint32_t nNodeID, std::vector<SServiceBaseInfo>& vecServiceBaseInfo) const;
 		
-		CBaseConnectionOtherNode*		getBaseConnectionOtherNodeByServiceID(uint16_t nServiceID) const;
-		CBaseConnectionOtherNode*		getBaseConnectionOtherNodeByNodeID(uint16_t nNodeID) const;
-		bool							addBaseConnectionOtherNodeByNodeID(uint16_t nNodeID, CBaseConnectionOtherNode* pBaseConnectionOtherNode);
-		void							delBaseConnectionOtherNodeByNodeID(uint16_t nNodeID);
+		CBaseConnectionOtherNode*		getBaseConnectionOtherNodeByServiceID(uint32_t nServiceID) const;
+		CBaseConnectionOtherNode*		getBaseConnectionOtherNodeByNodeID(uint32_t nNodeID) const;
+		bool							addBaseConnectionOtherNodeByNodeID(uint32_t nNodeID, CBaseConnectionOtherNode* pBaseConnectionOtherNode);
+		void							delBaseConnectionOtherNodeByNodeID(uint32_t nNodeID);
 		
 		bool							addBaseConnectionToMaster(CBaseConnectionToMaster* pBaseConnectionToMaster);
-		void							delBaseConnectionToMaster(uint16_t nMasterID);
+		void							delBaseConnectionToMaster(uint32_t nMasterID);
 
 	private:
 		void							onCheckConnectMaster(uint64_t nContext);
@@ -65,7 +65,7 @@ namespace core
 
 		struct SMasterInfo
 		{
-			uint16_t	nID;
+			uint32_t	nID;
 			std::string	szHost;
 			uint16_t	nPort;
 			bool		bActive;
@@ -73,13 +73,13 @@ namespace core
 						pBaseConnectionToMaster;
 		};
 
-		std::map<uint16_t, SNodeProxyInfo>		m_mapNodeProxyInfo;
-		std::map<uint16_t, SServiceProxyInfo>	m_mapServiceProxyInfo;
-		std::map<std::string, uint16_t>			m_mapServiceName;
-		std::map<std::string, std::vector<uint16_t>>
+		std::map<uint32_t, SNodeProxyInfo>		m_mapNodeProxyInfo;
+		std::map<uint32_t, SServiceProxyInfo>	m_mapServiceProxyInfo;
+		std::map<std::string, uint32_t>			m_mapServiceName;
+		std::map<std::string, std::vector<uint32_t>>
 												m_mapServiceIDByServiceType;
 
-		std::map<uint16_t, SMasterInfo>			m_mapMasterInfo;
+		std::map<uint32_t, SMasterInfo>			m_mapMasterInfo;
 		CTicker									m_tickCheckConnectMaster;
 
 		std::map<std::string, uint32_t>			m_mapConnectServiceName;	// 需要被连接的服务名字

@@ -18,10 +18,10 @@ public:
 	virtual void	onDestroy();
 
 	CServiceRegistry*	getServiceRegistry() const;
-	uint16_t			getMasterID() const;
+	uint32_t			getMasterID() const;
 
 private:
-	uint16_t				m_nMasterID;
+	uint32_t				m_nMasterID;
 	CServiceRegistry*		m_pServiceRegistry;
 	CNodeConnectionFactory*	m_pNodeConnectionFactory;
 };

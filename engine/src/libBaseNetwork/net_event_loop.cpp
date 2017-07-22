@@ -112,7 +112,7 @@ namespace base
 		delete this;
 	}
 
-	void CNetEventLoop::update(int64_t nTime)
+	void CNetEventLoop::update(uint32_t nTime)
 	{
 		for (auto iter = this->m_listCloseSocket.begin(); iter != this->m_listCloseSocket.end(); ++iter)
 		{
@@ -139,9 +139,13 @@ namespace base
 		// 如果在经过上面的循环后Socket中还存在数据没有发送出去，那么在下面的代码中，就会触发写事件继续发送
 		// 下面的代码还是发送不完，那么就会在下一帧的写事件触发时发送
 
-#ifdef _WIN32
 		if (this->m_nSocketCount == 0)
+		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(nTime));
 			return;
+		}
+
+#ifdef _WIN32
 
 		fd_set readfds;
 		fd_set writefds;
@@ -165,8 +169,8 @@ namespace base
 		}
 
 		struct timeval timeout;
-		timeout.tv_sec = (int32_t)((nTime * 1000) / 1000000);
-		timeout.tv_usec = (int32_t)((nTime * 1000) % 1000000);
+		timeout.tv_sec = (int32_t)(((int64_t)nTime * 1000) / 1000000);
+		timeout.tv_usec = (int32_t)(((int64_t)nTime * 1000) % 1000000);
 		int32_t nRet = ::select(0, &readfds, &writefds, &exceptfds, &timeout);
 		if (SOCKET_ERROR == nRet)
 		{
@@ -197,9 +201,6 @@ namespace base
 #else
 		do
 		{
-			if (this->m_nSocketCount == 0)
-				return;
-
 			this->m_pWakeup->wait(true);
 			int32_t nActiveCount = ::epoll_wait(this->m_nEpoll, &this->m_vecEpollEvent[0], this->m_vecEpollEvent.size(), nTime);
 			this->m_pWakeup->wait(false);

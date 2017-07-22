@@ -30,7 +30,7 @@ namespace core
 
 		CServiceBase*			getServiceBase() const;
 
-		uint16_t				getServiceID() const;
+		uint32_t				getServiceID() const;
 		const SServiceBaseInfo&	getServiceBaseInfo() const;
 
 		void					registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
@@ -62,11 +62,11 @@ namespace core
 		std::function<void(CActorBase*, SClientSessionInfo, const google::protobuf::Message*)>&
 								getActorForwardHandler(const std::string& szMessageName);
 
-		void					setServiceConnectCallback(const std::function<void(uint16_t)>& callback);
-		void					setServiceDisconnectCallback(const std::function<void(uint16_t)>& callback);
-		std::function<void(uint16_t)>&
+		void					setServiceConnectCallback(const std::function<void(uint32_t)>& callback);
+		void					setServiceDisconnectCallback(const std::function<void(uint32_t)>& callback);
+		std::function<void(uint32_t)>&
 								getServiceConnectCallback();
-		std::function<void(uint16_t)>&
+		std::function<void(uint32_t)>&
 								getServiceDisconnectCallback();
 
 		EServiceRunState		getRunState() const;
@@ -91,9 +91,9 @@ namespace core
 		std::map<std::string, std::function<void(CActorBase*, SClientSessionInfo, const google::protobuf::Message*)>>
 								m_mapActorForwardHandler;
 
-		std::function<void(uint16_t)>
+		std::function<void(uint32_t)>
 								m_fnServiceConnectCallback;
-		std::function<void(uint16_t)>
+		std::function<void(uint32_t)>
 								m_fnServiceDisconnectCallback;
 	};
 }

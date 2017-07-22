@@ -30,7 +30,7 @@ namespace core
 	{
 		SAFE_DELETE(this->m_pPendingResponseMessage);
 
-		for (uint32_t i = 0; i < CCoreApp::Inst()->getThroughput(); ++i)
+		while (true)
 		{
 			SActorMessagePacket sActorMessagePacket;
 			if (!this->m_channel.recv(sActorMessagePacket))
@@ -89,23 +89,16 @@ namespace core
 
 			this->m_pPendingResponseMessage = nullptr;
 			this->m_nPendingResponseResult = 0;
-			
 		}
 
-		for (uint32_t i = 0; i < CCoreApp::Inst()->getThroughput(); ++i)
+		while (this->m_eState == eABS_Normal)
 		{
 			SActorMessagePacket sActorMessagePacket;
 			if (!this->m_channel.recv(sActorMessagePacket))
 				break;
 
-			if (this->m_eState == eABS_Pending)
-				break;
-
 			this->dispatch(sActorMessagePacket);
 		}
-
-		if (!this->m_channel.empty() && this->m_eState == eABS_Normal)
-			this->m_pServiceBaseImpl->getActorScheduler()->addWorkActorBase(this);
 	}
 
 	void CActorBaseImpl::dispatch(const SActorMessagePacket& sActorMessagePacket)
@@ -115,16 +108,20 @@ namespace core
 		{
 			auto pMessage = std::shared_ptr<google::protobuf::Message>(sActorMessagePacket.pMessage);
 			auto callback = this->m_pServiceBaseImpl->getActorMessageHandler(pMessage->GetTypeName());
-			if (callback != nullptr)
+			if (callback == nullptr)
 			{
-				SSessionInfo sSessionInfo;
-				sSessionInfo.nFromID = sActorMessagePacket.nData;
-				sSessionInfo.nSessionID = sActorMessagePacket.nSessionID;
-				sSessionInfo.eTargetType = eMTT_Actor;
-
-				uint64_t nCoroutineID = coroutine::create(0, [&callback, this, pMessage, sSessionInfo](uint64_t){ callback(this->m_pActorBase, sSessionInfo, pMessage.get()); });
-				coroutine::resume(nCoroutineID, 0);
+				PrintWarning("CActorBaseImpl::dispatch error unknown request message actor_id: "UINT64FMT", message_name: %s", this->getID(), pMessage->GetTypeName().c_str());
+				return;
 			}
+
+			SSessionInfo sSessionInfo;
+			sSessionInfo.eFromType = sActorMessagePacket.nData != 0 ? eMTT_Actor : eMTT_Service;
+			sSessionInfo.nFromServiceID = sActorMessagePacket.nFromServiceID;
+			sSessionInfo.nFromActorID = sActorMessagePacket.nData;
+			sSessionInfo.nSessionID = sActorMessagePacket.nSessionID;
+
+			uint64_t nCoroutineID = coroutine::create(0, [&callback, this, pMessage, sSessionInfo](uint64_t){ callback(this->m_pActorBase, sSessionInfo, pMessage.get()); });
+			coroutine::resume(nCoroutineID, 0);
 		}
 		else if (sActorMessagePacket.nType == eMT_RESPONSE)
 		{
@@ -145,7 +142,7 @@ namespace core
 				else if (pPendingResponseInfo->callback != nullptr)
 				{
 					uint8_t nResult = (uint8_t)sActorMessagePacket.nData;
-					if (sActorMessagePacket.nData == eRRT_OK)
+					if (nResult == eRRT_OK)
 					{
 						uint64_t nCoroutineID = coroutine::create(0, [&pPendingResponseInfo, pMessage, nResult](uint64_t){ pPendingResponseInfo->callback(pMessage, nResult); });
 						coroutine::resume(nCoroutineID, 0);
@@ -164,24 +161,27 @@ namespace core
 		}
 		else if (sActorMessagePacket.nType == eMT_GATE_FORWARD)
 		{
-			SClientSessionInfo sClientSessionInfo;
-			sClientSessionInfo.nGateServiceID = (uint16_t)sActorMessagePacket.nData;
-			sClientSessionInfo.nSessionID = sActorMessagePacket.nSessionID;
 			auto pMessage = std::shared_ptr<google::protobuf::Message>(sActorMessagePacket.pMessage);
 
 			auto callback = this->m_pServiceBaseImpl->getActorForwardHandler(pMessage->GetTypeName());
-			if (callback != nullptr)
+			if (callback == nullptr)
 			{
-				uint64_t nCoroutineID = coroutine::create(0, [&callback, this, pMessage, sClientSessionInfo](uint64_t){ callback(this->m_pActorBase, sClientSessionInfo, pMessage.get()); });
-				coroutine::resume(nCoroutineID, 0);
+				PrintWarning("CActorBaseImpl::dispatch error unknown gate forawrd message actor_id: "UINT64FMT", message_name: %s", this->getID(), pMessage->GetTypeName().c_str());
+				return;
 			}
+			
+			SClientSessionInfo sClientSessionInfo;
+			sClientSessionInfo.nGateServiceID = sActorMessagePacket.nFromServiceID;
+			sClientSessionInfo.nSessionID = sActorMessagePacket.nSessionID;
+			uint64_t nCoroutineID = coroutine::create(0, [&callback, this, pMessage, sClientSessionInfo](uint64_t){ callback(this->m_pActorBase, sClientSessionInfo, pMessage.get()); });
+			coroutine::resume(nCoroutineID, 0);
 		}
 		else if (sActorMessagePacket.nType == eMT_TICKER)
 		{
 			CCoreTickerNode* pCoreTickerNode = reinterpret_cast<CCoreTickerNode*>(sActorMessagePacket.nSessionID);
 			if (pCoreTickerNode == nullptr)
 			{
-				PrintWarning("pCoreTickerNode == nullptr type: eMCT_TICKER");
+				PrintWarning("CActorBaseImpl::dispatch error pCoreTickerNode == nullptr actor_id: "UINT64FMT, this->getID());
 				return;
 			}
 
@@ -191,9 +191,13 @@ namespace core
 				return;
 			}
 
-			CTicker* pTicker = pCoreTickerNode->Value.m_pTicker;
-			pTicker->getCallback()(pTicker->getContext());
-			pCoreTickerNode->Value.release();
+			uint64_t nCoroutineID = coroutine::create(0, [pCoreTickerNode](uint64_t)
+			{
+				CTicker* pTicker = pCoreTickerNode->Value.m_pTicker;
+				pTicker->getCallback()(pTicker->getContext());
+				pCoreTickerNode->Value.release();
+			});
+			coroutine::resume(nCoroutineID, 0);
 		}
 	}
 

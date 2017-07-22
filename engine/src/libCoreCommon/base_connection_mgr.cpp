@@ -165,7 +165,7 @@ namespace core
 		CCoreApp::Inst()->getNetRunnable()->getMessageQueue()->send(sMessagePacket);
 	}
 
-	void CBaseConnectionMgr::connect_s(const std::string& szHost, uint16_t nPort, uint32_t nSendBufferSize, uint32_t nRecvBufferSize)
+	void CBaseConnectionMgr::connect_n(const std::string& szHost, uint16_t nPort, uint32_t nSendBufferSize, uint32_t nRecvBufferSize)
 	{
 		this->connect(szHost, nPort, eBCT_ConnectionToOtherNode, "", nSendBufferSize, nRecvBufferSize, nullptr);
 	}

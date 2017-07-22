@@ -23,7 +23,7 @@ namespace core
 
 		inline void	registerForwardHandler(const std::string& szMessageName, void(T::*handler)(SClientSessionInfo, const google::protobuf::Message*));
 
-		uint16_t	getServiceID() const;
+		uint32_t	getServiceID() const;
 
 	protected:
 		inline void	dispatch(T* pObject, SSessionInfo& sSessionInfo, const google::protobuf::Message* pMessage);

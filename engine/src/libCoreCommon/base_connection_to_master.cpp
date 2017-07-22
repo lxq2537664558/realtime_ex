@@ -27,7 +27,7 @@ namespace core
 		delete this;
 	}
 
-	uint16_t CBaseConnectionToMaster::getMasterID() const
+	uint32_t CBaseConnectionToMaster::getMasterID() const
 	{
 		return this->m_nMasterID;
 	}

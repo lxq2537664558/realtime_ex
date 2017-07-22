@@ -3,14 +3,14 @@ namespace core
 	template<class T>
 	bool CActorBase::async_call(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback)
 	{
-		DebugAstEx(pData != nullptr && callback != nullptr, false);
+		DebugAstEx(pMessage != nullptr && callback != nullptr, false);
 
 		auto callback_ = [callback](std::shared_ptr<google::protobuf::Message>& pResponseMessage, uint32_t nErrorCode)->void
 		{
 			callback(pResponseMessage.get(), nErrorCode);
 		};
 
-		if (!this->invoke(eType, nID, pData, 0, callback_))
+		if (!this->invoke(eType, nID, pMessage, 0, callback_))
 			return false;
 
 		return true;
@@ -19,16 +19,16 @@ namespace core
 	template<class T>
 	bool CActorBase::async_call(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, CFuture<T>& sFuture)
 	{
-		DebugAstEx(pData != nullptr, false);
+		DebugAstEx(pMessage != nullptr, false);
 
 		auto pPromise = std::make_shared<CPromise<T>>();
 
 		auto callback = [pPromise](std::shared_ptr<google::protobuf::Message>& pResponseMessage, uint32_t nErrorCode)->void
 		{
-			pPromise->setValue(pResponseMessage, nErrorCode);
+			pPromise->setValue(std::dynamic_pointer_cast<T>(pResponseMessage), nErrorCode);
 		};
 
-		if (!this->invoke(eType, nID, pData, 0, callback))
+		if (!this->invoke(eType, nID, pMessage, 0, callback))
 			return false;
 
 		sFuture = pPromise->getFuture();
@@ -50,7 +50,7 @@ namespace core
 		coroutine::delLocalData(coroutine::getCurrentID(), "response");
 
 		SSyncCallResultInfo* pSyncCallResultInfo = reinterpret_cast<SSyncCallResultInfo*>(nResponse);
-		pResponseMessage = pSyncCallResultInfo->pMessage;
+		pResponseMessage = std::dynamic_pointer_cast<T>(pSyncCallResultInfo->pMessage);
 
 		uint8_t nResult = pSyncCallResultInfo->nResult;
 		

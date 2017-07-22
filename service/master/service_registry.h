@@ -15,7 +15,8 @@ public:
 	~CServiceRegistry();
 
 	bool	addNode(CConnectionFromNode* pConnectionFromNode, const core::SNodeBaseInfo& sNodeBaseInfo, const std::vector<core::SServiceBaseInfo>& vecServiceBaseInfo);
-	void	delNode(uint16_t nNodeID);
+	void	delNode(uint32_t nNodeID);
+	void	onNodeDisconnect(uint32_t nNodeID);
 	
 private:
 	struct SNodeInfo
@@ -25,7 +26,7 @@ private:
 		CConnectionFromNode*				pConnectionFromNode;
 	};
 
-	std::map<uint16_t, SNodeInfo>	m_mapNodeInfo;
+	std::map<uint32_t, SNodeInfo>	m_mapNodeInfo;
 	std::set<std::string>			m_setServiceName;
-	std::set<uint16_t>				m_setServiceID;
+	std::set<uint32_t>				m_setServiceID;
 };

@@ -49,7 +49,7 @@ namespace core
 		return CCoreApp::Inst()->run(szInstanceName, szConfig);
 	}
 
-	void CBaseApp::registerTicker(uint8_t nType, uint16_t nFromServiceID, uint64_t nFromActorID, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
+	void CBaseApp::registerTicker(uint8_t nType, uint32_t nFromServiceID, uint64_t nFromActorID, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
 	{
 		CCoreApp::Inst()->registerTicker(nType, nFromServiceID, nFromActorID, pTicker, nStartTime, nIntervalTime, nContext);
 	}
@@ -69,12 +69,12 @@ namespace core
 		return CCoreApp::Inst()->getNodeBaseInfo();
 	}
 
-	uint16_t CBaseApp::getNodeID() const
+	uint32_t CBaseApp::getNodeID() const
 	{
 		return CCoreApp::Inst()->getNodeID();
 	}
 
-	CServiceBase* CBaseApp::getServiceBase(uint16_t nServiceID) const
+	CServiceBase* CBaseApp::getServiceBase(uint32_t nServiceID) const
 	{
 		CServiceBaseImpl* pServiceBaseImpl = CCoreApp::Inst()->getServiceBaseMgr()->getServiceBaseByID(nServiceID);
 		if (pServiceBaseImpl == nullptr)
@@ -83,7 +83,7 @@ namespace core
 		return pServiceBaseImpl->getServiceBase();
 	}
 
-	uint16_t CBaseApp::getServiceID(const std::string& szName) const
+	uint32_t CBaseApp::getServiceID(const std::string& szName) const
 	{
 		return CCoreApp::Inst()->getServiceRegistryProxy()->getServiceID(szName);
 	}

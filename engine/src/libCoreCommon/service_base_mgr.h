@@ -17,19 +17,19 @@ namespace core
 		
 		bool				init(tinyxml2::XMLElement* pNodeInfoXML);
 
-		CServiceBaseImpl*	getServiceBaseByID(uint16_t nID) const;
+		CServiceBaseImpl*	getServiceBaseByID(uint32_t nID) const;
 		CServiceBaseImpl*	getServiceBaseByName(const std::string& szName) const;
 		const std::vector<CServiceBaseImpl*>&
 							getServiceBase() const;
 		const std::vector<SServiceBaseInfo>&
 							getServiceBaseInfo() const;
 
-		bool				isOwnerService(uint16_t nServiceID) const;
+		bool				isOwnerService(uint32_t nServiceID) const;
 
 	private:
 		std::vector<SServiceBaseInfo>			m_vecServiceBaseInfo;
-		std::map<uint16_t, CServiceBaseImpl*>	m_mapServiceBase;
-		std::map<std::string, uint16_t>			m_mapServiceName;
+		std::map<uint32_t, CServiceBaseImpl*>	m_mapServiceBase;
+		std::map<std::string, uint32_t>			m_mapServiceName;
 		std::vector<CServiceBaseImpl*>			m_vecServiceBase;
 	};
 }

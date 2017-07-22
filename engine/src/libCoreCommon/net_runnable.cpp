@@ -74,7 +74,7 @@ namespace core
 	{
 		int64_t nBeginSamplingTime = base::getProcessPassTime();
 
-		this->m_pCoreConnectionMgr->update(-1);
+		this->m_pCoreConnectionMgr->update(_CYCLE_TIME);
 		
 		static std::vector<SMessagePacket> vecMessagePacket;
 		this->m_pMessageQueue->recv(vecMessagePacket);

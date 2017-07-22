@@ -56,7 +56,7 @@ namespace core
 		return this->m_pServiceBase;
 	}
 
-	uint16_t CServiceBaseImpl::getServiceID() const
+	uint32_t CServiceBaseImpl::getServiceID() const
 	{
 		return this->m_sServiceBaseInfo.nID;
 	}
@@ -158,22 +158,22 @@ namespace core
 		this->m_pServiceBase->onFrame();
 	}
 
-	void CServiceBaseImpl::setServiceConnectCallback(const std::function<void(uint16_t)>& callback)
+	void CServiceBaseImpl::setServiceConnectCallback(const std::function<void(uint32_t)>& callback)
 	{
 		this->m_fnServiceConnectCallback = callback;
 	}
 
-	void CServiceBaseImpl::setServiceDisconnectCallback(const std::function<void(uint16_t)>& callback)
+	void CServiceBaseImpl::setServiceDisconnectCallback(const std::function<void(uint32_t)>& callback)
 	{
 		this->m_fnServiceDisconnectCallback = callback;
 	}
 
-	std::function<void(uint16_t)>& CServiceBaseImpl::getServiceConnectCallback()
+	std::function<void(uint32_t)>& CServiceBaseImpl::getServiceConnectCallback()
 	{
 		return this->m_fnServiceConnectCallback;
 	}
 
-	std::function<void(uint16_t)>& CServiceBaseImpl::getServiceDisconnectCallback()
+	std::function<void(uint32_t)>& CServiceBaseImpl::getServiceDisconnectCallback()
 	{
 		return this->m_fnServiceDisconnectCallback;
 	}
