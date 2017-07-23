@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "core_connection_monitor.h"
+#include "core_connection.h"
 #include "core_app.h"
 
 #include <map>

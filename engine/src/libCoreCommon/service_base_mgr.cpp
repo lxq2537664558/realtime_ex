@@ -40,9 +40,24 @@ namespace core
 
 			PrintInfo("create service %s ok", sServiceBaseInfo.szName.c_str());
 
-			this->m_vecServiceBase.push_back(pServiceBaseImpl);
 			this->m_vecServiceBaseInfo.push_back(sServiceBaseInfo);
+			this->m_vecServiceBase.push_back(pServiceBaseImpl);
 			this->m_mapServiceBase[pServiceBaseImpl->getServiceID()] = pServiceBaseImpl;
+		}
+
+		return true;
+	}
+
+	bool CServiceBaseMgr::onInit()
+	{
+		for (size_t i = 0; i < this->m_vecServiceBase.size(); ++i)
+		{
+			CServiceBaseImpl* pServiceBaseImpl = this->m_vecServiceBase[i];
+			if (!pServiceBaseImpl->onInit())
+			{
+				PrintWarning("CServiceBaseMgr::onInit error service_name: %s", pServiceBaseImpl->getServiceBaseInfo().szName.c_str());
+				return false;
+			}
 		}
 
 		for (size_t k = 0; k < this->m_vecServiceBase.size(); ++k)

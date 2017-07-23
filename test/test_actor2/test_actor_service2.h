@@ -23,10 +23,8 @@ private:
 	virtual void			onFrame();
 	virtual void			onQuit();
 
-	void					onTicker(uint64_t nContext);
-
+	
 private:
-	CTicker								m_ticker;
 	CTestActorService2MessageHandler*	m_pTestActorService2MessageHandler;
 	CTestActor2MessageHandler*			m_pTestActor2MessageHandler;
 	CTestActor2*						m_pTestActor2;

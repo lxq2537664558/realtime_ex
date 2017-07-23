@@ -39,7 +39,7 @@ namespace core
 	void CBaseConnectionToMaster::onDisconnect()
 	{
 		if (this->m_nMasterID != 0)
-			CCoreApp::Inst()->getServiceRegistryProxy()->delBaseConnectionToMaster(this->m_nMasterID);
+			CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->delBaseConnectionToMaster(this->m_nMasterID);
 	}
 
 	void CBaseConnectionToMaster::onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize)
@@ -55,7 +55,7 @@ namespace core
 			netMsg.unpack(pData, nSize);
 
 			this->m_nMasterID = netMsg.nMasterID;
-			if (!CCoreApp::Inst()->getServiceRegistryProxy()->addBaseConnectionToMaster(this))
+			if (!CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->addBaseConnectionToMaster(this))
 			{
 				this->shutdown(true, "dup master connection");
 				return;
@@ -63,7 +63,7 @@ namespace core
 
 			smt_register_node_base_info netMsg1;
 			netMsg1.sNodeBaseInfo = CCoreApp::Inst()->getNodeBaseInfo();
-			netMsg1.vecServiceBaseInfo = CCoreApp::Inst()->getServiceBaseMgr()->getServiceBaseInfo();
+			netMsg1.vecServiceBaseInfo = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBaseInfo();
 
 			base::CWriteBuf& writeBuf = CCoreApp::Inst()->getWriteBuf();
 			netMsg1.pack(writeBuf);
@@ -75,14 +75,14 @@ namespace core
 			smt_sync_node_base_info netMsg;
 			netMsg.unpack(pData, nSize);
 			
-			CCoreApp::Inst()->getServiceRegistryProxy()->addNodeProxyInfo(netMsg.sNodeBaseInfo, netMsg.vecServiceBaseInfo, true);
+			CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->addNodeProxyInfo(netMsg.sNodeBaseInfo, netMsg.vecServiceBaseInfo, true);
 		}
 		else if (pHeader->nMessageID == eSMT_remove_node_base_info)
 		{
 			smt_remove_node_base_info netMsg;
 			netMsg.unpack(pData, nSize);
 
-			CCoreApp::Inst()->getServiceRegistryProxy()->delNodeProxyInfo(netMsg.nNodeID);
+			CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->delNodeProxyInfo(netMsg.nNodeID);
 		}
 	}
 }

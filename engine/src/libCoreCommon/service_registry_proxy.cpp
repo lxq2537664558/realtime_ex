@@ -52,9 +52,9 @@ namespace core
 			CCoreApp::Inst()->registerTicker(CTicker::eTT_Service, 0, 0, &this->m_tickCheckConnectMaster, 5 * 1000, 5 * 1000, 0);
 		}
 
-		CBaseApp::Inst()->getBaseConnectionMgr()->addConnectFailCallback("master", std::bind(&CServiceRegistryProxy::onConnectRefuse, this, std::placeholders::_1));
+		CCoreApp::Inst()->getLogicRunnable()->getBaseConnectionMgr()->addConnectFailCallback("master", std::bind(&CServiceRegistryProxy::onConnectRefuse, this, std::placeholders::_1));
 
-		const std::vector<SServiceBaseInfo>& vecServiceBaseInfo = CCoreApp::Inst()->getServiceBaseMgr()->getServiceBaseInfo();
+		const std::vector<SServiceBaseInfo>& vecServiceBaseInfo = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBaseInfo();
 		for (size_t i = 0; i < vecServiceBaseInfo.size(); ++i)
 		{
 			const SServiceBaseInfo& sServiceBaseInfo = vecServiceBaseInfo[i];
@@ -91,7 +91,7 @@ namespace core
 			if (sNodeProxyInfo.sNodeBaseInfo.nPort == 0 || sNodeProxyInfo.sNodeBaseInfo.szHost.empty())
 				return;
 
-			CCoreApp::Inst()->getBaseConnectionMgr()->connect(sNodeProxyInfo.sNodeBaseInfo.szHost, sNodeProxyInfo.sNodeBaseInfo.nPort, eBCT_ConnectionToOtherNode, "", sNodeProxyInfo.sNodeBaseInfo.nSendBufSize, sNodeProxyInfo.sNodeBaseInfo.nRecvBufSize, nullptr);
+			CCoreApp::Inst()->getLogicRunnable()->getBaseConnectionMgr()->connect(sNodeProxyInfo.sNodeBaseInfo.szHost, sNodeProxyInfo.sNodeBaseInfo.nPort, eBCT_ConnectionToOtherNode, "", sNodeProxyInfo.sNodeBaseInfo.nSendBufSize, sNodeProxyInfo.sNodeBaseInfo.nRecvBufSize, nullptr);
 		});
 
 		for (size_t i = 0; i < vecServiceBaseInfo.size(); ++i)
@@ -169,7 +169,7 @@ namespace core
 		auto iter = this->m_mapServiceName.find(szName);
 		if (iter == this->m_mapServiceName.end())
 		{
-			CServiceBaseImpl* pServiceBaseImpl = CCoreApp::Inst()->getServiceBaseMgr()->getServiceBaseByName(szName);
+			CServiceBaseImpl* pServiceBaseImpl = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBaseByName(szName);
 			if (pServiceBaseImpl == nullptr)
 				return 0;
 
@@ -184,7 +184,7 @@ namespace core
 		auto iter = this->m_mapServiceProxyInfo.find(nServiceID);
 		if (iter == this->m_mapServiceProxyInfo.end())
 		{
-			CServiceBaseImpl* pServiceBaseImpl = CCoreApp::Inst()->getServiceBaseMgr()->getServiceBaseByID(nServiceID);
+			CServiceBaseImpl* pServiceBaseImpl = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBaseByID(nServiceID);
 			if (pServiceBaseImpl == nullptr)
 				return "";
 
@@ -199,7 +199,7 @@ namespace core
 		auto iter = this->m_mapServiceProxyInfo.find(nServiceID);
 		if (iter == this->m_mapServiceProxyInfo.end())
 		{
-			CServiceBaseImpl* pServiceBaseImpl = CCoreApp::Inst()->getServiceBaseMgr()->getServiceBaseByID(nServiceID);
+			CServiceBaseImpl* pServiceBaseImpl = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBaseByID(nServiceID);
 			if (pServiceBaseImpl == nullptr)
 				return "";
 

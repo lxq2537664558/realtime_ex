@@ -61,7 +61,7 @@ namespace core
 
 	CBaseConnectionMgr*	CBaseApp::getBaseConnectionMgr() const
 	{
-		return CCoreApp::Inst()->getBaseConnectionMgr();
+		return CCoreApp::Inst()->getLogicRunnable()->getBaseConnectionMgr();
 	}
 
 	const SNodeBaseInfo& CBaseApp::getNodeBaseInfo() const
@@ -76,7 +76,7 @@ namespace core
 
 	CServiceBase* CBaseApp::getServiceBase(uint32_t nServiceID) const
 	{
-		CServiceBaseImpl* pServiceBaseImpl = CCoreApp::Inst()->getServiceBaseMgr()->getServiceBaseByID(nServiceID);
+		CServiceBaseImpl* pServiceBaseImpl = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBaseByID(nServiceID);
 		if (pServiceBaseImpl == nullptr)
 			return nullptr;
 
@@ -85,7 +85,7 @@ namespace core
 
 	uint32_t CBaseApp::getServiceID(const std::string& szName) const
 	{
-		return CCoreApp::Inst()->getServiceRegistryProxy()->getServiceID(szName);
+		return CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->getServiceID(szName);
 	}
 
 	const std::string& CBaseApp::getConfigFileName() const

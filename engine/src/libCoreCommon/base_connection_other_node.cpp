@@ -36,7 +36,7 @@ namespace core
 			// 同步节点名字
 			smt_notify_node_base_info netMsg;
 			netMsg.sNodeBaseInfo = CCoreApp::Inst()->getNodeBaseInfo();
-			netMsg.vecServiceBaseInfo = CCoreApp::Inst()->getServiceBaseMgr()->getServiceBaseInfo();
+			netMsg.vecServiceBaseInfo = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBaseInfo();
 			base::CWriteBuf& writeBuf = CCoreApp::Inst()->getWriteBuf();
 			netMsg.pack(writeBuf);
 
@@ -48,8 +48,8 @@ namespace core
 	{
 		if (this->getNodeID() != 0)
 		{
-			CCoreApp::Inst()->getServiceRegistryProxy()->delBaseConnectionOtherNodeByNodeID(this->getNodeID());
-			const std::vector<CServiceBaseImpl*>& vecServiceBase = CCoreApp::Inst()->getServiceBaseMgr()->getServiceBase();
+			CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->delBaseConnectionOtherNodeByNodeID(this->getNodeID());
+			const std::vector<CServiceBaseImpl*>& vecServiceBase = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBase();
 			for (size_t k = 0; k < vecServiceBase.size(); ++k)
 			{
 				auto& callback = vecServiceBase[k]->getServiceDisconnectCallback();
@@ -57,7 +57,7 @@ namespace core
 					continue;
 
 				std::vector<SServiceBaseInfo> vecServiceBaseInfo;
-				CCoreApp::Inst()->getServiceRegistryProxy()->getServiceBaseInfoByNodeID(this->getNodeID(), vecServiceBaseInfo);
+				CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->getServiceBaseInfoByNodeID(this->getNodeID(), vecServiceBaseInfo);
 				for (size_t i = 0; i < vecServiceBaseInfo.size(); ++i)
 				{
 					callback(vecServiceBaseInfo[i].nID);
@@ -82,9 +82,9 @@ namespace core
 				smt_notify_node_base_info netMsg;
 				netMsg.unpack(pData, nSize);
 
-				CCoreApp::Inst()->getServiceRegistryProxy()->addNodeProxyInfo(netMsg.sNodeBaseInfo, netMsg.vecServiceBaseInfo, false);
+				CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->addNodeProxyInfo(netMsg.sNodeBaseInfo, netMsg.vecServiceBaseInfo, false);
 
-				if (!CCoreApp::Inst()->getServiceRegistryProxy()->addBaseConnectionOtherNodeByNodeID(netMsg.sNodeBaseInfo.nID, this))
+				if (!CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->addBaseConnectionOtherNodeByNodeID(netMsg.sNodeBaseInfo.nID, this))
 				{
 					this->shutdown(true, "dup node connection");
 					return;
@@ -98,7 +98,7 @@ namespace core
 				netMsg1.pack(writeBuf);
 				this->send(eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
 
-				const std::vector<CServiceBaseImpl*>& vecServiceBase = CCoreApp::Inst()->getServiceBaseMgr()->getServiceBase();
+				const std::vector<CServiceBaseImpl*>& vecServiceBase = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBase();
 				for (size_t k = 0; k < vecServiceBase.size(); ++k)
 				{
 					auto& callback = vecServiceBase[k]->getServiceConnectCallback();
@@ -106,7 +106,7 @@ namespace core
 						continue;
 
 					std::vector<SServiceBaseInfo> vecServiceBaseInfo;
-					CCoreApp::Inst()->getServiceRegistryProxy()->getServiceBaseInfoByNodeID(this->getNodeID(), vecServiceBaseInfo);
+					CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->getServiceBaseInfoByNodeID(this->getNodeID(), vecServiceBaseInfo);
 					for (size_t i = 0; i < vecServiceBaseInfo.size(); ++i)
 					{
 						callback(vecServiceBaseInfo[i].nID);
@@ -120,14 +120,14 @@ namespace core
 				smt_notify_ack_node_base_info netMsg;
 				netMsg.unpack(pData, nSize);
 
-				if (!CCoreApp::Inst()->getServiceRegistryProxy()->addBaseConnectionOtherNodeByNodeID(netMsg.nNodeID, this))
+				if (!CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->addBaseConnectionOtherNodeByNodeID(netMsg.nNodeID, this))
 				{
 					this->shutdown(true, "dup node connection");
 					return;
 				}
 
 				this->m_nNodeID = netMsg.nNodeID;
-				const std::vector<CServiceBaseImpl*>& vecServiceBase = CCoreApp::Inst()->getServiceBaseMgr()->getServiceBase();
+				const std::vector<CServiceBaseImpl*>& vecServiceBase = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBase();
 				for (size_t k = 0; k < vecServiceBase.size(); ++k)
 				{
 					auto& callback = vecServiceBase[k]->getServiceConnectCallback();
@@ -135,7 +135,7 @@ namespace core
 						continue;
 
 					std::vector<SServiceBaseInfo> vecServiceBaseInfo;
-					CCoreApp::Inst()->getServiceRegistryProxy()->getServiceBaseInfoByNodeID(this->getNodeID(), vecServiceBaseInfo);
+					CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->getServiceBaseInfoByNodeID(this->getNodeID(), vecServiceBaseInfo);
 					for (size_t i = 0; i < vecServiceBaseInfo.size(); ++i)
 					{
 						callback(vecServiceBaseInfo[i].nID);

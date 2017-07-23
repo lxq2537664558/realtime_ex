@@ -102,13 +102,9 @@ namespace core
 		, m_nSamplingTime(_DEFAULT_SAMPLING_TIME)
 		, m_nInvokeTimeout(_DEFAULT_INVOKE_TIMEOUT)
 		, m_nQPS(0)
-		, m_pServiceBaseMgr(nullptr)
 		, m_pLogicRunnable(nullptr)
 		, m_pNetRunnable(nullptr)
 		, m_pTickerRunnable(nullptr)
-		, m_pTransporter(nullptr)
-		, m_pServiceRegistryProxy(nullptr)
-		, m_pNodeConnectionFactory(nullptr)
 	{
 
 	}
@@ -149,16 +145,6 @@ namespace core
 	void CCoreApp::unregisterTicker(CTicker* pTicker)
 	{
 		this->m_pTickerRunnable->unregisterTicker(pTicker);
-	}
-
-	CBaseConnectionMgr* CCoreApp::getBaseConnectionMgr() const
-	{
-		return this->m_pLogicRunnable->getBaseConnectionMgr();
-	}
-
-	CServiceBaseMgr* CCoreApp::getServiceBaseMgr() const
-	{
-		return this->m_pServiceBaseMgr;
 	}
 
 	const std::string& CCoreApp::getConfigFileName() const
@@ -367,36 +353,15 @@ namespace core
 		this->m_tickerQPS.setCallback(std::bind(&CCoreApp::onQPS, this, std::placeholders::_1));
 		this->registerTicker(CTicker::eTT_Service, 0, 0, &this->m_tickerQPS, 1000, 1000, 0);
 
-		this->m_pNodeConnectionFactory = new CNodeConnectionFactory();
-		this->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionToMaster, this->m_pNodeConnectionFactory);
-		this->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionFromOtherNode, this->m_pNodeConnectionFactory);
-		this->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionToOtherNode, this->m_pNodeConnectionFactory);
-
-		this->m_pTransporter = new CTransporter();
-
-		this->m_pServiceBaseMgr = new CServiceBaseMgr();
-		if (!this->m_pServiceBaseMgr->init(pNodeInfoXML))
-		{
-			PrintWarning("this->m_pServiceBaseMgr->init(pNodeInfoXML)");
-			return false;
-		}
-
-		this->m_pServiceRegistryProxy = new CServiceRegistryProxy();
-		if (!this->m_pServiceRegistryProxy->init(pRootXML))
-		{
-			PrintWarning("this->m_pCoreOtherNodeProxy->init(pRootXML)");
-			return false;
-		}
-
 		if (!this->m_pNetRunnable->init(nMaxConnectionCount))
 		{
 			PrintWarning("this->m_pNetRunnable->init(nMaxConnectionCount)");
 			return false;
 		}
 
-		if (!this->m_pLogicRunnable->init())
+		if (!this->m_pLogicRunnable->init(pRootXML))
 		{
-			PrintWarning("this->m_pLogicRunnable->init()");
+			PrintWarning("this->m_pLogicRunnable->init(pRootXML)");
 			return false;
 		}
 
@@ -420,10 +385,6 @@ namespace core
 		SAFE_DELETE(this->m_pLogicRunnable);
 		SAFE_DELETE(this->m_pTickerRunnable);
 		SAFE_DELETE(this->m_pNetRunnable);
-
-		SAFE_DELETE(this->m_pServiceRegistryProxy);
-		SAFE_DELETE(this->m_pServiceBaseMgr);
-		SAFE_DELETE(this->m_pTransporter);
 
 		CClassInfoMgr::Inst()->unRegisterClassInfo();
 		
@@ -490,16 +451,6 @@ namespace core
 	uint32_t CCoreApp::getNodeID() const
 	{
 		return this->m_sNodeBaseInfo.nID;
-	}
-
-	CTransporter* CCoreApp::getTransporter() const
-	{
-		return this->m_pTransporter;
-	}
-
-	CServiceRegistryProxy* CCoreApp::getServiceRegistryProxy() const
-	{
-		return this->m_pServiceRegistryProxy;
 	}
 
 	CNetRunnable* CCoreApp::getNetRunnable() const

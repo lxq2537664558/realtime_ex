@@ -24,8 +24,10 @@ namespace core
 
 		bool					init(CServiceBase* pServiceBase, const SServiceBaseInfo& sServiceBaseInfo);
 		void					quit();
+
 		void					run();
 
+		bool					onInit();
 		void					doQuit();
 
 		CServiceBase*			getServiceBase() const;

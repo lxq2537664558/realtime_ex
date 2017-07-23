@@ -53,15 +53,15 @@ namespace core
 			CServiceIDConverter* pServiceIDConverter = pServiceBaseImpl->getServiceIDConverter();
 			if (pServiceIDConverter != nullptr)
 			{
-				std::string szServiceType = CCoreApp::Inst()->getServiceRegistryProxy()->getServiceType(nToServiceID);
+				std::string szServiceType = CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->getServiceType(nToServiceID);
 				nToServiceID = pServiceIDConverter->convert(szServiceType, nToServiceID);
 				DebugAstEx(nToServiceID != 0, false);
 			}
 		}
 
-		if (!CCoreApp::Inst()->getServiceBaseMgr()->isOwnerService(nToServiceID))
+		if (!CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->isOwnerService(nToServiceID))
 		{
-			CBaseConnectionOtherNode* pBaseConnectionOtherNode = CCoreApp::Inst()->getServiceRegistryProxy()->getBaseConnectionOtherNodeByServiceID(nToServiceID);
+			CBaseConnectionOtherNode* pBaseConnectionOtherNode = CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->getBaseConnectionOtherNodeByServiceID(nToServiceID);
 			if (nullptr == pBaseConnectionOtherNode)
 				return false;
 
@@ -128,14 +128,14 @@ namespace core
 		CServiceIDConverter* pServiceIDConverter = pServiceBaseImpl->getServiceIDConverter();
 		if (pServiceIDConverter != nullptr)
 		{
-			std::string szServiceType = CCoreApp::Inst()->getServiceRegistryProxy()->getServiceType(nToServiceID);
+			std::string szServiceType = CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->getServiceType(nToServiceID);
 			nToServiceID = pServiceIDConverter->convert(szServiceType, nToServiceID);
 			DebugAstEx(nToServiceID != 0, false);
 		}
 
-		if (!CCoreApp::Inst()->getServiceBaseMgr()->isOwnerService(nToServiceID))
+		if (!CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->isOwnerService(nToServiceID))
 		{
-			CBaseConnectionOtherNode* pBaseConnectionOtherNode = CCoreApp::Inst()->getServiceRegistryProxy()->getBaseConnectionOtherNodeByServiceID(nToServiceID);
+			CBaseConnectionOtherNode* pBaseConnectionOtherNode = CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->getBaseConnectionOtherNodeByServiceID(nToServiceID);
 			if (nullptr == pBaseConnectionOtherNode)
 				return false;
 
@@ -226,7 +226,7 @@ namespace core
 	{
 		DebugAstEx(pMessage != nullptr, false);
 
-		CBaseConnectionOtherNode* pBaseConnectionOtherNode = CCoreApp::Inst()->getServiceRegistryProxy()->getBaseConnectionOtherNodeByServiceID(nToServiceID);
+		CBaseConnectionOtherNode* pBaseConnectionOtherNode = CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->getBaseConnectionOtherNodeByServiceID(nToServiceID);
 		if (nullptr == pBaseConnectionOtherNode)
 			return false;
 
@@ -259,7 +259,7 @@ namespace core
 		if (vecSessionID.empty())
 			return true;
 
-		CBaseConnectionOtherNode* pBaseConnectionOtherNode = CCoreApp::Inst()->getServiceRegistryProxy()->getBaseConnectionOtherNodeByServiceID(nToServiceID);
+		CBaseConnectionOtherNode* pBaseConnectionOtherNode = CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->getBaseConnectionOtherNodeByServiceID(nToServiceID);
 		if (nullptr == pBaseConnectionOtherNode)
 			return false;
 

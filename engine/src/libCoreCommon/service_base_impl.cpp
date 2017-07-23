@@ -35,11 +35,6 @@ namespace core
 		this->m_pServiceInvoker = new CServiceInvoker(this);
 		this->m_pMessageDispatcher = new CMessageDispatcher(this);
 
-		if (!this->m_pServiceBase->onInit())
-			return false;
-
-		this->m_eRunState = eSRS_Normal;
-
 		return true;
 	}
 
@@ -49,6 +44,16 @@ namespace core
 
 		this->m_eRunState = eSRS_Quitting;
 		this->m_pServiceBase->onQuit();
+	}
+
+	bool CServiceBaseImpl::onInit()
+	{
+		if (!this->m_pServiceBase->onInit())
+			return false;
+
+		this->m_eRunState = eSRS_Normal;
+
+		return true;
 	}
 
 	CServiceBase* CServiceBaseImpl::getServiceBase() const

@@ -111,7 +111,7 @@ namespace core
 				// 这里有暂存消息的需求，所以需要用shared_ptr
 				auto pMessage = std::shared_ptr<google::protobuf::Message>(pResponseContext->pMessage);
 				
-				auto pPendingResponseInfo = std::unique_ptr<SPendingResponseInfo>(CCoreApp::Inst()->getTransporter()->getPendingResponseInfo(pResponseContext->nSessionID, true));
+				auto pPendingResponseInfo = std::unique_ptr<SPendingResponseInfo>(CCoreApp::Inst()->getLogicRunnable()->getTransporter()->getPendingResponseInfo(pResponseContext->nSessionID, true));
 				if (nullptr == pPendingResponseInfo)
 					return;
 

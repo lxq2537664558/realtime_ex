@@ -29,6 +29,10 @@ namespace core
 		, m_pMessageQueue(nullptr)
 		, m_insideQueue(_DEFAULT_MESSAGE_QUEUE)
 		, m_pBaseConnectionMgr(nullptr)
+		, m_pServiceBaseMgr(nullptr)
+		, m_pTransporter(nullptr)
+		, m_pServiceRegistryProxy(nullptr)
+		, m_pNodeConnectionFactory(nullptr)
 	{
 		this->m_pMessageQueue = new CLogicMessageQueue();
 
@@ -38,12 +42,41 @@ namespace core
 	CLogicRunnable::~CLogicRunnable()
 	{
 		SAFE_DELETE(this->m_pMessageQueue);
+		SAFE_DELETE(this->m_pNodeConnectionFactory);
+		SAFE_DELETE(this->m_pServiceBaseMgr);
+		SAFE_DELETE(this->m_pServiceRegistryProxy);
 		SAFE_DELETE(this->m_pBaseConnectionMgr);
 		SAFE_RELEASE(this->m_pThreadBase);
 	}
 
-	bool CLogicRunnable::init()
+	bool CLogicRunnable::init(tinyxml2::XMLElement* pRootXML)
 	{
+		DebugAstEx(pRootXML != nullptr, false);
+
+		tinyxml2::XMLElement* pNodeInfoXML = pRootXML->FirstChildElement("node_info");
+		DebugAstEx(pNodeInfoXML != nullptr, false);
+
+		this->m_pNodeConnectionFactory = new CNodeConnectionFactory();
+		this->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionToMaster, this->m_pNodeConnectionFactory);
+		this->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionFromOtherNode, this->m_pNodeConnectionFactory);
+		this->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionToOtherNode, this->m_pNodeConnectionFactory);
+
+		this->m_pTransporter = new CTransporter();
+
+		this->m_pServiceBaseMgr = new CServiceBaseMgr();
+		if (!this->m_pServiceBaseMgr->init(pNodeInfoXML))
+		{
+			PrintWarning("this->m_pServiceBaseMgr->init(pNodeInfoXML)");
+			return false;
+		}
+
+		this->m_pServiceRegistryProxy = new CServiceRegistryProxy();
+		if (!this->m_pServiceRegistryProxy->init(pRootXML))
+		{
+			PrintWarning("this->m_pCoreOtherNodeProxy->init(pRootXML)");
+			return false;
+		}
+
 		const SNodeBaseInfo& sNodeBaseInfo = CCoreApp::Inst()->getNodeBaseInfo();
 
 		if (!sNodeBaseInfo.szHost.empty())
@@ -61,6 +94,21 @@ namespace core
 	CBaseConnectionMgr* CLogicRunnable::getBaseConnectionMgr() const
 	{
 		return this->m_pBaseConnectionMgr;
+	}
+
+	CServiceBaseMgr* CLogicRunnable::getServiceBaseMgr() const
+	{
+		return this->m_pServiceBaseMgr;
+	}
+
+	CTransporter* CLogicRunnable::getTransporter() const
+	{
+		return this->m_pTransporter;
+	}
+
+	CServiceRegistryProxy* CLogicRunnable::getServiceRegistryProxy() const
+	{
+		return this->m_pServiceRegistryProxy;
 	}
 
 	void CLogicRunnable::sendInsideMessage(const SMessagePacket& sMessagePacket)
@@ -85,6 +133,9 @@ namespace core
 	bool CLogicRunnable::onInit()
 	{
 		coroutine::init(_MAIN_STACK_SIZE);
+		if (!this->m_pServiceBaseMgr->onInit())
+			return false;
+
 		return CBaseApp::Inst()->onInit();
 	}
 
@@ -127,7 +178,7 @@ namespace core
 		{
 		case eMCT_QUIT:
 			{
-				const std::vector<CServiceBaseImpl*>& vecServiceBase = CCoreApp::Inst()->getServiceBaseMgr()->getServiceBase();
+						  const std::vector<CServiceBaseImpl*>& vecServiceBase = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBase();
 				for (size_t i = 0; i < vecServiceBase.size(); ++i)
 				{
 					vecServiceBase[i]->quit();
@@ -137,7 +188,7 @@ namespace core
 
 		case eMCT_FRAME:
 			{
-				const std::vector<CServiceBaseImpl*>& vecServiceBase = CCoreApp::Inst()->getServiceBaseMgr()->getServiceBase();
+				const std::vector<CServiceBaseImpl*>& vecServiceBase = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBase();
 
 				for (size_t i = 0; i < vecServiceBase.size(); ++i)
 				{
@@ -255,7 +306,7 @@ namespace core
 					nToServiceID = reinterpret_cast<SMCT_GATE_FORWARD*>(sMessagePacket.pData)->nToServiceID;
 					nMessageType = eMT_GATE_FORWARD;
 				}
-				CServiceBaseImpl* pServiceBaseImpl = CCoreApp::Inst()->getServiceBaseMgr()->getServiceBaseByID(nToServiceID);
+				CServiceBaseImpl* pServiceBaseImpl = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBaseByID(nToServiceID);
 				if (pServiceBaseImpl == nullptr)
 				{
 					PrintWarning("pServiceBaseImpl == nullptr type: eMCT_RECV_SOCKET_DATA");
@@ -294,7 +345,7 @@ namespace core
 				else
 				{
 					CTicker* pTicker = pCoreTickerNode->Value.m_pTicker;
-					CServiceBaseImpl* pServiceBaseImpl = CCoreApp::Inst()->getServiceBaseMgr()->getServiceBaseByID(pTicker->getServiceID());
+					CServiceBaseImpl* pServiceBaseImpl = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBaseByID(pTicker->getServiceID());
 					if (pServiceBaseImpl == nullptr)
 					{
 						PrintWarning("pServiceBaseImpl == nullptr type: eMCT_TICKER");

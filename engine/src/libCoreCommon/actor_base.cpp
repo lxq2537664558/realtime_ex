@@ -40,7 +40,7 @@ namespace core
 	{
 		DebugAstEx(pMessage != nullptr, false);
 
-		return CCoreApp::Inst()->getTransporter()->invoke_a(this->m_pActorBaseImpl->getServiceBaseImpl(), 0, this->getID(), eType, nID, pMessage);
+		return CCoreApp::Inst()->getLogicRunnable()->getTransporter()->invoke_a(this->m_pActorBaseImpl->getServiceBaseImpl(), 0, this->getID(), eType, nID, pMessage);
 	}
 
 	bool CActorBase::broadcast(const std::string& szServiceType, const google::protobuf::Message* pMessage)
@@ -74,9 +74,9 @@ namespace core
 
 	bool CActorBase::invoke(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, uint64_t nCoroutineID, const std::function<void(std::shared_ptr<google::protobuf::Message>&, uint32_t)>& callback)
 	{
-		uint64_t nSessionID = CCoreApp::Inst()->getTransporter()->genSessionID();
+		uint64_t nSessionID = CCoreApp::Inst()->getLogicRunnable()->getTransporter()->genSessionID();
 
-		if (!CCoreApp::Inst()->getTransporter()->invoke_a(this->m_pActorBaseImpl->getServiceBaseImpl(), nSessionID, this->getID(), eType, nID, pMessage))
+		if (!CCoreApp::Inst()->getLogicRunnable()->getTransporter()->invoke_a(this->m_pActorBaseImpl->getServiceBaseImpl(), nSessionID, this->getID(), eType, nID, pMessage))
 			return false;
 
 		SPendingResponseInfo* pPendingResponseInfo = this->m_pActorBaseImpl->addPendingResponseInfo(nSessionID, nCoroutineID, nID, pMessage->GetTypeName(), callback);

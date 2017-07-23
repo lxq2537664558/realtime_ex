@@ -17,6 +17,8 @@ namespace core
 		
 		bool				init(tinyxml2::XMLElement* pNodeInfoXML);
 
+		bool				onInit();
+
 		CServiceBaseImpl*	getServiceBaseByID(uint32_t nID) const;
 		CServiceBaseImpl*	getServiceBaseByName(const std::string& szName) const;
 		const std::vector<CServiceBaseImpl*>&
