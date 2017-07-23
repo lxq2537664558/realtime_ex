@@ -18,32 +18,20 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\proto_src\request_msg1.pb.cc">
-      <Filter>proto</Filter>
-    </ClCompile>
-    <ClCompile Include="..\proto_src\response_msg1.pb.cc">
-      <Filter>proto</Filter>
-    </ClCompile>
     <ClCompile Include="..\proto_src\request_msg2.pb.cc">
       <Filter>proto</Filter>
     </ClCompile>
     <ClCompile Include="..\proto_src\response_msg2.pb.cc">
       <Filter>proto</Filter>
     </ClCompile>
-    <ClCompile Include="test_actor_service1.cpp">
+    <ClCompile Include="test_actor_service2.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="test_actor1.cpp">
+    <ClCompile Include="test_actor_service2_message_handler.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="test_actor0.cpp">
       <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\proto_src\request_msg0.pb.cc">
-      <Filter>proto</Filter>
-    </ClCompile>
-    <ClCompile Include="..\proto_src\response_msg0.pb.cc">
-      <Filter>proto</Filter>
     </ClCompile>
     <ClCompile Include="test_actor0_message_handler.cpp">
       <Filter>源文件</Filter>
@@ -54,49 +42,31 @@
     <ClCompile Include="..\proto_src\response_msg3.pb.cc">
       <Filter>proto</Filter>
     </ClCompile>
-    <ClCompile Include="my_actor_id_converter.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\proto_src\request_msg1.pb.h">
-      <Filter>proto</Filter>
-    </ClInclude>
-    <ClInclude Include="..\proto_src\response_msg1.pb.h">
-      <Filter>proto</Filter>
-    </ClInclude>
     <ClInclude Include="..\proto_src\request_msg2.pb.h">
       <Filter>proto</Filter>
     </ClInclude>
     <ClInclude Include="..\proto_src\response_msg2.pb.h">
       <Filter>proto</Filter>
     </ClInclude>
-    <ClInclude Include="test_actor_service1.h">
+    <ClInclude Include="test_actor_service2.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="test_actor1.h">
+    <ClInclude Include="test_actor_service2_message_handler.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="test_actor0.h">
+    <ClInclude Include="test_actor2.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="test_actor0_message_handler.h">
+    <ClInclude Include="test_actor2_message_handler.h">
       <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\proto_src\request_msg0.pb.h">
-      <Filter>proto</Filter>
-    </ClInclude>
-    <ClInclude Include="..\proto_src\response_msg0.pb.h">
-      <Filter>proto</Filter>
     </ClInclude>
     <ClInclude Include="..\proto_src\request_msg3.pb.h">
       <Filter>proto</Filter>
     </ClInclude>
     <ClInclude Include="..\proto_src\response_msg3.pb.h">
       <Filter>proto</Filter>
-    </ClInclude>
-    <ClInclude Include="my_actor_id_converter.h">
-      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

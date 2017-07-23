@@ -3,6 +3,8 @@
 #include "libCoreCommon\ticker.h"
 
 #include "test_actor1.h"
+#include "test_actor0.h"
+#include "my_actor_id_converter.h"
 
 #include <map>
 
@@ -10,6 +12,7 @@ using namespace std;
 using namespace core;
 using namespace base;
 
+class CTestActor0MessageHandler;
 class CTestActorService1 :
 	public CServiceBase
 {
@@ -28,9 +31,9 @@ private:
 	void			onServiceDisconnect(uint32_t nServiceID);
 
 private:
-	CTicker						m_ticker1;
-	CTicker						m_ticker2;
-	std::map<uint32_t, bool>	m_mapConnectFlag;
-
+	CTestActor0*				m_pTestActor0;
 	CTestActor1*				m_pTestActor1;
+
+	CTestActor0MessageHandler*	m_pTestActor0MessageHandler;
+	CMyActorIDConverter*		m_pMyActorIDConverter;
 };

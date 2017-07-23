@@ -172,7 +172,7 @@ namespace base
 				this->m_eConnecterState = eNCS_Disconnecting;
 
 				// 不用等逻辑层主动关闭，只要没有需要发送的数据的了，就关闭连接
-				if (this->m_pSendBuffer->getTailDataSize() != 0)
+				if (this->m_pSendBuffer->getTailDataSize() == 0)
 					this->close();
 
 				break;
@@ -483,13 +483,4 @@ namespace base
 		this->m_eConnecterState = eConnecterState;
 	}
 
-	bool CNetConnecter::isWriteEvent() const
-	{
-		return (this->m_nFlag&eNCF_DisableWrite) != 0;
-	}
-
-	bool CNetConnecter::isReadEvent() const
-	{
-		return (this->m_nFlag&eNCF_CloseRecv) == 0;
-	}
 }

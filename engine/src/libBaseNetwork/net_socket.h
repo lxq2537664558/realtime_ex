@@ -39,9 +39,7 @@ namespace base
 		virtual void		release();
 		virtual void		onEvent(uint32_t nEvent) = 0;
 		virtual uint32_t	getSocketType() const = 0;
-		virtual bool		isWriteEvent() const = 0;
-		virtual bool		isReadEvent() const = 0;
-
+		
 		bool				open();
 		bool				nonblock();
 		bool				reuseAddr();

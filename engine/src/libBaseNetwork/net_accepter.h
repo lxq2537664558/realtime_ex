@@ -17,9 +17,7 @@ namespace base
 		virtual void            release();
 		virtual void            onEvent(uint32_t nEvent);
 		virtual uint32_t		getSocketType() const { return eNST_Acceptor; }
-		virtual bool			isWriteEvent() const { return true; }
-		virtual bool			isReadEvent() const { return true; }
-
+		
 		virtual void            setHandler(INetAccepterHandler* pHandler);
 		virtual const SNetAddr& getListenAddr() const;
 		virtual void            shutdown();

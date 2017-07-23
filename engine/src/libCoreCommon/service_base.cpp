@@ -77,12 +77,20 @@ namespace core
 		return this->m_pServiceBaseImpl->getServiceInvoker();
 	}
 
-	CActorBase* CServiceBase::createActor(const std::string& szClassName, const std::string& szContext)
+	CActorBase* CServiceBase::createActor(const std::string& szClassName, uint64_t nActorID, const std::string& szContext)
 	{
+		DebugAstEx(nActorID != 0, nullptr);
+
+		if (this->m_pServiceBaseImpl->getActorScheduler()->getActorBase(nActorID) != nullptr)
+		{
+			PrintWarning("CServiceBase::createActor error actor id exist actor_id: "UINT64FMT" class_name: %s", nActorID, szClassName.c_str());
+			return nullptr;
+		}
+
 		CActorBase* pActorBase = dynamic_cast<CActorBase*>(CBaseObject::createObject(szClassName));
 		DebugAstEx(pActorBase != nullptr, nullptr);
 
-		pActorBase->m_pActorBaseImpl = this->m_pServiceBaseImpl->getActorScheduler()->createActorBase(pActorBase);
+		pActorBase->m_pActorBaseImpl = this->m_pServiceBaseImpl->getActorScheduler()->createActorBase(nActorID, pActorBase);
 		if (pActorBase->m_pActorBaseImpl == nullptr)
 		{
 			SAFE_RELEASE(pActorBase);
@@ -100,5 +108,15 @@ namespace core
 	void CServiceBase::release()
 	{
 		CBaseObject::destroyObject(this);
+	}
+
+	void CServiceBase::setActorIDConverter(CActorIDConverter* pActorIDConverter)
+	{
+		this->m_pServiceBaseImpl->setActorIDConverter(pActorIDConverter);
+	}
+
+	void CServiceBase::setServiceIDConverter(CServiceIDConverter* pServiceIDConverter)
+	{
+		this->m_pServiceBaseImpl->setServiceIDConverter(pServiceIDConverter);
 	}
 }

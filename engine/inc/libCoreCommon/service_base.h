@@ -96,7 +96,7 @@ namespace core
 		/**
 		@brief: 创建actor
 		*/
-		CActorBase*				createActor(const std::string& szClassName, const std::string& szContext);
+		CActorBase*				createActor(const std::string& szClassName, uint64_t nActorID, const std::string& szContext);
 		/*
 		@brief: 获取运行状态
 		*/

@@ -161,10 +161,8 @@ namespace base
 			if (nullptr == pNetSocket)
 				continue;
 
-			if (pNetSocket->isWriteEvent())
-				FD_SET(pNetSocket->GetSocketID(), &writefds);
-			if (pNetSocket->isReadEvent())
-				FD_SET(pNetSocket->GetSocketID(), &readfds);
+			FD_SET(pNetSocket->GetSocketID(), &writefds);
+			FD_SET(pNetSocket->GetSocketID(), &readfds);
 			FD_SET(pNetSocket->GetSocketID(), &exceptfds);
 		}
 

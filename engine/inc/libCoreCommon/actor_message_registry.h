@@ -38,7 +38,7 @@ namespace core
 			core::CActorMessageRegistry<Class>::forward(this, pActorBase, sClientSessionInfo, pMessage);\
 		}
 
-#define REGISTER_ACTOR_MESSAGE_HANDLER(pServiceBase, Class, name, handler)	do { core::CActorMessageRegistry<Class>::registerMessageHandler(name, (core::CActorMessageRegistry<Class>::funMessageHandler)handler); pServiceBase->registerActorMessageHandler(name, std::bind(&Class::onDefaultActorMessageHandler, this, std::placeholders::_1, std::placeholders::_2)); } while(0)
-#define REGISTER_ACTOR_FORWARD_HANDLER(pServiceBase, Class, name, handler)	do { core::CActorMessageRegistry<Class>::registerForwardHandler(name, (core::CActorMessageRegistry<Class>::funForwardHandler)handler); pServiceBase->registerActorForwardHandler(name, std::bind(&Class::onDefaultActorForwardHandler, this, std::placeholders::_1, std::placeholders::_2)); } while(0)
+#define REGISTER_ACTOR_MESSAGE_HANDLER(pServiceBase, Class, name, handler)	do { core::CActorMessageRegistry<Class>::registerMessageHandler(name, (core::CActorMessageRegistry<Class>::funMessageHandler)handler); pServiceBase->registerActorMessageHandler(name, std::bind(&Class::onDefaultActorMessageHandler, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)); } while(0)
+#define REGISTER_ACTOR_FORWARD_HANDLER(pServiceBase, Class, name, handler)	do { core::CActorMessageRegistry<Class>::registerForwardHandler(name, (core::CActorMessageRegistry<Class>::funForwardHandler)handler); pServiceBase->registerActorForwardHandler(name, std::bind(&Class::onDefaultActorForwardHandler, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)); } while(0)
 
 #include "actor_message_registry.inl"

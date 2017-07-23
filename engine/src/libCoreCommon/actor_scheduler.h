@@ -16,7 +16,7 @@ namespace core
 
 		bool				init();
 
-		CActorBaseImpl*		createActorBase(CActorBase* pActor);
+		CActorBaseImpl*		createActorBase(uint64_t nActorID, CActorBase* pActorBase);
 		void				destroyActorBase(CActorBaseImpl* pActorBase);
 
 		CActorBaseImpl*		getActorBase(uint64_t nID) const;
@@ -27,7 +27,6 @@ namespace core
 		void				run();
 	
 	private:
-		uint64_t								m_nNextActorID;
 		CServiceBaseImpl*						m_pServiceBaseImpl;
 		std::map<uint64_t, CActorBaseImpl*>		m_mapActorBase;
 		std::map<uint64_t, CActorBaseImpl*>		m_mapWorkActorBase;

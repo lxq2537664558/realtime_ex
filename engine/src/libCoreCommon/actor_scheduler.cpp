@@ -14,8 +14,7 @@
 namespace core
 {
 	CActorScheduler::CActorScheduler(CServiceBaseImpl* pServiceBaseImpl)
-		: m_nNextActorID(1)
-		, m_pServiceBaseImpl(pServiceBaseImpl)
+		: m_pServiceBaseImpl(pServiceBaseImpl)
 	{
 	}
 
@@ -67,11 +66,13 @@ namespace core
 		}
 	}
 
-	CActorBaseImpl* CActorScheduler::createActorBase(CActorBase* pActorBase)
+	CActorBaseImpl* CActorScheduler::createActorBase(uint64_t nActorID, CActorBase* pActorBase)
 	{
 		DebugAstEx(pActorBase != nullptr, nullptr);
+		DebugAstEx(nActorID != 0, nullptr);
+		DebugAstEx(this->m_mapActorBase.find(nActorID) == this->m_mapActorBase.end(), nullptr);
 
-		CActorBaseImpl* pActorBaseImpl = new CActorBaseImpl(this->m_nNextActorID++, pActorBase, this->m_pServiceBaseImpl);
+		CActorBaseImpl* pActorBaseImpl = new CActorBaseImpl(nActorID, pActorBase, this->m_pServiceBaseImpl);
 		
 		this->m_mapActorBase[pActorBaseImpl->getID()] = pActorBaseImpl;
 

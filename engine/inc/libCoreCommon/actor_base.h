@@ -53,7 +53,7 @@ namespace core
 		异步的调用远程的接口，通过callback来拿到响应结果
 		*/
 		template<class T>
-		bool				async_call(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback);
+		bool				async_call(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, const std::function<void(const T*, uint32_t)>& callback);
 		/*
 		异步的调用远程的接口，通过CFuture来拿到响应结果
 		*/
