@@ -165,8 +165,14 @@
     <ClInclude Include="class_info_mgr.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreCommon\protobuf_helper.h">
-      <Filter>inc</Filter>
+    <ClInclude Include="..\..\inc\libCoreCommon\protobuf_factory.h">
+      <Filter>inc\service_base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreCommon\default_protobuf_factory.h">
+      <Filter>inc\service_base</Filter>
+    </ClInclude>
+    <ClInclude Include="base_connection_mgr_impl.h">
+      <Filter>src\framework</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -275,8 +281,8 @@
     <ClCompile Include="base_object.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="protobuf_helper.cpp">
-      <Filter>src</Filter>
+    <ClCompile Include="base_connection_mgr_impl.cpp">
+      <Filter>src\framework</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -300,6 +306,9 @@
     </None>
     <None Include="..\..\inc\libCoreCommon\when_all.inl">
       <Filter>inc</Filter>
+    </None>
+    <None Include="..\..\inc\libCoreCommon\default_protobuf_factory.inl">
+      <Filter>inc\service_base</Filter>
     </None>
   </ItemGroup>
 </Project>

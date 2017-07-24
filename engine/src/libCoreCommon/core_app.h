@@ -28,11 +28,6 @@ namespace core
 		void						registerTicker(uint8_t nType, uint32_t nFromServiceID, uint64_t nFromActorID, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
 		void						unregisterTicker(CTicker* pTicker);
 
-		void						addGlobalBeforeFilter(const std::string& szKey, NodeGlobalFilter callback);
-		void						delGlobalBeforeFilter(const std::string& szKey);
-		void						addGlobalAfterFilter(const std::string& szKey, NodeGlobalFilter callback);
-		void						delGlobalAfterFilter(const std::string& szKey);
-
 		CNetRunnable*				getNetRunnable() const;
 		CLogicRunnable*				getLogicRunnable() const;
 		CTickerRunnable*			getTickerRunnable() const;

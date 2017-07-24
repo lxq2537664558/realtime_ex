@@ -7,22 +7,20 @@
 namespace core
 {
 
-	class CBaseConnectionMgr;
 	class CCoreConnection;
+	class CBaseConnectionMgrImpl;
 
 	/**
 	@brief: 连接基础类，框架的所有连接都继承于这个类
 	*/
-	class CBaseConnection
+	class __CORE_COMMON_API__ CBaseConnection
 	{
-		friend class CBaseConnectionMgr;
-		friend class CCoreConnection;
+		friend class CBaseConnectionMgrImpl;
 
 	public:
 		CBaseConnection();
 		virtual ~CBaseConnection();
 
-		virtual bool			init(uint32_t nType, const std::string& szContext);
 		/**
 		@brief: 释放对象
 		*/
@@ -77,12 +75,6 @@ namespace core
 		const SNetAddr&			getRemoteAddr() const;
 
 	private:
-		void					onHeartbeat(uint64_t nContext);
-
-	private:
-		uint32_t	m_nType;
-		uint64_t	m_nID;
-		SNetAddr	m_sLocalAddr;
-		SNetAddr	m_sRemoteAddr;
+		CCoreConnection*	m_pCoreConnection;
 	};
 }

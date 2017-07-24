@@ -13,7 +13,7 @@ namespace core
 {
 	class CActorBaseImpl;
 	class CServiceBase;
-	class CActorBase :
+	class __CORE_COMMON_API__ CActorBase :
 		public CBaseObject
 	{
 		friend class CServiceBase;
@@ -73,14 +73,14 @@ namespace core
 		void				response(const SSessionInfo& sSessionInfo, const google::protobuf::Message* pMessage);
 
 		virtual void		release();
-		/*
-		发送消息给客户端
+		/**
+		@brief: 发送消息给客户端，这里不要求是protobuf格式的，但是需要在逻辑层自己序列化好
 		*/
-		static bool			send(const SClientSessionInfo& sClientSessionInfo, const google::protobuf::Message* pMessage);
-		/*
-		广播消息给客户端
+		static bool			send(const SClientSessionInfo& sClientSessionInfo, const void* pData, uint16_t nDataSize);
+		/**
+		@brief: 广播消息给客户端，这里不要求是protobuf格式的，但是需要在逻辑层自己序列化好
 		*/
-		static bool			broadcast(const std::vector<SClientSessionInfo>& vecClientSessionInfo, const google::protobuf::Message* pMessage);
+		static bool			broadcast(const std::vector<SClientSessionInfo>& vecClientSessionInfo, const void* pData, uint16_t nDataSize);
 
 	private:
 		bool				invoke(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, uint64_t nCoroutineID, const std::function<void(std::shared_ptr<google::protobuf::Message>&, uint32_t)>& callback);

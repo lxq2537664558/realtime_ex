@@ -89,12 +89,9 @@ namespace core
 				{
 					PROFILING_GUARD(eMCT_REQUEST_SOCKET_LISTEN)
 					SMCT_REQUEST_SOCKET_LISTEN* pContext = reinterpret_cast<SMCT_REQUEST_SOCKET_LISTEN*>(sMessagePacket.pData);
-					if (pContext == nullptr)
-					{
-						PrintWarning("context == nullptr type: eMCT_REQUEST_SOCKET_LISTEN");
-						continue;
-					}
+
 					this->m_pCoreConnectionMgr->listen(pContext->szHost, pContext->nPort, pContext->nType, pContext->szContext, pContext->nSendBufferSize, pContext->nSendBufferSize, pContext->messageParser);
+					
 					SAFE_DELETE(pContext);
 				}
 				break;
@@ -103,12 +100,9 @@ namespace core
 				{
 					PROFILING_GUARD(eMCT_REQUEST_SOCKET_CONNECT)
 					SMCT_REQUEST_SOCKET_CONNECT* pContext = reinterpret_cast<SMCT_REQUEST_SOCKET_CONNECT*>(sMessagePacket.pData);
-					if (pContext == nullptr)
-					{
-						PrintWarning("context == nullptr type: eMCT_REQUEST_SOCKET_CONNECT");
-						continue;
-					}
+					
 					this->m_pCoreConnectionMgr->connect(pContext->szHost, pContext->nPort, pContext->nType, pContext->szContext, pContext->nSendBufferSize, pContext->nSendBufferSize, pContext->messageParser);
+					
 					SAFE_DELETE(pContext);
 				}
 				break;
@@ -117,11 +111,7 @@ namespace core
 				{
 					PROFILING_GUARD(eMCT_REQUEST_SOCKET_SHUTDOWN)
 					SMCT_REQUEST_SOCKET_SHUTDOWN* pContext = reinterpret_cast<SMCT_REQUEST_SOCKET_SHUTDOWN*>(sMessagePacket.pData);
-					if (pContext == nullptr)
-					{
-						PrintWarning("context == nullptr type: eMCT_REQUEST_SOCKET_SHUTDOWN");
-						continue;
-					}
+					
 					CCoreConnection* pCoreConnection = this->m_pCoreConnectionMgr->getCoreConnectionByID(pContext->nSocketID);
 					if (nullptr != pCoreConnection)
 						pCoreConnection->shutdown(pContext->nForce != 0, pContext->szMsg);
@@ -134,15 +124,21 @@ namespace core
 				{
 					PROFILING_GUARD(eMCT_NOTIFY_SOCKET_CONNECT_ACK)
 					SMCT_NOTIFY_SOCKET_CONNECT_ACK* pContext = reinterpret_cast<SMCT_NOTIFY_SOCKET_CONNECT_ACK*>(sMessagePacket.pData);
-					if (pContext == nullptr)
-					{
-						PrintWarning("context == nullptr type: SMCT_NOTIFY_SOCKET_CONNECT_ACK");
-						continue;
-					}
+					
+					if (pContext->bSuccess)
+						pContext->pCoreConnection->setState(CCoreConnection::eCCS_Connected);
+					else
+						pContext->pCoreConnection->shutdown(true, "create base connection error");
 
-					CCoreConnection* pCoreConnection = this->m_pCoreConnectionMgr->getCoreConnectionByID(pContext->nSocketID);
-					if (nullptr != pCoreConnection)
-						pCoreConnection->setState(CCoreConnection::eCCS_Connected);
+					SAFE_DELETE(pContext);
+				}
+				break;
+
+			case eMCT_NOTIFY_SOCKET_DISCONNECT_ACK:
+				{
+					SMCT_NOTIFY_SOCKET_DISCONNECT_ACK* pContext = reinterpret_cast<SMCT_NOTIFY_SOCKET_DISCONNECT_ACK*>(sMessagePacket.pData);
+
+					CCoreApp::Inst()->getNetRunnable()->getCoreConnectionMgr()->destroyCoreConnection(pContext->nSocketID);
 
 					SAFE_DELETE(pContext);
 				}
@@ -152,15 +148,9 @@ namespace core
 				{
 					PROFILING_GUARD(eMCT_SEND_SOCKET_DATA)
 					SMCT_SEND_SOCKET_DATA* pContext = reinterpret_cast<SMCT_SEND_SOCKET_DATA*>(sMessagePacket.pData);
-					if (pContext == nullptr)
-					{
-						PrintWarning("context == nullptr type: eMCT_SEND_SOCKET_DATA");
-						continue;
-					}
-					CCoreConnection* pCoreConnection = this->m_pCoreConnectionMgr->getCoreConnectionByID(pContext->nSocketID);
-					if (nullptr != pCoreConnection)
-						pCoreConnection->send(pContext->nMessageType, pContext + 1, (uint16_t)(sMessagePacket.nDataSize - sizeof(SMCT_SEND_SOCKET_DATA)));
-				
+
+					pContext->pCoreConnection->send(pContext->nMessageType, pContext + 1, (uint16_t)(sMessagePacket.nDataSize - sizeof(SMCT_SEND_SOCKET_DATA)));
+
 					char* szBuf = reinterpret_cast<char*>(sMessagePacket.pData);
 					SAFE_DELETE_ARRAY(szBuf);
 				}
@@ -171,11 +161,6 @@ namespace core
 					PROFILING_GUARD(eMCT_BROADCAST_SOCKET_DATA1)
 					char* szBuf = reinterpret_cast<char*>(sMessagePacket.pData);
 					SMCT_BROADCAST_SOCKET_DATA1* pContext = reinterpret_cast<SMCT_BROADCAST_SOCKET_DATA1*>(sMessagePacket.pData);
-					if (pContext == nullptr)
-					{
-						PrintWarning("context == nullptr type: eMCT_BROADCAST_SOCKET_DATA1");
-						continue;
-					}
 					
 					void* pData = szBuf + sizeof(SMCT_BROADCAST_SOCKET_DATA1) + sizeof(uint64_t)*pContext->nSocketIDCount;
 					uint64_t* pSocketID = reinterpret_cast<uint64_t*>(szBuf + sizeof(SMCT_BROADCAST_SOCKET_DATA1));
@@ -197,11 +182,6 @@ namespace core
 					PROFILING_GUARD(eMCT_BROADCAST_SOCKET_DATA2)
 					char* szBuf = reinterpret_cast<char*>(sMessagePacket.pData);
 					SMCT_BROADCAST_SOCKET_DATA2* pContext = reinterpret_cast<SMCT_BROADCAST_SOCKET_DATA2*>(sMessagePacket.pData);
-					if (pContext == nullptr)
-					{
-						PrintWarning("context == nullptr type: eMCT_BROADCAST_SOCKET_DATA2");
-						continue;
-					}
 					
 					void* pData = szBuf + sizeof(SMCT_BROADCAST_SOCKET_DATA2) + sizeof(uint64_t)*pContext->nExcludeIDCount;
 					uint64_t* pExcludeID = reinterpret_cast<uint64_t*>(szBuf + sizeof(SMCT_BROADCAST_SOCKET_DATA2));
@@ -216,15 +196,11 @@ namespace core
 				{
 					PROFILING_GUARD(eMCT_ENABLE_HEARTBEAT)
 					SMCT_ENABLE_HEARTBEAT* pContext = reinterpret_cast<SMCT_ENABLE_HEARTBEAT*>(sMessagePacket.pData);
-					if (pContext == nullptr)
-					{
-						PrintWarning("context == nullptr type: SMCT_ENABLE_HEARTBEAT");
-						continue;
-					}
 
 					CCoreConnection* pCoreConnection = this->m_pCoreConnectionMgr->getCoreConnectionByID(pContext->nSocketID);
 					if (nullptr != pCoreConnection)
 						pCoreConnection->enableHeartbeat(!!pContext->nEnable);
+					
 					char* szBuf = reinterpret_cast<char*>(sMessagePacket.pData);
 					SAFE_DELETE_ARRAY(szBuf);
 				}

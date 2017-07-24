@@ -15,6 +15,7 @@ namespace core
 		eMCT_NOTIFY_SOCKET_CONNECT,
 		eMCT_NOTIFY_SOCKET_CONNECT_ACK,
 		eMCT_NOTIFY_SOCKET_DISCONNECT,
+		eMCT_NOTIFY_SOCKET_DISCONNECT_ACK,
 		eMCT_NOTIFY_SOCKET_CONNECT_FAIL,
 		eMCT_SEND_SOCKET_DATA,
 		eMCT_RECV_SOCKET_DATA,
@@ -57,21 +58,24 @@ namespace core
 		std::string	szMsg;
 	};
 
+	class CCoreConnection;
 	struct SMCT_NOTIFY_SOCKET_CONNECT
 	{
-		std::string	szContext;
-		uint32_t	nType;
-		SNetAddr	sLocalAddr;
-		SNetAddr	sRemoteAddr;
-		uint64_t	nSocketID;
+		CCoreConnection*	pCoreConnection;
 	};
 
 	struct SMCT_NOTIFY_SOCKET_CONNECT_ACK
 	{
-		uint64_t nSocketID;
+		CCoreConnection*	pCoreConnection;
+		uint8_t				bSuccess;
 	};
 
 	struct SMCT_NOTIFY_SOCKET_DISCONNECT
+	{
+		uint64_t nSocketID;
+	};
+
+	struct SMCT_NOTIFY_SOCKET_DISCONNECT_ACK
 	{
 		uint64_t nSocketID;
 	};
@@ -83,12 +87,8 @@ namespace core
 
 	struct SMCT_RECV_SOCKET_DATA
 	{
-		uint64_t	nSocketID;
-		uint64_t	nSessionID;
-		uint64_t	nData;
-		uint64_t	nToID;
-		uint32_t	nToServiceID;
 		uint8_t		nMessageType;
+		uint64_t	nSocketID;
 		uint16_t	nDataSize;
 		void*		pData;
 	};
@@ -126,8 +126,8 @@ namespace core
 
 	struct SMCT_SEND_SOCKET_DATA
 	{
-		uint64_t	nSocketID;
-		uint8_t		nMessageType;
+		uint8_t				nMessageType;
+		CCoreConnection*	pCoreConnection;
 	};
 
 	struct SMCT_BROADCAST_SOCKET_DATA1

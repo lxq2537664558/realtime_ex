@@ -19,6 +19,18 @@ namespace core
 
 		for (tinyxml2::XMLElement* pServiceInfoXML = pNodeInfoXML->FirstChildElement("service_info"); pServiceInfoXML != nullptr; pServiceInfoXML = pServiceInfoXML->NextSiblingElement("service_info"))
 		{
+			std::string szLibName = pServiceInfoXML->Attribute("lib_name");
+
+#ifdef _WIN32
+			szLibName += ".dll";
+			HINSTANCE hInstance = LoadLibraryA(szLibName.c_str());
+			if (hInstance == nullptr)
+			{
+				PrintWarning("hInstance == nullptr lib_name: %s", szLibName.c_str());
+				return false;
+			}
+#endif
+
 			SServiceBaseInfo sServiceBaseInfo;
 			sServiceBaseInfo.nID = pServiceInfoXML->UnsignedAttribute("service_id");
 			sServiceBaseInfo.szName = pServiceInfoXML->Attribute("service_name");

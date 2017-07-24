@@ -22,9 +22,9 @@ namespace core
 		
 		bool					invoke_a(CServiceBaseImpl* pServiceBaseImpl, uint64_t nSessionID, uint64_t nFromActorID, EMessageTargetType eToType, uint64_t nToID, const google::protobuf::Message* pMessage);
 		
-		bool					send(uint64_t nSessionID, uint32_t nToServiceID, const google::protobuf::Message* pMessage);
+		bool					send(uint64_t nSessionID, uint32_t nToServiceID, const void* pData, uint16_t nDataSize);
 
-		bool					broadcast(const std::vector<uint64_t>& vecSessionID, uint32_t nToServiceID, const google::protobuf::Message* pMessage);
+		bool					broadcast(const std::vector<uint64_t>& vecSessionID, uint32_t nToServiceID, const void* pData, uint16_t nDataSize);
 
 		SPendingResponseInfo*	getPendingResponseInfo(uint64_t nSessionID, bool bErase);
 		SPendingResponseInfo*	addPendingResponseInfo(uint64_t nSessionID, uint64_t nToID, const std::string& szMessageName, const std::function<void(std::shared_ptr<google::protobuf::Message>&, uint32_t)>& callback);

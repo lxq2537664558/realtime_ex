@@ -27,12 +27,12 @@ namespace core
 
 	}
 
-	void CServiceBase::registerServiceMessageHandler(const std::string& szMessageName, const std::function<void(SSessionInfo, const google::protobuf::Message*)>& callback)
+	void CServiceBase::registerServiceMessageHandler(const std::string& szMessageName, const std::function<void(CServiceBase*, SSessionInfo, const google::protobuf::Message*)>& callback)
 	{
 		this->m_pServiceBaseImpl->registerServiceMessageHandler(szMessageName, callback);
 	}
 
-	void CServiceBase::registerServiceForwardHandler(const std::string& szMessageName, const std::function<void(SClientSessionInfo, const google::protobuf::Message*)>& callback)
+	void CServiceBase::registerServiceForwardHandler(const std::string& szMessageName, const std::function<void(CServiceBase*, SClientSessionInfo, const google::protobuf::Message*)>& callback)
 	{
 		this->m_pServiceBaseImpl->registerServiceForwardHandler(szMessageName, callback);
 	}
@@ -118,5 +118,10 @@ namespace core
 	void CServiceBase::setServiceIDConverter(CServiceIDConverter* pServiceIDConverter)
 	{
 		this->m_pServiceBaseImpl->setServiceIDConverter(pServiceIDConverter);
+	}
+
+	void CServiceBase::setProtobufFactory(CProtobufFactory* pProtobufFactory)
+	{
+		this->m_pServiceBaseImpl->setProtobufFactory(pProtobufFactory);
 	}
 }

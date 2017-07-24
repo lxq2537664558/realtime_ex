@@ -54,16 +54,16 @@ namespace core
 		DebugAst(bRet);
 	}
 
-	bool CServiceInvoker::send(const SClientSessionInfo& sClientSessionInfo, const google::protobuf::Message* pMessage)
+	bool CServiceInvoker::send(const SClientSessionInfo& sClientSessionInfo, const void* pData, uint16_t nDataSize)
 	{
-		DebugAstEx(pMessage != nullptr, false);
+		DebugAstEx(pData != nullptr, false);
 
-		return CCoreApp::Inst()->getLogicRunnable()->getTransporter()->send(sClientSessionInfo.nSessionID, sClientSessionInfo.nGateServiceID, pMessage);
+		return CCoreApp::Inst()->getLogicRunnable()->getTransporter()->send(sClientSessionInfo.nSessionID, sClientSessionInfo.nGateServiceID, pData, nDataSize);
 	}
 
-	bool CServiceInvoker::broadcast(const std::vector<SClientSessionInfo>& vecClientSessionInfo, const google::protobuf::Message* pMessage)
+	bool CServiceInvoker::broadcast(const std::vector<SClientSessionInfo>& vecClientSessionInfo, const void* pData, uint16_t nDataSize)
 	{
-		DebugAstEx(pMessage != nullptr, false);
+		DebugAstEx(pData != nullptr, false);
 
 		std::map<uint32_t, std::vector<uint64_t>> mapClientSessionInfo;
 		for (size_t i = 0; i < vecClientSessionInfo.size(); ++i)
@@ -74,7 +74,7 @@ namespace core
 		bool bRet = true;
 		for (auto iter = mapClientSessionInfo.begin(); iter != mapClientSessionInfo.end(); ++iter)
 		{
-			if (!CCoreApp::Inst()->getLogicRunnable()->getTransporter()->broadcast(iter->second, iter->first, pMessage))
+			if (!CCoreApp::Inst()->getLogicRunnable()->getTransporter()->broadcast(iter->second, iter->first, pData, nDataSize))
 				bRet = false;
 		}
 

@@ -15,7 +15,7 @@ namespace core
 	// 这里定时器对象的拷贝只能通过用move的方式
 	// 当然你也可以以指针的形式持有CTicker对象，但是这样一来需要你自己管理这块内存，如果忘记删除，定时器还是在跑的，很可能就悲剧了
 	// 这里建议以指针的形式持有CTicker对象用std::unique_ptr包裹
-	class CTicker :
+	class __CORE_COMMON_API__ CTicker :
 		public virtual base::noninheritable<CTicker>,
 		public base::noncopyable
 	{
@@ -55,6 +55,6 @@ namespace core
 		void*							m_pCoreContext;		// 这块数据只会有逻辑线程去读
 		int64_t							m_nIntervalTime;	// 定时器运行的间隔时间
 		uint64_t						m_nContext;
-		std::function<void(uint64_t)>	m_callback;
+		std::function<void(uint64_t)>*	m_callback;
 	};
 }

@@ -22,7 +22,7 @@ namespace core
 			eCCS_None,
 			eCCS_Connectting,
 			eCCS_Connected,
-			eCCS_Disconnected,
+			eCCS_Disconnecting,
 		};
 
 	public:
@@ -38,6 +38,8 @@ namespace core
 		uint64_t			getID() const;
 
 		uint32_t			getType() const;
+
+		const std::string&	getContext() const;
 
 		void				shutdown(bool bForce, const std::string& szMsg);
 

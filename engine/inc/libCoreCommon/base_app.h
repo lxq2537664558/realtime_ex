@@ -15,7 +15,7 @@ namespace core
 	/**
 	@brief: 基础框架类
 	*/
-	class CBaseApp
+	class __CORE_COMMON_API__ CBaseApp
 	{
 		friend class CCoreApp;
 		friend class CLogicRunnable;
@@ -47,7 +47,7 @@ namespace core
 		/**
 		@brief: 添加服务之间的前置过滤器
 		*/
-		void						addGlobalBeforeFilter(const std::string& szKey, NodeGlobalFilter callback);
+		void						addGlobalBeforeFilter(const std::string& szKey, const NodeGlobalFilter& callback);
 		/**
 		@brief: 删除服务之间的前置过滤器
 		*/
@@ -55,7 +55,7 @@ namespace core
 		/**
 		@brief: 添加服务之间的后置过滤器
 		*/
-		void						addGlobalAfterFilter(const std::string& szKey, NodeGlobalFilter callback);
+		void						addGlobalAfterFilter(const std::string& szKey, const NodeGlobalFilter& callback);
 		/**
 		@brief: 删除服务之间的后置过滤器
 		*/
@@ -79,7 +79,7 @@ namespace core
 		/*
 		@brief: 获取配置文件名
 		*/
-		const std::string&			getConfigFileName() const;
+		const char*					getConfigFileName() const;
 		/*
 		@brief: 获取QPS
 		*/
@@ -96,10 +96,6 @@ namespace core
 		@brief: 发起退出
 		*/
 		void						doQuit();
-		/**
-		@brief: 获取网络临时buf
-		*/
-		base::CWriteBuf&			getWriteBuf() const;
 
 	protected:
 		virtual bool				onInit() { return true; }

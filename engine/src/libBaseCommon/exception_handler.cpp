@@ -75,14 +75,6 @@ static void createErrorLog(const char* szFileName, struct _EXCEPTION_POINTERS *p
 	nLen += _snprintf(g_pExceptionBuf + nLen, _MAX_EXCEPTION_BUF_SIZE - nLen, "R10:%I64x\tR11:%I64x\r\n", pContext->R10, pContext->R11);
 	nLen += _snprintf(g_pExceptionBuf + nLen, _MAX_EXCEPTION_BUF_SIZE - nLen, "R12:%I64x\tR13:%I64x\r\n", pContext->R12, pContext->R13);
 	nLen += _snprintf(g_pExceptionBuf + nLen, _MAX_EXCEPTION_BUF_SIZE - nLen, "R14:%I64x\tR15:%I64x\r\n", pContext->R14, pContext->R15);
-	nLen += _snprintf(g_pExceptionBuf + nLen, _MAX_EXCEPTION_BUF_SIZE - nLen, "XMM0:%I64x\tXMM1:%I64x\r\n", pContext->Xmm0, pContext->Xmm1);
-	nLen += _snprintf(g_pExceptionBuf + nLen, _MAX_EXCEPTION_BUF_SIZE - nLen, "XMM2:%I64x\tXMM3:%I64x\r\n", pContext->Xmm2, pContext->Xmm3);
-	nLen += _snprintf(g_pExceptionBuf + nLen, _MAX_EXCEPTION_BUF_SIZE - nLen, "XMM4:%I64x\tXMM5:%I64x\r\n", pContext->Xmm4, pContext->Xmm5);
-	nLen += _snprintf(g_pExceptionBuf + nLen, _MAX_EXCEPTION_BUF_SIZE - nLen, "XMM6:%I64x\tXMM7:%I64x\r\n", pContext->Xmm6, pContext->Xmm7);
-	nLen += _snprintf(g_pExceptionBuf + nLen, _MAX_EXCEPTION_BUF_SIZE - nLen, "XMM8:%I64x\tXMM9:%I64x\r\n", pContext->Xmm8, pContext->Xmm9);
-	nLen += _snprintf(g_pExceptionBuf + nLen, _MAX_EXCEPTION_BUF_SIZE - nLen, "XMM10:%I64x\tXMM11:%I64x\r\n", pContext->Xmm10, pContext->Xmm11);
-	nLen += _snprintf(g_pExceptionBuf + nLen, _MAX_EXCEPTION_BUF_SIZE - nLen, "XMM12:%I64x\tXMM13:%I64x\r\n", pContext->Xmm12, pContext->Xmm13);
-	nLen += _snprintf(g_pExceptionBuf + nLen, _MAX_EXCEPTION_BUF_SIZE - nLen, "XMM14:%I64x\tXMM15:%I64x\r\n", pContext->Xmm14, pContext->Xmm15);
 	nLen += _snprintf(g_pExceptionBuf + nLen, _MAX_EXCEPTION_BUF_SIZE - nLen, "RIP:%I64x\tRSP:%I64x\tRBP:%I64x\r\n", pContext->Rip, pContext->Rip, pContext->Rbp);
 	nLen += _snprintf(g_pExceptionBuf + nLen, _MAX_EXCEPTION_BUF_SIZE - nLen, "Flags:%08x\r\n", pContext->EFlags);
 #else

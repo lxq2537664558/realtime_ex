@@ -29,6 +29,7 @@ namespace core
 		, m_pMessageQueue(nullptr)
 		, m_insideQueue(_DEFAULT_MESSAGE_QUEUE)
 		, m_pBaseConnectionMgr(nullptr)
+		, m_pBaseConnectionMgrImpl(nullptr)
 		, m_pServiceBaseMgr(nullptr)
 		, m_pTransporter(nullptr)
 		, m_pServiceRegistryProxy(nullptr)
@@ -37,6 +38,7 @@ namespace core
 		this->m_pMessageQueue = new CLogicMessageQueue();
 
 		this->m_pBaseConnectionMgr = new CBaseConnectionMgr();
+		this->m_pBaseConnectionMgrImpl = new CBaseConnectionMgrImpl();
 	}
 
 	CLogicRunnable::~CLogicRunnable()
@@ -46,6 +48,7 @@ namespace core
 		SAFE_DELETE(this->m_pServiceBaseMgr);
 		SAFE_DELETE(this->m_pServiceRegistryProxy);
 		SAFE_DELETE(this->m_pBaseConnectionMgr);
+		SAFE_DELETE(this->m_pBaseConnectionMgrImpl);
 		SAFE_RELEASE(this->m_pThreadBase);
 	}
 
@@ -94,6 +97,11 @@ namespace core
 	CBaseConnectionMgr* CLogicRunnable::getBaseConnectionMgr() const
 	{
 		return this->m_pBaseConnectionMgr;
+	}
+
+	CBaseConnectionMgrImpl* CLogicRunnable::getBaseConnectionMgrImpl() const
+	{
+		return this->m_pBaseConnectionMgrImpl;
 	}
 
 	CServiceBaseMgr* CLogicRunnable::getServiceBaseMgr() const
@@ -178,7 +186,7 @@ namespace core
 		{
 		case eMCT_QUIT:
 			{
-						  const std::vector<CServiceBaseImpl*>& vecServiceBase = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBase();
+				const std::vector<CServiceBaseImpl*>& vecServiceBase = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBase();
 				for (size_t i = 0; i < vecServiceBase.size(); ++i)
 				{
 					vecServiceBase[i]->quit();
@@ -221,12 +229,21 @@ namespace core
 		case eMCT_NOTIFY_SOCKET_CONNECT:
 			{
 				SMCT_NOTIFY_SOCKET_CONNECT* pContext = reinterpret_cast<SMCT_NOTIFY_SOCKET_CONNECT*>(sMessagePacket.pData);
-				if (pContext == nullptr)
+
+				if (!this->m_pBaseConnectionMgrImpl->onConnect(pContext->pCoreConnection))
 				{
-					PrintWarning("context == nullptr type: eMCT_NOTIFY_SOCKET_CONNECT");
-					return true;
+					SMCT_NOTIFY_SOCKET_CONNECT_ACK* pContextAck = new SMCT_NOTIFY_SOCKET_CONNECT_ACK();
+
+					pContextAck->pCoreConnection = pContext->pCoreConnection;
+					pContextAck->bSuccess = false;
+
+					SMessagePacket sMessagePacket;
+					sMessagePacket.nType = eMCT_NOTIFY_SOCKET_CONNECT_ACK;
+					sMessagePacket.pData = pContextAck;
+					sMessagePacket.nDataSize = sizeof(SMCT_NOTIFY_SOCKET_CONNECT_ACK);
+
+					CCoreApp::Inst()->getNetRunnable()->getMessageQueue()->send(sMessagePacket);
 				}
-				this->m_pBaseConnectionMgr->onConnect(pContext->nSocketID, pContext->szContext, pContext->nType, pContext->sLocalAddr, pContext->sRemoteAddr);
 				SAFE_DELETE(pContext);
 			}
 			break;
@@ -234,25 +251,28 @@ namespace core
 		case eMCT_NOTIFY_SOCKET_DISCONNECT:
 			{
 				SMCT_NOTIFY_SOCKET_DISCONNECT* pContext = reinterpret_cast<SMCT_NOTIFY_SOCKET_DISCONNECT*>(sMessagePacket.pData);
-				if (pContext == nullptr)
-				{
-					PrintWarning("context == nullptr type: eMPT_NOTIFY_SOCKET_DISCONNECT");
-					return true;
-				}
-				this->m_pBaseConnectionMgr->onDisconnect(pContext->nSocketID);
+				
+				uint64_t nSocketID = pContext->nSocketID;
+				this->m_pBaseConnectionMgrImpl->onDisconnect(nSocketID);
 				SAFE_DELETE(pContext);
+
+				SMCT_NOTIFY_SOCKET_DISCONNECT_ACK* pContextAck = new SMCT_NOTIFY_SOCKET_DISCONNECT_ACK();
+
+				pContextAck->nSocketID = nSocketID;
+				
+				SMessagePacket sMessagePacket;
+				sMessagePacket.nType = eMCT_NOTIFY_SOCKET_DISCONNECT_ACK;
+				sMessagePacket.pData = pContextAck;
+				sMessagePacket.nDataSize = sizeof(SMCT_NOTIFY_SOCKET_DISCONNECT_ACK);
+
+				CCoreApp::Inst()->getNetRunnable()->getMessageQueue()->send(sMessagePacket);
 			}
 			break;
 
 		case eMCT_NOTIFY_SOCKET_CONNECT_FAIL:
 			{
 				SMCT_NOTIFY_SOCKET_CONNECT_FAIL* pContext = reinterpret_cast<SMCT_NOTIFY_SOCKET_CONNECT_FAIL*>(sMessagePacket.pData);
-				if (pContext == nullptr)
-				{
-					PrintWarning("context == nullptr type: SMCT_NOTIFY_SOCKET_CONNECT_FAIL");
-					return true;
-				}
-				this->m_pBaseConnectionMgr->onConnectFail(pContext->szContext);
+				this->m_pBaseConnectionMgrImpl->onConnectFail(pContext->szContext);
 				SAFE_DELETE(pContext);
 			}
 			break;
@@ -261,12 +281,22 @@ namespace core
 			{
 				PROFILING_GUARD(eMCT_RECV_SOCKET_DATA)
 				SMCT_RECV_SOCKET_DATA* pContext = reinterpret_cast<SMCT_RECV_SOCKET_DATA*>(sMessagePacket.pData);
-				if (pContext == nullptr)
+				
+				defer([&]()
 				{
-					PrintWarning("context == nullptr type: eMCT_RECV_SOCKET_DATA");
-					return true;
+					char* pBuf = reinterpret_cast<char*>(sMessagePacket.pData);
+					SAFE_DELETE_ARRAY(pBuf);
+				});
+
+				const auto& mapGlobalBeforeFilter = this->m_pBaseConnectionMgrImpl->getGlobalBeforeFilter();
+				for (auto iter = mapGlobalBeforeFilter.begin(); iter != mapGlobalBeforeFilter.end(); ++iter)
+				{
+					const NodeGlobalFilter& callback = iter->second;
+					if (!callback(pContext->nSocketID, pContext->pData, pContext->nDataSize))
+						return true;
 				}
-				CBaseConnection* pBaseConnection = this->m_pBaseConnectionMgr->getBaseConnectionByID(pContext->nSocketID);
+
+				CBaseConnection* pBaseConnection = this->m_pBaseConnectionMgrImpl->getBaseConnectionByID(pContext->nSocketID);
 				if (pBaseConnection == nullptr)
 				{
 					PrintWarning("pBaseConnection == nullptr type: eMCT_RECV_SOCKET_DATA socket_id: %d", pContext->nSocketID);
@@ -274,8 +304,13 @@ namespace core
 				}
 
 				pBaseConnection->onDispatch(pContext->nMessageType, pContext->pData, pContext->nDataSize);
-				char* pBuf = reinterpret_cast<char*>(sMessagePacket.pData);
-				SAFE_DELETE_ARRAY(pBuf);
+				const auto& mapGlobalAfterFilter = this->m_pBaseConnectionMgrImpl->getGlobalAfterFilter();
+				for (auto iter = mapGlobalAfterFilter.begin(); iter != mapGlobalAfterFilter.end(); ++iter)
+				{
+					const NodeGlobalFilter& callback = iter->second;
+					if (!callback(pContext->nSocketID, pContext->pData, pContext->nDataSize))
+						return true;
+				}
 			}
 			break;
 
@@ -283,12 +318,11 @@ namespace core
 		case eMCT_RESPONSE:
 		case eMCT_GATE_FORWARD:
 			{
-				if (sMessagePacket.pData == nullptr)
+				defer([&]()
 				{
-					PrintWarning("sMessagePacket.pData == nullptr type: eMCT_REQUEST");
-					return true;
-				}
-
+					char* pBuf = reinterpret_cast<char*>(sMessagePacket.pData);
+					SAFE_DELETE_ARRAY(pBuf);
+				});
 				uint32_t nToServiceID = 0;
 				uint8_t nMessageType = 0;
 				if (sMessagePacket.nType == eMCT_REQUEST)
@@ -314,9 +348,6 @@ namespace core
 				}
 
 				pServiceBaseImpl->getMessageDispatcher()->dispatch(CCoreApp::Inst()->getNodeID(), nMessageType, sMessagePacket.pData);
-
-				char* pBuf = reinterpret_cast<char*>(sMessagePacket.pData);
-				SAFE_DELETE_ARRAY(pBuf);
 			}
 			break;
 

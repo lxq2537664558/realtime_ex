@@ -14,6 +14,7 @@ namespace core
 		, m_pServiceBase(nullptr)
 		, m_pActorIDConverter(nullptr)
 		, m_pServiceIDConverter(nullptr)
+		, m_pProtobufFactory(nullptr)
 	{
 
 	}
@@ -71,12 +72,12 @@ namespace core
 		return this->m_sServiceBaseInfo;
 	}
 
-	void CServiceBaseImpl::registerServiceMessageHandler(const std::string& szMessageName, const std::function<void(SSessionInfo, const google::protobuf::Message*)>& callback)
+	void CServiceBaseImpl::registerServiceMessageHandler(const std::string& szMessageName, const std::function<void(CServiceBase*, SSessionInfo, const google::protobuf::Message*)>& callback)
 	{
 		this->m_mapServiceMessageHandler[szMessageName] = callback;
 	}
 
-	void CServiceBaseImpl::registerServiceForwardHandler(const std::string& szMessageName, const std::function<void(SClientSessionInfo, const google::protobuf::Message*)>& callback)
+	void CServiceBaseImpl::registerServiceForwardHandler(const std::string& szMessageName, const std::function<void(CServiceBase*, SClientSessionInfo, const google::protobuf::Message*)>& callback)
 	{
 		this->m_mapServiceForwardHandler[szMessageName] = callback;
 	}
@@ -91,24 +92,24 @@ namespace core
 		this->m_mapActorForwardHandler[szMessageName] = callback;
 	}
 
-	std::function<void(SSessionInfo, const google::protobuf::Message*)>& CServiceBaseImpl::getServiceMessageHandler(const std::string& szMessageName)
+	std::function<void(CServiceBase*, SSessionInfo, const google::protobuf::Message*)>& CServiceBaseImpl::getServiceMessageHandler(const std::string& szMessageName)
 	{
 		auto iter = this->m_mapServiceMessageHandler.find(szMessageName);
 		if (iter == this->m_mapServiceMessageHandler.end())
 		{
-			static std::function<void(SSessionInfo, const google::protobuf::Message*)> callback;
+			static std::function<void(CServiceBase*, SSessionInfo, const google::protobuf::Message*)> callback;
 			return callback;
 		}
 
 		return iter->second;
 	}
 
-	std::function<void(SClientSessionInfo, const google::protobuf::Message*)>& CServiceBaseImpl::getServiceForwardHandler(const std::string& szMessageName)
+	std::function<void(CServiceBase*, SClientSessionInfo, const google::protobuf::Message*)>& CServiceBaseImpl::getServiceForwardHandler(const std::string& szMessageName)
 	{
 		auto iter = this->m_mapServiceForwardHandler.find(szMessageName);
 		if (iter == this->m_mapServiceForwardHandler.end())
 		{
-			static std::function<void(SClientSessionInfo, const google::protobuf::Message*)> callback;
+			static std::function<void(CServiceBase*, SClientSessionInfo, const google::protobuf::Message*)> callback;
 			return callback;
 		}
 
@@ -221,5 +222,15 @@ namespace core
 	EServiceRunState CServiceBaseImpl::getRunState() const
 	{
 		return this->m_eRunState;
+	}
+
+	void CServiceBaseImpl::setProtobufFactory(CProtobufFactory* pProtobufFactory)
+	{
+		this->m_pProtobufFactory = pProtobufFactory;
+	}
+
+	CProtobufFactory* CServiceBaseImpl::getProtobufFactory() const
+	{
+		return this->m_pProtobufFactory;
 	}
 }

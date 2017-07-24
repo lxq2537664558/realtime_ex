@@ -19,11 +19,6 @@ namespace core
 
 	}
 
-	bool CBaseConnectionOtherNode::init(uint32_t nType, const std::string& szContext)
-	{
-		return CBaseConnection::init(nType, szContext);
-	}
-
 	void CBaseConnectionOtherNode::release()
 	{
 		delete this;

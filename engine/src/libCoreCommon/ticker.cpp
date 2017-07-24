@@ -14,6 +14,7 @@ namespace core
 		, m_nActorID(0)
 		, m_nType(eTT_None)
 	{
+		this->m_callback = new std::function<void(uint64_t)>();
 	}
 
 	CTicker::~CTicker()
@@ -28,7 +29,7 @@ namespace core
 		this->m_nActorID = rhs.m_nActorID;
 		this->m_nIntervalTime = rhs.m_nIntervalTime;
 		this->m_nContext = rhs.m_nContext;
-		this->m_callback = rhs.m_callback;
+		*this->m_callback = *rhs.m_callback;
 		this->m_pCoreContext = rhs.m_pCoreContext;
 		if (this->m_pCoreContext != nullptr)
 			reinterpret_cast<CCoreTickerNode*>(this->m_pCoreContext)->Value.m_pTicker = this;
@@ -46,7 +47,7 @@ namespace core
 		this->m_nActorID = rhs.m_nActorID;
 		this->m_nIntervalTime = rhs.m_nIntervalTime;
 		this->m_nContext = rhs.m_nContext;
-		this->m_callback = rhs.m_callback;
+		*this->m_callback = *rhs.m_callback;
 		this->m_pCoreContext = rhs.m_pCoreContext;
 		if (this->m_pCoreContext != nullptr)
 			reinterpret_cast<CCoreTickerNode*>(this->m_pCoreContext)->Value.m_pTicker = this;
@@ -68,12 +69,12 @@ namespace core
 
 	void CTicker::setCallback(const std::function<void(uint64_t)>& callback)
 	{
-		this->m_callback = callback;
+		*this->m_callback = callback;
 	}
 
 	std::function<void(uint64_t)>& CTicker::getCallback()
 	{
-		return this->m_callback;
+		return *this->m_callback;
 	}
 
 	uint64_t CTicker::getContext() const

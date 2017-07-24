@@ -6,6 +6,20 @@
 #include "google/protobuf/message.h"
 #include "libBaseCommon/base_function.h"
 
+#ifdef _WIN32
+
+#	ifdef __BUILD_CORE_COMMON_DLL__
+#		define __CORE_COMMON_API__ __declspec(dllexport)
+#	else
+#		define __CORE_COMMON_API__ __declspec(dllimport)
+#	endif
+
+#else
+
+#	define __CORE_COMMON_API__
+
+#endif
+
 #define _GET_MESSAGE_ID(szMessageName) (base::hash(szMessageName.c_str()))
 
 enum EResponseResultType
@@ -143,9 +157,9 @@ namespace core
 				pMessage;
 	};
 
-	typedef std::function<void(uint64_t, const message_header*)>						ClientCallback;				// 客户端消息处理函数类型
-	typedef std::function<void(SSessionInfo, const void* pData, uint16_t nDataSize)>	NodeGlobalFilter;			// 全局的消息过滤器类型
-
+	typedef std::function<void(uint64_t, const message_header*)>							ClientCallback;				// 客户端消息处理函数类型
+	typedef std::function<bool(uint64_t nSocketID, const void* pData, uint16_t nDataSize)>	NodeGlobalFilter;			// 全局的消息过滤器类型
+	
 #pragma pack(push,1)
 	struct gate_forward_cookice
 	{
@@ -161,8 +175,6 @@ namespace core
 	{
 		uint32_t	nToServiceID;
 		uint64_t	nSessionID;
-		uint16_t	nMessageNameLen;
-		char		szMessageName[1];
 	};
 
 	struct gate_broadcast_cookice :
@@ -170,8 +182,6 @@ namespace core
 	{
 		uint32_t	nToServiceID;
 		uint16_t	nSessionCount;
-		uint16_t	nMessageNameLen;
-		char		szMessageName[1];
 	};
 
 	struct request_cookice

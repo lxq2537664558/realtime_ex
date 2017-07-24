@@ -11,7 +11,6 @@ public:
 	CConnectionFromNode();
 	virtual ~CConnectionFromNode();
 
-	virtual bool		init(const std::string& szContext);
 	virtual uint32_t	getType() const;
 	virtual void		release();
 

@@ -14,15 +14,16 @@ namespace core
 
 	}
 
-	void CClassInfoMgr::registerClassInfo(const std::string& szClassName, uint32_t nObjectSize, uint32_t nBatchCount, funCreateBaseObject pfCreateBaseObject, funDestroyBaseObject pfDestroyBaseObject)
+	void CClassInfoMgr::registerClassInfo(const std::string& szClassName, uint32_t nObjectSize, uint32_t nBatchCount, const funCreateBaseObject& fnCreateBaseObject, const funDestroyBaseObject& fnDestroyBaseObject)
 	{
 		uint32_t nClassID = this->getClassID(szClassName);
 		DebugAst(this->m_mapClassInfo.find(nClassID) == this->m_mapClassInfo.end());
+
 		SClassInfo& classInfo = this->m_mapClassInfo[nClassID];
 		classInfo.szClassName = szClassName;
 		classInfo.nClassID = nClassID;
-		classInfo.pfCreateBaseObject = pfCreateBaseObject;
-		classInfo.pfDestroyBaseObject = pfDestroyBaseObject;
+		classInfo.fnCreateBaseObject = fnCreateBaseObject;
+		classInfo.fnDestroyBaseObject = fnDestroyBaseObject;
 		classInfo.pFixMemoryPool = new CFixMemoryPool(nObjectSize, nBatchCount);
 	}
 
@@ -55,7 +56,7 @@ namespace core
 
 		SClassInfo* pClassInfo = this->getClassInfo(pBaseObject->getClassID());
 		DebugAst(pClassInfo != nullptr);
-		pClassInfo->pfDestroyBaseObject(pBaseObject);
+		pClassInfo->fnDestroyBaseObject(pBaseObject);
 
 		char* pBuf = (char*)pBaseObject;
 		pClassInfo->pFixMemoryPool->deallocate(pBuf);
@@ -72,7 +73,7 @@ namespace core
 		DebugAstEx(pClassInfo != nullptr, nullptr);
 
 		void* pBuf = pClassInfo->pFixMemoryPool->allocate();
-		CBaseObject* pBaseObject = static_cast<CBaseObject*>(pClassInfo->pfCreateBaseObject(pBuf));
+		CBaseObject* pBaseObject = static_cast<CBaseObject*>(pClassInfo->fnCreateBaseObject(pBuf));
 
 		return pBaseObject;
 	}

@@ -11,7 +11,6 @@ namespace core
 		CBaseConnectionOtherNode();
 		virtual ~CBaseConnectionOtherNode();
 
-		virtual bool		init(uint32_t nType, const std::string& szContext);
 		virtual void		release();
 
 		virtual void		onConnect();

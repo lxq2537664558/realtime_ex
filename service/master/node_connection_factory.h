@@ -9,5 +9,5 @@ public:
 	CNodeConnectionFactory() { }
 	virtual ~CNodeConnectionFactory() { }
 
-	virtual core::CBaseConnection*	createBaseConnection(uint32_t nType, const std::string& szContext);
+	virtual core::CBaseConnection*	createBaseConnection(uint32_t nType);
 };

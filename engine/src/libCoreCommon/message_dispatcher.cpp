@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "message_dispatcher.h"
-#include "protobuf_helper.h"
 #include "core_common_define.h"
 #include "coroutine.h"
 #include "actor_base_impl.h"
@@ -70,7 +69,7 @@ namespace core
 				sSessionInfo.nFromServiceID = pRequestContext->nFromServiceID;
 				sSessionInfo.nFromActorID = pRequestContext->nFromActorID;
 				sSessionInfo.nSessionID = pRequestContext->nSessionID;
-				callback(sSessionInfo, pMessage.get());
+				callback(this->m_pServiceBaseImpl->getServiceBase(), sSessionInfo, pMessage.get());
 			}
 		}
 		else if (nMessageType == eMT_RESPONSE)
@@ -165,7 +164,7 @@ namespace core
 				sClientSessionInfo.nGateServiceID = pGateForwardContext->nFromServiceID;
 				sClientSessionInfo.nSessionID = pGateForwardContext->nSessionID;
 
-				callback(sClientSessionInfo, pMessage.get());
+				callback(this->m_pServiceBaseImpl->getServiceBase(), sClientSessionInfo, pMessage.get());
 			}
 		}
 	}

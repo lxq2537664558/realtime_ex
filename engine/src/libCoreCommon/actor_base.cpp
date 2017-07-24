@@ -48,14 +48,14 @@ namespace core
 		return this->m_pActorBaseImpl->getServiceBaseImpl()->getServiceInvoker()->broadcast(szServiceType, pMessage);
 	}
 
-	bool CActorBase::send(const SClientSessionInfo& sClientSessionInfo, const google::protobuf::Message* pMessage)
+	bool CActorBase::send(const SClientSessionInfo& sClientSessionInfo, const void* pData, uint16_t nDataSize)
 	{
-		return CServiceInvoker::send(sClientSessionInfo, pMessage);
+		return CServiceInvoker::send(sClientSessionInfo, pData, nDataSize);
 	}
 
-	bool CActorBase::broadcast(const std::vector<SClientSessionInfo>& vecClientSessionInfo, const google::protobuf::Message* pMessage)
+	bool CActorBase::broadcast(const std::vector<SClientSessionInfo>& vecClientSessionInfo, const void* pData, uint16_t nDataSize)
 	{
-		return CServiceInvoker::broadcast(vecClientSessionInfo, pMessage);
+		return CServiceInvoker::broadcast(vecClientSessionInfo, pData, nDataSize);
 	}
 
 	void CActorBase::response(const SSessionInfo& sSessionInfo, const google::protobuf::Message* pMessage)

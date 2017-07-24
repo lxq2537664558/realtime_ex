@@ -16,11 +16,6 @@ CConnectionFromNode::~CConnectionFromNode()
 
 }
 
-bool CConnectionFromNode::init(const std::string& szContext)
-{
-	return true;
-}
-
 uint32_t CConnectionFromNode::getType() const
 {
 	return eBCT_ConnectionFromService;

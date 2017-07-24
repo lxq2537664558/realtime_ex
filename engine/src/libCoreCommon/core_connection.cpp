@@ -5,16 +5,17 @@
 #include "core_common.h"
 #include "message_command.h"
 #include "logic_runnable.h"
-#include "protobuf_helper.h"
 #include "core_app.h"
 
 #include "libBaseCommon/debug_helper.h"
 #include "libBaseCommon/base_time.h"
 #include "libBaseCommon/profiling.h"
+#include "libBaseCommon/singleton.h"
 
 
 namespace core
 {
+	static SNetAddr s_DefaultAddr;
 	
 #pragma pack(push,1)
 
@@ -137,12 +138,8 @@ namespace core
 		DebugAst(this->m_pNetConnecter != nullptr);
 
 		SMCT_NOTIFY_SOCKET_CONNECT* pContext = new SMCT_NOTIFY_SOCKET_CONNECT();
-		pContext->szContext = this->m_szContext;
-		pContext->nType = this->getType();
-		pContext->sLocalAddr = this->m_pNetConnecter->getLocalAddr();
-		pContext->sRemoteAddr = this->m_pNetConnecter->getRemoteAddr();
-		pContext->nSocketID = this->getID();
-
+		pContext->pCoreConnection = this;
+		
 		SMessagePacket sMessagePacket;
 		sMessagePacket.nType = eMCT_NOTIFY_SOCKET_CONNECT;
 		sMessagePacket.pData = pContext;
@@ -167,10 +164,8 @@ namespace core
 
 		CCoreApp::Inst()->getLogicRunnable()->getMessageQueue()->send(sMessagePacket);
 
-		this->m_nState = eCCS_Disconnected;
+		this->m_nState = eCCS_Disconnecting;
 		this->m_pNetConnecter = nullptr;
-
-		CCoreApp::Inst()->getNetRunnable()->getCoreConnectionMgr()->destroyCoreConnection(this->getID());
 	}
 
 	void CCoreConnection::onConnectFail()
@@ -186,6 +181,11 @@ namespace core
 	uint32_t CCoreConnection::getType() const
 	{
 		return this->m_nType;
+	}
+
+	const std::string& CCoreConnection::getContext() const
+	{
+		return this->m_szContext;
 	}
 
 	void CCoreConnection::onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize)
@@ -205,10 +205,24 @@ namespace core
 			DebugAst(nSize > sizeof(request_cookice) + pCookice->nMessageNameLen);
 			DebugAst(pCookice->szMessageName[pCookice->nMessageNameLen] == 0);
 
+			CServiceBaseImpl* pServiceBaseImpl = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBaseByID(pCookice->nToServiceID);
+			if (pServiceBaseImpl == nullptr)
+			{
+				PrintWarning("CCoreConnection::onDispatch eMT_REQUEST error pServiceBaseImpl == nullptr service_id: %d", pCookice->nToServiceID);
+				return;
+			}
+
+			CProtobufFactory* pProtobufFactory = pServiceBaseImpl->getProtobufFactory();
+			if (pProtobufFactory == nullptr)
+			{
+				PrintWarning("CCoreConnection::onDispatch eMT_RESPONSE error pProtobufFactory == nullptr service_id: %d", pCookice->nToServiceID);
+				return;
+			}
+
 			const char* pMessageData = reinterpret_cast<const char*>(pCookice + 1) + pCookice->nMessageNameLen;
 			const std::string szMessageName = pCookice->szMessageName;
 
-			google::protobuf::Message* pMessage = unserialize_protobuf_message_from_buf(szMessageName, pMessageData, nSize - sizeof(request_cookice) - pCookice->nMessageNameLen);
+			google::protobuf::Message* pMessage = pProtobufFactory->unserialize_protobuf_message_from_buf(szMessageName, pMessageData, nSize - sizeof(request_cookice) - pCookice->nMessageNameLen);
 			if (nullptr == pMessage)
 				return;
 
@@ -236,10 +250,24 @@ namespace core
 			DebugAst(nSize > sizeof(response_cookice) + pCookice->nMessageNameLen);
 			DebugAst(pCookice->szMessageName[pCookice->nMessageNameLen] == 0);
 
+			CServiceBaseImpl* pServiceBaseImpl = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBaseByID(pCookice->nToServiceID);
+			if (pServiceBaseImpl == nullptr)
+			{
+				PrintWarning("CCoreConnection::onDispatch eMT_RESPONSE error pServiceBaseImpl == nullptr service_id: %d", pCookice->nToServiceID);
+				return;
+			}
+
+			CProtobufFactory* pProtobufFactory = pServiceBaseImpl->getProtobufFactory();
+			if (pProtobufFactory == nullptr)
+			{
+				PrintWarning("CCoreConnection::onDispatch eMT_RESPONSE error pProtobufFactory == nullptr service_id: %d", pCookice->nToServiceID);
+				return;
+			}
+
 			const char* pMessageData = reinterpret_cast<const char*>(pCookice + 1) + pCookice->nMessageNameLen;
 			const std::string szMessageName = pCookice->szMessageName;
 
-			google::protobuf::Message* pMessage = unserialize_protobuf_message_from_buf(szMessageName, pMessageData, nSize - sizeof(response_cookice) - pCookice->nMessageNameLen);
+			google::protobuf::Message* pMessage = pProtobufFactory->unserialize_protobuf_message_from_buf(szMessageName, pMessageData, nSize - sizeof(response_cookice) - pCookice->nMessageNameLen);
 			if (nullptr == pMessage)
 				return;
 
@@ -266,10 +294,24 @@ namespace core
 			DebugAst(nSize > sizeof(gate_forward_cookice) + pCookice->nMessageNameLen);
 			DebugAst(pCookice->szMessageName[pCookice->nMessageNameLen] == 0);
 
+			CServiceBaseImpl* pServiceBaseImpl = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBaseByID(pCookice->nToServiceID);
+			if (pServiceBaseImpl == nullptr)
+			{
+				PrintWarning("CCoreConnection::onDispatch eMT_GATE_FORWARD error pServiceBaseImpl == nullptr service_id: %d", pCookice->nToServiceID);
+				return;
+			}
+
+			CProtobufFactory* pProtobufFactory = pServiceBaseImpl->getProtobufFactory();
+			if (pProtobufFactory == nullptr)
+			{
+				PrintWarning("CCoreConnection::onDispatch eMT_RESPONSE error pProtobufFactory == nullptr service_id: %d", pCookice->nToServiceID);
+				return;
+			}
+
 			const char* pMessageData = reinterpret_cast<const char*>(pCookice + 1) + pCookice->nMessageNameLen;
 			const std::string szMessageName = pCookice->szMessageName;
 
-			google::protobuf::Message* pMessage = unserialize_protobuf_message_from_buf(szMessageName, pMessageData, nSize - sizeof(gate_forward_cookice) - pCookice->nMessageNameLen);
+			google::protobuf::Message* pMessage = pProtobufFactory->unserialize_protobuf_message_from_buf(szMessageName, pMessageData, nSize - sizeof(gate_forward_cookice) - pCookice->nMessageNameLen);
 			if (nullptr == pMessage)
 				return;
 
@@ -293,9 +335,6 @@ namespace core
 			char* pBuf = new char[sizeof(SMCT_RECV_SOCKET_DATA) + nSize];
 			SMCT_RECV_SOCKET_DATA* pContext = reinterpret_cast<SMCT_RECV_SOCKET_DATA*>(pBuf);
 			pContext->nSocketID = this->getID();
-			pContext->nSessionID = 0;
-			pContext->nData = 0;
-			pContext->nToID = 0;
 			pContext->nMessageType = nMessageType;
 			pContext->nDataSize = nSize;
 			pContext->pData = pBuf + sizeof(SMCT_RECV_SOCKET_DATA);
@@ -330,8 +369,10 @@ namespace core
 	{
 		PROFILING_GUARD(CCoreConnection::send)
 
-		DebugAst(this->m_pNetConnecter != nullptr);
 		DebugAst(pData != nullptr && nSize > 0);
+		
+		if (this->m_pNetConnecter == nullptr)
+			return;
 
 		this->m_monitor.onSend(nSize);
 
@@ -362,8 +403,10 @@ namespace core
 	{
 		PROFILING_GUARD(CCoreConnection::send)
 
-		DebugAst(this->m_pNetConnecter != nullptr);
 		DebugAst(pData != nullptr && pExtraBuf != nullptr && nSize + nExtraSize < UINT16_MAX);
+		
+		if (this->m_pNetConnecter == nullptr)
+			return;
 
 		this->m_monitor.onSend(nSize + nExtraSize);
 
@@ -422,20 +465,15 @@ namespace core
 	const SNetAddr& CCoreConnection::getLocalAddr() const
 	{
 		if (this->m_pNetConnecter == nullptr)
-		{
-			static SNetAddr s_Default;
-			return s_Default;
-		}
+			return s_DefaultAddr;
+		
 		return this->m_pNetConnecter->getLocalAddr();
 	}
 
 	const SNetAddr& CCoreConnection::getRemoteAddr() const
 	{
 		if (this->m_pNetConnecter == nullptr)
-		{
-			static SNetAddr s_Default;
-			return s_Default;
-		}
+			return s_DefaultAddr;
 
 		return this->m_pNetConnecter->getRemoteAddr();
 	}

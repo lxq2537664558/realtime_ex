@@ -6,6 +6,7 @@
 #include "base_object.h"
 #include "actor_id_converter.h"
 #include "service_id_converter.h"
+#include "protobuf_factory.h"
 
 #include "libBaseCommon/buf_file.h"
 
@@ -27,7 +28,7 @@ namespace core
 	/**
 	@brief: 服务基础类
 	*/
-	class CServiceBase :
+	class __CORE_COMMON_API__ CServiceBase :
 		public CBaseObject
 	{
 		friend class CServiceBaseImpl;
@@ -52,6 +53,11 @@ namespace core
 		void					setServiceIDConverter(CServiceIDConverter* pServiceIDConverter);
 
 		/**
+		@brief: 设置protobuf工厂，目的是为了创建出真实的protibuf，而不是反射出来的
+		*/
+		void					setProtobufFactory(CProtobufFactory* pProtobufFactory);
+
+		/**
 		@brief: 注册定时器
 		nStartTime 第一次触发定时器的时间
 		nIntervalTime 第一次触发定时器后接下来定时器触发的间隔时间，如果该值是0就表示这个定时器只触发一次
@@ -65,11 +71,11 @@ namespace core
 		/**
 		@brief: 注册普通服务消息
 		*/
-		void					registerServiceMessageHandler(const std::string& szMessageName, const std::function<void(SSessionInfo, const google::protobuf::Message*)>& callback);
+		void					registerServiceMessageHandler(const std::string& szMessageName, const std::function<void(CServiceBase*, SSessionInfo, const google::protobuf::Message*)>& callback);
 		/**
 		@brief: 注册经网关服务转发客户端的服务消息
 		*/
-		void					registerServiceForwardHandler(const std::string& szMessageName, const std::function<void(SClientSessionInfo, const google::protobuf::Message*)>& callback);
+		void					registerServiceForwardHandler(const std::string& szMessageName, const std::function<void(CServiceBase*, SClientSessionInfo, const google::protobuf::Message*)>& callback);
 		
 		/**
 		@brief: 注册普通actor消息

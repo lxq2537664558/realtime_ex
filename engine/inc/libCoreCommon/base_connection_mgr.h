@@ -1,34 +1,26 @@
 #pragma once
 
-#include <list>
-#include <map>
-#include <vector>
 #include <functional>
-
-#include "core_common.h"
 
 #include "libBaseCommon\noncopyable.h"
 #include "libBaseNetwork\network.h"
 
+#include "core_common.h"
+
 namespace core
 {
 	class CBaseConnection;
-	class CLogicRunnable;
 	class CBaseConnectionFactory;
 	/**
 	@brief: 基础连接管理类，主要管理基础连接以及发起连接跟发起监听
 	*/
-	class CBaseConnectionMgr :
+	class __CORE_COMMON_API__ CBaseConnectionMgr :
 		public base::noncopyable
 	{
-		friend class CBaseConnection;
-		friend class CLogicRunnable;
-
 	public:
 		CBaseConnectionMgr();
 		~CBaseConnectionMgr();
 
-		bool							init();
 		/**
 		@brief: 主动发起一个连接（异步）
 		*/
@@ -55,9 +47,9 @@ namespace core
 		*/
 		CBaseConnection*				getBaseConnectionByID(uint64_t nID) const;
 		/**
-		@brief: 根据连接的类型来获取所有基于这个连接类创建的连接对象
+		@brief: 根据连接的类型枚举连接对象,回调函数返回false停止枚举
 		*/
-		std::vector<CBaseConnection*>	getBaseConnection(uint32_t nType) const;
+		void							enumBaseConnection(uint32_t nType, const std::function<bool(CBaseConnection* pBaseConnection)>& callback) const;
 		/**
 		@brief: 根据连接的类型来获取所有基于这个连接类创建的连接数量
 		*/
@@ -65,15 +57,15 @@ namespace core
 		/**
 		@brief: 根据链接的类型来广播消息
 		*/
-		void							broadcast(uint32_t nType, uint8_t nMessageType, const void* pData, uint16_t nSize, const std::vector<uint64_t>* vecExcludeID);
+		void							broadcast(uint32_t nType, uint8_t nMessageType, const void* pData, uint16_t nDataSize, const std::vector<uint64_t>* vecExcludeID);
 		/**
 		@brief: 向一批特定链接广播消息
 		*/
-		void							broadcast(std::vector<uint64_t>& vecSocketID, uint8_t nMessageType, const void* pData, uint16_t nSize);
+		void							broadcast(const std::vector<uint64_t>& vecSocketID, uint8_t nMessageType, const void* pData, uint16_t nDataSize);
 		/**
 		@brief: 添加全局的连接成功回调
 		*/
-		void							addConnectCallback(const std::string& szKey, std::function<void(CBaseConnection*)> callback);
+		void							addConnectCallback(const std::string& szKey, const std::function<void(CBaseConnection*)>& callback);
 		/**
 		@brief: 删除全局的连接成功回调
 		*/
@@ -81,7 +73,7 @@ namespace core
 		/**
 		@brief: 添加全局的连接断开回调
 		*/
-		void							addDisconnectCallback(const std::string& szKey, std::function<void(CBaseConnection*)> callback);/**
+		void							addDisconnectCallback(const std::string& szKey, const std::function<void(CBaseConnection*)>& callback);/**
 		/**
 		@brief: 删除全局的连接断开回调
 		*/
@@ -89,24 +81,10 @@ namespace core
 		/**
 		@brief: 添加全局的主动发起连接被失败回调
 		*/
-		void							addConnectFailCallback(const std::string& szKey, std::function<void(const std::string&)> callback);
+		void							addConnectFailCallback(const std::string& szKey, const std::function<void(const std::string&)>& callback);
 		/**
 		@brief: 删除全局的主动发起连接被失败回调
 		*/
 		void							delConnectFailCallback(const std::string& szKey);
-
-	private:
-		void							onConnect(uint64_t nSocketID, const std::string& szContext, uint32_t nType, const SNetAddr& sLocalAddr, const SNetAddr& sRemoteAddr);
-		void							onDisconnect(uint64_t nSocketID);
-		void							onConnectFail(const std::string& szContext);
-
-	private:
-		std::map<uint64_t, CBaseConnection*>							m_mapBaseConnectionByID;
-		std::map<uint32_t, std::map<uint64_t, CBaseConnection*>>		m_mapBaseConnectionByType;
-		std::map<uint32_t, CBaseConnectionFactory*>						m_mapBaseConnectionFactory;
-
-		std::map<std::string, std::function<void(CBaseConnection*)>>	m_mapConnectCalback;
-		std::map<std::string, std::function<void(CBaseConnection*)>>	m_mapDisconnectCallback;
-		std::map<std::string, std::function<void(const std::string&)>>	m_mapConnectFailCallback;
 	};
 }

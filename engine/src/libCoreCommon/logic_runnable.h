@@ -4,6 +4,7 @@
 
 #include "logic_message_queue.h"
 #include "base_connection_mgr.h"
+#include "base_connection_mgr_impl.h"
 #include "node_connection_factory.h"
 #include "service_base_mgr.h"
 #include "transporter.h"
@@ -24,6 +25,7 @@ namespace core
 
 		CLogicMessageQueue*		getMessageQueue() const;
 		CBaseConnectionMgr*		getBaseConnectionMgr() const;
+		CBaseConnectionMgrImpl*	getBaseConnectionMgrImpl() const;
 		CServiceBaseMgr*		getServiceBaseMgr() const;
 		CTransporter*			getTransporter() const;
 		CServiceRegistryProxy*	getServiceRegistryProxy() const;
@@ -43,6 +45,7 @@ namespace core
 	private:
 		base::CThreadBase*							m_pThreadBase;
 		CBaseConnectionMgr*							m_pBaseConnectionMgr;
+		CBaseConnectionMgrImpl*						m_pBaseConnectionMgrImpl;
 		CLogicMessageQueue*							m_pMessageQueue;
 		CServiceBaseMgr*							m_pServiceBaseMgr;
 		CTransporter*								m_pTransporter;

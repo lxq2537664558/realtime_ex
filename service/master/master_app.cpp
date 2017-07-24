@@ -10,6 +10,7 @@
 
 CMasterApp::CMasterApp()
 	: m_pServiceRegistry(nullptr)
+	, m_writeBuf(UINT16_MAX)
 	, m_pNodeConnectionFactory(nullptr)
 	, m_nMasterID(0)
 {
@@ -31,7 +32,7 @@ bool CMasterApp::onInit()
 	this->m_pServiceRegistry = new CServiceRegistry();
 
 	tinyxml2::XMLDocument* pConfigXML = new tinyxml2::XMLDocument();
-	if (pConfigXML->LoadFile(CBaseApp::Inst()->getConfigFileName().c_str()) != tinyxml2::XML_SUCCESS)
+	if (pConfigXML->LoadFile(CBaseApp::Inst()->getConfigFileName()) != tinyxml2::XML_SUCCESS)
 	{
 		PrintWarning("load etc config error");
 		return false;
@@ -86,6 +87,11 @@ CServiceRegistry* CMasterApp::getServiceRegistry() const
 uint32_t CMasterApp::getMasterID() const
 {
 	return this->m_nMasterID;
+}
+
+base::CWriteBuf& CMasterApp::getWriteBuf()
+{
+	return this->m_writeBuf;
 }
 
 int32_t main(int32_t argc, char* argv[])

@@ -48,15 +48,18 @@ namespace core
 		void					setServiceIDConverter(CServiceIDConverter* pServiceIDConverter);
 		CServiceIDConverter*	getServiceIDConverter() const;
 
-		void					registerServiceMessageHandler(const std::string& szMessageName, const std::function<void(SSessionInfo, const google::protobuf::Message*)>& callback);
-		void					registerServiceForwardHandler(const std::string& szMessageName, const std::function<void(SClientSessionInfo, const google::protobuf::Message*)>& callback);
+		void					setProtobufFactory(CProtobufFactory* pProtobufFactory);
+		CProtobufFactory*		getProtobufFactory() const;
+
+		void					registerServiceMessageHandler(const std::string& szMessageName, const std::function<void(CServiceBase*, SSessionInfo, const google::protobuf::Message*)>& callback);
+		void					registerServiceForwardHandler(const std::string& szMessageName, const std::function<void(CServiceBase*, SClientSessionInfo, const google::protobuf::Message*)>& callback);
 		
 		void					registerActorMessageHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SSessionInfo, const google::protobuf::Message*)>& callback);
 		void					registerActorForwardHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SClientSessionInfo, const google::protobuf::Message*)>& callback);
 		
-		std::function<void(SSessionInfo, const google::protobuf::Message*)>&
+		std::function<void(CServiceBase*, SSessionInfo, const google::protobuf::Message*)>&
 								getServiceMessageHandler(const std::string& szMessageName);
-		std::function<void(SClientSessionInfo, const google::protobuf::Message*)>&
+		std::function<void(CServiceBase*, SClientSessionInfo, const google::protobuf::Message*)>&
 								getServiceForwardHandler(const std::string& szMessageName);
 
 		std::function<void(CActorBase*, SSessionInfo, const google::protobuf::Message*)>&
@@ -82,10 +85,11 @@ namespace core
 		CMessageDispatcher*		m_pMessageDispatcher;
 		CActorIDConverter*		m_pActorIDConverter;
 		CServiceIDConverter*	m_pServiceIDConverter;
+		CProtobufFactory*		m_pProtobufFactory;
 		
-		std::map<std::string, std::function<void(SSessionInfo, const google::protobuf::Message*)>>
+		std::map<std::string, std::function<void(CServiceBase*, SSessionInfo, const google::protobuf::Message*)>>
 								m_mapServiceMessageHandler;
-		std::map<std::string, std::function<void(SClientSessionInfo, const google::protobuf::Message*)>>
+		std::map<std::string, std::function<void(CServiceBase*, SClientSessionInfo, const google::protobuf::Message*)>>
 								m_mapServiceForwardHandler;
 
 		std::map<std::string, std::function<void(CActorBase*, SSessionInfo, const google::protobuf::Message*)>>

@@ -88,9 +88,9 @@ namespace core
 		return CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->getServiceID(szName);
 	}
 
-	const std::string& CBaseApp::getConfigFileName() const
+	const char* CBaseApp::getConfigFileName() const
 	{
-		return CCoreApp::Inst()->getConfigFileName();
+		return CCoreApp::Inst()->getConfigFileName().c_str();
 	}
 
 	void CBaseApp::doQuit()
@@ -115,8 +115,23 @@ namespace core
 		base::debugLog(bEnable);
 	}
 
-	base::CWriteBuf& CBaseApp::getWriteBuf() const
+	void CBaseApp::addGlobalBeforeFilter(const std::string& szKey, const NodeGlobalFilter& callback)
 	{
-		return CCoreApp::Inst()->getWriteBuf();
+		CCoreApp::Inst()->getLogicRunnable()->getBaseConnectionMgrImpl()->addGlobalBeforeFilter(szKey, callback);
+	}
+
+	void CBaseApp::delGlobalBeforeFilter(const std::string& szKey)
+	{
+		CCoreApp::Inst()->getLogicRunnable()->getBaseConnectionMgrImpl()->delGlobalBeforeFilter(szKey);
+	}
+
+	void CBaseApp::addGlobalAfterFilter(const std::string& szKey, const NodeGlobalFilter& callback)
+	{
+		CCoreApp::Inst()->getLogicRunnable()->getBaseConnectionMgrImpl()->addGlobalAfterFilter(szKey, callback);
+	}
+
+	void CBaseApp::delGlobalAfterFilter(const std::string& szKey)
+	{
+		CCoreApp::Inst()->getLogicRunnable()->getBaseConnectionMgrImpl()->delGlobalAfterFilter(szKey);
 	}
 }

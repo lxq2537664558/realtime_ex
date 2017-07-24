@@ -19,15 +19,15 @@ namespace core
 	{
 		std::string				szClassName;
 		uint32_t				nClassID;
-		funCreateBaseObject		pfCreateBaseObject;
-		funDestroyBaseObject	pfDestroyBaseObject;
+		funCreateBaseObject		fnCreateBaseObject;
+		funDestroyBaseObject	fnDestroyBaseObject;
 		CFixMemoryPool*			pFixMemoryPool;
 	};
 
 	/**
 	@brief: 逻辑基础类，是所有框架对象的根
 	*/
-	class CBaseObject :
+	class __CORE_COMMON_API__ CBaseObject :
 		public base::noncopyable
 	{
 	public:
@@ -38,12 +38,14 @@ namespace core
 		
 		virtual void		release() = 0;
 
-		static void			registerClassInfo(const std::string& szClassName, uint32_t nObjectSize, uint32_t nBatchCount, funCreateBaseObject pfCreateBaseObject, funDestroyBaseObject pfDestroyBaseObject);
+		static void			registerClassInfo(const std::string& szClassName, uint32_t nObjectSize, uint32_t nBatchCount, const funCreateBaseObject& fnCreateBaseObject, const funDestroyBaseObject& fnDestroyBaseObject);
+		
 		static SClassInfo*	getClassInfo(uint32_t nClassID);
 		static uint32_t		getClassID(const std::string& szClassName);
-		static void			destroyObject(CBaseObject* pBaseObject);
+		
 		static CBaseObject*	createObject(const std::string& szClassName);
 		static CBaseObject*	createObject(uint32_t nClassID);
+		static void			destroyObject(CBaseObject* pBaseObject);
 	};
 }
 
@@ -84,7 +86,7 @@ public:\
 	}\
 	void Class::registerClassInfo()\
 	{\
-		auto pfCreateBaseObject = std::bind(&create##Class, std::placeholders::_1);\
-		auto pfDestroyBaseObject = std::bind(&destroy##Class, std::placeholders::_1);\
-		core::CBaseObject::registerClassInfo(s_szClassName, sizeof(Class), nBatchCount, pfCreateBaseObject, pfDestroyBaseObject);\
+		auto fnCreateBaseObject = std::bind(&create##Class, std::placeholders::_1);\
+		auto fnDestroyBaseObject = std::bind(&destroy##Class, std::placeholders::_1);\
+		core::CBaseObject::registerClassInfo(s_szClassName, sizeof(Class), nBatchCount, fnCreateBaseObject, fnDestroyBaseObject);\
 	}

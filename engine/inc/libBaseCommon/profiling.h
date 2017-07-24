@@ -28,9 +28,9 @@ namespace base
 #else
 #	define PROFILING_BEGIN(Label)					base::profilingBeginByLabel(#Label, -1);
 #	define PROFILING_END(Label)						base::profilingEndByLabel(#Label, -1);
-#	define PROFILING_GUARD(Label)					base::profilingBeginByLabel(#Label, -1); Defer(base::profilingEndByLabel(#Label, -1););
+#	define PROFILING_GUARD(Label)					base::profilingBeginByLabel(#Label, -1); defer([](){ base::profilingEndByLabel(#Label, -1); });
 
 #	define PROFILING_BEGIN_EX(Label, Context)		base::profilingBeginByLabel(#Label, Context);
 #	define PROFILING_END_EX(Label, Context)			base::profilingEndByLabel(#Label, Context);
-#	define PROFILING_GUARD_EX(Label, Context)		base::profilingBeginByLabel(#Label, Context); Defer(base::profilingEndByLabel(#Label, Context););
+#	define PROFILING_GUARD_EX(Label, Context)		base::profilingBeginByLabel(#Label, Context); defer([](){ base::profilingEndByLabel(#Label, Context); });
 #endif

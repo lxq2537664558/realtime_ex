@@ -175,21 +175,6 @@
     <ProjectReference Include="..\..\engine\src\libCoreCommon\libCoreCommon.vcxproj">
       <Project>{ac3ef028-d610-4f35-904f-c981ca278960}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\test\test_actor1\test_actor1.vcxproj">
-      <Project>{4e41e191-a8b7-4203-9f4c-e1374a9f804d}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\test\test_actor2\test_actor2.vcxproj">
-      <Project>{f3809b10-6048-4af6-9ef0-300544d1d3f7}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\test\test_service1\test_service1.vcxproj">
-      <Project>{042179b4-38f3-444a-8210-049f5750b7c1}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\test\test_service2\test_service2.vcxproj">
-      <Project>{38c6a220-eae9-420f-b220-202fc814eb4b}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\test\test_service3\test_service3.vcxproj">
-      <Project>{a8829740-8419-44fd-a5ae-857275bc2413}</Project>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

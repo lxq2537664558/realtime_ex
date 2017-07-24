@@ -17,11 +17,6 @@ namespace core
 
 	}
 
-	bool CBaseConnectionToMaster::init(uint32_t nType, const std::string& szContext)
-	{
-		return CBaseConnection::init(nType, szContext);
-	}
-
 	void CBaseConnectionToMaster::release()
 	{
 		delete this;

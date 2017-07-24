@@ -10,7 +10,7 @@
 	
 	<!--节点信息-->
 	<node_info node_id = "4" node_name = "test_node_4" host = "127.0.0.1" port = "6001" send_buf_size = "1024" recv_buf_size = "1024">
-		<service_info service_id = "5" service_name = "test_actor_2" service_type = "test_actor" class_name = "CTestActorService2"/>
+		<service_info service_id = "5" service_name = "test_actor_2" service_type = "test_actor" lib_name = "test_actor2" class_name = "CTestActorService2"/>
 	</node_info>
 	
 	<!--本节点需要连接的服务-->

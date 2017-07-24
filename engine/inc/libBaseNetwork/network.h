@@ -116,7 +116,7 @@ namespace base
 		*/
 		virtual uint32_t	onRecv(const char* pData, uint32_t nDataSize) = 0;
 		/**
-		@brief: 数据发送完成回调（仅仅是发送到了socket缓存中，并不代表发送到对端，更别说被对方应用层处理，所以要准确的反馈数据被对方接收的事情需要应用层取处理）
+		@brief: 数据发送完成回调（仅仅是发送到了socket缓存中，并不代表发送到对端，更别说被对方应用层处理，所以要准确的反馈数据被对方接收的事情需要应用层去处理）
 		*/
 		virtual void		onSendComplete(uint32_t nSize) = 0;
 		/**

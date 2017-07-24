@@ -13,6 +13,6 @@ namespace core
 		CBaseConnectionFactory() { }
 		virtual ~CBaseConnectionFactory() { }
 
-		virtual CBaseConnection*	createBaseConnection(uint32_t nType, const std::string& szContext) = 0;
+		virtual CBaseConnection*	createBaseConnection(uint32_t nType) = 0;
 	};
 }

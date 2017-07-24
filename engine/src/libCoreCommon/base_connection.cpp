@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "base_connection.h"
+#include "core_connection.h"
 #include "base_connection_mgr.h"
 #include "core_common.h"
 #include "message_command.h"
@@ -18,8 +19,7 @@ namespace core
 	static SNetAddr s_DefaultNetAddr;
 
 	CBaseConnection::CBaseConnection()
-		: m_nID(0)
-		, m_nType(0)
+		: m_pCoreConnection(nullptr)
 	{
 	}
 
@@ -27,16 +27,29 @@ namespace core
 	{
 	}
 
-	bool CBaseConnection::init(uint32_t nType, const std::string& szContext)
-	{
-		this->m_nType = nType;
-
-		return true;
-	}
-
 	uint32_t CBaseConnection::getType() const
 	{
-		return this->m_nType;
+		return this->m_pCoreConnection->getType();
+	}
+
+	uint64_t CBaseConnection::getID() const
+	{
+		return this->m_pCoreConnection->getID();
+	}
+
+	const SNetAddr& CBaseConnection::getLocalAddr() const
+	{
+		return this->m_pCoreConnection->getLocalAddr();
+	}
+
+	const SNetAddr& CBaseConnection::getRemoteAddr() const
+	{
+		return this->m_pCoreConnection->getRemoteAddr();
+	}
+
+	void CBaseConnection::setMessageParser(MessageParser parser)
+	{
+
 	}
 
 	void CBaseConnection::send(uint8_t nMessageType, const void* pData, uint16_t nSize)
@@ -46,7 +59,7 @@ namespace core
 		char* szBuf = new char[sizeof(SMCT_SEND_SOCKET_DATA) + nSize];
 		SMCT_SEND_SOCKET_DATA* pContext = reinterpret_cast<SMCT_SEND_SOCKET_DATA*>(szBuf);
 		pContext->nMessageType = nMessageType;
-		pContext->nSocketID = this->getID();
+		pContext->pCoreConnection = this->m_pCoreConnection;
 		memcpy(szBuf + sizeof(SMCT_SEND_SOCKET_DATA), pData, nSize);
 
 		SMessagePacket sMessagePacket;
@@ -67,7 +80,7 @@ namespace core
 		char* szBuf = new char[sizeof(SMCT_SEND_SOCKET_DATA) + nSize];
 		SMCT_SEND_SOCKET_DATA* pContext = reinterpret_cast<SMCT_SEND_SOCKET_DATA*>(szBuf);
 		pContext->nMessageType = nMessageType;
-		pContext->nSocketID = this->getID();
+		pContext->pCoreConnection = this->m_pCoreConnection;
 		memcpy(szBuf + sizeof(SMCT_SEND_SOCKET_DATA), pData, nSize);
 		memcpy(szBuf + sizeof(SMCT_SEND_SOCKET_DATA) + nSize, pExtraBuf, nExtraSize);
 
@@ -106,25 +119,5 @@ namespace core
 		sMessagePacket.nDataSize = sizeof(SMCT_ENABLE_HEARTBEAT);
 
 		CCoreApp::Inst()->getNetRunnable()->getMessageQueue()->send(sMessagePacket);
-	}
-
-	uint64_t CBaseConnection::getID() const
-	{
-		return this->m_nID;
-	}
-
-	const SNetAddr& CBaseConnection::getLocalAddr() const
-	{
-		return this->m_sLocalAddr;
-	}
-
-	const SNetAddr& CBaseConnection::getRemoteAddr() const
-	{
-		return this->m_sRemoteAddr;
-	}
-
-	void CBaseConnection::setMessageParser(MessageParser parser)
-	{
-		
 	}
 }
