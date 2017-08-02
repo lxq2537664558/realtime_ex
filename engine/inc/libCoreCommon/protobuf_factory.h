@@ -1,6 +1,7 @@
 #pragma once
 
-#include "libBaseCommon\noncopyable.h"
+#include <stdint.h>
+#include <string.h>
 
 #include "google\protobuf\message.h"
 
@@ -9,8 +10,7 @@ namespace core
 	/**
 	@brief: protobuf 生成器，所有接口需要线程安全，这里必须要虚函数才能保证最终调用的才是具体模块的CDefaultProtobufFactory，而不是core_common的CDefaultProtobufFactory
 	*/
-	class CProtobufFactory :
-		public base::noncopyable
+	class CProtobufFactory
 	{
 	public:
 		virtual ~CProtobufFactory() { }

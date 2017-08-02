@@ -161,7 +161,7 @@ namespace core
 		return (uint32_t)iter->second.size();
 	}
 
-	CCoreConnection* CCoreConnectionMgr::getCoreConnectionByID(uint64_t nID) const
+	CCoreConnection* CCoreConnectionMgr::getCoreConnectionBySocketID(uint64_t nID) const
 	{
 		auto iter = this->m_mapCoreConnectionByID.find(nID);
 		if (iter == this->m_mapCoreConnectionByID.end())

@@ -24,7 +24,7 @@ namespace core
 		~CServiceRegistryProxy();
 
 		bool							init(tinyxml2::XMLElement* pXMLElement);
-		
+
 		void							addNodeProxyInfo(const SNodeBaseInfo& sNodeBaseInfo, const std::vector<SServiceBaseInfo>& vecServiceBaseInfo, bool bMaster);
 		void							delNodeProxyInfo(uint32_t nID);
 
@@ -47,6 +47,7 @@ namespace core
 	private:
 		void							onCheckConnectMaster(uint64_t nContext);
 		void							onConnectRefuse(const std::string& szContext);
+		bool							checkLocalGateServiceProxyInfo();
 
 	private:
 		struct SNodeProxyInfo

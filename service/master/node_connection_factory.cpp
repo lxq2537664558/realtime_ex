@@ -4,7 +4,9 @@
 
 #include "libBaseCommon\debug_helper.h"
 
-core::CBaseConnection* CNodeConnectionFactory::createBaseConnection(uint32_t nType)
+using namespace core;
+
+CBaseConnection* CNodeConnectionFactory::createBaseConnection(uint32_t nType)
 {
 	switch (nType)
 	{

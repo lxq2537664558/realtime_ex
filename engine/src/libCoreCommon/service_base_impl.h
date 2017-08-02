@@ -8,6 +8,8 @@
 #include "logic_message_queue.h"
 #include "message_dispatcher.h"
 
+#include "libBaseCommon\spin_lock.h"
+
 #include <map>
 
 namespace core
@@ -22,7 +24,7 @@ namespace core
 		CServiceBaseImpl();
 		~CServiceBaseImpl();
 
-		bool					init(CServiceBase* pServiceBase, const SServiceBaseInfo& sServiceBaseInfo);
+		bool					init(CServiceBase* pServiceBase, const SServiceBaseInfo& sServiceBaseInfo, const std::string& szConfigFileName);
 		void					quit();
 
 		void					run();
@@ -51,6 +53,9 @@ namespace core
 		void					setProtobufFactory(CProtobufFactory* pProtobufFactory);
 		CProtobufFactory*		getProtobufFactory() const;
 
+		void					addServiceSelector(CServiceSelector* pServiceSelector);
+		CServiceSelector*		getServiceSelector(uint32_t nType) const;
+
 		void					registerServiceMessageHandler(const std::string& szMessageName, const std::function<void(CServiceBase*, SSessionInfo, const google::protobuf::Message*)>& callback);
 		void					registerServiceForwardHandler(const std::string& szMessageName, const std::function<void(CServiceBase*, SClientSessionInfo, const google::protobuf::Message*)>& callback);
 		
@@ -67,17 +72,21 @@ namespace core
 		std::function<void(CActorBase*, SClientSessionInfo, const google::protobuf::Message*)>&
 								getActorForwardHandler(const std::string& szMessageName);
 
-		void					setServiceConnectCallback(const std::function<void(uint32_t)>& callback);
-		void					setServiceDisconnectCallback(const std::function<void(uint32_t)>& callback);
-		std::function<void(uint32_t)>&
+		const std::string&		getForwardMessageName(uint32_t nMessageID);
+
+		void					setServiceConnectCallback(const std::function<void(const std::string&, uint32_t)>& callback);
+		void					setServiceDisconnectCallback(const std::function<void(const std::string&, uint32_t)>& callback);
+		std::function<void(const std::string&, uint32_t)>&
 								getServiceConnectCallback();
-		std::function<void(uint32_t)>&
+		std::function<void(const std::string&, uint32_t)>&
 								getServiceDisconnectCallback();
 
 		EServiceRunState		getRunState() const;
+		const std::string&		getConfigFileName() const;
 		
 	private:
 		SServiceBaseInfo		m_sServiceBaseInfo;
+		std::string				m_szConfigFileName;
 		CServiceBase*			m_pServiceBase;
 		EServiceRunState		m_eRunState;
 		CServiceInvoker*		m_pServiceInvoker;
@@ -97,9 +106,16 @@ namespace core
 		std::map<std::string, std::function<void(CActorBase*, SClientSessionInfo, const google::protobuf::Message*)>>
 								m_mapActorForwardHandler;
 
-		std::function<void(uint32_t)>
+		std::map<uint32_t, std::string>
+								m_mapForwardMessageName;
+		base::spin_lock			m_lockForwardMessage;	// 这个冲突概率非常小，直接用旋转锁，这样性能比读写锁还高
+
+		std::function<void(const std::string&, uint32_t)>
 								m_fnServiceConnectCallback;
-		std::function<void(uint32_t)>
+		std::function<void(const std::string&, uint32_t)>
 								m_fnServiceDisconnectCallback;
+
+		std::map<uint32_t, CServiceSelector*>
+								m_mapServiceSelector;
 	};
 }

@@ -47,12 +47,17 @@ namespace core
 		this->m_pServiceBaseImpl->registerActorForwardHandler(szMessageName, callback);
 	}
 
-	void CServiceBase::setServiceConnectCallback(const std::function<void(uint32_t)>& callback)
+	const std::string& CServiceBase::getForwardMessageName(uint32_t nMessageID)
+	{
+		return this->m_pServiceBaseImpl->getForwardMessageName(nMessageID);
+	}
+
+	void CServiceBase::setServiceConnectCallback(const std::function<void(const std::string&, uint32_t)>& callback)
 	{
 		this->m_pServiceBaseImpl->setServiceConnectCallback(callback);
 	}
 
-	void CServiceBase::setServiceDisconnectCallback(const std::function<void(uint32_t)>& callback)
+	void CServiceBase::setServiceDisconnectCallback(const std::function<void(const std::string&, uint32_t)>& callback)
 	{
 		this->m_pServiceBaseImpl->setServiceDisconnectCallback(callback);
 	}
@@ -105,9 +110,33 @@ namespace core
 		return pActorBase;
 	}
 
+	CActorBase* CServiceBase::getActorBase(uint64_t nID) const
+	{
+		CActorBaseImpl* pActorBaseImpl = this->m_pServiceBaseImpl->getActorScheduler()->getActorBase(nID);
+		if (nullptr == pActorBaseImpl)
+			return nullptr;
+
+		return pActorBaseImpl->getActorBase();
+	}
+
+	EServiceRunState CServiceBase::getRunState() const
+	{
+		return this->m_pServiceBaseImpl->getRunState();
+	}
+
+	const std::string& CServiceBase::getConfigFileName() const
+	{
+		return this->m_pServiceBaseImpl->getConfigFileName();
+	}
+
 	void CServiceBase::release()
 	{
 		CBaseObject::destroyObject(this);
+	}
+
+	CServiceBaseImpl* CServiceBase::getServiceBaseImpl() const
+	{
+		return this->m_pServiceBaseImpl;
 	}
 
 	void CServiceBase::setActorIDConverter(CActorIDConverter* pActorIDConverter)
@@ -120,8 +149,23 @@ namespace core
 		this->m_pServiceBaseImpl->setServiceIDConverter(pServiceIDConverter);
 	}
 
+	void CServiceBase::addServiceSelector(CServiceSelector* pServiceSelector)
+	{
+		this->m_pServiceBaseImpl->addServiceSelector(pServiceSelector);
+	}
+
+	CServiceSelector* CServiceBase::getServiceSelector(uint32_t nType) const
+	{
+		return this->m_pServiceBaseImpl->getServiceSelector(nType);
+	}
+
 	void CServiceBase::setProtobufFactory(CProtobufFactory* pProtobufFactory)
 	{
 		this->m_pServiceBaseImpl->setProtobufFactory(pProtobufFactory);
+	}
+
+	CProtobufFactory* CServiceBase::getProtobufFactory() const
+	{
+		return this->m_pServiceBaseImpl->getProtobufFactory();
 	}
 }

@@ -109,15 +109,17 @@ namespace core
 
 	void CBaseConnection::enableHeartbeat(bool bEnable)
 	{
-		SMCT_ENABLE_HEARTBEAT* pContext = new SMCT_ENABLE_HEARTBEAT();
-		pContext->nSocketID = this->getID();
-		pContext->nEnable = bEnable;
-
-		SMessagePacket sMessagePacket;
-		sMessagePacket.nType = eMCT_ENABLE_HEARTBEAT;
-		sMessagePacket.pData = pContext;
-		sMessagePacket.nDataSize = sizeof(SMCT_ENABLE_HEARTBEAT);
-
-		CCoreApp::Inst()->getNetRunnable()->getMessageQueue()->send(sMessagePacket);
+		this->m_pCoreConnection->enableHeartbeat(bEnable);
 	}
+
+	const char* CBaseConnection::getContext() const
+	{
+		return this->m_pCoreConnection->getContext().c_str();
+	}
+
+	void CBaseConnection::setSessionID(uint64_t nSessionID)
+	{
+		this->m_pCoreConnection->setSessionID(nSessionID);
+	}
+
 }

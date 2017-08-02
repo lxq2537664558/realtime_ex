@@ -23,8 +23,8 @@ private:
 	virtual void			onFrame();
 	virtual void			onQuit();
 
-	void					onServiceConnect(uint32_t nServiceID);
-	void					onServiceDisconnect(uint32_t nServiceID);
+	void					onServiceConnect(const std::string& szType, uint32_t nServiceID);
+	void					onServiceDisconnect(const std::string& szType, uint32_t nServiceID);
 
 	void					onTicker1(uint64_t nContext);
 	void					onTicker2(uint64_t nContext);

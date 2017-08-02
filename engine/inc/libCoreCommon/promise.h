@@ -1,16 +1,15 @@
 #pragma once
 
+#include "libBaseCommon\noncopyable.h"
+
 #include "future.h"
 
 namespace core
 {
 	template<class T>
-	class CPromise
+	class CPromise :
+		public base::noncopyable
 	{
-	private:
-		CPromise(const CPromise&) = delete;
-		const CPromise& operator = (const CPromise&) = delete;
-
 	public:
 		CPromise();
 		~CPromise();

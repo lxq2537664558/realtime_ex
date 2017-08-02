@@ -1,0 +1,5 @@
+syntax = "proto2";
+
+message player_enter_request {
+	optional uint64 player_id = 1;
+}

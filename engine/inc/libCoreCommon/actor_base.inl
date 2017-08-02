@@ -37,7 +37,7 @@ namespace core
 	}
 
 	template<class T>
-	uint32_t CActorBase::sync_call(uint16_t nServiceID, const google::protobuf::Message* pMessage, std::shared_ptr<T>& pResponseMessage)
+	uint32_t CActorBase::sync_call(uint32_t nServiceID, const google::protobuf::Message* pMessage, std::shared_ptr<T>& pResponseMessage)
 	{
 		if (!this->invoke(eMTT_Service, nServiceID, pMessage, coroutine::getCurrentID(), nullptr))
 			return eRRT_ERROR;
@@ -57,5 +57,17 @@ namespace core
 		SAFE_DELETE(pSyncCallResultInfo);
 
 		return nResult;
+	}
+
+	template<class T>
+	bool CActorBase::async_call(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, const std::function<void(const T*, uint32_t)>& callback)
+	{
+		return this->getServiceBase()->getServiceInvoker()->async_call(szServiceType, nServiceSelectorType, nServiceSelectorContext, pMessage, callback);
+	}
+
+	template<class T>
+	bool CActorBase::async_call(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, CFuture<T>& sFuture)
+	{
+		return this->getServiceBase()->getServiceInvoker()->async_call(szServiceType, nServiceSelectorType, nServiceSelectorContext, pMessage, sFuture);
 	}
 }

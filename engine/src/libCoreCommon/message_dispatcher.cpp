@@ -139,7 +139,7 @@ namespace core
 				}
 
 				SActorMessagePacket sActorMessagePacket;
-				sActorMessagePacket.nData = 0;
+				sActorMessagePacket.nData = pGateForwardContext->nSocketID;
 				sActorMessagePacket.nFromServiceID = pGateForwardContext->nFromServiceID;
 				sActorMessagePacket.nSessionID = pGateForwardContext->nSessionID;
 				sActorMessagePacket.nType = eMT_GATE_FORWARD;
@@ -161,8 +161,9 @@ namespace core
 				}
 
 				SClientSessionInfo sClientSessionInfo;
-				sClientSessionInfo.nGateServiceID = pGateForwardContext->nFromServiceID;
 				sClientSessionInfo.nSessionID = pGateForwardContext->nSessionID;
+				sClientSessionInfo.nSocketID = pGateForwardContext->nSocketID;
+				sClientSessionInfo.nGateServiceID = pGateForwardContext->nFromServiceID;
 
 				callback(this->m_pServiceBaseImpl->getServiceBase(), sClientSessionInfo, pMessage.get());
 			}

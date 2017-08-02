@@ -1,13 +1,13 @@
 #pragma once
-#include "google/protobuf/message.h"
+
+#include <memory>
 
 #include "base_object.h"
 #include "coroutine.h"
-#include "core_common.h"
 #include "future.h"
 #include "ticker.h"
 
-#include <memory>
+#include "google/protobuf/message.h"
 
 namespace core
 {
@@ -28,6 +28,8 @@ namespace core
 
 		uint64_t			getID() const;
 
+		CServiceBase*		getServiceBase() const;
+
 		/**
 		@brief: 注册定时器
 		nStartTime 第一次触发定时器的时间
@@ -45,15 +47,10 @@ namespace core
 		bool				send(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage);
 
 		/*
-		给某一个类型的服务广播消息
-		*/
-		bool				broadcast(const std::string& szServiceType, const google::protobuf::Message* pMessage);
-
-		/*
 		异步的调用远程的接口，通过callback来拿到响应结果
 		*/
 		template<class T>
-		bool				async_call(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, const std::function<void(const T*, uint32_t)>& callback);
+		inline bool			async_call(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, const std::function<void(const T*, uint32_t)>& callback);
 		/*
 		异步的调用远程的接口，通过CFuture来拿到响应结果
 		*/
@@ -65,7 +62,16 @@ namespace core
 		另外 同步调用只支持调用其他服务，不支持调用其他actor
 		*/
 		template<class T>
-		inline uint32_t		sync_call(uint16_t nServiceID, const google::protobuf::Message* pMessage, std::shared_ptr<T>& pResponseMessage);
+		inline uint32_t		sync_call(uint32_t nServiceID, const google::protobuf::Message* pMessage, std::shared_ptr<T>& pResponseMessage);
+
+
+		bool				send(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, google::protobuf::Message* pMessage);
+
+		template<class T>
+		inline bool			async_call(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, const std::function<void(const T*, uint32_t)>& callback);
+
+		template<class T>
+		inline bool			async_call(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, CFuture<T>& sFuture);
 
 		/*
 		通过请求的session响应请求
@@ -76,11 +82,11 @@ namespace core
 		/**
 		@brief: 发送消息给客户端，这里不要求是protobuf格式的，但是需要在逻辑层自己序列化好
 		*/
-		static bool			send(const SClientSessionInfo& sClientSessionInfo, const void* pData, uint16_t nDataSize);
+		bool				send(const SClientSessionInfo& sClientSessionInfo, const google::protobuf::Message* pMessage);
 		/**
 		@brief: 广播消息给客户端，这里不要求是protobuf格式的，但是需要在逻辑层自己序列化好
 		*/
-		static bool			broadcast(const std::vector<SClientSessionInfo>& vecClientSessionInfo, const void* pData, uint16_t nDataSize);
+		bool				broadcast(const std::vector<SClientSessionInfo>& vecClientSessionInfo, const google::protobuf::Message* pMessage);
 
 	private:
 		bool				invoke(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, uint64_t nCoroutineID, const std::function<void(std::shared_ptr<google::protobuf::Message>&, uint32_t)>& callback);

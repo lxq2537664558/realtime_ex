@@ -1,11 +1,15 @@
 #include "stdafx.h"
 #include "connection_from_client.h"
-#include "gate_message_dispatcher.h"
-#include "gate_app.h"
+#include "client_message_dispatcher.h"
+#include "client_session_mgr.h"
+#include "gate_service.h"
 
-#include "libCoreServiceKit/cluster_invoker.h"
+#include "libCoreCommon\base_app.h"
+
+using namespace core;
 
 CConnectionFromClient::CConnectionFromClient()
+	: m_pGateService(nullptr)
 {
 
 }
@@ -13,11 +17,6 @@ CConnectionFromClient::CConnectionFromClient()
 CConnectionFromClient::~CConnectionFromClient()
 {
 
-}
-
-bool CConnectionFromClient::init(const std::string& szContext)
-{
-	return true;
 }
 
 uint32_t CConnectionFromClient::getType() const
@@ -32,19 +31,26 @@ void CConnectionFromClient::release()
 
 void CConnectionFromClient::onConnect()
 {
-	CGateApp::Inst()->getGateSessionMgr()->createSession(this->getID(), this->getID());
+	uint32_t nServiceID = 0;
+	base::crt::atoui(this->getContext(), nServiceID);
+	this->m_pGateService = dynamic_cast<CGateService*>(CBaseApp::Inst()->getServiceBase(nServiceID));
+	if (nullptr == this->m_pGateService)
+	{
+		PrintWarning("gate service id error service_id: %d", nServiceID);
+		this->shutdown(true, "nullptr == this->m_pGateService");
+		return;
+	}
 }
 
 void CConnectionFromClient::onDisconnect()
 {
-	CGateApp::Inst()->getGateSessionMgr()->delSessionbySocketID(this->getID());
+	if(this->m_pGateService != nullptr)
+		this->m_pGateService->getClientSessionMgr()->delSessionbySocketID(this->getID());
 }
 
-bool CConnectionFromClient::onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize)
+void CConnectionFromClient::onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize)
 {
-	DebugAstEx(nMessageType == eMT_CLIENT, true);
+	DebugAst(nMessageType == eMT_CLIENT);
 
-	CGateMessageDispatcher::Inst()->dispatch(this->getID(), nMessageType, pData, nSize);
-
-	return true;
+	this->m_pGateService->getClientMessageDispatcher()->dispatch(this, pData, nSize);
 }

@@ -15,7 +15,8 @@ namespace core
 	/**
 	@brief: 基础框架类
 	*/
-	class __CORE_COMMON_API__ CBaseApp
+	class __CORE_COMMON_API__ CBaseApp :
+		public base::noncopyable
 	{
 		friend class CCoreApp;
 		friend class CLogicRunnable;
@@ -45,21 +46,21 @@ namespace core
 		*/
 		CBaseConnectionMgr*			getBaseConnectionMgr() const;
 		/**
-		@brief: 添加服务之间的前置过滤器
+		@brief: 添加服务之间的特定消息的前置过滤器（排除掉定时器，心跳，request，response，gate_forward）
 		*/
-		void						addGlobalBeforeFilter(const std::string& szKey, const NodeGlobalFilter& callback);
+		void						addGlobalBeforeFilter(uint8_t nMessageType, const std::string& szKey, const NodeGlobalFilter& callback);
 		/**
-		@brief: 删除服务之间的前置过滤器
+		@brief: 删除服务之间的特定消息的前置过滤器（排除掉定时器，心跳，request，response，gate_forward）
 		*/
-		void						delGlobalBeforeFilter(const std::string& szKey);
+		void						delGlobalBeforeFilter(uint8_t nMessageType, const std::string& szKey);
 		/**
-		@brief: 添加服务之间的后置过滤器
+		@brief: 添加服务之间的特定消息的后置过滤器（排除掉定时器，心跳，request，response，gate_forward）
 		*/
-		void						addGlobalAfterFilter(const std::string& szKey, const NodeGlobalFilter& callback);
+		void						addGlobalAfterFilter(uint8_t nMessageType, const std::string& szKey, const NodeGlobalFilter& callback);
 		/**
-		@brief: 删除服务之间的后置过滤器
+		@brief: 删除服务之间的特定消息的后置过滤器（排除掉定时器，心跳，request，response，gate_forward）
 		*/
-		void						delGlobalAfterFilter(const std::string& szKey);
+		void						delGlobalAfterFilter(uint8_t nMessageType, const std::string& szKey);
 		/*
 		@brief: 根据服务ID获取服务
 		*/
@@ -76,10 +77,18 @@ namespace core
 		@brief: 根据节点名字获取节点id
 		*/
 		uint32_t					getServiceID(const std::string& szName) const;
+		/**
+		@brief: 判断是否是本节点的服务
+		*/
+		bool						isLocalService(uint32_t nServiceID) const;
+		/**
+		@brief: 根据服务类型取到该类型服务的所有服务id
+		*/
+		const std::vector<uint32_t>&getServiceIDByTypeName(const std::string& szName) const;
 		/*
 		@brief: 获取配置文件名
 		*/
-		const char*					getConfigFileName() const;
+		const std::string&			getConfigFileName() const;
 		/*
 		@brief: 获取QPS
 		*/

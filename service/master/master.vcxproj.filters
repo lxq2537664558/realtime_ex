@@ -24,9 +24,6 @@
     <ClInclude Include="targetver.h">
       <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="master_app.h">
-      <Filter>inc</Filter>
-    </ClInclude>
     <ClInclude Include="connection_from_node.h">
       <Filter>inc</Filter>
     </ClInclude>
@@ -36,12 +33,12 @@
     <ClInclude Include="service_registry.h">
       <Filter>inc</Filter>
     </ClInclude>
+    <ClInclude Include="master_service.h">
+      <Filter>inc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="master_app.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="connection_from_node.cpp">
@@ -51,6 +48,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="service_registry.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="master_service.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

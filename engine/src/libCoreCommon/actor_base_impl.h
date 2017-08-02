@@ -32,6 +32,8 @@ namespace core
 		EActorBaseState			getState() const;
 		void					setState(EActorBaseState eState);
 
+		CActorBase*				getActorBase() const;
+
 		CServiceBaseImpl*		getServiceBaseImpl() const;
 
 		void					registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);

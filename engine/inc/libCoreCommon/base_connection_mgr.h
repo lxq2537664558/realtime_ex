@@ -3,7 +3,6 @@
 #include <functional>
 
 #include "libBaseCommon\noncopyable.h"
-#include "libBaseNetwork\network.h"
 
 #include "core_common.h"
 
@@ -45,7 +44,11 @@ namespace core
 		/**
 		@brief: 根据连接ID获取一个连接
 		*/
-		CBaseConnection*				getBaseConnectionByID(uint64_t nID) const;
+		CBaseConnection*				getBaseConnectionBySocketID(uint64_t nID) const;
+		/**
+		@brief: 根据服务ID获取一个连接
+		*/
+		CBaseConnection*				getBaseConnectionByServiceID(uint32_t nID) const;
 		/**
 		@brief: 根据连接的类型枚举连接对象,回调函数返回false停止枚举
 		*/

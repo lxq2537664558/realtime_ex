@@ -28,8 +28,8 @@ private:
 	virtual void	onFrame();
 	virtual void	onQuit();
 
-	void			onServiceConnect(uint32_t nServiceID);
-	void			onServiceDisconnect(uint32_t nServiceID);
+	void			onServiceConnect(const std::string&, uint32_t nServiceID);
+	void			onServiceDisconnect(const std::string&, uint32_t nServiceID);
 
 private:
 	CTestActor0*				m_pTestActor0;

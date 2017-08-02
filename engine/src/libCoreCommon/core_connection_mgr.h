@@ -33,7 +33,7 @@ namespace core
 		void				broadcast(uint32_t nType, uint8_t nMessageType, const void* pData, uint16_t nSize, uint64_t* pExcludeID, uint16_t nExcludeIDCount);
 		
 		void				destroyCoreConnection(uint64_t nSocketID);
-		CCoreConnection*	getCoreConnectionByID(uint64_t nID) const;
+		CCoreConnection*	getCoreConnectionBySocketID(uint64_t nID) const;
 		uint32_t			getCoreConnectionCount(uint32_t nType) const;
 
 		void				wakeup();

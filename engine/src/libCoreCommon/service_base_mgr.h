@@ -26,7 +26,7 @@ namespace core
 		const std::vector<SServiceBaseInfo>&
 							getServiceBaseInfo() const;
 
-		bool				isOwnerService(uint32_t nServiceID) const;
+		bool				isLocalService(uint32_t nServiceID) const;
 
 	private:
 		std::vector<SServiceBaseInfo>			m_vecServiceBaseInfo;

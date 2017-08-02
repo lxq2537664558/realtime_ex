@@ -25,8 +25,6 @@ namespace core
 		eMCT_BROADCAST_SOCKET_DATA1,
 		eMCT_BROADCAST_SOCKET_DATA2,
 		eMCT_TICKER,
-		eMCT_ENABLE_HEARTBEAT,
-		eMCT_SEND_HEARTBEAT,
 	};
 
 	struct SMCT_REQUEST_SOCKET_LISTEN
@@ -117,6 +115,7 @@ namespace core
 	struct SMCT_GATE_FORWARD
 	{
 		uint64_t	nSessionID;
+		uint64_t	nSocketID;
 		uint32_t	nFromServiceID;
 		uint64_t	nToActorID;
 		uint32_t	nToServiceID;
@@ -141,16 +140,5 @@ namespace core
 		uint32_t	nType;
 		uint8_t		nMessageType;
 		uint16_t	nExcludeIDCount;
-	};
-
-	struct SMCT_ENABLE_HEARTBEAT
-	{
-		uint64_t	nSocketID;
-		uint8_t		nEnable;
-	};
-
-	struct SMCT_SEND_HEARTBEAT
-	{
-		uint64_t	nSocketID;
 	};
 }

@@ -26,6 +26,11 @@ namespace core
 		return this->m_pActorBaseImpl->getID();
 	}
 
+	CServiceBase* CActorBase::getServiceBase() const
+	{
+		return this->m_pActorBaseImpl->getServiceBaseImpl()->getServiceBase();
+	}
+
 	void CActorBase::registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
 	{
 		this->m_pActorBaseImpl->registerTicker(pTicker, nStartTime, nIntervalTime, nContext);
@@ -43,24 +48,24 @@ namespace core
 		return CCoreApp::Inst()->getLogicRunnable()->getTransporter()->invoke_a(this->m_pActorBaseImpl->getServiceBaseImpl(), 0, this->getID(), eType, nID, pMessage);
 	}
 
-	bool CActorBase::broadcast(const std::string& szServiceType, const google::protobuf::Message* pMessage)
+	bool CActorBase::send(const SClientSessionInfo& sClientSessionInfo, const google::protobuf::Message* pMessage)
 	{
-		return this->m_pActorBaseImpl->getServiceBaseImpl()->getServiceInvoker()->broadcast(szServiceType, pMessage);
+		return this->getServiceBase()->getServiceInvoker()->send(sClientSessionInfo, pMessage);
 	}
 
-	bool CActorBase::send(const SClientSessionInfo& sClientSessionInfo, const void* pData, uint16_t nDataSize)
+	bool CActorBase::send(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, google::protobuf::Message* pMessage)
 	{
-		return CServiceInvoker::send(sClientSessionInfo, pData, nDataSize);
+		return this->getServiceBase()->getServiceInvoker()->send(szServiceType, nServiceSelectorType, nServiceSelectorContext, pMessage);
 	}
 
-	bool CActorBase::broadcast(const std::vector<SClientSessionInfo>& vecClientSessionInfo, const void* pData, uint16_t nDataSize)
+	bool CActorBase::broadcast(const std::vector<SClientSessionInfo>& vecClientSessionInfo, const google::protobuf::Message* pMessage)
 	{
-		return CServiceInvoker::broadcast(vecClientSessionInfo, pData, nDataSize);
+		return this->getServiceBase()->getServiceInvoker()->broadcast(vecClientSessionInfo, pMessage);
 	}
 
 	void CActorBase::response(const SSessionInfo& sSessionInfo, const google::protobuf::Message* pMessage)
 	{
-		this->m_pActorBaseImpl->getServiceBaseImpl()->getServiceInvoker()->response(sSessionInfo, pMessage);
+		this->getServiceBase()->getServiceInvoker()->response(sSessionInfo, pMessage);
 	}
 
 	void CActorBase::release()

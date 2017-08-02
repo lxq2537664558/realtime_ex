@@ -174,6 +174,15 @@
     <ClInclude Include="base_connection_mgr_impl.h">
       <Filter>src\framework</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreCommon\service_selector.h">
+      <Filter>inc\service_base</Filter>
+    </ClInclude>
+    <ClInclude Include="random_service_selector.h">
+      <Filter>src\service_base</Filter>
+    </ClInclude>
+    <ClInclude Include="hash_service_selector.h">
+      <Filter>src\service_base</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="fix_memory_pool.cpp">
@@ -283,6 +292,12 @@
     </ClCompile>
     <ClCompile Include="base_connection_mgr_impl.cpp">
       <Filter>src\framework</Filter>
+    </ClCompile>
+    <ClCompile Include="random_service_selector.cpp">
+      <Filter>src\service_base</Filter>
+    </ClCompile>
+    <ClCompile Include="hash_service_selector.cpp">
+      <Filter>src\service_base</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

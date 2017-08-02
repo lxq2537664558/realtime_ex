@@ -30,8 +30,8 @@ bool CTestService1::onInit()
 	this->m_pDefaultProtobufFactory = new CDefaultProtobufFactory();
 	this->setProtobufFactory(this->m_pDefaultProtobufFactory);
 
-	this->setServiceConnectCallback(std::bind(&CTestService1::onServiceConnect, this, std::placeholders::_1));
-	this->setServiceDisconnectCallback(std::bind(&CTestService1::onServiceDisconnect, this, std::placeholders::_1));
+	this->setServiceConnectCallback(std::bind(&CTestService1::onServiceConnect, this, std::placeholders::_1, std::placeholders::_2));
+	this->setServiceDisconnectCallback(std::bind(&CTestService1::onServiceDisconnect, this, std::placeholders::_1, std::placeholders::_2));
 
 	return true;
 }
@@ -161,8 +161,11 @@ void CTestService1::onTicker3(uint64_t nContext)
 	});
 }
 
-void CTestService1::onServiceConnect(uint32_t nServiceID)
+void CTestService1::onServiceConnect(const std::string& szType, uint32_t nServiceID)
 {
+	if (szType == "master")
+		return;
+
 	PrintInfo("ServiceConnect service_id: %d", nServiceID);
 
 	this->m_mapConnectFlag[nServiceID] = true;
@@ -174,12 +177,15 @@ void CTestService1::onServiceConnect(uint32_t nServiceID)
 	}
 
 	this->registerTicker(&this->m_ticker1, 1000, 5000, 0);
-	this->registerTicker(&this->m_ticker2, 1000, 5000, 0);
-	this->registerTicker(&this->m_ticker3, 1000, 5000, 0);
+// 	this->registerTicker(&this->m_ticker2, 1000, 5000, 0);
+// 	this->registerTicker(&this->m_ticker3, 1000, 5000, 0);
 }
 
-void CTestService1::onServiceDisconnect(uint32_t nServiceID)
+void CTestService1::onServiceDisconnect(const std::string& szType, uint32_t nServiceID)
 {
+	if (szType == "master")
+		return;
+
 	PrintInfo("ServiceDisconnect service_id: %d", nServiceID);
 
 	this->m_mapConnectFlag[nServiceID] = false;

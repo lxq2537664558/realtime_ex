@@ -3,17 +3,18 @@
 #include "core_common.h"
 
 #include "libBaseNetwork\network.h"
+#include "libBaseCommon\noncopyable.h"
 
 namespace core
 {
-
 	class CCoreConnection;
 	class CBaseConnectionMgrImpl;
 
 	/**
 	@brief: 连接基础类，框架的所有连接都继承于这个类
 	*/
-	class __CORE_COMMON_API__ CBaseConnection
+	class __CORE_COMMON_API__ CBaseConnection :
+		public base::noncopyable
 	{
 		friend class CBaseConnectionMgrImpl;
 
@@ -73,6 +74,14 @@ namespace core
 		@brief: 获取远程地址
 		*/
 		const SNetAddr&			getRemoteAddr() const;
+		/**
+		@brief: 获取上下文
+		*/
+		const char*				getContext() const;
+		/**
+		@brief: 设置session_id
+		*/
+		void					setSessionID(uint64_t nSessionID);
 
 	private:
 		CCoreConnection*	m_pCoreConnection;

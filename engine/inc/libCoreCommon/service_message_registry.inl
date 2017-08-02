@@ -17,12 +17,6 @@ namespace core
 	}
 
 	template<class T>
-	uint32_t CServiceMessageRegistry<T>::getServiceID() const
-	{
-		return this->m_nServiceID;
-	}
-
-	template<class T>
 	void CServiceMessageRegistry<T>::dispatch(T* pObject, CServiceBase* pServiceBase, SSessionInfo& sSessionInfo, const google::protobuf::Message* pMessage)
 	{
 		DebugAst(pMessage != nullptr);
@@ -31,7 +25,7 @@ namespace core
 		if (iter == m_mapMessageHandler.end())
 			return;
 
-		funMessageHandler handler = iter->second;
+		funcMessageHandler handler = iter->second;
 
 		(pObject->*handler)(pServiceBase, sSessionInfo, pMessage);
 	}
@@ -45,7 +39,7 @@ namespace core
 		if (iter == m_mapForwardHandler.end())
 			return;
 
-		funForwardHandler handler = iter->second;
+		funcForwardHandler handler = iter->second;
 
 		(pObject->*handler)(pServiceBase, sClientSessionInfo, pMessage);
 	}

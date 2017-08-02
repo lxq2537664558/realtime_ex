@@ -1,0 +1,5 @@
+syntax = "proto2";
+
+message gate_handshake_request {
+	optional string key = 1;
+}

@@ -55,7 +55,7 @@ namespace core
 				CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->getServiceBaseInfoByNodeID(this->getNodeID(), vecServiceBaseInfo);
 				for (size_t i = 0; i < vecServiceBaseInfo.size(); ++i)
 				{
-					callback(vecServiceBaseInfo[i].nID);
+					callback(vecServiceBaseInfo[i].szType, vecServiceBaseInfo[i].nID);
 				}
 			}
 		}
@@ -104,7 +104,7 @@ namespace core
 					CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->getServiceBaseInfoByNodeID(this->getNodeID(), vecServiceBaseInfo);
 					for (size_t i = 0; i < vecServiceBaseInfo.size(); ++i)
 					{
-						callback(vecServiceBaseInfo[i].nID);
+						callback(vecServiceBaseInfo[i].szType, vecServiceBaseInfo[i].nID);
 					}
 				}
 			}
@@ -133,7 +133,7 @@ namespace core
 					CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->getServiceBaseInfoByNodeID(this->getNodeID(), vecServiceBaseInfo);
 					for (size_t i = 0; i < vecServiceBaseInfo.size(); ++i)
 					{
-						callback(vecServiceBaseInfo[i].nID);
+						callback(vecServiceBaseInfo[i].szType, vecServiceBaseInfo[i].nID);
 					}
 				}
 			}

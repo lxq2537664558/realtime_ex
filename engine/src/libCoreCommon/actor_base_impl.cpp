@@ -171,8 +171,9 @@ namespace core
 			}
 			
 			SClientSessionInfo sClientSessionInfo;
-			sClientSessionInfo.nGateServiceID = sActorMessagePacket.nFromServiceID;
 			sClientSessionInfo.nSessionID = sActorMessagePacket.nSessionID;
+			sClientSessionInfo.nSocketID = sActorMessagePacket.nData;
+			sClientSessionInfo.nGateServiceID = sActorMessagePacket.nFromServiceID;
 			uint64_t nCoroutineID = coroutine::create(0, [&callback, this, pMessage, sClientSessionInfo](uint64_t){ callback(this->m_pActorBase, sClientSessionInfo, pMessage.get()); });
 			coroutine::resume(nCoroutineID, 0);
 		}
@@ -327,4 +328,10 @@ namespace core
 
 		return true;
 	}
+
+	CActorBase* CActorBaseImpl::getActorBase() const
+	{
+		return this->m_pActorBase;
+	}
+
 }

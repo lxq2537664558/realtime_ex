@@ -27,7 +27,7 @@ static std::string& rtrim(std::string &s)
 
 namespace base
 {
-	std::string &trim(std::string s)
+	std::string &trim(std::string& s)
 	{
 		return ltrim(rtrim(s));
 	}
@@ -92,7 +92,8 @@ namespace base
 		if (nIndex >= this->m_nCount)
 			return false;
 
-		std::string str = trim(this->m_szElement[nIndex]);
+		std::string str = this->m_szElement[nIndex];
+		str = trim(str);
 		return base::crt::atoi(str.c_str(), nValue);
 	}
 
@@ -101,7 +102,8 @@ namespace base
 		if (nIndex >= this->m_nCount)
 			return false;
 
-		std::string str = trim(this->m_szElement[nIndex]);
+		std::string str = this->m_szElement[nIndex];
+		str = trim(str);
 		return base::crt::atoui(str.c_str(), nValue);
 	}
 
@@ -110,7 +112,8 @@ namespace base
 		if (nIndex >= this->m_nCount)
 			return false;
 
-		std::string str = trim(this->m_szElement[nIndex]);
+		std::string str = this->m_szElement[nIndex];
+		str = trim(str);
 		return base::crt::atoi64(str.c_str(), nValue);
 	}
 
@@ -119,7 +122,8 @@ namespace base
 		if (nIndex >= this->m_nCount)
 			return false;
 
-		std::string str = trim(this->m_szElement[nIndex]);
+		std::string str = this->m_szElement[nIndex];
+		str = trim(str);
 		return base::crt::atoui64(str.c_str(), nValue);
 	}
 

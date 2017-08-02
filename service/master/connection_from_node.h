@@ -2,8 +2,7 @@
 
 #include "libCoreCommon/base_connection.h"
 
-#define eBCT_ConnectionFromService	_BASE_CONNECTION_TYPE_BEGIN
-
+class CMasterService;
 class CConnectionFromNode
 	: public core::CBaseConnection
 {
@@ -21,5 +20,6 @@ public:
 	uint32_t			getNodeID() const;
 
 private:
-	uint32_t	m_nNodeID;
+	uint32_t		m_nNodeID;
+	CMasterService*	m_pMasterService;
 };

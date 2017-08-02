@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64">
       <Configuration>Debug</Configuration>
@@ -14,18 +14,19 @@
     <ProjectGuid>{881BCAD3-0EBA-4DDB-B303-3B18E77AA605}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>gate</RootNamespace>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -61,7 +62,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>..\..\3rd\tinyxml2\lib\win32\$(Configuration);..\..\3rd\protobuf\lib\win32\$(Configuration);$(OutDir);</AdditionalLibraryDirectories>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;libBaseCommon.lib;libBaseNetwork.lib;libCoreCommon.lib;libCoreServiceKit.lib;tinyxml2.lib;libprotobuf.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;libBaseCommon.lib;libBaseNetwork.lib;libCoreCommon.lib;tinyxml2.lib;libprotobuf.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -82,38 +83,65 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>..\..\3rd\tinyxml2\lib\win32\$(Configuration);..\..\3rd\protobuf\lib\win32\$(Configuration);$(OutDir);</AdditionalLibraryDirectories>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;libBaseCommon.lib;libBaseNetwork.lib;libCoreCommon.lib;libCoreServiceKit.lib;tinyxml2.lib;libprotobuf.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;libBaseCommon.lib;libBaseNetwork.lib;libCoreCommon.lib;tinyxml2.lib;libprotobuf.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="client_message_handler.h" />
     <ClInclude Include="connection_from_client.h" />
-    <ClInclude Include="gate_app.h" />
-    <ClInclude Include="gate_message_dispatcher.h" />
-    <ClInclude Include="gate_message_handler.h" />
-    <ClInclude Include="gate_session.h" />
-    <ClInclude Include="gate_session_mgr.h" />
-    <ClInclude Include="service_connection_factory.h" />
+    <ClInclude Include="client_message_dispatcher.h" />
+    <ClInclude Include="gate_service.h" />
+    <ClInclude Include="client_session.h" />
+    <ClInclude Include="client_session_mgr.h" />
+    <ClInclude Include="client_connection_factory.h" />
+    <ClInclude Include="proto_src\gate_handshake_request.pb.h" />
+    <ClInclude Include="proto_src\gate_handshake_response.pb.h" />
+    <ClInclude Include="proto_src\player_enter_request.pb.h" />
+    <ClInclude Include="proto_src\player_enter_response.pb.h" />
+    <ClInclude Include="proto_src\player_leave.pb.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="client_message_handler.cpp" />
     <ClCompile Include="connection_from_client.cpp" />
-    <ClCompile Include="gate_app.cpp" />
-    <ClCompile Include="gate_message_dispatcher.cpp" />
-    <ClCompile Include="gate_message_handler.cpp" />
-    <ClCompile Include="gate_session.cpp" />
-    <ClCompile Include="gate_session_mgr.cpp" />
-    <ClCompile Include="service_connection_factory.cpp" />
+    <ClCompile Include="client_message_dispatcher.cpp" />
+    <ClCompile Include="gate_service.cpp" />
+    <ClCompile Include="client_session.cpp" />
+    <ClCompile Include="client_session_mgr.cpp" />
+    <ClCompile Include="client_connection_factory.cpp" />
+    <ClCompile Include="proto_src\gate_handshake_request.pb.cc">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4800;4267;</DisableSpecificWarnings>
+    </ClCompile>
+    <ClCompile Include="proto_src\gate_handshake_response.pb.cc">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4800;4267;</DisableSpecificWarnings>
+    </ClCompile>
+    <ClCompile Include="proto_src\player_enter_request.pb.cc">
+      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4800;4267;</DisableSpecificWarnings>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="proto_src\player_enter_response.pb.cc">
+      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4800;4267;</DisableSpecificWarnings>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="proto_src\player_leave.pb.cc">
+      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4800;4267;</DisableSpecificWarnings>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\engine\src\libCoreServiceKit\libCoreServiceKit.vcxproj">
+    <ProjectReference Include="..\..\engine\src\libCoreCommon\libCoreCommon.vcxproj">
       <Project>{5ff8f978-d4c4-47da-bb2e-382441b238df}</Project>
     </ProjectReference>
   </ItemGroup>

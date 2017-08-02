@@ -5,7 +5,6 @@
 
 #include "core_common.h"
 
-#include <atomic>
 #include <functional>
 
 

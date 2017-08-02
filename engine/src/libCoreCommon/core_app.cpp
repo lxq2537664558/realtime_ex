@@ -334,7 +334,7 @@ namespace core
 			return false;
 		}
 		// 加载节点基本信息
-		this->m_sNodeBaseInfo.nID = (uint16_t)nID;
+		this->m_sNodeBaseInfo.nID = nID;
 		this->m_sNodeBaseInfo.szName = pNodeInfoXML->Attribute("node_name");
 		if (pNodeInfoXML->Attribute("host") != nullptr)
 			this->m_sNodeBaseInfo.szHost = pNodeInfoXML->Attribute("host");

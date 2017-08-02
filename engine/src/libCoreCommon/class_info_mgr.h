@@ -1,21 +1,34 @@
 #pragma once
 
+#include <map>
+
 #include "base_object.h"
+#include "fix_memory_pool.h"
 
 #include "libBaseCommon\singleton.h"
-
-#include <map>
 
 namespace core
 {
 	class CClassInfoMgr :
 		public base::CSingleton<CClassInfoMgr>
 	{
+	private:
+		struct SClassInfo
+		{
+			std::string		szClassName;
+			uint32_t		nClassID;
+			CFixMemoryPool*	pFixMemoryPool;
+			std::function<CBaseObject*(void*)>
+				fnCreateBaseObject;
+			std::function<void(CBaseObject*)>
+				fnDestroyBaseObject;
+		};
+
 	public:
 		CClassInfoMgr();
 		~CClassInfoMgr();
 
-		void			registerClassInfo(const std::string& szClassName, uint32_t nObjectSize, uint32_t nBatchCount, const funCreateBaseObject& fnCreateBaseObject, const funDestroyBaseObject& fnDestroyBaseObject);
+		void			registerClassInfo(const std::string& szClassName, uint32_t nObjectSize, uint32_t nBatchCount, const std::function<CBaseObject*(void*)>& fnCreateBaseObject, const std::function<void(CBaseObject*)>& fnDestroyBaseObject);
 		void			unRegisterClassInfo();
 
 		SClassInfo*		getClassInfo(uint32_t nClassID);

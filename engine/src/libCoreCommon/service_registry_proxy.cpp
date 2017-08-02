@@ -61,6 +61,29 @@ namespace core
 			this->m_mapServiceIDByServiceType[sServiceBaseInfo.szType].push_back(sServiceBaseInfo.nID);
 		}
 
+		return this->checkLocalGateServiceProxyInfo();
+	}
+
+	bool CServiceRegistryProxy::checkLocalGateServiceProxyInfo()
+	{
+		// 一个节点只能有一个gate服务，本节点跟其他服务跟gate之间通过socket连接
+		uint32_t nGateServiceID = 0;
+		const std::vector<SServiceBaseInfo>& vecServiceBaseInfo = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBaseInfo();
+		for (size_t i = 0; i < vecServiceBaseInfo.size(); ++i)
+		{
+			const SServiceBaseInfo& sServiceBaseInfo = vecServiceBaseInfo[i];
+			if (sServiceBaseInfo.szType == "gate")
+			{
+				if (nGateServiceID != 0)
+				{
+					PrintInfo("dup gate service_name: %s service_id: %d", sServiceBaseInfo.szName.c_str(), sServiceBaseInfo.nID);
+					return false;
+				}
+
+				nGateServiceID = sServiceBaseInfo.nID;
+			}
+		}
+
 		return true;
 	}
 
@@ -324,6 +347,7 @@ namespace core
 		iter->second.pBaseConnectionToMaster = pBaseConnectionToMaster;
 		
 		PrintInfo("add master master_id: %d", pBaseConnectionToMaster->getMasterID());
+
 		return true;
 	}
 

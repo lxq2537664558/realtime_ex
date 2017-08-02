@@ -112,7 +112,7 @@ namespace core
 					PROFILING_GUARD(eMCT_REQUEST_SOCKET_SHUTDOWN)
 					SMCT_REQUEST_SOCKET_SHUTDOWN* pContext = reinterpret_cast<SMCT_REQUEST_SOCKET_SHUTDOWN*>(sMessagePacket.pData);
 					
-					CCoreConnection* pCoreConnection = this->m_pCoreConnectionMgr->getCoreConnectionByID(pContext->nSocketID);
+					CCoreConnection* pCoreConnection = this->m_pCoreConnectionMgr->getCoreConnectionBySocketID(pContext->nSocketID);
 					if (nullptr != pCoreConnection)
 						pCoreConnection->shutdown(pContext->nForce != 0, pContext->szMsg);
 
@@ -126,7 +126,7 @@ namespace core
 					SMCT_NOTIFY_SOCKET_CONNECT_ACK* pContext = reinterpret_cast<SMCT_NOTIFY_SOCKET_CONNECT_ACK*>(sMessagePacket.pData);
 					
 					if (pContext->bSuccess)
-						pContext->pCoreConnection->setState(CCoreConnection::eCCS_Connected);
+						pContext->pCoreConnection->onConnectAck();
 					else
 						pContext->pCoreConnection->shutdown(true, "create base connection error");
 
@@ -166,7 +166,7 @@ namespace core
 					uint64_t* pSocketID = reinterpret_cast<uint64_t*>(szBuf + sizeof(SMCT_BROADCAST_SOCKET_DATA1));
 					for (size_t i = 0; i < pContext->nSocketIDCount; ++i)
 					{
-						CCoreConnection* pCoreConnection = this->m_pCoreConnectionMgr->getCoreConnectionByID(pSocketID[i]);
+						CCoreConnection* pCoreConnection = this->m_pCoreConnectionMgr->getCoreConnectionBySocketID(pSocketID[i]);
 						if (nullptr != pCoreConnection)
 						{
 							pCoreConnection->send(pContext->nMessageType, pData, (uint16_t)(sMessagePacket.nDataSize - sizeof(SMCT_BROADCAST_SOCKET_DATA1) - sizeof(uint64_t)*pContext->nSocketIDCount));
@@ -188,20 +188,6 @@ namespace core
 					
 					this->m_pCoreConnectionMgr->broadcast(pContext->nType, pContext->nMessageType, pData, (uint16_t)(sMessagePacket.nDataSize - sizeof(SMCT_BROADCAST_SOCKET_DATA2) - sizeof(uint64_t)*pContext->nExcludeIDCount), pExcludeID, pContext->nExcludeIDCount);
 					
-					SAFE_DELETE_ARRAY(szBuf);
-				}
-				break;
-
-			case eMCT_ENABLE_HEARTBEAT:
-				{
-					PROFILING_GUARD(eMCT_ENABLE_HEARTBEAT)
-					SMCT_ENABLE_HEARTBEAT* pContext = reinterpret_cast<SMCT_ENABLE_HEARTBEAT*>(sMessagePacket.pData);
-
-					CCoreConnection* pCoreConnection = this->m_pCoreConnectionMgr->getCoreConnectionByID(pContext->nSocketID);
-					if (nullptr != pCoreConnection)
-						pCoreConnection->enableHeartbeat(!!pContext->nEnable);
-					
-					char* szBuf = reinterpret_cast<char*>(sMessagePacket.pData);
 					SAFE_DELETE_ARRAY(szBuf);
 				}
 				break;

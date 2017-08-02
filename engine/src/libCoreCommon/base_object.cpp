@@ -4,14 +4,9 @@
 
 namespace core
 {
-	void CBaseObject::registerClassInfo(const std::string& szClassName, uint32_t nObjectSize, uint32_t nBatchCount, const funCreateBaseObject& fnCreateBaseObject, const funDestroyBaseObject& fnDestroyBaseObject)
+	void CBaseObject::registerClassInfo(const std::string& szClassName, uint32_t nObjectSize, uint32_t nBatchCount, const std::function<CBaseObject*(void*)>& fnCreateBaseObject, const std::function<void(CBaseObject*)>& fnDestroyBaseObject)
 	{
 		CClassInfoMgr::Inst()->registerClassInfo(szClassName, nObjectSize, nBatchCount, fnCreateBaseObject, fnDestroyBaseObject);
-	}
-
-	SClassInfo* CBaseObject::getClassInfo(uint32_t nClassID)
-	{
-		return CClassInfoMgr::Inst()->getClassInfo(nClassID);
 	}
 
 	uint32_t CBaseObject::getClassID(const std::string& szClassName)

@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="proto_src">
+      <UniqueIdentifier>{eb696e68-34b4-4c73-b82f-c6937b575651}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -24,52 +27,82 @@
     <ClInclude Include="targetver.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="gate_app.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="connection_from_client.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="gate_session.h">
+    <ClInclude Include="gate_service.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="gate_session_mgr.h">
+    <ClInclude Include="client_connection_factory.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="gate_message_dispatcher.h">
+    <ClInclude Include="client_session.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="gate_message_handler.h">
+    <ClInclude Include="client_session_mgr.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="service_connection_factory.h">
+    <ClInclude Include="client_message_dispatcher.h">
       <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="proto_src\gate_handshake_request.pb.h">
+      <Filter>proto_src</Filter>
+    </ClInclude>
+    <ClInclude Include="proto_src\gate_handshake_response.pb.h">
+      <Filter>proto_src</Filter>
+    </ClInclude>
+    <ClInclude Include="client_message_handler.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="proto_src\player_enter_request.pb.h">
+      <Filter>proto_src</Filter>
+    </ClInclude>
+    <ClInclude Include="proto_src\player_enter_response.pb.h">
+      <Filter>proto_src</Filter>
+    </ClInclude>
+    <ClInclude Include="proto_src\player_leave.pb.h">
+      <Filter>proto_src</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="gate_app.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="connection_from_client.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="gate_session_mgr.cpp">
+    <ClCompile Include="gate_service.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="gate_session.cpp">
+    <ClCompile Include="client_connection_factory.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="gate_message_dispatcher.cpp">
+    <ClCompile Include="client_session.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="gate_message_handler.cpp">
+    <ClCompile Include="client_session_mgr.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="service_connection_factory.cpp">
+    <ClCompile Include="client_message_dispatcher.cpp">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="proto_src\gate_handshake_request.pb.cc">
+      <Filter>proto_src</Filter>
+    </ClCompile>
+    <ClCompile Include="proto_src\gate_handshake_response.pb.cc">
+      <Filter>proto_src</Filter>
+    </ClCompile>
+    <ClCompile Include="client_message_handler.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="proto_src\player_enter_request.pb.cc">
+      <Filter>proto_src</Filter>
+    </ClCompile>
+    <ClCompile Include="proto_src\player_enter_response.pb.cc">
+      <Filter>proto_src</Filter>
+    </ClCompile>
+    <ClCompile Include="proto_src\player_leave.pb.cc">
+      <Filter>proto_src</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

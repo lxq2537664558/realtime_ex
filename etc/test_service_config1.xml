@@ -11,7 +11,7 @@
 	<!--节点信息-->
 	<node_info node_id = "1" node_name = "test_node_1">
 		<service_info service_id = "1" service_name = "test_service_1" service_type = "test_service" lib_name = "test_service1" class_name = "CTestService1"/>
-		<service_info service_id = "3" service_name = "test_service_3" service_type = "test_service" lib_name = "test_service3" class_name = "CTestService3"/>
+		<service_info service_id = "2" service_name = "test_service_2" service_type = "test_service" lib_name = "test_service2" class_name = "CTestService2"/>
 	</node_info>
 	
 	<!--本节点需要连接的服务-->
@@ -23,6 +23,6 @@
 	
 	<!--连接master地址-->
 	<monster_info>
-		<master id = "1" host = "127.0.0.1" port = "10001"/>
+		<master id = "10001" host = "127.0.0.1" port = "10001"/>
 	</monster_info>
 </root>

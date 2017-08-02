@@ -8,10 +8,11 @@
 #include <set>
 
 class CConnectionFromNode;
+class CMasterService;
 class CServiceRegistry
 {
 public:
-	CServiceRegistry();
+	CServiceRegistry(CMasterService* pMasterService);
 	~CServiceRegistry();
 
 	bool	addNode(CConnectionFromNode* pConnectionFromNode, const core::SNodeBaseInfo& sNodeBaseInfo, const std::vector<core::SServiceBaseInfo>& vecServiceBaseInfo);
@@ -28,4 +29,6 @@ private:
 	std::map<uint32_t, SNodeInfo>	m_mapNodeInfo;
 	std::set<std::string>			m_setServiceName;
 	std::set<uint32_t>				m_setServiceID;
+
+	CMasterService*					m_pMasterService;
 };

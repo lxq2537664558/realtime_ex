@@ -1,13 +1,17 @@
 #include "stdafx.h"
 #include "service_registry.h"
-#include "master_app.h"
 #include "connection_from_node.h"
+#include "master_service.h"
 
 #include "libCoreCommon/base_connection_mgr.h"
 #include "libBaseCommon/base_function.h"
 #include "libCoreCommon/proto_system.h"
+#include "libCoreCommon/base_app.h"
 
-CServiceRegistry::CServiceRegistry()
+using namespace core;
+
+CServiceRegistry::CServiceRegistry(CMasterService* pMasterService)
+	: m_pMasterService(pMasterService)
 {
 
 }
@@ -17,7 +21,7 @@ CServiceRegistry::~CServiceRegistry()
 
 }
 
-bool CServiceRegistry::addNode(CConnectionFromNode* pConnectionFromNode, const core::SNodeBaseInfo& sNodeBaseInfo, const std::vector<core::SServiceBaseInfo>& vecServiceBaseInfo)
+bool CServiceRegistry::addNode(CConnectionFromNode* pConnectionFromNode, const SNodeBaseInfo& sNodeBaseInfo, const std::vector<SServiceBaseInfo>& vecServiceBaseInfo)
 {
 	DebugAstEx(pConnectionFromNode != nullptr, false);
 
@@ -30,7 +34,7 @@ bool CServiceRegistry::addNode(CConnectionFromNode* pConnectionFromNode, const c
 
 	for (size_t i = 0; i < vecServiceBaseInfo.size(); ++i)
 	{
-		const core::SServiceBaseInfo& sServiceBaseInfo = vecServiceBaseInfo[i];
+		const SServiceBaseInfo& sServiceBaseInfo = vecServiceBaseInfo[i];
 		if (this->m_setServiceName.find(sServiceBaseInfo.szName) != this->m_setServiceName.end())
 		{
 			PrintWarning("CServiceRegistry::addNode dup service name: %s node id: %d", sServiceBaseInfo.szName.c_str(), sNodeBaseInfo.nID);
@@ -52,7 +56,7 @@ bool CServiceRegistry::addNode(CConnectionFromNode* pConnectionFromNode, const c
 
 	for (size_t i = 0; i < vecServiceBaseInfo.size(); ++i)
 	{
-		const core::SServiceBaseInfo& sServiceBaseInfo = vecServiceBaseInfo[i];
+		const SServiceBaseInfo& sServiceBaseInfo = vecServiceBaseInfo[i];
 
 		this->m_setServiceID.insert(sServiceBaseInfo.nID);
 		this->m_setServiceName.insert(sServiceBaseInfo.szName);
@@ -66,10 +70,10 @@ bool CServiceRegistry::addNode(CConnectionFromNode* pConnectionFromNode, const c
 		if (sNodeProxyInfo.pConnectionFromNode == nullptr)
 			continue;
 
-		base::CWriteBuf& writeBuf = CMasterApp::Inst()->getWriteBuf();
+		base::CWriteBuf& writeBuf = this->m_pMasterService->getWriteBuf();
 
 		// 同步基本服务信息
-		core::smt_sync_node_base_info netMsg1;
+		smt_sync_node_base_info netMsg1;
 		netMsg1.sNodeBaseInfo = sNodeProxyInfo.sNodeBaseInfo;
 		netMsg1.vecServiceBaseInfo = sNodeProxyInfo.vecServiceBaseInfo;
 
@@ -78,9 +82,9 @@ bool CServiceRegistry::addNode(CConnectionFromNode* pConnectionFromNode, const c
 	}
 
 	// 把这个新加入的服务广播给其他服务
-	base::CWriteBuf& writeBuf = CMasterApp::Inst()->getWriteBuf();
+	base::CWriteBuf& writeBuf = this->m_pMasterService->getWriteBuf();
 	
-	core::smt_sync_node_base_info netMsg;
+	smt_sync_node_base_info netMsg;
 	netMsg.sNodeBaseInfo = sNodeBaseInfo;
 	netMsg.vecServiceBaseInfo = vecServiceBaseInfo;
 
@@ -88,7 +92,7 @@ bool CServiceRegistry::addNode(CConnectionFromNode* pConnectionFromNode, const c
 
 	std::vector<uint64_t> vecExcludeID;
 	vecExcludeID.push_back(pConnectionFromNode->getID());
-	CMasterApp::Inst()->getBaseConnectionMgr()->broadcast(eBCT_ConnectionFromService, eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize(), &vecExcludeID);
+	CBaseApp::Inst()->getBaseConnectionMgr()->broadcast(eBCT_ConnectionFromService, eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize(), &vecExcludeID);
 	
 	PrintInfo("register node node_id: %d node_name: %s local addr: %s %d remote addr: %s %d", sNodeBaseInfo.nID, sNodeBaseInfo.szName.c_str(), pConnectionFromNode->getLocalAddr().szHost, pConnectionFromNode->getLocalAddr().nPort, pConnectionFromNode->getRemoteAddr().szHost, pConnectionFromNode->getRemoteAddr().nPort);
 
@@ -106,14 +110,14 @@ void CServiceRegistry::delNode(uint32_t nNodeID)
 
 	const SNodeInfo& sNodeInfo = iter->second;
 
-	base::CWriteBuf& writeBuf = CMasterApp::Inst()->getWriteBuf();
+	base::CWriteBuf& writeBuf = this->m_pMasterService->getWriteBuf();
 
-	core::smt_remove_node_base_info netMsg;
+	smt_remove_node_base_info netMsg;
 	netMsg.nNodeID = nNodeID;
 
 	netMsg.pack(writeBuf);
 
-	CMasterApp::Inst()->getBaseConnectionMgr()->broadcast(eBCT_ConnectionFromService, eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize(), nullptr);
+	CBaseApp::Inst()->getBaseConnectionMgr()->broadcast(eBCT_ConnectionFromService, eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize(), nullptr);
 
 	for (auto iter = sNodeInfo.vecServiceBaseInfo.begin(); iter != sNodeInfo.vecServiceBaseInfo.end(); ++iter)
 	{

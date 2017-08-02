@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64">
       <Configuration>Debug</Configuration>
@@ -30,6 +30,7 @@
     <ClInclude Include="..\..\inc\libCoreCommon\service_id_converter.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\service_invoker.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\service_message_registry.h" />
+    <ClInclude Include="..\..\inc\libCoreCommon\service_selector.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\ticker.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\when_all.h" />
     <ClInclude Include="actor_base_impl.h" />
@@ -41,6 +42,8 @@
     <ClInclude Include="core_connection_monitor.h" />
     <ClInclude Include="base_connection_other_node.h" />
     <ClInclude Include="base_connection_to_master.h" />
+    <ClInclude Include="hash_service_selector.h" />
+    <ClInclude Include="random_service_selector.h" />
     <ClInclude Include="service_registry_proxy.h" />
     <ClInclude Include="core_common_define.h" />
     <ClInclude Include="coroutine_impl.h" />
@@ -76,6 +79,8 @@
     <ClCompile Include="core_connection_monitor.cpp" />
     <ClCompile Include="base_connection_other_node.cpp" />
     <ClCompile Include="base_connection_to_master.cpp" />
+    <ClCompile Include="hash_service_selector.cpp" />
+    <ClCompile Include="random_service_selector.cpp" />
     <ClCompile Include="service_registry_proxy.cpp" />
     <ClCompile Include="coroutine.cpp" />
     <ClCompile Include="coroutine_impl.cpp" />
@@ -123,13 +128,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>

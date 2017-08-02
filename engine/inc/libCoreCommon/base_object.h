@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <string>
 
 #include "libBaseCommon/base_common.h"
 #include "libBaseCommon/noncopyable.h"
@@ -10,20 +11,6 @@
 
 namespace core
 {
-	class CBaseObject;
-	typedef std::function<CBaseObject*(void*)>	funCreateBaseObject;
-	typedef std::function<void(CBaseObject*)>	funDestroyBaseObject;
-
-	class CFixMemoryPool;
-	struct SClassInfo
-	{
-		std::string				szClassName;
-		uint32_t				nClassID;
-		funCreateBaseObject		fnCreateBaseObject;
-		funDestroyBaseObject	fnDestroyBaseObject;
-		CFixMemoryPool*			pFixMemoryPool;
-	};
-
 	/**
 	@brief: 逻辑基础类，是所有框架对象的根
 	*/
@@ -38,9 +25,8 @@ namespace core
 		
 		virtual void		release() = 0;
 
-		static void			registerClassInfo(const std::string& szClassName, uint32_t nObjectSize, uint32_t nBatchCount, const funCreateBaseObject& fnCreateBaseObject, const funDestroyBaseObject& fnDestroyBaseObject);
+		static void			registerClassInfo(const std::string& szClassName, uint32_t nObjectSize, uint32_t nBatchCount, const std::function<CBaseObject*(void*)>& fnCreateBaseObject, const std::function<void(CBaseObject*)>& fnDestroyBaseObject);
 		
-		static SClassInfo*	getClassInfo(uint32_t nClassID);
 		static uint32_t		getClassID(const std::string& szClassName);
 		
 		static CBaseObject*	createObject(const std::string& szClassName);

@@ -105,9 +105,9 @@ namespace core
 		CCoreApp::Inst()->getLogicRunnable()->getBaseConnectionMgrImpl()->enumBaseConnection(nType, callback);
 	}
 
-	CBaseConnection* CBaseConnectionMgr::getBaseConnectionByID(uint64_t nID) const
+	CBaseConnection* CBaseConnectionMgr::getBaseConnectionBySocketID(uint64_t nID) const
 	{
-		return CCoreApp::Inst()->getLogicRunnable()->getBaseConnectionMgrImpl()->getBaseConnectionByID(nID);
+		return CCoreApp::Inst()->getLogicRunnable()->getBaseConnectionMgrImpl()->getBaseConnectionBySocketID(nID);
 	}
 
 	void CBaseConnectionMgr::broadcast(uint32_t nType, uint8_t nMessageType, const void* pData, uint16_t nDataSize, const std::vector<uint64_t>* vecExcludeID)
@@ -169,5 +169,10 @@ namespace core
 	CBaseConnectionFactory* CBaseConnectionMgr::getBaseConnectionFactory(uint32_t nType) const
 	{
 		return CCoreApp::Inst()->getLogicRunnable()->getBaseConnectionMgrImpl()->getBaseConnectionFactory(nType);
+	}
+
+	CBaseConnection* CBaseConnectionMgr::getBaseConnectionByServiceID(uint32_t nID) const
+	{
+		return CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->getBaseConnectionOtherNodeByServiceID(nID);
 	}
 }

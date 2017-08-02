@@ -186,21 +186,21 @@ namespace core
 		{
 		case eMCT_QUIT:
 			{
-				const std::vector<CServiceBaseImpl*>& vecServiceBase = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBase();
-				for (size_t i = 0; i < vecServiceBase.size(); ++i)
+				const std::vector<CServiceBaseImpl*>& vecServiceBaseImpl = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBase();
+				for (size_t i = 0; i < vecServiceBaseImpl.size(); ++i)
 				{
-					vecServiceBase[i]->quit();
+					vecServiceBaseImpl[i]->quit();
 				}
 			}
 			break;
 
 		case eMCT_FRAME:
 			{
-				const std::vector<CServiceBaseImpl*>& vecServiceBase = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBase();
+				const std::vector<CServiceBaseImpl*>& vecServiceBaseImpl = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBase();
 
-				for (size_t i = 0; i < vecServiceBase.size(); ++i)
+				for (size_t i = 0; i < vecServiceBaseImpl.size(); ++i)
 				{
-					vecServiceBase[i]->run();
+					vecServiceBaseImpl[i]->run();
 				}
 				
 				bool bQuit = true;
@@ -208,9 +208,9 @@ namespace core
 				if (CBaseApp::Inst()->onProcess())
 					bQuit = false;
 
-				for (size_t i = 0; i < vecServiceBase.size(); ++i)
+				for (size_t i = 0; i < vecServiceBaseImpl.size(); ++i)
 				{
-					if (vecServiceBase[i]->getRunState() != eSRS_Quit)
+					if (vecServiceBaseImpl[i]->getRunState() != eSRS_Quit)
 					{
 						bQuit = false;
 						break;
@@ -288,15 +288,17 @@ namespace core
 					SAFE_DELETE_ARRAY(pBuf);
 				});
 
-				const auto& mapGlobalBeforeFilter = this->m_pBaseConnectionMgrImpl->getGlobalBeforeFilter();
-				for (auto iter = mapGlobalBeforeFilter.begin(); iter != mapGlobalBeforeFilter.end(); ++iter)
+				const auto mapGlobalBeforeFilter = this->m_pBaseConnectionMgrImpl->getGlobalBeforeFilter(pContext->nMessageType);
+				if (mapGlobalBeforeFilter != nullptr)
 				{
-					const NodeGlobalFilter& callback = iter->second;
-					if (!callback(pContext->nSocketID, pContext->pData, pContext->nDataSize))
-						return true;
+					for (auto iter = mapGlobalBeforeFilter->begin(); iter != mapGlobalBeforeFilter->end(); ++iter)
+					{
+						const NodeGlobalFilter& callback = iter->second;
+						callback(pContext->nSocketID, pContext->nMessageType, pContext->pData, pContext->nDataSize);
+					}
 				}
 
-				CBaseConnection* pBaseConnection = this->m_pBaseConnectionMgrImpl->getBaseConnectionByID(pContext->nSocketID);
+				CBaseConnection* pBaseConnection = this->m_pBaseConnectionMgrImpl->getBaseConnectionBySocketID(pContext->nSocketID);
 				if (pBaseConnection == nullptr)
 				{
 					PrintWarning("pBaseConnection == nullptr type: eMCT_RECV_SOCKET_DATA socket_id: %d", pContext->nSocketID);
@@ -304,12 +306,14 @@ namespace core
 				}
 
 				pBaseConnection->onDispatch(pContext->nMessageType, pContext->pData, pContext->nDataSize);
-				const auto& mapGlobalAfterFilter = this->m_pBaseConnectionMgrImpl->getGlobalAfterFilter();
-				for (auto iter = mapGlobalAfterFilter.begin(); iter != mapGlobalAfterFilter.end(); ++iter)
+				const auto mapGlobalAfterFilter = this->m_pBaseConnectionMgrImpl->getGlobalAfterFilter(pContext->nMessageType);
+				if (mapGlobalAfterFilter != nullptr)
 				{
-					const NodeGlobalFilter& callback = iter->second;
-					if (!callback(pContext->nSocketID, pContext->pData, pContext->nDataSize))
-						return true;
+					for (auto iter = mapGlobalAfterFilter->begin(); iter != mapGlobalAfterFilter->end(); ++iter)
+					{
+						const NodeGlobalFilter& callback = iter->second;
+						callback(pContext->nSocketID, pContext->nMessageType, pContext->pData, pContext->nDataSize);
+					}
 				}
 			}
 			break;
@@ -411,6 +415,11 @@ namespace core
 		}
 
 		return true;
+	}
+
+	void CLogicRunnable::release()
+	{
+
 	}
 
 }

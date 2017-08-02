@@ -1,16 +1,15 @@
 #pragma once
-#include "libBaseCommon\noncopyable.h"
 
+#include <stdint.h>
 #include <string>
 
 namespace core
 {
-	class CServiceIDConverter :
-		public base::noncopyable
+	class CServiceIDConverter
 	{
 	public:
 		virtual ~CServiceIDConverter() { }
 
-		virtual uint32_t convert(const std::string& szServiceType, uint32_t nServiceID) = 0;
+		virtual uint32_t convert(uint32_t nServiceID) = 0;
 	};
 }

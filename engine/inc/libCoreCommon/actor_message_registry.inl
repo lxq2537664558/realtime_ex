@@ -25,7 +25,7 @@ namespace core
 		if (iter == m_mapMessageHandler.end())
 			return;
 
-		funMessageHandler handler = iter->second;
+		funcMessageHandler handler = iter->second;
 
 		(pObject->*handler)(pActorBase, sSessionInfo, pMessage);
 	}
@@ -39,7 +39,7 @@ namespace core
 		if (iter == m_mapForwardHandler.end())
 			return;
 
-		funForwardHandler handler = iter->second;
+		funcForwardHandler handler = iter->second;
 
 		(pObject->*handler)(pActorBase, sClientSessionInfo, pMessage);
 	}

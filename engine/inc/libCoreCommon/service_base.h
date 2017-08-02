@@ -1,12 +1,13 @@
 #pragma once
 
 #include "core_common.h"
-#include "ticker.h"
 #include "service_invoker.h"
 #include "base_object.h"
+#include "ticker.h"
 #include "actor_id_converter.h"
 #include "service_id_converter.h"
 #include "protobuf_factory.h"
+#include "service_selector.h"
 
 #include "libBaseCommon/buf_file.h"
 
@@ -51,11 +52,23 @@ namespace core
 		@brief: 设置service_id转换器
 		*/
 		void					setServiceIDConverter(CServiceIDConverter* pServiceIDConverter);
+		/**
+		@brief: 添加服务选择器
+		*/
+		void					addServiceSelector(CServiceSelector* pServiceSelector);
+		/**
+		@brief: 获取服务选择器
+		*/
+		CServiceSelector*		getServiceSelector(uint32_t nType) const;
 
 		/**
 		@brief: 设置protobuf工厂，目的是为了创建出真实的protibuf，而不是反射出来的
 		*/
 		void					setProtobufFactory(CProtobufFactory* pProtobufFactory);
+		/**
+		@brief: 获取protobuf工厂
+		*/
+		CProtobufFactory*		getProtobufFactory() const;
 
 		/**
 		@brief: 注册定时器
@@ -87,13 +100,18 @@ namespace core
 		void					registerActorForwardHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SClientSessionInfo, const google::protobuf::Message*)>& callback);
 
 		/**
+		@brief: 获取客户端转发消息名字
+		*/
+		const std::string&		getForwardMessageName(uint32_t nMessageID);
+
+		/**
 		@brief: 设置全局的服务连接成功回调
 		*/
-		void					setServiceConnectCallback(const std::function<void(uint32_t)>& callback);
+		void					setServiceConnectCallback(const std::function<void(const std::string&, uint32_t)>& callback);
 		/**
 		@brief: 设置全局的服务连接断开回调
 		*/
-		void					setServiceDisconnectCallback(const std::function<void(uint32_t)>& callback);
+		void					setServiceDisconnectCallback(const std::function<void(const std::string&, uint32_t)>& callback);
 
 		/**
 		@brief: 获取服务调用器
@@ -103,16 +121,26 @@ namespace core
 		@brief: 创建actor
 		*/
 		CActorBase*				createActor(const std::string& szClassName, uint64_t nActorID, const std::string& szContext);
+		/**
+		@brief: 根据id获取actor
+		*/
+		CActorBase*				getActorBase(uint64_t nID) const;
 		/*
 		@brief: 获取运行状态
 		*/
 		EServiceRunState		getRunState() const;
+		/*
+		@brief: 获取配置文件名
+		*/
+		const std::string&		getConfigFileName() const;
 		/*
 		@brief: 逻辑发出退出
 		*/
 		void					doQuit();
 		
 		virtual void			release();
+
+		CServiceBaseImpl*		getServiceBaseImpl() const;
 
 	protected:
 		virtual bool			onInit() = 0;

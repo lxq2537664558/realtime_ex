@@ -38,8 +38,8 @@ bool CTestActorService1::onInit()
 	CTestActor1::registerClassInfo();
 	CTestActor0::registerClassInfo();
 
-	this->setServiceConnectCallback(std::bind(&CTestActorService1::onServiceConnect, this, std::placeholders::_1));
-	this->setServiceDisconnectCallback(std::bind(&CTestActorService1::onServiceDisconnect, this, std::placeholders::_1));
+	this->setServiceConnectCallback(std::bind(&CTestActorService1::onServiceConnect, this, std::placeholders::_1, std::placeholders::_2));
+	this->setServiceDisconnectCallback(std::bind(&CTestActorService1::onServiceDisconnect, this, std::placeholders::_1, std::placeholders::_2));
 
 	return true;
 }
@@ -54,7 +54,7 @@ void CTestActorService1::onQuit()
 	PrintInfo("CTestService1::onQuit");
 }
 
-void CTestActorService1::onServiceConnect(uint32_t nServiceID)
+void CTestActorService1::onServiceConnect(const std::string&, uint32_t nServiceID)
 {
 	PrintInfo("ServiceConnect service_id: %d", nServiceID);
 
@@ -72,7 +72,7 @@ void CTestActorService1::onServiceConnect(uint32_t nServiceID)
 	this->m_pTestActor0 = dynamic_cast<CTestActor0*>(pActorBase);
 }
 
-void CTestActorService1::onServiceDisconnect(uint32_t nServiceID)
+void CTestActorService1::onServiceDisconnect(const std::string&, uint32_t nServiceID)
 {
 	PrintInfo("ServiceDisconnect service_id: %d", nServiceID);
 }

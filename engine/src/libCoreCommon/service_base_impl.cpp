@@ -3,6 +3,10 @@
 #include "service_base.h"
 #include "core_app.h"
 #include "actor_base.h"
+#include "hash_service_selector.h"
+#include "random_service_selector.h"
+
+#include <mutex>
 
 namespace core
 {
@@ -24,17 +28,21 @@ namespace core
 
 	}
 
-	bool CServiceBaseImpl::init(CServiceBase* pServiceBase, const SServiceBaseInfo& sServiceBaseInfo)
+	bool CServiceBaseImpl::init(CServiceBase* pServiceBase, const SServiceBaseInfo& sServiceBaseInfo, const std::string& szConfigFileName)
 	{
 		DebugAstEx(pServiceBase != nullptr, false);
-
+		
+		this->m_szConfigFileName = szConfigFileName;
 		this->m_sServiceBaseInfo = sServiceBaseInfo;
 		this->m_pServiceBase = pServiceBase;
 		this->m_pServiceBase->m_pServiceBaseImpl = this;
 		
 		this->m_pActorScheduler = new CActorScheduler(this);
-		this->m_pServiceInvoker = new CServiceInvoker(this);
+		this->m_pServiceInvoker = new CServiceInvoker(pServiceBase);
 		this->m_pMessageDispatcher = new CMessageDispatcher(this);
+
+		this->m_mapServiceSelector[eSST_Hash] = new CHashServiceSelector();
+		this->m_mapServiceSelector[eSST_Random] = new CRandomServiceSelector();
 
 		return true;
 	}
@@ -79,6 +87,18 @@ namespace core
 
 	void CServiceBaseImpl::registerServiceForwardHandler(const std::string& szMessageName, const std::function<void(CServiceBase*, SClientSessionInfo, const google::protobuf::Message*)>& callback)
 	{
+		uint32_t nMessageID = base::hash(szMessageName.c_str());
+
+		std::unique_lock<base::spin_lock> guard(this->m_lockForwardMessage);
+
+		auto iter = this->m_mapForwardMessageName.find(nMessageID);
+		if (iter != this->m_mapForwardMessageName.end() && szMessageName != iter->second)
+		{
+			PrintWarning("dup forward message id message_id: %d old_message_name: %s new_message_name: %s", nMessageID, iter->second.c_str(), szMessageName.c_str());
+			return;
+		}
+
+		this->m_mapForwardMessageName[nMessageID] = szMessageName;
 		this->m_mapServiceForwardHandler[szMessageName] = callback;
 	}
 
@@ -89,6 +109,18 @@ namespace core
 
 	void CServiceBaseImpl::registerActorForwardHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SClientSessionInfo, const google::protobuf::Message*)>& callback)
 	{
+		uint32_t nMessageID = base::hash(szMessageName.c_str());
+
+		std::unique_lock<base::spin_lock> guard(this->m_lockForwardMessage);
+
+		auto iter = this->m_mapForwardMessageName.find(nMessageID);
+		if (iter != this->m_mapForwardMessageName.end() && szMessageName != iter->second)
+		{
+			PrintWarning("dup forward message id message_id: %d old_message_name: %s new_message_name: %s", nMessageID, iter->second.c_str(), szMessageName.c_str());
+			return;
+		}
+
+		this->m_mapForwardMessageName[nMessageID] = szMessageName;
 		this->m_mapActorForwardHandler[szMessageName] = callback;
 	}
 
@@ -164,22 +196,22 @@ namespace core
 		this->m_pServiceBase->onFrame();
 	}
 
-	void CServiceBaseImpl::setServiceConnectCallback(const std::function<void(uint32_t)>& callback)
+	void CServiceBaseImpl::setServiceConnectCallback(const std::function<void(const std::string&, uint32_t)>& callback)
 	{
 		this->m_fnServiceConnectCallback = callback;
 	}
 
-	void CServiceBaseImpl::setServiceDisconnectCallback(const std::function<void(uint32_t)>& callback)
+	void CServiceBaseImpl::setServiceDisconnectCallback(const std::function<void(const std::string&, uint32_t)>& callback)
 	{
 		this->m_fnServiceDisconnectCallback = callback;
 	}
 
-	std::function<void(uint32_t)>& CServiceBaseImpl::getServiceConnectCallback()
+	std::function<void(const std::string&, uint32_t)>& CServiceBaseImpl::getServiceConnectCallback()
 	{
 		return this->m_fnServiceConnectCallback;
 	}
 
-	std::function<void(uint32_t)>& CServiceBaseImpl::getServiceDisconnectCallback()
+	std::function<void(const std::string&, uint32_t)>& CServiceBaseImpl::getServiceDisconnectCallback()
 	{
 		return this->m_fnServiceDisconnectCallback;
 	}
@@ -232,5 +264,40 @@ namespace core
 	CProtobufFactory* CServiceBaseImpl::getProtobufFactory() const
 	{
 		return this->m_pProtobufFactory;
+	}
+
+	const std::string& CServiceBaseImpl::getConfigFileName() const
+	{
+		return this->m_szConfigFileName;
+	}
+
+	void CServiceBaseImpl::addServiceSelector(CServiceSelector* pServiceSelector)
+	{
+		DebugAst(pServiceSelector != nullptr);
+
+		this->m_mapServiceSelector[pServiceSelector->getType()] = pServiceSelector;
+	}
+
+	CServiceSelector* CServiceBaseImpl::getServiceSelector(uint32_t nType) const
+	{
+		auto iter = this->m_mapServiceSelector.find(nType);
+		if (iter == this->m_mapServiceSelector.end())
+			return nullptr;
+
+		return iter->second;
+	}
+
+	const std::string& CServiceBaseImpl::getForwardMessageName(uint32_t nMessageID)
+	{
+		std::unique_lock<base::spin_lock> guard(this->m_lockForwardMessage);
+
+		auto iter = this->m_mapForwardMessageName.find(nMessageID);
+		if (iter == this->m_mapForwardMessageName.end())
+		{
+			static std::string s_Default;
+			return s_Default;
+		}
+
+		return iter->second;
 	}
 }

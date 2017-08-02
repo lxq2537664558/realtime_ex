@@ -4,6 +4,7 @@
 #include "stdafx.h"
 
 #include "libCoreCommon/base_app.h"
+using namespace core;
 
 int32_t main(int32_t argc, char* argv[])
 {
@@ -13,7 +14,7 @@ int32_t main(int32_t argc, char* argv[])
 		return 0;
 	}
 
-	core::CBaseApp* pBaseApp = new core::CBaseApp();
+	CBaseApp* pBaseApp = new CBaseApp();
 	pBaseApp->run(argv[0], argv[1]);
 	SAFE_DELETE(pBaseApp);
 

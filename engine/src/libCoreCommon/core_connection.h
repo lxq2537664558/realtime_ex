@@ -5,6 +5,8 @@
 #include "core_common.h"
 #include "core_connection_monitor.h"
 
+#include <atomic>
+
 namespace core
 {
 	class CCoreConnectionMgr;
@@ -51,8 +53,12 @@ namespace core
 
 		void				enableHeartbeat(bool bEnable);
 
-		void				setState(uint32_t nState);
 		uint32_t			getState() const;
+
+		void				onConnectAck();
+
+		void				setSessionID(uint64_t nSessionID);
+		uint64_t			getSessionID() const;
 
 	private:
 		uint32_t			onRecv(const char* pData, uint32_t nDataSize);
@@ -66,7 +72,7 @@ namespace core
 		void				onHeartbeat(uint64_t nContext);
 
 	private:
-		bool					m_bHeartbeat;
+		std::atomic<uint8_t>	m_bHeartbeat;
 		CTicker					m_heartbeat;
 		uint32_t				m_nSendHeartbeatCount;
 
@@ -74,6 +80,7 @@ namespace core
 		uint32_t				m_nType;
 		uint32_t				m_nState;
 		std::string				m_szContext;
+		uint64_t				m_nSessionID;
 		MessageParser			m_messageParser;
 		CCoreConnectionMonitor	m_monitor;
 	};

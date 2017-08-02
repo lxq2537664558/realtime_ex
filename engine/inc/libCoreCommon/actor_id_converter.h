@@ -1,10 +1,9 @@
 #pragma once
-#include "libBaseCommon\noncopyable.h"
+#include <stdint.h>
 
 namespace core
 {
-	class CActorIDConverter :
-		public base::noncopyable
+	class CActorIDConverter
 	{
 	public:
 		virtual ~CActorIDConverter() { }

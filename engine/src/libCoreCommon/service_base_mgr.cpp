@@ -36,7 +36,13 @@ namespace core
 			sServiceBaseInfo.szName = pServiceInfoXML->Attribute("service_name");
 			sServiceBaseInfo.szType = pServiceInfoXML->Attribute("service_type");
 			sServiceBaseInfo.szClassName = pServiceInfoXML->Attribute("class_name");
-			
+			std::string szConfigFileName;
+			if (pServiceInfoXML->Attribute("config_file_name") != nullptr)
+			{
+				szConfigFileName = base::getCurrentWorkPath();
+				szConfigFileName += "/etc/";
+				szConfigFileName += pServiceInfoXML->Attribute("config_file_name");
+			}
 			CServiceBase* pServiceBase = dynamic_cast<CServiceBase*>(CBaseObject::createObject(sServiceBaseInfo.szClassName));
 			if (nullptr == pServiceBase)
 			{
@@ -44,7 +50,7 @@ namespace core
 				return false;
 			}
 			CServiceBaseImpl* pServiceBaseImpl = new CServiceBaseImpl();
-			if (!pServiceBaseImpl->init(pServiceBase, sServiceBaseInfo))
+			if (!pServiceBaseImpl->init(pServiceBase, sServiceBaseInfo, szConfigFileName))
 			{
 				PrintWarning("create service_base %s error", sServiceBaseInfo.szName.c_str());
 				return false;
@@ -83,7 +89,7 @@ namespace core
 				if (this->m_vecServiceBaseInfo[i].nID == this->m_vecServiceBase[k]->getServiceID())
 					continue;
 
-				callback(this->m_vecServiceBaseInfo[i].nID);
+				callback(this->m_vecServiceBaseInfo[i].szType, this->m_vecServiceBaseInfo[i].nID);
 			}
 		}
 
@@ -118,7 +124,7 @@ namespace core
 		return this->m_vecServiceBaseInfo;
 	}
 
-	bool CServiceBaseMgr::isOwnerService(uint32_t nServiceID) const
+	bool CServiceBaseMgr::isLocalService(uint32_t nServiceID) const
 	{
 		for (size_t i = 0; i < this->m_vecServiceBaseInfo.size(); ++i)
 		{

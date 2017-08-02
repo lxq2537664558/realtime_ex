@@ -32,4 +32,30 @@ namespace core
 
 		return this->invoke(eType, nID, pMessage, callback_);
 	}
+
+	template<class T>
+	bool CServiceInvoker::async_call(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, const std::function<void(const T*, uint32_t)>& callback)
+	{
+		DebugAstEx(nServiceSelectorType != eSST_Broadcast, false);
+
+		CServiceSelector* pServiceSelector = this->m_pServiceBase->getServiceSelector(nServiceSelectorType);
+		DebugAstEx(pServiceSelector != nullptr, false);
+
+		uint32_t nServiceID = pServiceSelector->select(szServiceType, nServiceSelectorContext);
+
+		return this->async_call(eMTT_Service, nServiceID, pMessage, callback);
+	}
+
+	template<class T>
+	bool CServiceInvoker::async_call(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, CFuture<T>& sFuture)
+	{
+		DebugAstEx(nServiceSelectorType != eSST_Broadcast, false);
+
+		CServiceSelector* pServiceSelector = this->m_pServiceBase->getServiceSelector(nServiceSelectorType);
+		DebugAstEx(pServiceSelector != nullptr, false);
+
+		uint32_t nServiceID = pServiceSelector->select(szServiceType, nServiceSelectorContext);
+
+		return this->async_call(eMTT_Service, nServiceID, pMessage, sFuture);
+	}
 }

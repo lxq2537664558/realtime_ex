@@ -12,7 +12,6 @@
 #include "libBaseCommon/profiling.h"
 #include "libBaseCommon/singleton.h"
 
-
 namespace core
 {
 	static SNetAddr s_DefaultAddr;
@@ -24,22 +23,17 @@ namespace core
 		uint8_t	nContext;
 	};
 
-	// 消息头
-	struct core_message_header
-	{
-		uint16_t	nMessageSize;	// 包括消息头的
-		uint8_t		nMessageType;
-	};
-
 #pragma pack(pop)
 
 	CCoreConnection::CCoreConnection()
-		: m_bHeartbeat(false)
+		: m_bHeartbeat(true)
 		, m_nSendHeartbeatCount(0)
 		, m_nID(0)
 		, m_nType(0)
 		, m_nState(eCCS_None)
+		, m_nSessionID(0)
 	{
+		this->m_heartbeat.setCallback(std::bind(&CCoreConnection::onHeartbeat, this, std::placeholders::_1));
 	}
 	
 	CCoreConnection::~CCoreConnection()
@@ -88,10 +82,10 @@ namespace core
 				else
 				{
 					// 都不够消息头
-					if (nDataSize < sizeof(core_message_header))
+					if (nDataSize < sizeof(message_header))
 						break;
 
-					const core_message_header* pHeader = reinterpret_cast<const core_message_header*>(pData);
+					const message_header* pHeader = reinterpret_cast<const message_header*>(pData);
 					if (pHeader->nMessageSize < sizeof(message_header))
 					{
 						char szBuf[256] = { 0 };
@@ -106,7 +100,7 @@ namespace core
 
 					nMessageSize = pHeader->nMessageSize;
 
-					this->onDispatch(pHeader->nMessageType, pHeader + 1, pHeader->nMessageSize - sizeof(core_message_header));
+					this->onDispatch((uint8_t)pHeader->nMessageID, pHeader + 1, pHeader->nMessageSize - sizeof(message_header));
 				}
 
 				nRecvSize += nMessageSize;
@@ -166,11 +160,28 @@ namespace core
 
 		this->m_nState = eCCS_Disconnecting;
 		this->m_pNetConnecter = nullptr;
+
+		if (this->m_heartbeat.isRegister())
+			CCoreApp::Inst()->unregisterTicker(&this->m_heartbeat);
 	}
 
 	void CCoreConnection::onConnectFail()
 	{
 
+	}
+
+	void CCoreConnection::onConnectAck()
+	{
+		if (this->m_nState != eCCS_Connectting)
+		{
+			PrintWarning("CCoreConnection::onConnectAck error socket_id: "UINT64FMT, this->getID());
+			this->shutdown(true, "CCoreConnection::onConnectAck error");
+			return;
+		}
+
+		this->m_nState = eCCS_Connected;
+
+		CCoreApp::Inst()->registerTicker(CTicker::eTT_Net, 0, 0, &this->m_heartbeat, CCoreApp::Inst()->getHeartbeatTime(), CCoreApp::Inst()->getHeartbeatTime(), 0);
 	}
 
 	uint64_t CCoreConnection::getID() const
@@ -215,7 +226,7 @@ namespace core
 			CProtobufFactory* pProtobufFactory = pServiceBaseImpl->getProtobufFactory();
 			if (pProtobufFactory == nullptr)
 			{
-				PrintWarning("CCoreConnection::onDispatch eMT_RESPONSE error pProtobufFactory == nullptr service_id: %d", pCookice->nToServiceID);
+				PrintWarning("CCoreConnection::onDispatch eMT_REQUEST error pProtobufFactory == nullptr service_id: %d", pCookice->nToServiceID);
 				return;
 			}
 
@@ -224,7 +235,10 @@ namespace core
 
 			google::protobuf::Message* pMessage = pProtobufFactory->unserialize_protobuf_message_from_buf(szMessageName, pMessageData, nSize - sizeof(request_cookice) - pCookice->nMessageNameLen);
 			if (nullptr == pMessage)
+			{
+				PrintWarning("CCoreConnection::onDispatch eMT_REQUEST error pMessage == nullptr service_id: %d message_name: %s", pCookice->nToServiceID, szMessageName.c_str());
 				return;
+			}
 
 			char* szBuf = new char[sizeof(SMCT_REQUEST)];
 			SMCT_REQUEST* pContext = reinterpret_cast<SMCT_REQUEST*>(szBuf);
@@ -269,7 +283,10 @@ namespace core
 
 			google::protobuf::Message* pMessage = pProtobufFactory->unserialize_protobuf_message_from_buf(szMessageName, pMessageData, nSize - sizeof(response_cookice) - pCookice->nMessageNameLen);
 			if (nullptr == pMessage)
+			{
+				PrintWarning("CCoreConnection::onDispatch eMT_RESPONSE error pMessage == nullptr service_id: %d message_name: %s", pCookice->nToServiceID, szMessageName.c_str());
 				return;
+			}
 
 			char* szBuf = new char[sizeof(SMCT_RESPONSE)];
 			SMCT_RESPONSE* pContext = reinterpret_cast<SMCT_RESPONSE*>(szBuf);
@@ -291,8 +308,6 @@ namespace core
 			const gate_forward_cookice* pCookice = reinterpret_cast<const gate_forward_cookice*>(pData);
 
 			DebugAst(nSize > sizeof(gate_forward_cookice));
-			DebugAst(nSize > sizeof(gate_forward_cookice) + pCookice->nMessageNameLen);
-			DebugAst(pCookice->szMessageName[pCookice->nMessageNameLen] == 0);
 
 			CServiceBaseImpl* pServiceBaseImpl = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBaseByID(pCookice->nToServiceID);
 			if (pServiceBaseImpl == nullptr)
@@ -304,20 +319,32 @@ namespace core
 			CProtobufFactory* pProtobufFactory = pServiceBaseImpl->getProtobufFactory();
 			if (pProtobufFactory == nullptr)
 			{
-				PrintWarning("CCoreConnection::onDispatch eMT_RESPONSE error pProtobufFactory == nullptr service_id: %d", pCookice->nToServiceID);
+				PrintWarning("CCoreConnection::onDispatch eMT_GATE_FORWARD error pProtobufFactory == nullptr service_id: %d", pCookice->nToServiceID);
 				return;
 			}
 
-			const char* pMessageData = reinterpret_cast<const char*>(pCookice + 1) + pCookice->nMessageNameLen;
-			const std::string szMessageName = pCookice->szMessageName;
-
-			google::protobuf::Message* pMessage = pProtobufFactory->unserialize_protobuf_message_from_buf(szMessageName, pMessageData, nSize - sizeof(gate_forward_cookice) - pCookice->nMessageNameLen);
-			if (nullptr == pMessage)
+			const message_header* pHeader = reinterpret_cast<const message_header*>(pCookice + 1);
+			DebugAst(sizeof(gate_forward_cookice) + pHeader->nMessageSize == nSize);
+			const std::string& szMessageName = pServiceBaseImpl->getForwardMessageName(pHeader->nMessageID);
+			if (szMessageName.empty())
+			{
+				PrintWarning("CCoreConnection::onDispatch eMT_GATE_FORWARD error szMessageName.empty() service_id: %d message_id: %d", pCookice->nToServiceID, pHeader->nMessageID);
 				return;
+			}
+
+			const char* pMessageData = reinterpret_cast<const char*>(pHeader + 1);
+			
+			google::protobuf::Message* pMessage = pProtobufFactory->unserialize_protobuf_message_from_buf(szMessageName, pMessageData, nSize - sizeof(gate_forward_cookice)- sizeof(message_header));
+			if (nullptr == pMessage)
+			{
+				PrintWarning("CCoreConnection::onDispatch eMT_GATE_FORWARD error pMessage == nullptr service_id: %d message_name: %s", pCookice->nToServiceID, szMessageName.c_str());
+				return;
+			}
 
 			char* szBuf = new char[sizeof(SMCT_GATE_FORWARD)];
 			SMCT_GATE_FORWARD* pContext = reinterpret_cast<SMCT_GATE_FORWARD*>(szBuf);
 			pContext->nSessionID = pCookice->nSessionID;
+			pContext->nSocketID = pCookice->nSocketID;
 			pContext->nFromServiceID = pCookice->nFromServiceID;
 			pContext->nToActorID = pCookice->nToActorID;
 			pContext->nToServiceID = pCookice->nToServiceID;
@@ -329,6 +356,39 @@ namespace core
 			sMessagePacket.nDataSize = sizeof(SMCT_GATE_FORWARD);
 
 			CCoreApp::Inst()->getLogicRunnable()->getMessageQueue()->send(sMessagePacket);
+		}
+		else if (nMessageType == eMT_TO_GATE)
+		{
+			const gate_send_cookice* pCookice = reinterpret_cast<const gate_send_cookice*>(pData);
+			CCoreConnection* pCoreConnection = CCoreApp::Inst()->getNetRunnable()->getCoreConnectionMgr()->getCoreConnectionBySocketID(pCookice->nSocketID);
+			if (nullptr == pCoreConnection)
+				return;
+
+			if (pCoreConnection->getSessionID() != pCookice->nSessionID)
+				return;
+
+			const message_header* pHeader = reinterpret_cast<const message_header*>(pCookice + 1);
+			pCoreConnection->send(eMT_CLIENT, pHeader, pHeader->nMessageSize);
+		}
+		else if (nMessageType == eMT_TO_GATE_BROADCAST)
+		{
+			const gate_broadcast_cookice* pCookice = reinterpret_cast<const gate_broadcast_cookice*>(pData);
+			
+			const message_header* pHeader = reinterpret_cast<const message_header*>(reinterpret_cast<const char*>(pData) + sizeof(gate_broadcast_cookice) + pCookice->nSessionCount * sizeof(std::pair<uint64_t, uint64_t>));
+
+			const std::pair<uint64_t, uint64_t>* pSession = reinterpret_cast<const std::pair<uint64_t, uint64_t>*>(pCookice + 1);
+
+			for (uint16_t i = 0; i < pCookice->nSessionCount; ++i)
+			{
+				CCoreConnection* pCoreConnection = CCoreApp::Inst()->getNetRunnable()->getCoreConnectionMgr()->getCoreConnectionBySocketID(pSession[i].second);
+				if (nullptr == pCoreConnection)
+					continue;
+
+				if (pCoreConnection->getSessionID() != pSession[i].first)
+					return;
+
+				pCoreConnection->send(eMT_CLIENT, pHeader, pHeader->nMessageSize);
+			}
 		}
 		else
 		{
@@ -351,18 +411,18 @@ namespace core
 
 	void CCoreConnection::onHeartbeat(uint64_t nContext)
 	{
-		if (this->m_bHeartbeat)
-			return;
-		
-		if (this->m_nSendHeartbeatCount > CCoreApp::Inst()->getHeartbeatLimit())
-		{
-			this->shutdown(true, "heart beat time out");
-			return;
-		}
-		
-		++this->m_nSendHeartbeatCount;
-		connection_heart_beat netMsg;
-		this->send(eMT_HEARTBEAT, &netMsg, sizeof(netMsg));
+// 		if (this->m_bHeartbeat.load(std::memory_order_acquire) == 0)
+// 			return;
+// 		
+// 		if (this->m_nSendHeartbeatCount > CCoreApp::Inst()->getHeartbeatLimit())
+// 		{
+// 			this->shutdown(true, "heart beat time out");
+// 			return;
+// 		}
+// 		
+// 		++this->m_nSendHeartbeatCount;
+// 		connection_heart_beat netMsg;
+// 		this->send(eMT_HEARTBEAT, &netMsg, sizeof(netMsg));
 	}
 
 	void CCoreConnection::send(uint8_t nMessageType, const void* pData, uint16_t nSize)
@@ -379,19 +439,19 @@ namespace core
 		switch (nMessageType)
 		{
 		case eMT_CLIENT:
-		case eMT_HEARTBEAT:
 			this->m_pNetConnecter->send(pData, nSize, true);
 			break;
 
+		case eMT_HEARTBEAT:
 		case eMT_REQUEST:
 		case eMT_RESPONSE:
 		case eMT_SYSTEM:
 		case eMT_GATE_FORWARD:
 		case eMT_TO_GATE:
 			{
-				core_message_header header;
+				message_header header;
 				header.nMessageSize = sizeof(header) + nSize;
-				header.nMessageType = nMessageType;
+				header.nMessageID = nMessageType;
 				this->m_pNetConnecter->send(&header, sizeof(header), true);
 				this->m_pNetConnecter->send(pData, nSize, true);
 			}
@@ -426,9 +486,9 @@ namespace core
 		case eMT_GATE_FORWARD:
 		case eMT_TO_GATE:
 			{
-				core_message_header header;
+				message_header header;
 				header.nMessageSize = sizeof(header) + nSize + nExtraSize;
-				header.nMessageType = nMessageType;
+				header.nMessageID = nMessageType;
 				this->m_pNetConnecter->send(&header, sizeof(header), true);
 				this->m_pNetConnecter->send(pData, nSize, true);
 				this->m_pNetConnecter->send(pExtraBuf, nExtraSize, true);
@@ -485,16 +545,21 @@ namespace core
 
 	void CCoreConnection::enableHeartbeat(bool bEnable)
 	{
-		this->m_bHeartbeat = bEnable;
-	}
-
-	void CCoreConnection::setState(uint32_t nState)
-	{
-		this->m_nState = nState;
+		this->m_bHeartbeat.store(bEnable, std::memory_order_release);
 	}
 
 	uint32_t CCoreConnection::getState() const
 	{
 		return this->m_nState;
+	}
+
+	void CCoreConnection::setSessionID(uint64_t nSessionID)
+	{
+		this->m_nSessionID = nSessionID;
+	}
+
+	uint64_t CCoreConnection::getSessionID() const
+	{
+		return this->m_nSessionID;
 	}
 }

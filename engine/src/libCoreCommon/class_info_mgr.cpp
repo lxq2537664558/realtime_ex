@@ -14,7 +14,7 @@ namespace core
 
 	}
 
-	void CClassInfoMgr::registerClassInfo(const std::string& szClassName, uint32_t nObjectSize, uint32_t nBatchCount, const funCreateBaseObject& fnCreateBaseObject, const funDestroyBaseObject& fnDestroyBaseObject)
+	void CClassInfoMgr::registerClassInfo(const std::string& szClassName, uint32_t nObjectSize, uint32_t nBatchCount, const std::function<CBaseObject*(void*)>& fnCreateBaseObject, const std::function<void(CBaseObject*)>& fnDestroyBaseObject)
 	{
 		uint32_t nClassID = this->getClassID(szClassName);
 		DebugAst(this->m_mapClassInfo.find(nClassID) == this->m_mapClassInfo.end());
@@ -36,7 +36,7 @@ namespace core
 		}
 	}
 
-	SClassInfo* CClassInfoMgr::getClassInfo(uint32_t nClassID)
+	CClassInfoMgr::SClassInfo* CClassInfoMgr::getClassInfo(uint32_t nClassID)
 	{
 		auto iter = this->m_mapClassInfo.find(nClassID);
 		if (iter == this->m_mapClassInfo.end())

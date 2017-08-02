@@ -69,6 +69,14 @@ namespace base
 		return this->m_nCurPos;
 	}
 
+	uint32_t CReadBuf::getSize() const
+	{
+		if (this->m_nCurPos >= this->m_nBufSize)
+			return 0;
+
+		return this->m_nBufSize - this->m_nCurPos;
+	}
+
 	bool CReadBuf::read(void* pBuf, uint32_t nSize)
 	{
 		DebugAstEx(pBuf != nullptr, false);

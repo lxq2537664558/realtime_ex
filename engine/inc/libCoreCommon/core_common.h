@@ -36,9 +36,9 @@ namespace core
 	struct message_header
 	{
 		uint16_t	nMessageSize;	// 包括消息头的
-		uint16_t	nMessageID;
+		uint32_t	nMessageID;
 
-		message_header(uint16_t nMessageID) : nMessageID(nMessageID) { }
+		message_header(uint32_t nMessageID) : nMessageID(nMessageID) { }
 		message_header() {}
 	};
 
@@ -87,8 +87,9 @@ enum EMessageType
 	eMT_RESPONSE			= 4,		// 服务之间的响应消息
 	eMT_GATE_FORWARD		= 5,		// 客户端通过网关服务转发给其他服务消息
 	eMT_TO_GATE				= 6,		// 其他服务通过网关服务转发客户端消息
-	eMT_CLIENT				= 7,		// 客户端消息
-	eMT_TICKER				= 8,		// 定时器
+	eMT_TO_GATE_BROADCAST	= 7,		// 其他服务通过网关服务广播客户端消息
+	eMT_CLIENT				= 8,		// 客户端消息
+	eMT_TICKER				= 9,		// 定时器
 };
 
 namespace core
@@ -140,6 +141,7 @@ namespace core
 	{
 		uint32_t	nGateServiceID;
 		uint64_t	nSessionID;
+		uint64_t	nSocketID;
 	};
 
 	struct SSessionInfo
@@ -157,31 +159,30 @@ namespace core
 				pMessage;
 	};
 
-	typedef std::function<void(uint64_t, const message_header*)>							ClientCallback;				// 客户端消息处理函数类型
-	typedef std::function<bool(uint64_t nSocketID, const void* pData, uint16_t nDataSize)>	NodeGlobalFilter;			// 全局的消息过滤器类型
+	typedef std::function<void(uint64_t, uint8_t, const void*, uint16_t)>	NodeGlobalFilter;			// 全局的消息过滤器类型
 	
 #pragma pack(push,1)
 	struct gate_forward_cookice
 	{
 		uint64_t	nSessionID;
+		uint64_t	nSocketID;
 		uint32_t	nFromServiceID;
 		uint64_t	nToActorID;
 		uint32_t	nToServiceID;
-		uint16_t	nMessageNameLen;
-		char		szMessageName[1];
 	};
 
 	struct gate_send_cookice
 	{
-		uint32_t	nToServiceID;
 		uint64_t	nSessionID;
+		uint64_t	nSocketID;
 	};
 
 	struct gate_broadcast_cookice :
 		public message_header
 	{
-		uint32_t	nToServiceID;
 		uint16_t	nSessionCount;
+		// uint64_t session_id
+		// uint64_t socket_id
 	};
 
 	struct request_cookice
@@ -227,3 +228,18 @@ inline int32_t default_client_message_parser(const char* pData, uint32_t nSize, 
 }
 
 #define _BASE_CONNECTION_TYPE_BEGIN	100
+
+enum EBaseConnectionType
+{
+	eBCT_ConnectionFromService = _BASE_CONNECTION_TYPE_BEGIN,
+	eBCT_ConnectionFromClient,
+};
+
+enum EServiceSelectorType
+{
+	eSST_Random,	// 随机
+	eSST_Hash,		// hash
+	eSST_Broadcast,	// 广播
+
+	// 额外的类型由逻辑代码自己去设置
+};

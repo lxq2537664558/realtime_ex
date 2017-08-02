@@ -31,7 +31,7 @@ namespace core
 		CBaseConnectionFactory*			getBaseConnectionFactory(uint32_t nType) const;
 		
 		void							enumBaseConnection(uint32_t nType, const std::function<bool(CBaseConnection* pBaseConnection)>& callback) const;
-		CBaseConnection*				getBaseConnectionByID(uint64_t nID) const;
+		CBaseConnection*				getBaseConnectionBySocketID(uint64_t nID) const;
 		uint32_t						getBaseConnectionCount(uint32_t nType) const;
 		
 		void							addConnectCallback(const std::string& szKey, const std::function<void(CBaseConnection*)>& callback);
@@ -43,14 +43,14 @@ namespace core
 		void							addConnectFailCallback(const std::string& szKey, const std::function<void(const std::string&)>& callback);
 		void							delConnectFailCallback(const std::string& szKey);
 
-		void							addGlobalBeforeFilter(const std::string& szKey, const NodeGlobalFilter& callback);
-		void							delGlobalBeforeFilter(const std::string& szKey);
-		void							addGlobalAfterFilter(const std::string& szKey, const NodeGlobalFilter& callback);
-		void							delGlobalAfterFilter(const std::string& szKey);
-		const std::map<std::string, NodeGlobalFilter>&
-										getGlobalBeforeFilter() const;
-		const std::map<std::string, NodeGlobalFilter>&
-										getGlobalAfterFilter() const;
+		void							addGlobalBeforeFilter(uint8_t nMessageType, const std::string& szKey, const NodeGlobalFilter& callback);
+		void							delGlobalBeforeFilter(uint8_t nMessageType, const std::string& szKey);
+		void							addGlobalAfterFilter(uint8_t nMessageType, const std::string& szKey, const NodeGlobalFilter& callback);
+		void							delGlobalAfterFilter(uint8_t nMessageType, const std::string& szKey);
+		const std::map<std::string, NodeGlobalFilter>*
+										getGlobalBeforeFilter(uint8_t nMessageType) const;
+		const std::map<std::string, NodeGlobalFilter>*
+										getGlobalAfterFilter(uint8_t nMessageType) const;
 
 	private:
 		bool							onConnect(CCoreConnection* pCoreConnection);
@@ -66,7 +66,11 @@ namespace core
 		std::map<std::string, std::function<void(CBaseConnection*)>>	m_mapDisconnectCallback;
 		std::map<std::string, std::function<void(const char*)>>			m_mapConnectFailCallback;
 
-		std::map<std::string, NodeGlobalFilter>							m_mapGlobalBeforeFilter;
-		std::map<std::string, NodeGlobalFilter>							m_mapGlobalAfterFilter;
+		struct SNodeGlobalFilterInfo
+		{
+			std::map<std::string, NodeGlobalFilter>	mapGlobalBeforeFilter;
+			std::map<std::string, NodeGlobalFilter>	mapGlobalAfterFilter;
+		};
+		std::map<uint8_t, SNodeGlobalFilterInfo>						m_mapGlobalFilterInfo;
 	};
 }

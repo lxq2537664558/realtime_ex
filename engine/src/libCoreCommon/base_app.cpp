@@ -88,9 +88,9 @@ namespace core
 		return CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->getServiceID(szName);
 	}
 
-	const char* CBaseApp::getConfigFileName() const
+	const std::string& CBaseApp::getConfigFileName() const
 	{
-		return CCoreApp::Inst()->getConfigFileName().c_str();
+		return CCoreApp::Inst()->getConfigFileName();
 	}
 
 	void CBaseApp::doQuit()
@@ -115,23 +115,33 @@ namespace core
 		base::debugLog(bEnable);
 	}
 
-	void CBaseApp::addGlobalBeforeFilter(const std::string& szKey, const NodeGlobalFilter& callback)
+	void CBaseApp::addGlobalBeforeFilter(uint8_t nMessageType, const std::string& szKey, const NodeGlobalFilter& callback)
 	{
-		CCoreApp::Inst()->getLogicRunnable()->getBaseConnectionMgrImpl()->addGlobalBeforeFilter(szKey, callback);
+		CCoreApp::Inst()->getLogicRunnable()->getBaseConnectionMgrImpl()->addGlobalBeforeFilter(nMessageType, szKey, callback);
 	}
 
-	void CBaseApp::delGlobalBeforeFilter(const std::string& szKey)
+	void CBaseApp::delGlobalBeforeFilter(uint8_t nMessageType, const std::string& szKey)
 	{
-		CCoreApp::Inst()->getLogicRunnable()->getBaseConnectionMgrImpl()->delGlobalBeforeFilter(szKey);
+		CCoreApp::Inst()->getLogicRunnable()->getBaseConnectionMgrImpl()->delGlobalBeforeFilter(nMessageType, szKey);
 	}
 
-	void CBaseApp::addGlobalAfterFilter(const std::string& szKey, const NodeGlobalFilter& callback)
+	void CBaseApp::addGlobalAfterFilter(uint8_t nMessageType, const std::string& szKey, const NodeGlobalFilter& callback)
 	{
-		CCoreApp::Inst()->getLogicRunnable()->getBaseConnectionMgrImpl()->addGlobalAfterFilter(szKey, callback);
+		CCoreApp::Inst()->getLogicRunnable()->getBaseConnectionMgrImpl()->addGlobalAfterFilter(nMessageType, szKey, callback);
 	}
 
-	void CBaseApp::delGlobalAfterFilter(const std::string& szKey)
+	void CBaseApp::delGlobalAfterFilter(uint8_t nMessageType, const std::string& szKey)
 	{
-		CCoreApp::Inst()->getLogicRunnable()->getBaseConnectionMgrImpl()->delGlobalAfterFilter(szKey);
+		CCoreApp::Inst()->getLogicRunnable()->getBaseConnectionMgrImpl()->delGlobalAfterFilter(nMessageType, szKey);
+	}
+
+	bool CBaseApp::isLocalService(uint32_t nServiceID) const
+	{
+		return CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->isLocalService(nServiceID);
+	}
+
+	const std::vector<uint32_t>& CBaseApp::getServiceIDByTypeName(const std::string& szName) const
+	{
+		return CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->getServiceIDByTypeName(szName);
 	}
 }

@@ -58,8 +58,7 @@ namespace core
 			this->m_mapPendingActorBase.erase(iter++);
 		}
 
-		std::map<uint64_t, CActorBaseImpl*> mapWorkActorBase;
-		mapWorkActorBase.swap(this->m_mapWorkActorBase);
+		std::map<uint64_t, CActorBaseImpl*> mapWorkActorBase = std::move(this->m_mapWorkActorBase);
 		for (auto iter = mapWorkActorBase.begin(); iter != mapWorkActorBase.end(); ++iter)
 		{
 			iter->second->process();
