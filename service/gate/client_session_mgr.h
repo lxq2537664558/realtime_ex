@@ -5,14 +5,14 @@
 #include <map>
 
 class CGateService;
-class CConnectionFromClient;
+class CGateConnectionFromClient;
 class CClientSessionMgr
 {
 public:
 	CClientSessionMgr(CGateService* pGateService);
 	~CClientSessionMgr();
 
-	CClientSession*	createSession(uint64_t nSocketID, uint32_t nServiceID, uint64_t nPlayerID, const std::string& szToken, CConnectionFromClient* pConnectionFromClient);
+	CClientSession*	createSession(uint64_t nSocketID, uint32_t nServiceID, uint64_t nPlayerID, const std::string& szToken, CGateConnectionFromClient* pGateConnectionFromClient);
 	CClientSession*	getSessionByPlayerID(uint64_t nActorID) const;
 	CClientSession*	getSessionBySocketID(uint64_t nSocketID) const;
 	void			delSessionbySocketID(uint64_t nSocketID);

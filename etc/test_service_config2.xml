@@ -11,8 +11,8 @@
 	<!--节点信息-->
 	<node_info node_id = "2" node_name = "test_node_2" host = "127.0.0.1" port = "6000" send_buf_size = "1024" recv_buf_size = "1024">
 		<service_info service_id = "3" service_name = "test_service_3" service_type = "test_service" lib_name = "test_service3" class_name = "CTestService3"/>
-		<service_info service_id = "10001" service_name = "test_master_1" service_type = "master" lib_name = "master" class_name = "CMasterService" config_file_name = "master_config.xml"/>
-		<service_info service_id = "20001" service_name = "test_gate_1" service_type = "gate" lib_name = "gate" class_name = "CGateService" config_file_name = "gate_config.xml"/>
+		<service_info service_id = "10001" service_name = "test_master_1" service_type = "master" lib_name = "master" config_file_name = "master_config.xml"/>
+		<service_info service_id = "20001" service_name = "test_gate_1" service_type = "gate" lib_name = "gate" config_file_name = "gate_config.xml"/>
 	</node_info>
 	
 	<!--本节点需要连接的服务-->

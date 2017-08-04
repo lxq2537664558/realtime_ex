@@ -27,7 +27,7 @@ namespace core
 	{
 	}
 
-	uint32_t CBaseConnection::getType() const
+	const std::string& CBaseConnection::getType() const
 	{
 		return this->m_pCoreConnection->getType();
 	}
@@ -122,4 +122,8 @@ namespace core
 		this->m_pCoreConnection->setSessionID(nSessionID);
 	}
 
+	base::ENetConnecterMode CBaseConnection::getMode() const
+	{
+		return this->m_pCoreConnection->getMode();
+	}
 }

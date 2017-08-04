@@ -27,9 +27,6 @@
     <ClInclude Include="targetver.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="connection_from_client.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="gate_service.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -63,12 +60,12 @@
     <ClInclude Include="proto_src\player_leave.pb.h">
       <Filter>proto_src</Filter>
     </ClInclude>
+    <ClInclude Include="gate_connection_from_client.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="connection_from_client.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="gate_service.cpp">
@@ -103,6 +100,9 @@
     </ClCompile>
     <ClCompile Include="proto_src\player_leave.pb.cc">
       <Filter>proto_src</Filter>
+    </ClCompile>
+    <ClCompile Include="gate_connection_from_client.cpp">
+      <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

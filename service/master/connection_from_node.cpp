@@ -19,11 +19,6 @@ CConnectionFromNode::~CConnectionFromNode()
 
 }
 
-uint32_t CConnectionFromNode::getType() const
-{
-	return eBCT_ConnectionFromService;
-}
-
 void CConnectionFromNode::release()
 {
 	delete this;

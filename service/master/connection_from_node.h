@@ -10,7 +10,6 @@ public:
 	CConnectionFromNode();
 	virtual ~CConnectionFromNode();
 
-	virtual uint32_t	getType() const;
 	virtual void		release();
 
 	virtual void		onConnect();

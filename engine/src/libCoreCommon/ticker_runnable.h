@@ -14,14 +14,14 @@ namespace core
 	class CTickerRunnable;
 	class CNetRunnable;
 	class CLogicRunnable;
-	class CActorBaseImpl;
+	class CCoreActor;
 	class CTicker;
 	class CCoreTickerInfo
 	{
 		friend class CTickerRunnable;
 		friend class CNetRunnable;
 		friend class CLogicRunnable;
-		friend class CActorBaseImpl;
+		friend class CCoreActor;
 		friend class CTicker;
 
 	public:

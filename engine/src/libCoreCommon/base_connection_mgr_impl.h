@@ -27,12 +27,12 @@ namespace core
 		CBaseConnectionMgrImpl();
 		~CBaseConnectionMgrImpl();
 		
-		void							setBaseConnectionFactory(uint32_t nType, CBaseConnectionFactory* pBaseConnectionFactory);
-		CBaseConnectionFactory*			getBaseConnectionFactory(uint32_t nType) const;
+		void							setBaseConnectionFactory(const std::string& szType, CBaseConnectionFactory* pBaseConnectionFactory);
+		CBaseConnectionFactory*			getBaseConnectionFactory(const std::string& szType) const;
 		
-		void							enumBaseConnection(uint32_t nType, const std::function<bool(CBaseConnection* pBaseConnection)>& callback) const;
+		void							enumBaseConnection(const std::string& szType, const std::function<bool(CBaseConnection* pBaseConnection)>& callback) const;
 		CBaseConnection*				getBaseConnectionBySocketID(uint64_t nID) const;
-		uint32_t						getBaseConnectionCount(uint32_t nType) const;
+		uint32_t						getBaseConnectionCount(const std::string& szType) const;
 		
 		void							addConnectCallback(const std::string& szKey, const std::function<void(CBaseConnection*)>& callback);
 		void							delConnectCallback(const std::string& szKey);
@@ -59,8 +59,8 @@ namespace core
 
 	private:
 		std::map<uint64_t, CBaseConnection*>							m_mapBaseConnectionByID;
-		std::map<uint32_t, std::map<uint64_t, CBaseConnection*>>		m_mapBaseConnectionByType;
-		std::map<uint32_t, CBaseConnectionFactory*>						m_mapBaseConnectionFactory;
+		std::map<std::string, std::map<uint64_t, CBaseConnection*>>		m_mapBaseConnectionByType;
+		std::map<std::string, CBaseConnectionFactory*>					m_mapBaseConnectionFactory;
 
 		std::map<std::string, std::function<void(CBaseConnection*)>>	m_mapConnectCalback;
 		std::map<std::string, std::function<void(CBaseConnection*)>>	m_mapDisconnectCallback;

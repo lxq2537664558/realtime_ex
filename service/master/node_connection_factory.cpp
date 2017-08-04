@@ -6,22 +6,11 @@
 
 using namespace core;
 
-CBaseConnection* CNodeConnectionFactory::createBaseConnection(uint32_t nType)
+CBaseConnection* CNodeConnectionFactory::createBaseConnection(const std::string& szType)
 {
-	switch (nType)
-	{
-	case eBCT_ConnectionFromService:
-		{
-			CConnectionFromNode* pConnectionFromService = new CConnectionFromNode();
+	DebugAstEx(szType == "CConnectionFromNode", nullptr);
 
-			return pConnectionFromService;
-		}
-		break;
-	default:
-		{
-			PrintWarning("CServiceConnectionFactory::createBaseConnection error type: %d", nType);
-		}
-	}
+	CConnectionFromNode* pConnectionFromService = new CConnectionFromNode();
 
-	return nullptr;
+	return pConnectionFromService;
 }

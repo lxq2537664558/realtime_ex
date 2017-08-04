@@ -4,11 +4,11 @@
 #include "libCoreCommon/default_protobuf_factory.h"
 
 #include "client_session.h"
-#include "connection_from_client.h"
+#include "gate_connection_from_client.h"
 
 #include <map>
 
-typedef std::function<void(CConnectionFromClient*, const google::protobuf::Message*)>	ClientCallback;	// 客户端消息处理函数类型
+typedef std::function<void(CGateConnectionFromClient*, const google::protobuf::Message*)>	ClientCallback;	// 客户端消息处理函数类型
 
 class CGateService;
 class CClientMessageDispatcher
@@ -20,7 +20,7 @@ public:
 	/**
 	@brief: 消息派发函数，由各个消息源调用来派发消息
 	*/
-	void	dispatch(CConnectionFromClient* pConnectionFromClient, const void* pData, uint16_t nSize);
+	void	dispatch(CGateConnectionFromClient* pGateConnectionFromClient, const void* pData, uint16_t nSize);
 	/**
 	@brief: 注册经客户端消息响应函数
 	*/

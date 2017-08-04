@@ -60,14 +60,14 @@ namespace core
 	}
 
 	template<class T>
-	bool CActorBase::async_call(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, const std::function<void(const T*, uint32_t)>& callback)
+	bool CActorBase::async_call(const std::string& szServiceType, const std::string& szServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, const std::function<void(const T*, uint32_t)>& callback)
 	{
-		return this->getServiceBase()->getServiceInvoker()->async_call(szServiceType, nServiceSelectorType, nServiceSelectorContext, pMessage, callback);
+		return this->getServiceBase()->getServiceInvoker()->async_call(szServiceType, szServiceSelectorType, nServiceSelectorContext, pMessage, callback);
 	}
 
 	template<class T>
-	bool CActorBase::async_call(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, CFuture<T>& sFuture)
+	bool CActorBase::async_call(const std::string& szServiceType, const std::string& szServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, CFuture<T>& sFuture)
 	{
-		return this->getServiceBase()->getServiceInvoker()->async_call(szServiceType, nServiceSelectorType, nServiceSelectorContext, pMessage, sFuture);
+		return this->getServiceBase()->getServiceInvoker()->async_call(szServiceType, szServiceSelectorType, nServiceSelectorContext, pMessage, sFuture);
 	}
 }

@@ -11,6 +11,6 @@ namespace core
 		CNodeConnectionFactory() { }
 		virtual ~CNodeConnectionFactory() { }
 
-		virtual CBaseConnection*	createBaseConnection(uint32_t nType);
+		virtual CBaseConnection*	createBaseConnection(const std::string& szType);
 	};
 }

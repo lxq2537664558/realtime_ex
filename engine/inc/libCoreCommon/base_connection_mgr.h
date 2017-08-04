@@ -23,7 +23,7 @@ namespace core
 		/**
 		@brief: 主动发起一个连接（异步）
 		*/
-		void							connect(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, const MessageParser& messageParser);
+		void							connect(const std::string& szHost, uint16_t nPort, const std::string& szType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, const MessageParser& messageParser);
 		/**
 		@brief: 直接连接目标节点
 		*/
@@ -31,16 +31,16 @@ namespace core
 		/**
 		@brief: 发起一个监听
 		*/
-		void							listen(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser);
+		void							listen(const std::string& szHost, uint16_t nPort, const std::string& szType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser);
 
 		/**
 		@brief: 设置某一个类型的连接创建工厂
 		*/
-		void							setBaseConnectionFactory(uint32_t nType, CBaseConnectionFactory* pBaseConnectionFactory);
+		void							setBaseConnectionFactory(const std::string& szType, CBaseConnectionFactory* pBaseConnectionFactory);
 		/**
 		@brief: 获取某一个类型的连接创建工厂
 		*/
-		CBaseConnectionFactory*			getBaseConnectionFactory(uint32_t nType) const;
+		CBaseConnectionFactory*			getBaseConnectionFactory(const std::string& szType) const;
 		/**
 		@brief: 根据连接ID获取一个连接
 		*/
@@ -52,15 +52,15 @@ namespace core
 		/**
 		@brief: 根据连接的类型枚举连接对象,回调函数返回false停止枚举
 		*/
-		void							enumBaseConnection(uint32_t nType, const std::function<bool(CBaseConnection* pBaseConnection)>& callback) const;
+		void							enumBaseConnection(const std::string& szType, const std::function<bool(CBaseConnection* pBaseConnection)>& callback) const;
 		/**
 		@brief: 根据连接的类型来获取所有基于这个连接类创建的连接数量
 		*/
-		uint32_t						getBaseConnectionCount(uint32_t nType) const;
+		uint32_t						getBaseConnectionCount(const std::string& szType) const;
 		/**
 		@brief: 根据链接的类型来广播消息
 		*/
-		void							broadcast(uint32_t nType, uint8_t nMessageType, const void* pData, uint16_t nDataSize, const std::vector<uint64_t>* vecExcludeID);
+		void							broadcast(const std::string& szType, uint8_t nMessageType, const void* pData, uint16_t nDataSize, const std::vector<uint64_t>* vecExcludeID);
 		/**
 		@brief: 向一批特定链接广播消息
 		*/

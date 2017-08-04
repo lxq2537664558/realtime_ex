@@ -5,16 +5,16 @@
 #include "coroutine.h"
 #include "core_app.h"
 #include "core_common_define.h"
-#include "actor_base_impl.h"
-#include "service_base_impl.h"
+#include "core_actor.h"
+#include "core_service.h"
 
 #include "libCoreCommon/base_app.h"
 #include "libBaseCommon/base_time.h"
 
 namespace core
 {
-	CActorScheduler::CActorScheduler(CServiceBaseImpl* pServiceBaseImpl)
-		: m_pServiceBaseImpl(pServiceBaseImpl)
+	CActorScheduler::CActorScheduler(CCoreService* pCoreService)
+		: m_pCoreService(pCoreService)
 	{
 	}
 
@@ -28,10 +28,10 @@ namespace core
 		return true;
 	}
 
-	CActorBaseImpl* CActorScheduler::getActorBase(uint64_t nID) const
+	CCoreActor* CActorScheduler::getCoreActor(uint64_t nID) const
 	{
-		auto iter = this->m_mapActorBase.find(nID);
-		if (iter == this->m_mapActorBase.end())
+		auto iter = this->m_mapCoreActor.find(nID);
+		if (iter == this->m_mapCoreActor.end())
 			return nullptr;
 
 		return iter->second;
@@ -40,69 +40,71 @@ namespace core
 	void CActorScheduler::run()
 	{
 		int64_t nCurTime = base::getGmtTime();
-		for (auto iter = this->m_mapPendingActorBase.begin(); iter != this->m_mapPendingActorBase.end();)
+		for (auto iter = this->m_mapPendingCoreActor.begin(); iter != this->m_mapPendingCoreActor.end();)
 		{
-			CActorBaseImpl* pActorBaseImpl = iter->second;
-			if (pActorBaseImpl == nullptr)
+			CCoreActor* pCoreActor = iter->second;
+			if (pCoreActor == nullptr)
 			{
 				++iter;
 				continue;
 			}
 
-			if (!pActorBaseImpl->onPendingTimer(nCurTime))
+			if (!pCoreActor->onPendingTimer(nCurTime))
 			{
 				++iter;
 				continue;
 			}
 
-			this->m_mapPendingActorBase.erase(iter++);
+			this->m_mapPendingCoreActor.erase(iter++);
 		}
 
-		std::map<uint64_t, CActorBaseImpl*> mapWorkActorBase = std::move(this->m_mapWorkActorBase);
-		for (auto iter = mapWorkActorBase.begin(); iter != mapWorkActorBase.end(); ++iter)
+		std::map<uint64_t, CCoreActor*> mapWorkCoreActor = std::move(this->m_mapWorkCoreActor);
+		for (auto iter = mapWorkCoreActor.begin(); iter != mapWorkCoreActor.end(); ++iter)
 		{
 			iter->second->process();
 		}
 	}
 
-	CActorBaseImpl* CActorScheduler::createActorBase(uint64_t nActorID, CActorBase* pActorBase)
+	CCoreActor* CActorScheduler::createCoreActor(uint64_t nActorID, CActorBase* pActorBase)
 	{
 		DebugAstEx(pActorBase != nullptr, nullptr);
 		DebugAstEx(nActorID != 0, nullptr);
-		DebugAstEx(this->m_mapActorBase.find(nActorID) == this->m_mapActorBase.end(), nullptr);
+		DebugAstEx(this->m_mapCoreActor.find(nActorID) == this->m_mapCoreActor.end(), nullptr);
 
-		CActorBaseImpl* pActorBaseImpl = new CActorBaseImpl(nActorID, pActorBase, this->m_pServiceBaseImpl);
+		CCoreActor* pCoreActor = new CCoreActor(nActorID, pActorBase, this->m_pCoreService);
 		
-		this->m_mapActorBase[pActorBaseImpl->getID()] = pActorBaseImpl;
+		this->m_mapCoreActor[pCoreActor->getID()] = pCoreActor;
 
-		return pActorBaseImpl;
+		return pCoreActor;
 	}
 
-	void CActorScheduler::destroyActorBase(CActorBaseImpl* pActorBaseImpl)
+	void CActorScheduler::destroyCoreActor(CCoreActor* pCoreActor)
 	{
-		DebugAst(pActorBaseImpl != nullptr);
+		DebugAst(pCoreActor != nullptr);
 
-		this->m_mapActorBase.erase(pActorBaseImpl->getID());
+		this->m_mapCoreActor.erase(pCoreActor->getID());
+		this->m_mapWorkCoreActor.erase(pCoreActor->getID());
+		this->m_mapPendingCoreActor.erase(pCoreActor->getID());
 
-		SAFE_DELETE(pActorBaseImpl);
+		SAFE_DELETE(pCoreActor);
 	}
 
-	void CActorScheduler::addWorkActorBase(CActorBaseImpl* pBaseActorImpl)
+	void CActorScheduler::addWorkCoreActor(CCoreActor* pCoreActor)
 	{
-		DebugAst(pBaseActorImpl != nullptr);
+		DebugAst(pCoreActor != nullptr);
 
-		if (pBaseActorImpl->getState() == CActorBaseImpl::eABS_Normal || pBaseActorImpl->getState() == CActorBaseImpl::eABS_RecvPending)
-			this->m_mapWorkActorBase[pBaseActorImpl->getID()] = pBaseActorImpl;
+		if (pCoreActor->getState() == CCoreActor::eABS_Normal || pCoreActor->getState() == CCoreActor::eABS_RecvPending)
+			this->m_mapWorkCoreActor[pCoreActor->getID()] = pCoreActor;
 	}
 
-	void CActorScheduler::addPendingActorBase(CActorBaseImpl* pActorBase)
+	void CActorScheduler::addPendingCoreActor(CCoreActor* pCoreActor)
 	{
-		DebugAst(pActorBase != nullptr);
+		DebugAst(pCoreActor != nullptr);
 
-		DebugAst(pActorBase->getState() == CActorBaseImpl::eABS_Normal);
+		DebugAst(pCoreActor->getState() == CCoreActor::eABS_Normal);
 
-		this->m_mapPendingActorBase[pActorBase->getID()] = pActorBase;
+		this->m_mapPendingCoreActor[pCoreActor->getID()] = pCoreActor;
 
-		pActorBase->setState(CActorBaseImpl::eABS_Pending);
+		pCoreActor->setState(CCoreActor::eABS_Pending);
 	}
 }

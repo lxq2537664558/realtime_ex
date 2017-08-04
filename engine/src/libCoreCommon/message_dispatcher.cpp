@@ -1,11 +1,11 @@
 #include "stdafx.h"
 #include "message_dispatcher.h"
 #include "core_common_define.h"
-#include "coroutine.h"
-#include "actor_base_impl.h"
-#include "core_app.h"
 #include "message_command.h"
-#include "service_base_impl.h"
+#include "coroutine.h"
+#include "core_actor.h"
+#include "core_app.h"
+#include "core_service.h"
 
 #include "libBaseCommon/debug_helper.h"
 #include "libBaseCommon/defer.h"
@@ -14,8 +14,8 @@
 
 namespace core
 {
-	CMessageDispatcher::CMessageDispatcher(CServiceBaseImpl* pServiceBaseImpl)
-		: m_pServiceBaseImpl(pServiceBaseImpl)
+	CMessageDispatcher::CMessageDispatcher(CCoreService* pCoreService)
+		: m_pCoreService(pCoreService)
 	{
 
 	}
@@ -36,31 +36,32 @@ namespace core
 			{
 				google::protobuf::Message* pMessage = pRequestContext->pMessage;
 
-				CActorBaseImpl* pActorBaseImpl = this->m_pServiceBaseImpl->getActorScheduler()->getActorBase(pRequestContext->nToActorID);
-				if (nullptr == pActorBaseImpl)
+				CCoreActor* pCoreActor = this->m_pCoreService->getActorScheduler()->getCoreActor(pRequestContext->nToActorID);
+				if (nullptr == pCoreActor)
 				{
 					SAFE_DELETE(pMessage);
 					return;
 				}
+
 				SActorMessagePacket sActorMessagePacket;
 				sActorMessagePacket.nData = pRequestContext->nFromActorID;
 				sActorMessagePacket.nFromServiceID = pRequestContext->nFromServiceID;
 				sActorMessagePacket.nSessionID = pRequestContext->nSessionID;
 				sActorMessagePacket.nType = eMT_REQUEST;
 				sActorMessagePacket.pMessage = pMessage;
-				pActorBaseImpl->getChannel()->send(sActorMessagePacket);
+				pCoreActor->getChannel()->send(sActorMessagePacket);
 
-				this->m_pServiceBaseImpl->getActorScheduler()->addWorkActorBase(pActorBaseImpl);
+				this->m_pCoreService->getActorScheduler()->addWorkCoreActor(pCoreActor);
 			}
 			else
 			{
 				// 这里没有暂存的需求，所以直接用unique_ptr
 				auto pMessage = std::unique_ptr<google::protobuf::Message>(pRequestContext->pMessage);
 
-				auto& callback = this->m_pServiceBaseImpl->getServiceMessageHandler(pMessage->GetTypeName());
+				auto& callback = this->m_pCoreService->getServiceMessageHandler(pMessage->GetTypeName());
 				if (callback == nullptr)
 				{
-					PrintWarning("CMessageDispatcher::dispatch error unknown request message service_id: %d, message_name: %s", this->m_pServiceBaseImpl->getServiceID(), pMessage->GetTypeName().c_str());
+					PrintWarning("CMessageDispatcher::dispatch error unknown request message service_id: %d, message_name: %s", this->m_pCoreService->getServiceID(), pMessage->GetTypeName().c_str());
 					return;
 				}
 
@@ -69,7 +70,7 @@ namespace core
 				sSessionInfo.nFromServiceID = pRequestContext->nFromServiceID;
 				sSessionInfo.nFromActorID = pRequestContext->nFromActorID;
 				sSessionInfo.nSessionID = pRequestContext->nSessionID;
-				callback(this->m_pServiceBaseImpl->getServiceBase(), sSessionInfo, pMessage.get());
+				callback(this->m_pCoreService->getServiceBase(), sSessionInfo, pMessage.get());
 			}
 		}
 		else if (nMessageType == eMT_RESPONSE)
@@ -79,14 +80,14 @@ namespace core
 			{
 				google::protobuf::Message* pMessage = pResponseContext->pMessage;
 
-				CActorBaseImpl* pActorBaseImpl = this->m_pServiceBaseImpl->getActorScheduler()->getActorBase(pResponseContext->nToActorID);
-				if (nullptr == pActorBaseImpl)
+				CCoreActor* pCoreActor = this->m_pCoreService->getActorScheduler()->getCoreActor(pResponseContext->nToActorID);
+				if (nullptr == pCoreActor)
 				{
 					SAFE_DELETE(pMessage);
 					return;
 				}
 
-				if (pResponseContext->nSessionID != pActorBaseImpl->getPendingResponseSessionID())
+				if (pResponseContext->nSessionID != pCoreActor->getPendingResponseSessionID())
 				{
 					SActorMessagePacket sActorMessagePacket;
 					sActorMessagePacket.nData = pResponseContext->nResult;
@@ -94,15 +95,15 @@ namespace core
 					sActorMessagePacket.nFromServiceID = 0;
 					sActorMessagePacket.nType = eMT_RESPONSE;
 					sActorMessagePacket.pMessage = pMessage;
-					pActorBaseImpl->getChannel()->send(sActorMessagePacket);
+					pCoreActor->getChannel()->send(sActorMessagePacket);
 
-					this->m_pServiceBaseImpl->getActorScheduler()->addWorkActorBase(pActorBaseImpl);
+					this->m_pCoreService->getActorScheduler()->addWorkCoreActor(pCoreActor);
 				}
 				else
 				{
-					pActorBaseImpl->setPendingResponseMessage(pResponseContext->nResult, pMessage);
+					pCoreActor->setPendingResponseMessage(pResponseContext->nResult, pMessage);
 
-					this->m_pServiceBaseImpl->getActorScheduler()->addWorkActorBase(pActorBaseImpl);
+					this->m_pCoreService->getActorScheduler()->addWorkCoreActor(pCoreActor);
 				}
 			}
 			else
@@ -131,8 +132,8 @@ namespace core
 			{
 				google::protobuf::Message* pMessage = pGateForwardContext->pMessage;
 
-				CActorBaseImpl* pActorBaseImpl = this->m_pServiceBaseImpl->getActorScheduler()->getActorBase(pGateForwardContext->nToActorID);
-				if (nullptr == pActorBaseImpl)
+				CCoreActor* pCoreActor = this->m_pCoreService->getActorScheduler()->getCoreActor(pGateForwardContext->nToActorID);
+				if (nullptr == pCoreActor)
 				{
 					SAFE_DELETE(pMessage);
 					return;
@@ -144,19 +145,19 @@ namespace core
 				sActorMessagePacket.nSessionID = pGateForwardContext->nSessionID;
 				sActorMessagePacket.nType = eMT_GATE_FORWARD;
 				sActorMessagePacket.pMessage = pMessage;
-				pActorBaseImpl->getChannel()->send(sActorMessagePacket);
+				pCoreActor->getChannel()->send(sActorMessagePacket);
 
-				this->m_pServiceBaseImpl->getActorScheduler()->addWorkActorBase(pActorBaseImpl);
+				this->m_pCoreService->getActorScheduler()->addWorkCoreActor(pCoreActor);
 			}
 			else
 			{
 				// 这里没有暂存的需求，所以直接用unique_ptr
 				auto pMessage = std::unique_ptr<google::protobuf::Message>(pGateForwardContext->pMessage);
 
-				auto& callback = this->m_pServiceBaseImpl->getServiceForwardHandler(pMessage->GetTypeName());
+				auto& callback = this->m_pCoreService->getServiceForwardHandler(pMessage->GetTypeName());
 				if (callback == nullptr)
 				{
-					PrintWarning("CMessageDispatcher::dispatch error unknown gate forward message service_id: %d, message_name: %s", this->m_pServiceBaseImpl->getServiceID(), pMessage->GetTypeName().c_str());
+					PrintWarning("CMessageDispatcher::dispatch error unknown gate forward message service_id: %d, message_name: %s", this->m_pCoreService->getServiceID(), pMessage->GetTypeName().c_str());
 					return;
 				}
 
@@ -165,7 +166,7 @@ namespace core
 				sClientSessionInfo.nSocketID = pGateForwardContext->nSocketID;
 				sClientSessionInfo.nGateServiceID = pGateForwardContext->nFromServiceID;
 
-				callback(this->m_pServiceBaseImpl->getServiceBase(), sClientSessionInfo, pMessage.get());
+				callback(this->m_pCoreService->getServiceBase(), sClientSessionInfo, pMessage.get());
 			}
 		}
 	}

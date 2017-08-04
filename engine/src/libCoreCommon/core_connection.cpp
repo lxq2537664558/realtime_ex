@@ -29,7 +29,6 @@ namespace core
 		: m_bHeartbeat(true)
 		, m_nSendHeartbeatCount(0)
 		, m_nID(0)
-		, m_nType(0)
 		, m_nState(eCCS_None)
 		, m_nSessionID(0)
 	{
@@ -41,9 +40,9 @@ namespace core
 		DebugAst(this->m_pNetConnecter == nullptr);
 	}
 
-	bool CCoreConnection::init(uint32_t nType, uint64_t nID, const std::string& szContext, const MessageParser& messageParser)
+	bool CCoreConnection::init(const std::string& szType, uint64_t nID, const std::string& szContext, const MessageParser& messageParser)
 	{
-		this->m_nType = nType;
+		this->m_szType = szType;
 		this->m_nID = nID;
 		this->m_szContext = szContext;
 		this->m_messageParser = messageParser;
@@ -189,9 +188,9 @@ namespace core
 		return this->m_nID;
 	}
 
-	uint32_t CCoreConnection::getType() const
+	const std::string& CCoreConnection::getType() const
 	{
-		return this->m_nType;
+		return this->m_szType;
 	}
 
 	const std::string& CCoreConnection::getContext() const
@@ -216,14 +215,14 @@ namespace core
 			DebugAst(nSize > sizeof(request_cookice) + pCookice->nMessageNameLen);
 			DebugAst(pCookice->szMessageName[pCookice->nMessageNameLen] == 0);
 
-			CServiceBaseImpl* pServiceBaseImpl = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBaseByID(pCookice->nToServiceID);
-			if (pServiceBaseImpl == nullptr)
+			CCoreService* pCoreService = CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->getCoreServiceByID(pCookice->nToServiceID);
+			if (pCoreService == nullptr)
 			{
-				PrintWarning("CCoreConnection::onDispatch eMT_REQUEST error pServiceBaseImpl == nullptr service_id: %d", pCookice->nToServiceID);
+				PrintWarning("CCoreConnection::onDispatch eMT_REQUEST error pCoreService == nullptr service_id: %d", pCookice->nToServiceID);
 				return;
 			}
 
-			CProtobufFactory* pProtobufFactory = pServiceBaseImpl->getProtobufFactory();
+			CProtobufFactory* pProtobufFactory = pCoreService->getServiceBase()->getProtobufFactory();
 			if (pProtobufFactory == nullptr)
 			{
 				PrintWarning("CCoreConnection::onDispatch eMT_REQUEST error pProtobufFactory == nullptr service_id: %d", pCookice->nToServiceID);
@@ -264,14 +263,14 @@ namespace core
 			DebugAst(nSize > sizeof(response_cookice) + pCookice->nMessageNameLen);
 			DebugAst(pCookice->szMessageName[pCookice->nMessageNameLen] == 0);
 
-			CServiceBaseImpl* pServiceBaseImpl = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBaseByID(pCookice->nToServiceID);
-			if (pServiceBaseImpl == nullptr)
+			CCoreService* pCoreService = CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->getCoreServiceByID(pCookice->nToServiceID);
+			if (pCoreService == nullptr)
 			{
-				PrintWarning("CCoreConnection::onDispatch eMT_RESPONSE error pServiceBaseImpl == nullptr service_id: %d", pCookice->nToServiceID);
+				PrintWarning("CCoreConnection::onDispatch eMT_RESPONSE error pCoreService == nullptr service_id: %d", pCookice->nToServiceID);
 				return;
 			}
 
-			CProtobufFactory* pProtobufFactory = pServiceBaseImpl->getProtobufFactory();
+			CProtobufFactory* pProtobufFactory = pCoreService->getServiceBase()->getProtobufFactory();
 			if (pProtobufFactory == nullptr)
 			{
 				PrintWarning("CCoreConnection::onDispatch eMT_RESPONSE error pProtobufFactory == nullptr service_id: %d", pCookice->nToServiceID);
@@ -309,14 +308,14 @@ namespace core
 
 			DebugAst(nSize > sizeof(gate_forward_cookice));
 
-			CServiceBaseImpl* pServiceBaseImpl = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBaseByID(pCookice->nToServiceID);
-			if (pServiceBaseImpl == nullptr)
+			CCoreService* pCoreService = CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->getCoreServiceByID(pCookice->nToServiceID);
+			if (pCoreService == nullptr)
 			{
-				PrintWarning("CCoreConnection::onDispatch eMT_GATE_FORWARD error pServiceBaseImpl == nullptr service_id: %d", pCookice->nToServiceID);
+				PrintWarning("CCoreConnection::onDispatch eMT_GATE_FORWARD error pCoreService == nullptr service_id: %d", pCookice->nToServiceID);
 				return;
 			}
 
-			CProtobufFactory* pProtobufFactory = pServiceBaseImpl->getProtobufFactory();
+			CProtobufFactory* pProtobufFactory = pCoreService->getServiceBase()->getProtobufFactory();
 			if (pProtobufFactory == nullptr)
 			{
 				PrintWarning("CCoreConnection::onDispatch eMT_GATE_FORWARD error pProtobufFactory == nullptr service_id: %d", pCookice->nToServiceID);
@@ -325,7 +324,7 @@ namespace core
 
 			const message_header* pHeader = reinterpret_cast<const message_header*>(pCookice + 1);
 			DebugAst(sizeof(gate_forward_cookice) + pHeader->nMessageSize == nSize);
-			const std::string& szMessageName = pServiceBaseImpl->getForwardMessageName(pHeader->nMessageID);
+			const std::string& szMessageName = pCoreService->getForwardMessageName(pHeader->nMessageID);
 			if (szMessageName.empty())
 			{
 				PrintWarning("CCoreConnection::onDispatch eMT_GATE_FORWARD error szMessageName.empty() service_id: %d message_id: %d", pCookice->nToServiceID, pHeader->nMessageID);
@@ -562,4 +561,13 @@ namespace core
 	{
 		return this->m_nSessionID;
 	}
+
+	base::ENetConnecterMode CCoreConnection::getMode() const
+	{
+		if (this->m_pNetConnecter == nullptr)
+			return base::eNCM_Unknown;
+
+		return this->m_pNetConnecter->getConnecterMode();
+	}
+
 }

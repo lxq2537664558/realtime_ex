@@ -10,7 +10,7 @@
 	
 	<!--节点信息-->
 	<node_info node_id = "3" node_name = "test_node_3">
-		<service_info service_id = "4" service_name = "test_actor_1" service_type = "test_actor" lib_name = "test_actor1" class_name = "CTestActorService1"/>
+		<service_info service_id = "4" service_name = "test_actor_1" service_type = "test_actor" lib_name = "test_actor1"/>
 	</node_info>
 	
 	<!--本节点需要连接的服务-->

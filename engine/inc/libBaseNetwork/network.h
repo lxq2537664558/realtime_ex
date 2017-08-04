@@ -77,12 +77,12 @@ namespace base
 		eNCS_Unknown
 	};
 
-	enum ENetConnecterType
+	enum ENetConnecterMode
 	{
-		eNCT_Initiative,	// 主动连接
-		eNCT_Passive,		// 被动连接
+		eNCM_Initiative,	// 主动连接
+		eNCM_Passive,		// 被动连接
 
-		eNCT_Unknown
+		eNCM_Unknown
 	};
 
 	class INetConnecter;
@@ -213,9 +213,9 @@ namespace base
 		*/
 		virtual const SNetAddr&		getRemoteAddr() const = 0;
 		/**
-		@brief: 获取连接器类型
+		@brief: 获取连接器模式
 		*/
-		virtual ENetConnecterType	getConnecterType() const = 0;
+		virtual ENetConnecterMode	getConnecterMode() const = 0;
 		/**
 		@brief: 获取连接器状态
 		*/

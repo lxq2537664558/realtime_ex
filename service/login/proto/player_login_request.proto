@@ -1,0 +1,5 @@
+syntax = "proto2";
+
+message player_login_request {
+	optional uint64 account_id = 1;
+}

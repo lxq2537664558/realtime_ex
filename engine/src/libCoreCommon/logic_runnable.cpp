@@ -8,7 +8,7 @@
 #include "ticker_runnable.h"
 #include "net_runnable.h"
 #include "service_base.h"
-#include "service_base_impl.h"
+#include "core_service.h"
 
 #include "libBaseCommon/debug_helper.h"
 #include "libBaseCommon/base_time.h"
@@ -30,10 +30,11 @@ namespace core
 		, m_insideQueue(_DEFAULT_MESSAGE_QUEUE)
 		, m_pBaseConnectionMgr(nullptr)
 		, m_pBaseConnectionMgrImpl(nullptr)
-		, m_pServiceBaseMgr(nullptr)
+		, m_pCoreServiceMgr(nullptr)
 		, m_pTransporter(nullptr)
 		, m_pServiceRegistryProxy(nullptr)
 		, m_pNodeConnectionFactory(nullptr)
+		, m_nTotalSamplingTime(0)
 	{
 		this->m_pMessageQueue = new CLogicMessageQueue();
 
@@ -45,7 +46,7 @@ namespace core
 	{
 		SAFE_DELETE(this->m_pMessageQueue);
 		SAFE_DELETE(this->m_pNodeConnectionFactory);
-		SAFE_DELETE(this->m_pServiceBaseMgr);
+		SAFE_DELETE(this->m_pCoreServiceMgr);
 		SAFE_DELETE(this->m_pServiceRegistryProxy);
 		SAFE_DELETE(this->m_pBaseConnectionMgr);
 		SAFE_DELETE(this->m_pBaseConnectionMgrImpl);
@@ -60,14 +61,13 @@ namespace core
 		DebugAstEx(pNodeInfoXML != nullptr, false);
 
 		this->m_pNodeConnectionFactory = new CNodeConnectionFactory();
-		this->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionToMaster, this->m_pNodeConnectionFactory);
-		this->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionFromOtherNode, this->m_pNodeConnectionFactory);
-		this->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionToOtherNode, this->m_pNodeConnectionFactory);
-
+		this->getBaseConnectionMgr()->setBaseConnectionFactory("CBaseConnectionToMaster", this->m_pNodeConnectionFactory);
+		this->getBaseConnectionMgr()->setBaseConnectionFactory("CBaseConnectionOtherNode", this->m_pNodeConnectionFactory);
+		
 		this->m_pTransporter = new CTransporter();
 
-		this->m_pServiceBaseMgr = new CServiceBaseMgr();
-		if (!this->m_pServiceBaseMgr->init(pNodeInfoXML))
+		this->m_pCoreServiceMgr = new CCoreServiceMgr();
+		if (!this->m_pCoreServiceMgr->init(pNodeInfoXML))
 		{
 			PrintWarning("this->m_pServiceBaseMgr->init(pNodeInfoXML)");
 			return false;
@@ -83,7 +83,7 @@ namespace core
 		const SNodeBaseInfo& sNodeBaseInfo = CCoreApp::Inst()->getNodeBaseInfo();
 
 		if (!sNodeBaseInfo.szHost.empty())
-			this->m_pBaseConnectionMgr->listen(sNodeBaseInfo.szHost, sNodeBaseInfo.nPort, eBCT_ConnectionFromOtherNode, "", sNodeBaseInfo.nSendBufSize, sNodeBaseInfo.nRecvBufSize, nullptr);
+			this->m_pBaseConnectionMgr->listen(sNodeBaseInfo.szHost, sNodeBaseInfo.nPort, "CBaseConnectionToMaster", "", sNodeBaseInfo.nSendBufSize, sNodeBaseInfo.nRecvBufSize, nullptr);
 
 		this->m_pThreadBase = base::CThreadBase::createNew(this);
 		return nullptr != this->m_pThreadBase;
@@ -104,9 +104,9 @@ namespace core
 		return this->m_pBaseConnectionMgrImpl;
 	}
 
-	CServiceBaseMgr* CLogicRunnable::getServiceBaseMgr() const
+	CCoreServiceMgr* CLogicRunnable::getCoreServiceMgr() const
 	{
-		return this->m_pServiceBaseMgr;
+		return this->m_pCoreServiceMgr;
 	}
 
 	CTransporter* CLogicRunnable::getTransporter() const
@@ -141,7 +141,7 @@ namespace core
 	bool CLogicRunnable::onInit()
 	{
 		coroutine::init(_MAIN_STACK_SIZE);
-		if (!this->m_pServiceBaseMgr->onInit())
+		if (!this->m_pCoreServiceMgr->onInit())
 			return false;
 
 		return CBaseApp::Inst()->onInit();
@@ -154,7 +154,7 @@ namespace core
 
 	bool CLogicRunnable::onProcess()
 	{
-		int64_t nBeginTime = base::getProcessPassTime();
+		int64_t nBeginSamplingTime = base::getProcessPassTime();
 
 		static std::vector<SMessagePacket> vecMessagePacket;
 
@@ -177,6 +177,15 @@ namespace core
 				return false;
 		}
 
+		int64_t nEndSamplingTime = base::getProcessPassTime();
+		this->m_nTotalSamplingTime = this->m_nTotalSamplingTime + (uint32_t)(nEndSamplingTime - nBeginSamplingTime);
+
+		if (this->m_nTotalSamplingTime / 1000 >= CCoreApp::Inst()->getSamplingTime())
+		{
+			base::profiling(this->m_nTotalSamplingTime);
+			this->m_nTotalSamplingTime = 0;
+		}
+
 		return true;
 	}
 
@@ -186,21 +195,21 @@ namespace core
 		{
 		case eMCT_QUIT:
 			{
-				const std::vector<CServiceBaseImpl*>& vecServiceBaseImpl = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBase();
-				for (size_t i = 0; i < vecServiceBaseImpl.size(); ++i)
+				const std::vector<CCoreService*>& vecCoreService = CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->getCoreService();
+				for (size_t i = 0; i < vecCoreService.size(); ++i)
 				{
-					vecServiceBaseImpl[i]->quit();
+					vecCoreService[i]->quit();
 				}
 			}
 			break;
 
 		case eMCT_FRAME:
 			{
-				const std::vector<CServiceBaseImpl*>& vecServiceBaseImpl = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBase();
+				const std::vector<CCoreService*>& vecCoreService = CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->getCoreService();
 
-				for (size_t i = 0; i < vecServiceBaseImpl.size(); ++i)
+				for (size_t i = 0; i < vecCoreService.size(); ++i)
 				{
-					vecServiceBaseImpl[i]->run();
+					vecCoreService[i]->run();
 				}
 				
 				bool bQuit = true;
@@ -208,9 +217,9 @@ namespace core
 				if (CBaseApp::Inst()->onProcess())
 					bQuit = false;
 
-				for (size_t i = 0; i < vecServiceBaseImpl.size(); ++i)
+				for (size_t i = 0; i < vecCoreService.size(); ++i)
 				{
-					if (vecServiceBaseImpl[i]->getRunState() != eSRS_Quit)
+					if (vecCoreService[i]->getRunState() != eSRS_Quit)
 					{
 						bQuit = false;
 						break;
@@ -344,14 +353,14 @@ namespace core
 					nToServiceID = reinterpret_cast<SMCT_GATE_FORWARD*>(sMessagePacket.pData)->nToServiceID;
 					nMessageType = eMT_GATE_FORWARD;
 				}
-				CServiceBaseImpl* pServiceBaseImpl = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBaseByID(nToServiceID);
-				if (pServiceBaseImpl == nullptr)
+				CCoreService* pCoreService = CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->getCoreServiceByID(nToServiceID);
+				if (pCoreService == nullptr)
 				{
-					PrintWarning("pServiceBaseImpl == nullptr type: eMCT_RECV_SOCKET_DATA");
+					PrintWarning("pCoreService == nullptr type: eMCT_RECV_SOCKET_DATA");
 					return true;
 				}
 
-				pServiceBaseImpl->getMessageDispatcher()->dispatch(CCoreApp::Inst()->getNodeID(), nMessageType, sMessagePacket.pData);
+				pCoreService->getMessageDispatcher()->dispatch(CCoreApp::Inst()->getNodeID(), nMessageType, sMessagePacket.pData);
 			}
 			break;
 
@@ -380,18 +389,18 @@ namespace core
 				else
 				{
 					CTicker* pTicker = pCoreTickerNode->Value.m_pTicker;
-					CServiceBaseImpl* pServiceBaseImpl = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBaseByID(pTicker->getServiceID());
-					if (pServiceBaseImpl == nullptr)
+					CCoreService* pCoreService = CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->getCoreServiceByID(pTicker->getServiceID());
+					if (pCoreService == nullptr)
 					{
-						PrintWarning("pServiceBaseImpl == nullptr type: eMCT_TICKER");
+						PrintWarning("pCoreService == nullptr type: eMCT_TICKER");
 						pCoreTickerNode->Value.release();
 						return true;
 					}
 
-					CActorBaseImpl* pActorBaseImpl = pServiceBaseImpl->getActorScheduler()->getActorBase(pTicker->getActorID());
-					if (pActorBaseImpl == nullptr)
+					CCoreActor* pCoreActor = pCoreService->getActorScheduler()->getCoreActor(pTicker->getActorID());
+					if (pCoreActor == nullptr)
 					{
-						PrintWarning("pActorBaseImpl == nullptr type: eMCT_TICKER");
+						PrintWarning("pCoreActor == nullptr type: eMCT_TICKER");
 						pCoreTickerNode->Value.release();
 						return true;
 					}
@@ -401,9 +410,9 @@ namespace core
 					sActorMessagePacket.nSessionID = uint64_t(pCoreTickerNode);
 					sActorMessagePacket.nType = eMT_TICKER;
 					sActorMessagePacket.pMessage = nullptr;
-					pActorBaseImpl->getChannel()->send(sActorMessagePacket);
+					pCoreActor->getChannel()->send(sActorMessagePacket);
 
-					pServiceBaseImpl->getActorScheduler()->addWorkActorBase(pActorBaseImpl);
+					pCoreService->getActorScheduler()->addWorkCoreActor(pCoreActor);
 				}
 			}
 			break;
@@ -421,5 +430,4 @@ namespace core
 	{
 
 	}
-
 }

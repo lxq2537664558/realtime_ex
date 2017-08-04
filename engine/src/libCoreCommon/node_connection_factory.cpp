@@ -7,31 +7,23 @@
 
 namespace core
 {
-	CBaseConnection* CNodeConnectionFactory::createBaseConnection(uint32_t nType)
+	CBaseConnection* CNodeConnectionFactory::createBaseConnection(const std::string& szType)
 	{
-		switch (nType)
+		if (szType == "CBaseConnectionToMaster")
 		{
-		case eBCT_ConnectionToMaster:
-			{
-				CBaseConnectionToMaster* pBaseConnectionToMaster = new CBaseConnectionToMaster();
-				
-				return pBaseConnectionToMaster;
-			}
-			break;
+			CBaseConnectionToMaster* pBaseConnectionToMaster = new CBaseConnectionToMaster();
 
-		case eBCT_ConnectionToOtherNode:
-		case eBCT_ConnectionFromOtherNode:
-			{
-				CBaseConnectionOtherNode* pBaseConnectionOtherNode = new CBaseConnectionOtherNode();
+			return pBaseConnectionToMaster;
+		}
+		else if(szType == "CBaseConnectionOtherNode")
+		{
+			CBaseConnectionOtherNode* pBaseConnectionOtherNode = new CBaseConnectionOtherNode();
 
-				return pBaseConnectionOtherNode;
-			}
-			break;
-
-		default:
-			{
-				PrintWarning("CNodeConnectionFactory::createBaseConnection error type: %d", nType);
-			}
+			return pBaseConnectionOtherNode;
+		}
+		else
+		{
+			PrintWarning("CNodeConnectionFactory::createBaseConnection error type: %s", szType.c_str());
 		}
 
 		return nullptr;

@@ -31,7 +31,7 @@ namespace core
 		CCoreConnection();
 		~CCoreConnection();
 
-		bool				init(uint32_t nType, uint64_t nID, const std::string& szContext, const MessageParser& messageParser);
+		bool				init(const std::string& szType, uint64_t nID, const std::string& szContext, const MessageParser& messageParser);
 		void				send(uint8_t nMessageType, const void* pData, uint16_t nSize);
 		void				send(uint8_t nMessageType, const void* pData, uint16_t nSize, const void* pExtraBuf, uint16_t nExtraSize);
 		
@@ -39,7 +39,7 @@ namespace core
 
 		uint64_t			getID() const;
 
-		uint32_t			getType() const;
+		const std::string&	getType() const;
 
 		const std::string&	getContext() const;
 
@@ -60,6 +60,9 @@ namespace core
 		void				setSessionID(uint64_t nSessionID);
 		uint64_t			getSessionID() const;
 
+		base::ENetConnecterMode
+							getMode() const;
+
 	private:
 		uint32_t			onRecv(const char* pData, uint32_t nDataSize);
 		virtual void		onSendComplete(uint32_t nSize);
@@ -77,7 +80,7 @@ namespace core
 		uint32_t				m_nSendHeartbeatCount;
 
 		uint64_t				m_nID;
-		uint32_t				m_nType;
+		std::string				m_szType;
 		uint32_t				m_nState;
 		std::string				m_szContext;
 		uint64_t				m_nSessionID;

@@ -63,7 +63,7 @@ namespace base
 			pNetConnecter->setSocketID(nSocketID);
 			pNetConnecter->setLocalAddr();
 			pNetConnecter->setRemoteAddr();
-			pNetConnecter->setConnecterType(eNCT_Passive);
+			pNetConnecter->setConnecterMode(eNCM_Passive);
 			pNetConnecter->setConnecterState(eNCS_Connecting);
 			if (!pNetConnecter->nonblock())
 			{

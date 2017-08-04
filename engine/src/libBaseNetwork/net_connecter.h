@@ -33,7 +33,7 @@ namespace base
 		virtual void				shutdown(bool bForce, const char* szFormat, ...);
 		virtual const SNetAddr&		getLocalAddr() const;
 		virtual const SNetAddr&		getRemoteAddr() const;
-		virtual ENetConnecterType	getConnecterType() const;
+		virtual ENetConnecterMode	getConnecterMode() const;
 		virtual ENetConnecterState	getConnecterState() const;
 		virtual	uint32_t			getSendDataSize() const;
 		virtual	uint32_t			getRecvDataSize() const;
@@ -43,7 +43,7 @@ namespace base
 		int32_t						getSendConnecterIndex() const;
 		void						setSendConnecterIndex(int32_t nIndex);
 		bool						connect(const SNetAddr& sNetAddr);
-		void						setConnecterType(ENetConnecterType eConnecterType);
+		void						setConnecterMode(ENetConnecterMode eConnecterMode);
 		void						setConnecterState(ENetConnecterState eConnecterState);
 		void						flushSend();
 
@@ -53,7 +53,7 @@ namespace base
 		void						onSend();
 
 	private:
-		ENetConnecterType		m_eConnecterType;
+		ENetConnecterMode		m_eConnecterMode;
 		ENetConnecterState		m_eConnecterState;
 		uint32_t				m_nFlag;
 		CNetRecvBuffer*			m_pRecvBuffer;

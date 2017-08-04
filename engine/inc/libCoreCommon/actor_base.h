@@ -2,7 +2,6 @@
 
 #include <memory>
 
-#include "base_object.h"
 #include "coroutine.h"
 #include "future.h"
 #include "ticker.h"
@@ -11,10 +10,16 @@
 
 namespace core
 {
-	class CActorBaseImpl;
+	/*
+	actor的创建销毁流程是
+	createActor  ---> 创建CActorBase对象 ---> 创建CCoreActor对象 ---> 调用CActorBase的onInit函数（这个函数用协程去调的）---> 正常actor
+	destroyActor ---> 调用CActorBase的onDestroy函数（普通调用）---> 销毁CCoreActor对象 ---> 调用CActorBase的release函数销毁CActorBase对象
+	*/
+
+	class CCoreActor;
 	class CServiceBase;
 	class __CORE_COMMON_API__ CActorBase :
-		public CBaseObject
+		public base::noncopyable
 	{
 		friend class CServiceBase;
 
@@ -23,9 +28,6 @@ namespace core
 		virtual ~CActorBase();
 
 	public:
-		virtual void		onInit(const std::string& szContext) { }
-		virtual void		onDestroy() { }
-
 		uint64_t			getID() const;
 
 		CServiceBase*		getServiceBase() const;
@@ -65,20 +67,19 @@ namespace core
 		inline uint32_t		sync_call(uint32_t nServiceID, const google::protobuf::Message* pMessage, std::shared_ptr<T>& pResponseMessage);
 
 
-		bool				send(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, google::protobuf::Message* pMessage);
+		bool				send(const std::string& szServiceType, const std::string& szServiceSelectorType, uint64_t nServiceSelectorContext, google::protobuf::Message* pMessage);
 
 		template<class T>
-		inline bool			async_call(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, const std::function<void(const T*, uint32_t)>& callback);
+		inline bool			async_call(const std::string& szServiceType, const std::string& szServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, const std::function<void(const T*, uint32_t)>& callback);
 
 		template<class T>
-		inline bool			async_call(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, CFuture<T>& sFuture);
+		inline bool			async_call(const std::string& szServiceType, const std::string& szServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, CFuture<T>& sFuture);
 
 		/*
 		通过请求的session响应请求
 		*/
 		void				response(const SSessionInfo& sSessionInfo, const google::protobuf::Message* pMessage);
 
-		virtual void		release();
 		/**
 		@brief: 发送消息给客户端，这里不要求是protobuf格式的，但是需要在逻辑层自己序列化好
 		*/
@@ -89,10 +90,15 @@ namespace core
 		bool				broadcast(const std::vector<SClientSessionInfo>& vecClientSessionInfo, const google::protobuf::Message* pMessage);
 
 	private:
+		virtual void		onInit(const std::string& szContext) { }
+		virtual void		onDestroy() { }
+
+		virtual void		release() = 0;
+
 		bool				invoke(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, uint64_t nCoroutineID, const std::function<void(std::shared_ptr<google::protobuf::Message>&, uint32_t)>& callback);
 
 	private:
-		CActorBaseImpl*	m_pActorBaseImpl;
+		CCoreActor*	m_pCoreActor;
 	};
 }
 

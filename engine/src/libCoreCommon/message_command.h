@@ -32,7 +32,7 @@ namespace core
 		std::string			szHost;
 		uint16_t			nPort;
 		std::string			szContext;
-		uint32_t			nType;
+		std::string			szType;
 		uint32_t			nSendBufferSize;
 		uint32_t			nRecvBufferSize;
 		MessageParser		messageParser;
@@ -43,7 +43,7 @@ namespace core
 		std::string			szHost;
 		uint16_t			nPort;
 		std::string			szContext;
-		uint32_t			nType;
+		std::string			szType;
 		uint32_t			nSendBufferSize;
 		uint32_t			nRecvBufferSize;
 		MessageParser		messageParser;
@@ -137,8 +137,9 @@ namespace core
 
 	struct SMCT_BROADCAST_SOCKET_DATA2
 	{
-		uint32_t	nType;
 		uint8_t		nMessageType;
 		uint16_t	nExcludeIDCount;
+		uint16_t	nTypeLen;
+		char		szType[1];
 	};
 }

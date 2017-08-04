@@ -11,7 +11,6 @@ namespace core
 		CRandomServiceSelector() { }
 		virtual ~CRandomServiceSelector() { }
 
-		virtual uint32_t	getType() const { return eSST_Random; }
-		virtual uint32_t	select(const std::string& szServiceType, uint64_t nContext);
+		virtual uint32_t	select(const std::string& szServiceType, const std::string& szServiceSelectorType, uint64_t nContext);
 	};
 }

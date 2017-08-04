@@ -42,17 +42,17 @@ namespace core
 		/**
 		@brief: 单向的给目标（服务，actor）发消息
 		*/
-		bool				send(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, google::protobuf::Message* pMessage);
+		bool				send(const std::string& szServiceType, const std::string& szServiceSelectorType, uint64_t nServiceSelectorContext, google::protobuf::Message* pMessage);
 		/**
 		@brief: 通过callback的方式进行远程调用，调用的时候请用返回消息类型来实例化模板函数
 		*/
 		template<class T>
-		inline bool			async_call(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, const std::function<void(const T*, uint32_t)>& callback);
+		inline bool			async_call(const std::string& szServiceType, const std::string& szServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, const std::function<void(const T*, uint32_t)>& callback);
 		/**
 		@brief: 通过future的方式进行远程调用
 		*/
 		template<class T>
-		inline bool			async_call(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, CFuture<T>& sFuture);
+		inline bool			async_call(const std::string& szServiceType, const std::string& szServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, CFuture<T>& sFuture);
 		//==================================指定服务类型之间调用=======================================//
 
 		

@@ -155,20 +155,20 @@ namespace core
 		}
 	}
 
-	uint32_t CBaseConnectionMgrImpl::getBaseConnectionCount(uint32_t nType) const
+	uint32_t CBaseConnectionMgrImpl::getBaseConnectionCount(const std::string& szType) const
 	{
-		auto iter = this->m_mapBaseConnectionByType.find(nType);
+		auto iter = this->m_mapBaseConnectionByType.find(szType);
 		if (iter == this->m_mapBaseConnectionByType.end())
 			return 0;
 
 		return (uint32_t)iter->second.size();
 	}
 
-	void CBaseConnectionMgrImpl::enumBaseConnection(uint32_t nType, const std::function<bool(CBaseConnection* pBaseConnection)>& callback) const
+	void CBaseConnectionMgrImpl::enumBaseConnection(const std::string& szType, const std::function<bool(CBaseConnection* pBaseConnection)>& callback) const
 	{
 		DebugAst(callback != nullptr);
 
-		auto iter = this->m_mapBaseConnectionByType.find(nType);
+		auto iter = this->m_mapBaseConnectionByType.find(szType);
 		if (iter == this->m_mapBaseConnectionByType.end())
 			return;
 
@@ -193,17 +193,17 @@ namespace core
 		return iter->second;
 	}
 
-	void CBaseConnectionMgrImpl::setBaseConnectionFactory(uint32_t nType, CBaseConnectionFactory* pBaseConnectionFactory)
+	void CBaseConnectionMgrImpl::setBaseConnectionFactory(const std::string& szType, CBaseConnectionFactory* pBaseConnectionFactory)
 	{
 		if (pBaseConnectionFactory == nullptr)
-			this->m_mapBaseConnectionFactory.erase(nType);
+			this->m_mapBaseConnectionFactory.erase(szType);
 		else
-			this->m_mapBaseConnectionFactory[nType] = pBaseConnectionFactory;
+			this->m_mapBaseConnectionFactory[szType] = pBaseConnectionFactory;
 	}
 
-	CBaseConnectionFactory* CBaseConnectionMgrImpl::getBaseConnectionFactory(uint32_t nType) const
+	CBaseConnectionFactory* CBaseConnectionMgrImpl::getBaseConnectionFactory(const std::string& szType) const
 	{
-		auto iter = this->m_mapBaseConnectionFactory.find(nType);
+		auto iter = this->m_mapBaseConnectionFactory.find(szType);
 		if (iter == this->m_mapBaseConnectionFactory.end())
 			return nullptr;
 

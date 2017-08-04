@@ -1,3 +1,5 @@
+#include "libBaseCommon\debug_helper.h"
+
 namespace core
 {
 	template<class T>

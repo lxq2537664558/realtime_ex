@@ -33,17 +33,17 @@ namespace core
 		return this->m_nNextSessionID;
 	}
 
-	bool CTransporter::invoke(CServiceBaseImpl* pServiceBaseImpl, uint64_t nSessionID, EMessageTargetType eFromType, uint64_t nFromID, EMessageTargetType eToType, uint64_t nToID, const google::protobuf::Message* pMessage)
+	bool CTransporter::invoke(CCoreService* pCoreService, uint64_t nSessionID, EMessageTargetType eFromType, uint64_t nFromID, EMessageTargetType eToType, uint64_t nToID, const google::protobuf::Message* pMessage)
 	{
-		DebugAstEx(pMessage != nullptr && pServiceBaseImpl != nullptr, false);
+		DebugAstEx(pMessage != nullptr && pCoreService != nullptr, false);
 
-		CProtobufFactory* pProtobufFactory = pServiceBaseImpl->getProtobufFactory();
+		CProtobufFactory* pProtobufFactory = pCoreService->getServiceBase()->getProtobufFactory();
 		DebugAstEx(pProtobufFactory != nullptr, false);
 		
 		uint32_t nToServiceID = 0;
 		if (eToType == eMTT_Actor)
 		{
-			CActorIDConverter* pActorIDConverter = pServiceBaseImpl->getActorIDConverter();
+			CActorIDConverter* pActorIDConverter = pCoreService->getServiceBase()->getActorIDConverter();
 			DebugAstEx(pActorIDConverter != nullptr, false);
 
 			nToServiceID = pActorIDConverter->convertToServiceID(nToID);
@@ -52,7 +52,7 @@ namespace core
 		else
 		{
 			nToServiceID = (uint32_t)nToID;
-			CServiceIDConverter* pServiceIDConverter = pServiceBaseImpl->getServiceIDConverter();
+			CServiceIDConverter* pServiceIDConverter = pCoreService->getServiceBase()->getServiceIDConverter();
 			if (pServiceIDConverter != nullptr)
 			{
 				nToServiceID = pServiceIDConverter->convert(nToServiceID);
@@ -60,7 +60,7 @@ namespace core
 			}
 		}
 
-		if (!CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->isLocalService(nToServiceID))
+		if (!CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->isLocalService(nToServiceID))
 		{
 			CBaseConnectionOtherNode* pBaseConnectionOtherNode = CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->getBaseConnectionOtherNodeByServiceID(nToServiceID);
 			if (nullptr == pBaseConnectionOtherNode)
@@ -70,7 +70,7 @@ namespace core
 			// Ìî³äcookice
 			request_cookice* pCookice = reinterpret_cast<request_cookice*>(&this->m_szBuf[0]);
 			pCookice->nSessionID = nSessionID;
-			pCookice->nFromServiceID = pServiceBaseImpl->getServiceID();
+			pCookice->nFromServiceID = pCoreService->getServiceID();
 			pCookice->nToServiceID = nToServiceID;
 			pCookice->nFromActorID = 0;
 			pCookice->nToActorID = 0;
@@ -101,7 +101,7 @@ namespace core
 			char* szBuf = new char[sizeof(SMCT_REQUEST)];
 			SMCT_REQUEST* pContext = reinterpret_cast<SMCT_REQUEST*>(szBuf);
 			pContext->nSessionID = nSessionID;
-			pContext->nFromServiceID = pServiceBaseImpl->getServiceID();
+			pContext->nFromServiceID = pCoreService->getServiceID();
 			pContext->nToServiceID = nToServiceID;
 			pContext->nFromActorID = 0;
 			pContext->nToActorID = 0;
@@ -122,21 +122,21 @@ namespace core
 		return true;
 	}
 
-	bool CTransporter::response(CServiceBaseImpl* pServiceBaseImpl, uint32_t nToServiceID, uint64_t nToActorID, uint64_t nSessionID, uint8_t nResult, const google::protobuf::Message* pMessage)
+	bool CTransporter::response(CCoreService* pCoreService, uint32_t nToServiceID, uint64_t nToActorID, uint64_t nSessionID, uint8_t nResult, const google::protobuf::Message* pMessage)
 	{
-		DebugAstEx(pMessage != nullptr && pServiceBaseImpl != nullptr, false);
+		DebugAstEx(pMessage != nullptr && pCoreService != nullptr, false);
 		
-		CProtobufFactory* pProtobufFactory = pServiceBaseImpl->getProtobufFactory();
+		CProtobufFactory* pProtobufFactory = pCoreService->getServiceBase()->getProtobufFactory();
 		DebugAstEx(pProtobufFactory != nullptr, false);
 
-		CServiceIDConverter* pServiceIDConverter = pServiceBaseImpl->getServiceIDConverter();
+		CServiceIDConverter* pServiceIDConverter = pCoreService->getServiceBase()->getServiceIDConverter();
 		if (pServiceIDConverter != nullptr)
 		{
 			nToServiceID = pServiceIDConverter->convert(nToServiceID);
 			DebugAstEx(nToServiceID != 0, false);
 		}
 
-		if (!CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->isLocalService(nToServiceID))
+		if (!CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->isLocalService(nToServiceID))
 		{
 			CBaseConnectionOtherNode* pBaseConnectionOtherNode = CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->getBaseConnectionOtherNodeByServiceID(nToServiceID);
 			if (nullptr == pBaseConnectionOtherNode)
@@ -188,17 +188,17 @@ namespace core
 		return true;
 	}
 
-	bool CTransporter::forward(CServiceBaseImpl* pServiceBaseImpl, EMessageTargetType eType, uint64_t nID, const SClientSessionInfo& sClientSessionInfo, const google::protobuf::Message* pMessage)
+	bool CTransporter::forward(CCoreService* pCoreService, EMessageTargetType eType, uint64_t nID, const SClientSessionInfo& sClientSessionInfo, const google::protobuf::Message* pMessage)
 	{
-		DebugAstEx(pMessage != nullptr && pServiceBaseImpl != nullptr, false);
+		DebugAstEx(pMessage != nullptr && pCoreService != nullptr, false);
 
-		CProtobufFactory* pProtobufFactory = pServiceBaseImpl->getProtobufFactory();
+		CProtobufFactory* pProtobufFactory = pCoreService->getServiceBase()->getProtobufFactory();
 		DebugAstEx(pProtobufFactory != nullptr, false);
 
 		uint32_t nToServiceID = 0;
 		if (eType == eMTT_Actor)
 		{
-			CActorIDConverter* pActorIDConverter = pServiceBaseImpl->getActorIDConverter();
+			CActorIDConverter* pActorIDConverter = pCoreService->getServiceBase()->getActorIDConverter();
 			DebugAstEx(pActorIDConverter != nullptr, false);
 
 			nToServiceID = pActorIDConverter->convertToServiceID(nID);
@@ -207,7 +207,7 @@ namespace core
 		else
 		{
 			nToServiceID = (uint32_t)nID;
-			CServiceIDConverter* pServiceIDConverter = pServiceBaseImpl->getServiceIDConverter();
+			CServiceIDConverter* pServiceIDConverter = pCoreService->getServiceBase()->getServiceIDConverter();
 			if (pServiceIDConverter != nullptr)
 			{
 				nToServiceID = pServiceIDConverter->convert(nToServiceID);
@@ -215,7 +215,7 @@ namespace core
 			}
 		}
 
-		if (!CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->isLocalService(nToServiceID))
+		if (!CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->isLocalService(nToServiceID))
 		{
 			CBaseConnectionOtherNode* pBaseConnectionOtherNode = CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->getBaseConnectionOtherNodeByServiceID(nToServiceID);
 			if (nullptr == pBaseConnectionOtherNode)
@@ -240,7 +240,7 @@ namespace core
 				return false;
 
 			pHeader->nMessageSize = uint16_t(sizeof(message_header) + nDataSize);
-			pHeader->nMessageID = base::hash(pMessage->GetTypeName().c_str());
+			pHeader->nMessageID = _GET_MESSAGE_ID(pMessage->GetTypeName());
 
 			nDataSize += nCookiceLen;
 
@@ -277,7 +277,7 @@ namespace core
 	{
 		DebugAstEx(pData != nullptr, false);
 
-		if (!CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->isLocalService(nToServiceID))
+		if (!CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->isLocalService(nToServiceID))
 		{
 			CBaseConnection* pBaseConnection = CBaseApp::Inst()->getBaseConnectionMgr()->getBaseConnectionByServiceID(nToServiceID);
 			if (nullptr == pBaseConnection)
@@ -297,13 +297,13 @@ namespace core
 		}
 		else
 		{
-			CServiceBaseImpl* pServiceBaseImpl = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBaseByID(nToServiceID);
-			DebugAstEx(pServiceBaseImpl != nullptr, false);
+			CCoreService* pCoreService = CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->getCoreServiceByID(nToServiceID);
+			DebugAstEx(pCoreService != nullptr, false);
 
-			CProtobufFactory* pProtobufFactory = pServiceBaseImpl->getProtobufFactory();
+			CProtobufFactory* pProtobufFactory = pCoreService->getServiceBase()->getProtobufFactory();
 			DebugAstEx(pProtobufFactory != nullptr, false);
 
-			const std::string& szMessageName = pServiceBaseImpl->getForwardMessageName(pData->nMessageID);
+			const std::string& szMessageName = pCoreService->getForwardMessageName(pData->nMessageID);
 			if (szMessageName.empty())
 			{
 				PrintWarning("CTransporter::gate_forward error szMessageName.empty() service_id: %d actor_id: "UINT64FMT" message_id: %d", nToServiceID, nToActorID, pData->nMessageID);
@@ -336,17 +336,17 @@ namespace core
 		return true;
 	}
 
-	bool CTransporter::invoke_a(CServiceBaseImpl* pServiceBaseImpl, uint64_t nSessionID, uint64_t nFromActorID, EMessageTargetType eToType, uint64_t nToID, const google::protobuf::Message* pMessage)
+	bool CTransporter::invoke_a(CCoreService* pCoreService, uint64_t nSessionID, uint64_t nFromActorID, EMessageTargetType eToType, uint64_t nToID, const google::protobuf::Message* pMessage)
 	{
-		DebugAstEx(pServiceBaseImpl != nullptr, false);
+		DebugAstEx(pCoreService != nullptr, false);
 
-		CProtobufFactory* pProtobufFactory = pServiceBaseImpl->getProtobufFactory();
+		CProtobufFactory* pProtobufFactory = pCoreService->getServiceBase()->getProtobufFactory();
 		DebugAstEx(pProtobufFactory != nullptr, false);
 
 		if (eToType == eMTT_Actor)
 		{
-			CActorBaseImpl* pToActorBaseImpl = pServiceBaseImpl->getActorScheduler()->getActorBase(nToID);
-			if (pToActorBaseImpl != nullptr)
+			CCoreActor* pToCoreActor = pCoreService->getActorScheduler()->getCoreActor(nToID);
+			if (pToCoreActor != nullptr)
 			{
 				google::protobuf::Message* pNewMessage = pProtobufFactory->clone_protobuf_message(pMessage);
 				if (nullptr == pNewMessage)
@@ -354,36 +354,36 @@ namespace core
 
 				SActorMessagePacket sActorMessagePacket;
 				sActorMessagePacket.nData = nFromActorID;
-				sActorMessagePacket.nFromServiceID = pServiceBaseImpl->getServiceID();
+				sActorMessagePacket.nFromServiceID = pCoreService->getServiceID();
 				sActorMessagePacket.nSessionID = nSessionID;
 				sActorMessagePacket.nType = eMT_REQUEST;
 				sActorMessagePacket.pMessage = pNewMessage;
 
-				pToActorBaseImpl->getChannel()->send(sActorMessagePacket);
+				pToCoreActor->getChannel()->send(sActorMessagePacket);
 
-				pServiceBaseImpl->getActorScheduler()->addWorkActorBase(pToActorBaseImpl);
+				pCoreService->getActorScheduler()->addWorkCoreActor(pToCoreActor);
 
 				return true;
 			}
 			else
 			{
-				return this->invoke(pServiceBaseImpl, nSessionID, eMTT_Actor, nFromActorID, eMTT_Actor, nToID, pMessage);
+				return this->invoke(pCoreService, nSessionID, eMTT_Actor, nFromActorID, eMTT_Actor, nToID, pMessage);
 			}
 		}
 		else
 		{
-			return this->invoke(pServiceBaseImpl, nSessionID, eMTT_Actor, nFromActorID, eMTT_Service, nToID, pMessage);
+			return this->invoke(pCoreService, nSessionID, eMTT_Actor, nFromActorID, eMTT_Service, nToID, pMessage);
 		}
 	}
 
-	bool CTransporter::send(CServiceBaseImpl* pServiceBaseImpl, uint64_t nSessionID, uint64_t nSocketID, uint32_t nToServiceID, const google::protobuf::Message* pMessage)
+	bool CTransporter::send(CCoreService* pCoreService, uint64_t nSessionID, uint64_t nSocketID, uint32_t nToServiceID, const google::protobuf::Message* pMessage)
 	{
-		DebugAstEx(pMessage != nullptr && pServiceBaseImpl != nullptr, false);
+		DebugAstEx(pMessage != nullptr && pCoreService != nullptr, false);
 		
-		CProtobufFactory* pProtobufFactory = pServiceBaseImpl->getProtobufFactory();
+		CProtobufFactory* pProtobufFactory = pCoreService->getServiceBase()->getProtobufFactory();
 		DebugAstEx(pProtobufFactory != nullptr, false);
 
-		if (!CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->isLocalService(nToServiceID))
+		if (!CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->isLocalService(nToServiceID))
 		{
 			CBaseConnectionOtherNode* pBaseConnectionOtherNode = CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->getBaseConnectionOtherNodeByServiceID(nToServiceID);
 			if (nullptr == pBaseConnectionOtherNode)
@@ -404,7 +404,7 @@ namespace core
 				return false;
 
 			pHeader->nMessageSize = uint16_t(sizeof(message_header) + nDataSize);
-			pHeader->nMessageID = base::hash(pMessage->GetTypeName().c_str());
+			pHeader->nMessageID = _GET_MESSAGE_ID(pMessage->GetTypeName());
 
 			nDataSize += nCookiceLen;
 
@@ -425,7 +425,7 @@ namespace core
 				return false;
 
 			pHeader->nMessageSize = uint16_t(sizeof(message_header) + nDataSize);
-			pHeader->nMessageID = base::hash(pMessage->GetTypeName().c_str());
+			pHeader->nMessageID = _GET_MESSAGE_ID(pMessage->GetTypeName());
 
 			nDataSize += nCookiceLen;
 
@@ -435,17 +435,17 @@ namespace core
 		return true;
 	}
 
-	bool CTransporter::broadcast(CServiceBaseImpl* pServiceBaseImpl, const std::vector<std::pair<uint64_t, uint64_t>>& vecSessionID, uint32_t nToServiceID, const google::protobuf::Message* pMessage)
+	bool CTransporter::broadcast(CCoreService* pCoreService, const std::vector<std::pair<uint64_t, uint64_t>>& vecSessionID, uint32_t nToServiceID, const google::protobuf::Message* pMessage)
 	{
 		if (vecSessionID.empty())
 			return true;
 
-		DebugAstEx(pMessage != nullptr && pServiceBaseImpl != nullptr, false);
+		DebugAstEx(pMessage != nullptr && pCoreService != nullptr, false);
 
-		CProtobufFactory* pProtobufFactory = pServiceBaseImpl->getProtobufFactory();
+		CProtobufFactory* pProtobufFactory = pCoreService->getServiceBase()->getProtobufFactory();
 		DebugAstEx(pProtobufFactory != nullptr, false);
 
-		if (!CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->isLocalService(nToServiceID))
+		if (!CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->isLocalService(nToServiceID))
 		{
 			CBaseConnectionOtherNode* pBaseConnectionOtherNode = CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->getBaseConnectionOtherNodeByServiceID(nToServiceID);
 			if (nullptr == pBaseConnectionOtherNode)
@@ -469,7 +469,7 @@ namespace core
 				return false;
 
 			pHeader->nMessageSize = uint16_t(sizeof(message_header) + nDataSize);
-			pHeader->nMessageID = base::hash(pMessage->GetTypeName().c_str());
+			pHeader->nMessageID = _GET_MESSAGE_ID(pMessage->GetTypeName());
 
 			nDataSize += nCookiceLen;
 
@@ -486,7 +486,7 @@ namespace core
 				return false;
 
 			pHeader->nMessageSize = uint16_t(sizeof(message_header) + nDataSize);
-			pHeader->nMessageID = base::hash(pMessage->GetTypeName().c_str());
+			pHeader->nMessageID = _GET_MESSAGE_ID(pMessage->GetTypeName());
 
 			nDataSize += nCookiceLen;
 

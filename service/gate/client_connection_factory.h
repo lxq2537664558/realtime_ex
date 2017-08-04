@@ -9,5 +9,5 @@ public:
 	CClientConnectionFactory() { }
 	virtual ~CClientConnectionFactory() { }
 
-	virtual core::CBaseConnection*	createBaseConnection(uint32_t nType);
+	virtual core::CBaseConnection*	createBaseConnection(const std::string& szType);
 };

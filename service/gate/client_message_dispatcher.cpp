@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "client_message_dispatcher.h"
-#include "connection_from_client.h"
+#include "gate_connection_from_client.h"
 #include "gate_service.h"
 #include "client_session.h"
 #include "client_session_mgr.h"
@@ -39,20 +39,20 @@ void CClientMessageDispatcher::registerMessageHandler(const std::string& szMessa
 	this->m_mapMessageHandler[nMessageID] = sClientMessageHandler;
 }
 
-void CClientMessageDispatcher::dispatch(CConnectionFromClient* pConnectionFromClient, const void* pData, uint16_t nSize)
+void CClientMessageDispatcher::dispatch(CGateConnectionFromClient* pGateConnectionFromClient, const void* pData, uint16_t nSize)
 {
 	DebugAst(pData != nullptr);
-	DebugAst(pConnectionFromClient != nullptr);
+	DebugAst(pGateConnectionFromClient != nullptr);
 
 	const message_header* pHeader = reinterpret_cast<const message_header*>(pData);
 
 	auto iter = this->m_mapMessageHandler.find(pHeader->nMessageID);
 	if (iter == this->m_mapMessageHandler.end())
 	{
-		CClientSession* pClientSession = this->m_pGateService->getClientSessionMgr()->getSessionBySocketID(pConnectionFromClient->getID());
+		CClientSession* pClientSession = this->m_pGateService->getClientSessionMgr()->getSessionBySocketID(pGateConnectionFromClient->getID());
 		if(pClientSession == nullptr || pClientSession->getState() != eCSS_Normal)
 		{
-			pConnectionFromClient->shutdown(true, "invalid session");
+			pGateConnectionFromClient->shutdown(true, "invalid session");
 			return;
 		}
 
@@ -73,7 +73,7 @@ void CClientMessageDispatcher::dispatch(CConnectionFromClient* pConnectionFromCl
 	ClientCallback& callback = iter->second.callback;
 	DebugAst(callback != nullptr);
 
-	callback(pConnectionFromClient, pMessage);
+	callback(pGateConnectionFromClient, pMessage);
 }
 
 void CClientMessageDispatcher::forward(CClientSession* pClientSession, const message_header* pHeader)

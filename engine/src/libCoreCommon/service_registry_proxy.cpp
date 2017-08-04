@@ -54,7 +54,7 @@ namespace core
 
 		CCoreApp::Inst()->getLogicRunnable()->getBaseConnectionMgr()->addConnectFailCallback("master", std::bind(&CServiceRegistryProxy::onConnectRefuse, this, std::placeholders::_1));
 
-		const std::vector<SServiceBaseInfo>& vecServiceBaseInfo = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBaseInfo();
+		const std::vector<SServiceBaseInfo>& vecServiceBaseInfo = CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->getServiceBaseInfo();
 		for (size_t i = 0; i < vecServiceBaseInfo.size(); ++i)
 		{
 			const SServiceBaseInfo& sServiceBaseInfo = vecServiceBaseInfo[i];
@@ -68,7 +68,7 @@ namespace core
 	{
 		// 一个节点只能有一个gate服务，本节点跟其他服务跟gate之间通过socket连接
 		uint32_t nGateServiceID = 0;
-		const std::vector<SServiceBaseInfo>& vecServiceBaseInfo = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBaseInfo();
+		const std::vector<SServiceBaseInfo>& vecServiceBaseInfo = CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->getServiceBaseInfo();
 		for (size_t i = 0; i < vecServiceBaseInfo.size(); ++i)
 		{
 			const SServiceBaseInfo& sServiceBaseInfo = vecServiceBaseInfo[i];
@@ -114,7 +114,7 @@ namespace core
 			if (sNodeProxyInfo.sNodeBaseInfo.nPort == 0 || sNodeProxyInfo.sNodeBaseInfo.szHost.empty())
 				return;
 
-			CCoreApp::Inst()->getLogicRunnable()->getBaseConnectionMgr()->connect(sNodeProxyInfo.sNodeBaseInfo.szHost, sNodeProxyInfo.sNodeBaseInfo.nPort, eBCT_ConnectionToOtherNode, "", sNodeProxyInfo.sNodeBaseInfo.nSendBufSize, sNodeProxyInfo.sNodeBaseInfo.nRecvBufSize, nullptr);
+			CCoreApp::Inst()->getLogicRunnable()->getBaseConnectionMgr()->connect(sNodeProxyInfo.sNodeBaseInfo.szHost, sNodeProxyInfo.sNodeBaseInfo.nPort, "CBaseConnectionOtherNode", "", sNodeProxyInfo.sNodeBaseInfo.nSendBufSize, sNodeProxyInfo.sNodeBaseInfo.nRecvBufSize, nullptr);
 		});
 
 		for (size_t i = 0; i < vecServiceBaseInfo.size(); ++i)
@@ -192,11 +192,11 @@ namespace core
 		auto iter = this->m_mapServiceName.find(szName);
 		if (iter == this->m_mapServiceName.end())
 		{
-			CServiceBaseImpl* pServiceBaseImpl = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBaseByName(szName);
-			if (pServiceBaseImpl == nullptr)
+			CCoreService* pCoreService = CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->getCoreServiceByName(szName);
+			if (pCoreService == nullptr)
 				return 0;
 
-			return pServiceBaseImpl->getServiceID();
+			return pCoreService->getServiceID();
 		}
 
 		return iter->second;
@@ -207,11 +207,11 @@ namespace core
 		auto iter = this->m_mapServiceProxyInfo.find(nServiceID);
 		if (iter == this->m_mapServiceProxyInfo.end())
 		{
-			CServiceBaseImpl* pServiceBaseImpl = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBaseByID(nServiceID);
-			if (pServiceBaseImpl == nullptr)
+			CCoreService* pCoreService = CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->getCoreServiceByID(nServiceID);
+			if (pCoreService == nullptr)
 				return "";
 
-			return pServiceBaseImpl->getServiceBaseInfo().szType;
+			return pCoreService->getServiceBaseInfo().szType;
 		}
 
 		return iter->second.sServiceBaseInfo.szType;
@@ -222,11 +222,11 @@ namespace core
 		auto iter = this->m_mapServiceProxyInfo.find(nServiceID);
 		if (iter == this->m_mapServiceProxyInfo.end())
 		{
-			CServiceBaseImpl* pServiceBaseImpl = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBaseByID(nServiceID);
-			if (pServiceBaseImpl == nullptr)
+			CCoreService* pCoreService = CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->getCoreServiceByID(nServiceID);
+			if (pCoreService == nullptr)
 				return "";
 
-			return pServiceBaseImpl->getServiceBaseInfo().szName;
+			return pCoreService->getServiceBaseInfo().szName;
 		}
 
 		return iter->second.sServiceBaseInfo.szName;
@@ -373,7 +373,7 @@ namespace core
 			sMasterInfo.bActive = true;
 			char szBuf[256] = { 0 };
 			base::crt::snprintf(szBuf, _countof(szBuf), "master%d", sMasterInfo.nID);
-			CBaseApp::Inst()->getBaseConnectionMgr()->connect(sMasterInfo.szHost, sMasterInfo.nPort, eBCT_ConnectionToMaster, szBuf, 10 * 1024, 10 * 1024, nullptr);;
+			CBaseApp::Inst()->getBaseConnectionMgr()->connect(sMasterInfo.szHost, sMasterInfo.nPort, "CBaseConnectionToMaster", szBuf, 10 * 1024, 10 * 1024, nullptr);;
 		}
 	}
 

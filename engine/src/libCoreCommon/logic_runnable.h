@@ -6,7 +6,7 @@
 #include "base_connection_mgr.h"
 #include "base_connection_mgr_impl.h"
 #include "node_connection_factory.h"
-#include "service_base_mgr.h"
+#include "core_service_mgr.h"
 #include "transporter.h"
 #include "service_registry_proxy.h"
 
@@ -26,7 +26,7 @@ namespace core
 		CLogicMessageQueue*		getMessageQueue() const;
 		CBaseConnectionMgr*		getBaseConnectionMgr() const;
 		CBaseConnectionMgrImpl*	getBaseConnectionMgrImpl() const;
-		CServiceBaseMgr*		getServiceBaseMgr() const;
+		CCoreServiceMgr*		getCoreServiceMgr() const;
 		CTransporter*			getTransporter() const;
 		CServiceRegistryProxy*	getServiceRegistryProxy() const;
 
@@ -47,10 +47,12 @@ namespace core
 		CBaseConnectionMgr*							m_pBaseConnectionMgr;
 		CBaseConnectionMgrImpl*						m_pBaseConnectionMgrImpl;
 		CLogicMessageQueue*							m_pMessageQueue;
-		CServiceBaseMgr*							m_pServiceBaseMgr;
+		CCoreServiceMgr*							m_pCoreServiceMgr;
 		CTransporter*								m_pTransporter;
 		CServiceRegistryProxy*						m_pServiceRegistryProxy;
 		CNodeConnectionFactory*						m_pNodeConnectionFactory;
 		base::CCircleQueue<SMessagePacket, false>	m_insideQueue;
+
+		int64_t										m_nTotalSamplingTime;
 	};
 }

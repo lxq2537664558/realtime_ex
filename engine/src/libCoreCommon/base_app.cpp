@@ -21,8 +21,6 @@
 
 #include "base_app.h"
 #include "core_app.h"
-#include "core_connection_mgr.h"
-#include "service_base_mgr.h"
 
 // 放这里为了调试或者看dump的时候方便
 core::CBaseApp* g_pBaseApp = nullptr;
@@ -76,11 +74,11 @@ namespace core
 
 	CServiceBase* CBaseApp::getServiceBase(uint32_t nServiceID) const
 	{
-		CServiceBaseImpl* pServiceBaseImpl = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBaseByID(nServiceID);
-		if (pServiceBaseImpl == nullptr)
+		CCoreService* pCoreService = CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->getCoreServiceByID(nServiceID);
+		if (pCoreService == nullptr)
 			return nullptr;
 
-		return pServiceBaseImpl->getServiceBase();
+		return pCoreService->getServiceBase();
 	}
 
 	uint32_t CBaseApp::getServiceID(const std::string& szName) const
@@ -137,7 +135,7 @@ namespace core
 
 	bool CBaseApp::isLocalService(uint32_t nServiceID) const
 	{
-		return CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->isLocalService(nServiceID);
+		return CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->isLocalService(nServiceID);
 	}
 
 	const std::vector<uint32_t>& CBaseApp::getServiceIDByTypeName(const std::string& szName) const

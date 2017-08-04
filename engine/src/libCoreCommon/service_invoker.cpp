@@ -25,14 +25,14 @@ namespace core
 	{
 		DebugAstEx(pMessage != nullptr, false);
 
-		return CCoreApp::Inst()->getLogicRunnable()->getTransporter()->invoke(this->m_pServiceBase->getServiceBaseImpl(), 0, eMTT_Service, this->m_pServiceBase->getServiceID(), eType, nID, pMessage);
+		return CCoreApp::Inst()->getLogicRunnable()->getTransporter()->invoke(this->m_pServiceBase->m_pCoreService, 0, eMTT_Service, this->m_pServiceBase->getServiceID(), eType, nID, pMessage);
 	}
 
 	void CServiceInvoker::response(const SSessionInfo& sSessionInfo, const google::protobuf::Message* pMessage)
 	{
 		DebugAst(pMessage != nullptr);
 
-		bool bRet = CCoreApp::Inst()->getLogicRunnable()->getTransporter()->response(this->m_pServiceBase->getServiceBaseImpl(), sSessionInfo.nFromServiceID, sSessionInfo.nFromActorID, sSessionInfo.nSessionID, eRRT_OK, pMessage);
+		bool bRet = CCoreApp::Inst()->getLogicRunnable()->getTransporter()->response(this->m_pServiceBase->m_pCoreService, sSessionInfo.nFromServiceID, sSessionInfo.nFromActorID, sSessionInfo.nSessionID, eRRT_OK, pMessage);
 		DebugAst(bRet);
 	}
 
@@ -40,12 +40,12 @@ namespace core
 	{
 		DebugAstEx(pMessage != nullptr, false);
 
-		return CCoreApp::Inst()->getLogicRunnable()->getTransporter()->send(this->m_pServiceBase->getServiceBaseImpl(), sClientSessionInfo.nSessionID, sClientSessionInfo.nSocketID, sClientSessionInfo.nGateServiceID, pMessage);
+		return CCoreApp::Inst()->getLogicRunnable()->getTransporter()->send(this->m_pServiceBase->m_pCoreService, sClientSessionInfo.nSessionID, sClientSessionInfo.nSocketID, sClientSessionInfo.nGateServiceID, pMessage);
 	}
 
-	bool CServiceInvoker::send(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, google::protobuf::Message* pMessage)
+	bool CServiceInvoker::send(const std::string& szServiceType, const std::string& szServiceSelectorType, uint64_t nServiceSelectorContext, google::protobuf::Message* pMessage)
 	{
-		if (nServiceSelectorType == eSST_Broadcast)
+		if (szServiceSelectorType == "broadcast")
 		{
 			DebugAstEx(pMessage != nullptr, false);
 
@@ -58,10 +58,10 @@ namespace core
 			return true;
 		}
 
-		CServiceSelector* pServiceSelector = this->m_pServiceBase->getServiceSelector(nServiceSelectorType);
+		CServiceSelector* pServiceSelector = this->m_pServiceBase->getServiceSelector(szServiceSelectorType);
 		DebugAstEx(pServiceSelector != nullptr, false);
 
-		uint32_t nServiceID = pServiceSelector->select(szServiceType, nServiceSelectorContext);
+		uint32_t nServiceID = pServiceSelector->select(szServiceType, szServiceSelectorType, nServiceSelectorContext);
 		return this->send(eMTT_Service, nServiceID, pMessage);
 	}
 
@@ -78,7 +78,7 @@ namespace core
 		bool bRet = true;
 		for (auto iter = mapClientSessionInfo.begin(); iter != mapClientSessionInfo.end(); ++iter)
 		{
-			if (!CCoreApp::Inst()->getLogicRunnable()->getTransporter()->broadcast(this->m_pServiceBase->getServiceBaseImpl(), iter->second, iter->first, pMessage))
+			if (!CCoreApp::Inst()->getLogicRunnable()->getTransporter()->broadcast(this->m_pServiceBase->m_pCoreService, iter->second, iter->first, pMessage))
 				bRet = false;
 		}
 
@@ -88,7 +88,7 @@ namespace core
 	bool CServiceInvoker::invoke(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, const std::function<void(std::shared_ptr<google::protobuf::Message>&, uint32_t)>& callback)
 	{
 		uint64_t nSessionID = CCoreApp::Inst()->getLogicRunnable()->getTransporter()->genSessionID();
-		if (!CCoreApp::Inst()->getLogicRunnable()->getTransporter()->invoke(this->m_pServiceBase->getServiceBaseImpl(), nSessionID, eMTT_Service, this->m_pServiceBase->getServiceID(), eType, nID, pMessage))
+		if (!CCoreApp::Inst()->getLogicRunnable()->getTransporter()->invoke(this->m_pServiceBase->m_pCoreService, nSessionID, eMTT_Service, this->m_pServiceBase->getServiceID(), eType, nID, pMessage))
 			return false;
 
 		SPendingResponseInfo* pPendingResponseInfo = CCoreApp::Inst()->getLogicRunnable()->getTransporter()->addPendingResponseInfo(nSessionID, nID, pMessage->GetTypeName(), callback);
@@ -99,7 +99,7 @@ namespace core
 
 	bool CServiceInvoker::forward(EMessageTargetType eType, uint64_t nID, const SClientSessionInfo& sClientSessionInfo, const google::protobuf::Message* pMessage)
 	{
-		return CCoreApp::Inst()->getLogicRunnable()->getTransporter()->forward(this->m_pServiceBase->getServiceBaseImpl(), eType, nID, sClientSessionInfo, pMessage);
+		return CCoreApp::Inst()->getLogicRunnable()->getTransporter()->forward(this->m_pServiceBase->m_pCoreService, eType, nID, sClientSessionInfo, pMessage);
 	}
 
 	bool CServiceInvoker::gate_forward(uint64_t nSessionID, uint64_t nSocketID, uint32_t nToServiceID, uint64_t nToActorID, const message_header* pData)

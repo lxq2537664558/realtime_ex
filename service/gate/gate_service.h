@@ -9,19 +9,20 @@
 class CGateService :
 	public core::CServiceBase
 {
-	DECLARE_OBJECT(CGateService)
-
 public:
 	CGateService();
 	virtual ~CGateService();
 
-	CClientSessionMgr*			getClientSessionMgr() const;
-	CClientMessageDispatcher*	getClientMessageDispatcher() const;
+	CClientSessionMgr*				getClientSessionMgr() const;
+	CClientMessageDispatcher*		getClientMessageDispatcher() const;
+	virtual core::CProtobufFactory*	getProtobufFactory() const;
+	
+	virtual void					release();
 
 private:
-	virtual bool				onInit();
-	virtual void				onFrame();
-	virtual void				onQuit();
+	virtual bool					onInit();
+	virtual void					onFrame();
+	virtual void					onQuit();
 
 private:
 	CClientConnectionFactory*		m_pClientConnectionFactory;

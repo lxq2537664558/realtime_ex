@@ -26,15 +26,15 @@ namespace core
 		~CCoreConnectionMgr();
 
 		bool				init(uint32_t nMaxConnectionCount);
-		bool				connect(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser);
-		bool				listen(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser);
+		bool				connect(const std::string& szHost, uint16_t nPort, const std::string& szType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser);
+		bool				listen(const std::string& szHost, uint16_t nPort, const std::string& szType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser);
 		void				update(uint32_t nTime);
 
-		void				broadcast(uint32_t nType, uint8_t nMessageType, const void* pData, uint16_t nSize, uint64_t* pExcludeID, uint16_t nExcludeIDCount);
+		void				broadcast(const std::string& szType, uint8_t nMessageType, const void* pData, uint16_t nSize, uint64_t* pExcludeID, uint16_t nExcludeIDCount);
 		
 		void				destroyCoreConnection(uint64_t nSocketID);
 		CCoreConnection*	getCoreConnectionBySocketID(uint64_t nID) const;
-		uint32_t			getCoreConnectionCount(uint32_t nType) const;
+		uint32_t			getCoreConnectionCount(const std::string& szType) const;
 
 		void				wakeup();
 
@@ -43,13 +43,12 @@ namespace core
 			public base::INetAccepterHandler
 		{
 			std::string			szContext;
-			uint32_t			nType;
+			std::string			szType;
 			CCoreConnectionMgr*	pCoreConnectionMgr;
 			MessageParser		messageParser;
 
 			virtual base::INetConnecterHandler* onAccept( base::INetConnecter* pNetConnecter );
 		};
-
 
 		/**
 		@brief: 主动发起连接时等待连接建立的处理器，这个设计主要为了屏蔽逻辑层在发起连接请求到真正连接成功会有一段时间这个问题
@@ -58,7 +57,7 @@ namespace core
 			public base::INetConnecterHandler
 		{
 			std::string			szContext;
-			uint32_t			nType;
+			std::string			szType;
 			CCoreConnectionMgr*	pCoreConnectionMgr;
 			MessageParser		messageParser;
 
@@ -69,19 +68,19 @@ namespace core
 			virtual void		onConnectFail();
 		};
 
-		base::INetEventLoop*							m_pNetEventLoop;
-		std::vector<base::INetAccepterHandler*>			m_vecNetAccepterHandler;
-		std::list<SNetActiveWaitConnecterHandler*>		m_listActiveNetWaitConnecterHandler;
+		base::INetEventLoop*								m_pNetEventLoop;
+		std::vector<base::INetAccepterHandler*>				m_vecNetAccepterHandler;
+		std::list<SNetActiveWaitConnecterHandler*>			m_listActiveNetWaitConnecterHandler;
 
-		std::map<uint32_t, std::list<CCoreConnection*>>	m_mapCoreConnectionByTypeID;
-		std::map<uint64_t, CCoreConnection*>			m_mapCoreConnectionByID;
-		uint64_t										m_nNextCoreConnectionID;
+		std::map<std::string, std::list<CCoreConnection*>>	m_mapCoreConnectionByTypeID;
+		std::map<uint64_t, CCoreConnection*>				m_mapCoreConnectionByID;
+		uint64_t											m_nNextCoreConnectionID;
 		
 	private:
 		base::INetConnecterHandler*	onAccept( SNetAccepterHandler* pNetAccepterHandler, base::INetConnecter* pNetConnecter );
 		void						onConnect( SNetActiveWaitConnecterHandler* pNetActiveWaitConnecterHandler );
 		void						delActiveWaitConnecterHandler( SNetActiveWaitConnecterHandler* pWaitActiveConnecterHandler );
 
-		CCoreConnection*			createCoreConnection(uint32_t nType, const std::string& szContext, const MessageParser& messageParser);
+		CCoreConnection*			createCoreConnection(const std::string& szType, const std::string& szContext, const MessageParser& messageParser);
 	};
 }

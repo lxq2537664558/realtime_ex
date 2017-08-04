@@ -92,7 +92,7 @@ bool CServiceRegistry::addNode(CConnectionFromNode* pConnectionFromNode, const S
 
 	std::vector<uint64_t> vecExcludeID;
 	vecExcludeID.push_back(pConnectionFromNode->getID());
-	CBaseApp::Inst()->getBaseConnectionMgr()->broadcast(eBCT_ConnectionFromService, eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize(), &vecExcludeID);
+	CBaseApp::Inst()->getBaseConnectionMgr()->broadcast("CConnectionFromNode", eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize(), &vecExcludeID);
 	
 	PrintInfo("register node node_id: %d node_name: %s local addr: %s %d remote addr: %s %d", sNodeBaseInfo.nID, sNodeBaseInfo.szName.c_str(), pConnectionFromNode->getLocalAddr().szHost, pConnectionFromNode->getLocalAddr().nPort, pConnectionFromNode->getRemoteAddr().szHost, pConnectionFromNode->getRemoteAddr().nPort);
 
@@ -117,7 +117,7 @@ void CServiceRegistry::delNode(uint32_t nNodeID)
 
 	netMsg.pack(writeBuf);
 
-	CBaseApp::Inst()->getBaseConnectionMgr()->broadcast(eBCT_ConnectionFromService, eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize(), nullptr);
+	CBaseApp::Inst()->getBaseConnectionMgr()->broadcast("CConnectionFromNode", eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize(), nullptr);
 
 	for (auto iter = sNodeInfo.vecServiceBaseInfo.begin(); iter != sNodeInfo.vecServiceBaseInfo.end(); ++iter)
 	{

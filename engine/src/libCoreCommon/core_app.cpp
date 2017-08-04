@@ -30,7 +30,6 @@
 #include "class_info_mgr.h"
 
 #include "tinyxml2/tinyxml2.h"
-#include "service_base_impl.h"
 
 #define _DEFAULT_HEARTBEAT_LIMIT	3
 #define _DEFAULT_HEARTBEAT_TIME		10

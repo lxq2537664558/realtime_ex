@@ -24,11 +24,4 @@ namespace core
 		std::function<void(std::shared_ptr<google::protobuf::Message>, uint32_t)>
 					callback;
 	};
-
-	enum EBaseConnectionType
-	{
-		eBCT_ConnectionToMaster			= 10,
-		eBCT_ConnectionFromOtherNode	= 11,
-		eBCT_ConnectionToOtherNode		= 12,
-	};
 }

@@ -66,9 +66,6 @@
     <ClInclude Include="coroutine_mgr.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="actor_base_impl.h">
-      <Filter>src\actor</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\inc\libCoreCommon\base_app.h">
       <Filter>inc\framework</Filter>
     </ClInclude>
@@ -150,12 +147,6 @@
     <ClInclude Include="transporter.h">
       <Filter>src\framework</Filter>
     </ClInclude>
-    <ClInclude Include="service_base_impl.h">
-      <Filter>src\service_base</Filter>
-    </ClInclude>
-    <ClInclude Include="service_base_mgr.h">
-      <Filter>src\service_base</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\inc\libCoreCommon\service_id_converter.h">
       <Filter>inc\service_base</Filter>
     </ClInclude>
@@ -183,6 +174,18 @@
     <ClInclude Include="hash_service_selector.h">
       <Filter>src\service_base</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreCommon\actor_factory.h">
+      <Filter>inc\actor</Filter>
+    </ClInclude>
+    <ClInclude Include="core_service.h">
+      <Filter>src\service_base</Filter>
+    </ClInclude>
+    <ClInclude Include="core_service_mgr.h">
+      <Filter>src\service_base</Filter>
+    </ClInclude>
+    <ClInclude Include="core_actor.h">
+      <Filter>src\actor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="fix_memory_pool.cpp">
@@ -205,9 +208,6 @@
     </ClCompile>
     <ClCompile Include="coroutine_mgr.cpp">
       <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="actor_base_impl.cpp">
-      <Filter>src\actor</Filter>
     </ClCompile>
     <ClCompile Include="actor_base.cpp">
       <Filter>src\actor</Filter>
@@ -275,12 +275,6 @@
     <ClCompile Include="service_invoker.cpp">
       <Filter>src\service_base</Filter>
     </ClCompile>
-    <ClCompile Include="service_base_impl.cpp">
-      <Filter>src\service_base</Filter>
-    </ClCompile>
-    <ClCompile Include="service_base_mgr.cpp">
-      <Filter>src\service_base</Filter>
-    </ClCompile>
     <ClCompile Include="service_registry_proxy.cpp">
       <Filter>src\framework</Filter>
     </ClCompile>
@@ -298,6 +292,15 @@
     </ClCompile>
     <ClCompile Include="hash_service_selector.cpp">
       <Filter>src\service_base</Filter>
+    </ClCompile>
+    <ClCompile Include="core_service_mgr.cpp">
+      <Filter>src\service_base</Filter>
+    </ClCompile>
+    <ClCompile Include="core_service.cpp">
+      <Filter>src\service_base</Filter>
+    </ClCompile>
+    <ClCompile Include="core_actor.cpp">
+      <Filter>src\actor</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

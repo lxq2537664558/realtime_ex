@@ -1,35 +1,35 @@
 #pragma once
 
-#include "actor_base_impl.h"
+#include "core_actor.h"
 #include "service_base.h"
 
 #include <map>
 
 namespace core
 {
-	class CServiceBaseImpl;
+	class CCoreService;
 	class CActorScheduler
 	{
 	public:
-		CActorScheduler(CServiceBaseImpl* pServiceBaseImpl);
+		CActorScheduler(CCoreService* pCoreService);
 		~CActorScheduler();
 
-		bool				init();
+		bool			init();
 
-		CActorBaseImpl*		createActorBase(uint64_t nActorID, CActorBase* pActorBase);
-		void				destroyActorBase(CActorBaseImpl* pActorBase);
+		CCoreActor*		createCoreActor(uint64_t nActorID, CActorBase* pActorBase);
+		void			destroyCoreActor(CCoreActor* pCoreActor);
 
-		CActorBaseImpl*		getActorBase(uint64_t nID) const;
+		CCoreActor*		getCoreActor(uint64_t nID) const;
 
-		void				addWorkActorBase(CActorBaseImpl* pActorBase);
-		void				addPendingActorBase(CActorBaseImpl* pActorBase);
+		void			addWorkCoreActor(CCoreActor* pCoreActor);
+		void			addPendingCoreActor(CCoreActor* pCoreActor);
 
-		void				run();
-	
+		void			run();
+
 	private:
-		CServiceBaseImpl*						m_pServiceBaseImpl;
-		std::map<uint64_t, CActorBaseImpl*>		m_mapActorBase;
-		std::map<uint64_t, CActorBaseImpl*>		m_mapWorkActorBase;
-		std::map<uint64_t, CActorBaseImpl*>		m_mapPendingActorBase;
+		CCoreService*					m_pCoreService;
+		std::map<uint64_t, CCoreActor*>	m_mapCoreActor;
+		std::map<uint64_t, CCoreActor*>	m_mapWorkCoreActor;
+		std::map<uint64_t, CCoreActor*>	m_mapPendingCoreActor;
 	};
 }

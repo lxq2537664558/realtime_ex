@@ -10,8 +10,8 @@
 	
 	<!--节点信息-->
 	<node_info node_id = "1" node_name = "test_node_1">
-		<service_info service_id = "1" service_name = "test_service_1" service_type = "test_service" lib_name = "test_service1" class_name = "CTestService1"/>
-		<service_info service_id = "2" service_name = "test_service_2" service_type = "test_service" lib_name = "test_service2" class_name = "CTestService2"/>
+		<service_info service_id = "1" service_name = "test_service_1" service_type = "test_service" lib_name = "test_service1"/>
+		<service_info service_id = "2" service_name = "test_service_2" service_type = "test_service" lib_name = "test_service2"/>
 	</node_info>
 	
 	<!--本节点需要连接的服务-->

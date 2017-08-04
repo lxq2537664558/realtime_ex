@@ -115,7 +115,7 @@ namespace base
 		第一种情况是socket连接出现错误（不要问为什么，这是系统规定的，可读可写时候有可能是connect连接成功后远程主机断开了连接close(socket)），
 		第二种情况是connect连接成功，socket读缓冲区得到了远程主机发送的数据。需要通过connect连接后返回给errno的值来进行判定，或者通过调用 getsockopt(sockfd,SOL_SOCKET,SO_ERROR,&error,&len); 函数返回值来判断是否发生错误
 		*/
-		if (this->m_eConnecterType == eNCT_Initiative)
+		if (this->m_eConnecterMode == eNCM_Initiative)
 		{
 			int32_t err;
 			socklen_t len = sizeof(err);
@@ -245,7 +245,7 @@ namespace base
 	}
 
 	CNetConnecter::CNetConnecter()
-		: m_eConnecterType(eNCT_Unknown)
+		: m_eConnecterMode(eNCM_Unknown)
 		, m_eConnecterState(eNCS_Disconnected)
 		, m_nSendConnecterIndex(_Invalid_SendConnecterIndex)
 		, m_nFlag(0)
@@ -313,7 +313,7 @@ namespace base
 			case NW_EINTR:
 			case NW_EISCONN:
 				// 这个由事件循环回调可写事件通知连接建立
-				this->m_eConnecterType = eNCT_Initiative;
+				this->m_eConnecterMode = eNCM_Initiative;
 				this->m_eConnecterState = eNCS_Connecting;
 
 				this->m_pNetEventLoop->addSocket(this);
@@ -327,7 +327,7 @@ namespace base
 		}
 		else
 		{
-			this->m_eConnecterType = eNCT_Initiative;
+			this->m_eConnecterMode = eNCM_Initiative;
 			this->m_eConnecterState = eNCS_Connected;
 			this->m_pNetEventLoop->addSocket(this);
 			this->onConnect();
@@ -448,9 +448,9 @@ namespace base
 		return this->m_sRemoteAddr;
 	}
 
-	ENetConnecterType CNetConnecter::getConnecterType() const
+	ENetConnecterMode CNetConnecter::getConnecterMode() const
 	{
-		return this->m_eConnecterType;
+		return this->m_eConnecterMode;
 	}
 
 	ENetConnecterState CNetConnecter::getConnecterState() const
@@ -473,9 +473,9 @@ namespace base
 		return CNetSocket::setNoDelay(bEnable);
 	}
 
-	void CNetConnecter::setConnecterType(ENetConnecterType eConnecterType)
+	void CNetConnecter::setConnecterMode(ENetConnecterMode eConnecterMode)
 	{
-		this->m_eConnecterType = eConnecterType;
+		this->m_eConnecterMode = eConnecterMode;
 	}
 
 	void CNetConnecter::setConnecterState(ENetConnecterState eConnecterState)

@@ -34,27 +34,27 @@ namespace core
 	}
 
 	template<class T>
-	bool CServiceInvoker::async_call(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, const std::function<void(const T*, uint32_t)>& callback)
+	bool CServiceInvoker::async_call(const std::string& szServiceType, const std::string& szServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, const std::function<void(const T*, uint32_t)>& callback)
 	{
-		DebugAstEx(nServiceSelectorType != eSST_Broadcast, false);
+		DebugAstEx(szServiceSelectorType != "broadcast", false);
 
-		CServiceSelector* pServiceSelector = this->m_pServiceBase->getServiceSelector(nServiceSelectorType);
+		CServiceSelector* pServiceSelector = this->m_pServiceBase->getServiceSelector(szServiceSelectorType);
 		DebugAstEx(pServiceSelector != nullptr, false);
 
-		uint32_t nServiceID = pServiceSelector->select(szServiceType, nServiceSelectorContext);
+		uint32_t nServiceID = pServiceSelector->select(szServiceType, szServiceSelectorType, nServiceSelectorContext);
 
 		return this->async_call(eMTT_Service, nServiceID, pMessage, callback);
 	}
 
 	template<class T>
-	bool CServiceInvoker::async_call(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, CFuture<T>& sFuture)
+	bool CServiceInvoker::async_call(const std::string& szServiceType, const std::string& szServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, CFuture<T>& sFuture)
 	{
-		DebugAstEx(nServiceSelectorType != eSST_Broadcast, false);
+		DebugAstEx(szServiceSelectorType != "broadcast", false);
 
-		CServiceSelector* pServiceSelector = this->m_pServiceBase->getServiceSelector(nServiceSelectorType);
+		CServiceSelector* pServiceSelector = this->m_pServiceBase->getServiceSelector(szServiceSelectorType);
 		DebugAstEx(pServiceSelector != nullptr, false);
 
-		uint32_t nServiceID = pServiceSelector->select(szServiceType, nServiceSelectorContext);
+		uint32_t nServiceID = pServiceSelector->select(szServiceType, szServiceSelectorType, nServiceSelectorContext);
 
 		return this->async_call(eMTT_Service, nServiceID, pMessage, sFuture);
 	}

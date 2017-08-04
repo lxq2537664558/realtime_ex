@@ -8,16 +8,16 @@
 
 namespace core
 {
-	class CServiceBaseImpl;
+	class CCoreService;
 	class CMessageDispatcher
 	{
 	public:
-		CMessageDispatcher(CServiceBaseImpl* pServiceBaseImpl);
+		CMessageDispatcher(CCoreService* pCoreService);
 		~CMessageDispatcher();
 
 		void dispatch(uint32_t nFromNodeID, uint8_t nMessageType, const void* pContext);
 
 	private:
-		CServiceBaseImpl*	m_pServiceBaseImpl;
+		CCoreService*	m_pCoreService;
 	};
 }

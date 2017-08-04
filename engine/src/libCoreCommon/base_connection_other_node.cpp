@@ -26,12 +26,12 @@ namespace core
 
 	void CBaseConnectionOtherNode::onConnect()
 	{
-		if (this->getType() == eBCT_ConnectionToOtherNode)
+		if (this->getMode() == base::eNCM_Initiative)
 		{
 			// 同步节点名字
 			smt_notify_node_base_info netMsg;
 			netMsg.sNodeBaseInfo = CCoreApp::Inst()->getNodeBaseInfo();
-			netMsg.vecServiceBaseInfo = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBaseInfo();
+			netMsg.vecServiceBaseInfo = CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->getServiceBaseInfo();
 			base::CWriteBuf& writeBuf = CCoreApp::Inst()->getWriteBuf();
 			netMsg.pack(writeBuf);
 
@@ -44,7 +44,7 @@ namespace core
 		if (this->getNodeID() != 0)
 		{
 			CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->delBaseConnectionOtherNodeByNodeID(this->getNodeID());
-			const std::vector<CServiceBaseImpl*>& vecServiceBase = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBase();
+			const std::vector<CCoreService*>& vecServiceBase = CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->getCoreService();
 			for (size_t k = 0; k < vecServiceBase.size(); ++k)
 			{
 				auto& callback = vecServiceBase[k]->getServiceDisconnectCallback();
@@ -93,7 +93,7 @@ namespace core
 				netMsg1.pack(writeBuf);
 				this->send(eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
 
-				const std::vector<CServiceBaseImpl*>& vecServiceBase = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBase();
+				const std::vector<CCoreService*>& vecServiceBase = CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->getCoreService();
 				for (size_t k = 0; k < vecServiceBase.size(); ++k)
 				{
 					auto& callback = vecServiceBase[k]->getServiceConnectCallback();
@@ -122,7 +122,7 @@ namespace core
 				}
 
 				this->m_nNodeID = netMsg.nNodeID;
-				const std::vector<CServiceBaseImpl*>& vecServiceBase = CCoreApp::Inst()->getLogicRunnable()->getServiceBaseMgr()->getServiceBase();
+				const std::vector<CCoreService*>& vecServiceBase = CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->getCoreService();
 				for (size_t k = 0; k < vecServiceBase.size(); ++k)
 				{
 					auto& callback = vecServiceBase[k]->getServiceConnectCallback();

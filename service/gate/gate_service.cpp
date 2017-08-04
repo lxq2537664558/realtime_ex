@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "gate_service.h"
-#include "connection_from_client.h"
+#include "gate_connection_from_client.h"
 
 #include "libCoreCommon\base_app.h"
 #include "libCoreCommon\base_connection_mgr.h"
@@ -8,8 +8,6 @@
 #include "tinyxml2\tinyxml2.h"
 
 using namespace core;
-
-DEFINE_OBJECT(CGateService, 1);
 
 CGateService::CGateService()
 	: m_pClientConnectionFactory(nullptr)
@@ -37,10 +35,10 @@ bool CGateService::onInit()
 	this->m_pClientSessionMgr = new CClientSessionMgr(this);
 
 	this->m_pClientConnectionFactory = new CClientConnectionFactory();
-	CBaseApp::Inst()->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionFromClient, this->m_pClientConnectionFactory);
-	this->m_pDefaultProtobufFactory = new CDefaultProtobufFactory();
-	this->setProtobufFactory(this->m_pDefaultProtobufFactory);
+	CBaseApp::Inst()->getBaseConnectionMgr()->setBaseConnectionFactory("CGateConnectionFromClient", this->m_pClientConnectionFactory);
 
+	this->m_pDefaultProtobufFactory = new CDefaultProtobufFactory();
+	
 	tinyxml2::XMLDocument* pConfigXML = new tinyxml2::XMLDocument();
 	if (pConfigXML->LoadFile(this->getConfigFileName().c_str()) != tinyxml2::XML_SUCCESS)
 	{
@@ -66,7 +64,7 @@ bool CGateService::onInit()
 	base::crt::snprintf(szBuf, _countof(szBuf), "%d", this->getServiceID());
 
 	// 启动客户端连接
-	CBaseApp::Inst()->getBaseConnectionMgr()->listen(szHost, nPort, eBCT_ConnectionFromClient, szBuf, nSendBufSize, nRecvBufSize, default_client_message_parser);
+	CBaseApp::Inst()->getBaseConnectionMgr()->listen(szHost, nPort, "CGateConnectionFromClient", szBuf, nSendBufSize, nRecvBufSize, default_client_message_parser);
 
 	SAFE_DELETE(pConfigXML);
 
@@ -95,28 +93,17 @@ CClientMessageDispatcher* CGateService::getClientMessageDispatcher() const
 	return this->m_pClientMessageDispatcher;
 }
 
-#ifdef _WIN32
-
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
+void CGateService::release()
 {
-	switch (fdwReason)
-	{
-	case DLL_PROCESS_ATTACH:
-		CGateService::registerClassInfo();
-		break;
-
-	case DLL_THREAD_ATTACH:
-
-		break;
-
-	case DLL_THREAD_DETACH:
-
-		break;
-
-	case DLL_PROCESS_DETACH:
-
-		break;
-	}
-	return TRUE;
+	delete this;
 }
-#endif
+
+CProtobufFactory* CGateService::getProtobufFactory() const
+{
+	return this->m_pDefaultProtobufFactory;
+}
+
+extern "C" __declspec(dllexport) CServiceBase* createServiceBase()
+{
+	return new CGateService();
+}

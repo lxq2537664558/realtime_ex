@@ -76,7 +76,7 @@ namespace core
 	{
 		DebugAstEx(pNetConnecter != nullptr && pNetAccepterHandler != nullptr, nullptr);
 
-		CCoreConnection* pCoreConnection = this->createCoreConnection(pNetAccepterHandler->nType, pNetAccepterHandler->szContext, pNetAccepterHandler->messageParser);
+		CCoreConnection* pCoreConnection = this->createCoreConnection(pNetAccepterHandler->szType, pNetAccepterHandler->szContext, pNetAccepterHandler->messageParser);
 		DebugAstEx(nullptr != pCoreConnection, nullptr);
 
 		return pCoreConnection;
@@ -86,7 +86,7 @@ namespace core
 	{
 		DebugAst(pNetActiveWaitConnecterHandler != nullptr && pNetActiveWaitConnecterHandler->getNetConnecter() != nullptr);
 
-		CCoreConnection* pCoreConnection = this->createCoreConnection(pNetActiveWaitConnecterHandler->nType, pNetActiveWaitConnecterHandler->szContext, pNetActiveWaitConnecterHandler->messageParser);
+		CCoreConnection* pCoreConnection = this->createCoreConnection(pNetActiveWaitConnecterHandler->szType, pNetActiveWaitConnecterHandler->szContext, pNetActiveWaitConnecterHandler->messageParser);
 		if (nullptr == pCoreConnection)
 			return;
 
@@ -104,12 +104,12 @@ namespace core
 		SAFE_DELETE(pWaitActiveConnecterHandler);
 	}
 
-	bool CCoreConnectionMgr::connect(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser)
+	bool CCoreConnectionMgr::connect(const std::string& szHost, uint16_t nPort, const std::string& szType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser)
 	{
-		PrintInfo("start connect host: %s  port: %u type: %u context: %s", szHost.c_str(), nPort, nType, szContext.c_str());
+		PrintInfo("start connect host: %s  port: %u type: %s context: %s", szHost.c_str(), nPort, szType.c_str(), szContext.c_str());
 		SNetActiveWaitConnecterHandler* pWaitActiveConnecterHandler = new SNetActiveWaitConnecterHandler();
 		pWaitActiveConnecterHandler->szContext = szContext;
-		pWaitActiveConnecterHandler->nType = nType;
+		pWaitActiveConnecterHandler->szType = szType;
 		pWaitActiveConnecterHandler->pCoreConnectionMgr = this;
 		pWaitActiveConnecterHandler->messageParser = messageParser;
 
@@ -126,11 +126,11 @@ namespace core
 		return true;
 	}
 
-	bool CCoreConnectionMgr::listen(const std::string& szHost, uint16_t nPort, uint32_t nType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser)
+	bool CCoreConnectionMgr::listen(const std::string& szHost, uint16_t nPort, const std::string& szType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser)
 	{
 		SNetAccepterHandler* pNetAccepterHandler = new SNetAccepterHandler();
 		pNetAccepterHandler->szContext = szContext;
-		pNetAccepterHandler->nType = nType;
+		pNetAccepterHandler->szType = szType;
 		pNetAccepterHandler->pCoreConnectionMgr = this;
 		pNetAccepterHandler->messageParser = messageParser;
 
@@ -152,9 +152,9 @@ namespace core
 		this->m_pNetEventLoop->update(nTime);
 	}
 
-	uint32_t CCoreConnectionMgr::getCoreConnectionCount(uint32_t nType) const
+	uint32_t CCoreConnectionMgr::getCoreConnectionCount(const std::string& szType) const
 	{
-		auto iter = this->m_mapCoreConnectionByTypeID.find(nType);
+		auto iter = this->m_mapCoreConnectionByTypeID.find(szType);
 		if (iter == this->m_mapCoreConnectionByTypeID.end())
 			return 0;
 
@@ -170,9 +170,9 @@ namespace core
 		return iter->second;
 	}
 
-	void CCoreConnectionMgr::broadcast(uint32_t nType, uint8_t nMessageType, const void* pData, uint16_t nSize, uint64_t* pExcludeID, uint16_t nExcludeIDCount)
+	void CCoreConnectionMgr::broadcast(const std::string& szType, uint8_t nMessageType, const void* pData, uint16_t nSize, uint64_t* pExcludeID, uint16_t nExcludeIDCount)
 	{
-		auto iter = this->m_mapCoreConnectionByTypeID.find(nType);
+		auto iter = this->m_mapCoreConnectionByTypeID.find(szType);
 		if (iter == this->m_mapCoreConnectionByTypeID.end())
 			return;
 
@@ -202,18 +202,18 @@ namespace core
 		}
 	}
 
-	CCoreConnection* CCoreConnectionMgr::createCoreConnection(uint32_t nType, const std::string& szContext, const MessageParser& messageParser)
+	CCoreConnection* CCoreConnectionMgr::createCoreConnection(const std::string& szType, const std::string& szContext, const MessageParser& messageParser)
 	{
 		CCoreConnection* pCoreConnection = new CCoreConnection();
-		if (!pCoreConnection->init(nType, this->m_nNextCoreConnectionID++, szContext, messageParser))
+		if (!pCoreConnection->init(szType, this->m_nNextCoreConnectionID++, szContext, messageParser))
 		{
 			SAFE_DELETE(pCoreConnection);
-			PrintWarning("init core connection error type: %d context: %s", nType, szContext.c_str());
+			PrintWarning("init core connection error type: %s context: %s", szType.c_str(), szContext.c_str());
 			return nullptr;
 		}
 
 		this->m_mapCoreConnectionByID[pCoreConnection->getID()] = pCoreConnection;
-		this->m_mapCoreConnectionByTypeID[nType].push_back(pCoreConnection);
+		this->m_mapCoreConnectionByTypeID[szType].push_back(pCoreConnection);
 
 		return pCoreConnection;
 	}

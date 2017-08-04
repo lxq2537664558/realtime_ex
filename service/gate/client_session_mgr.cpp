@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "client_session_mgr.h"
 #include "gate_service.h"
-#include "connection_from_client.h"
+#include "gate_connection_from_client.h"
 
 #include "libBaseCommon\rand_gen.h"
 #include "libCoreCommon\core_common.h"
@@ -22,9 +22,9 @@ CClientSessionMgr::~CClientSessionMgr()
 
 }
 
-CClientSession* CClientSessionMgr::createSession(uint64_t nSocketID, uint32_t nServiceID, uint64_t nPlayerID, const std::string& szToken, CConnectionFromClient* pConnectionFromClient)
+CClientSession* CClientSessionMgr::createSession(uint64_t nSocketID, uint32_t nServiceID, uint64_t nPlayerID, const std::string& szToken, CGateConnectionFromClient* pGateConnectionFromClient)
 {
-	DebugAstEx(pConnectionFromClient != nullptr, nullptr);
+	DebugAstEx(pGateConnectionFromClient != nullptr, nullptr);
 
 	if (this->getSessionByPlayerID(nPlayerID) != nullptr)
 	{
@@ -48,7 +48,7 @@ CClientSession* CClientSessionMgr::createSession(uint64_t nSocketID, uint32_t nS
 	}
 	this->m_mapPlayerIDBySocketID[nSocketID] = nPlayerID;
 	this->m_mapClientSessionByPlayerID[nPlayerID] = pClientSession;
-	pConnectionFromClient->setSessionID(nSessionID);
+	pGateConnectionFromClient->setSessionID(nSessionID);
 
 	PrintInfo("create session player_id: "UINT64FMT"session_id: "UINT64FMT" socket_id: "UINT64FMT, nPlayerID, nSessionID, nSocketID);
 

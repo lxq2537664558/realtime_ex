@@ -1,1 +1,4 @@
-valgrind --tool=memcheck --undef-value-errors=yes --leak-check=full --error-limit=no --show-reachable=yes --log-file=CoreCommon_memcheck_%p.log ./TestCoreCommon
+#!/bin/sh
+cd ../bin/linux
+chmod 777 launcher
+valgrind --tool=memcheck --undef-value-errors=yes --leak-check=full --error-limit=no --show-reachable=yes --log-file=launcher_%p.log ./launcher $1

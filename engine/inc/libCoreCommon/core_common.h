@@ -76,7 +76,6 @@ public:\
 #define unpack_end()
 
 
-
 #define _INVALID_SOCKET_ID			-1
 
 enum EMessageType
@@ -134,7 +133,6 @@ namespace core
 		uint32_t	nID;
 		std::string	szName;			// 服务名字
 		std::string	szType;			// 服务类型（比如gate, gas）
-		std::string szClassName;	// 类名字
 	};
 
 	struct SClientSessionInfo
@@ -226,20 +224,3 @@ inline int32_t default_client_message_parser(const char* pData, uint32_t nSize, 
 
 	return pHeader->nMessageSize;
 }
-
-#define _BASE_CONNECTION_TYPE_BEGIN	100
-
-enum EBaseConnectionType
-{
-	eBCT_ConnectionFromService = _BASE_CONNECTION_TYPE_BEGIN,
-	eBCT_ConnectionFromClient,
-};
-
-enum EServiceSelectorType
-{
-	eSST_Random,	// 随机
-	eSST_Hash,		// hash
-	eSST_Broadcast,	// 广播
-
-	// 额外的类型由逻辑代码自己去设置
-};

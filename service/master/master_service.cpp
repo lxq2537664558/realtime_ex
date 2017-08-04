@@ -9,8 +9,6 @@
 
 using namespace core;
 
-DEFINE_OBJECT(CMasterService, 1);
-
 CMasterService::CMasterService()
 	: m_pServiceRegistry(nullptr)
 	, m_writeBuf(UINT16_MAX)
@@ -52,7 +50,7 @@ bool CMasterService::onInit()
 	}
 
 	this->m_pNodeConnectionFactory = new CNodeConnectionFactory();
-	CBaseApp::Inst()->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionFromService, this->m_pNodeConnectionFactory);
+	CBaseApp::Inst()->getBaseConnectionMgr()->setBaseConnectionFactory("CConnectionFromNode", this->m_pNodeConnectionFactory);
 
 	const std::string szHost = pMasterXML->Attribute("host") != nullptr ? pMasterXML->Attribute("host") : "0.0.0.0";
 	uint16_t nPort = (uint16_t)pMasterXML->UnsignedAttribute("port");
@@ -60,7 +58,7 @@ bool CMasterService::onInit()
 	char szBuf[256] = { 0 };
 	base::crt::snprintf(szBuf, _countof(szBuf), "%d", this->getServiceID());
 
-	CBaseApp::Inst()->getBaseConnectionMgr()->listen(szHost, nPort, eBCT_ConnectionFromService, szBuf, 10 * 1024, 10 * 1024, nullptr);
+	CBaseApp::Inst()->getBaseConnectionMgr()->listen(szHost, nPort, "CConnectionFromNode", szBuf, 10 * 1024, 10 * 1024, nullptr);
 
 	SAFE_DELETE(pConfigXML);
 
@@ -94,27 +92,17 @@ base::CWriteBuf& CMasterService::getWriteBuf()
 	return this->m_writeBuf;
 }
 
-#ifdef _WIN32
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
+void CMasterService::release()
 {
-	switch (fdwReason)
-	{
-	case DLL_PROCESS_ATTACH:
-		CMasterService::registerClassInfo();
-		break;
-
-	case DLL_THREAD_ATTACH:
-
-		break;
-
-	case DLL_THREAD_DETACH:
-
-		break;
-
-	case DLL_PROCESS_DETACH:
-
-		break;
-	}
-	return TRUE;
+	delete this;
 }
-#endif
+
+core::CProtobufFactory* CMasterService::getProtobufFactory() const
+{
+	return nullptr;
+}
+
+extern "C" __declspec(dllexport) CServiceBase* createServiceBase()
+{
+	return new CMasterService();
+}

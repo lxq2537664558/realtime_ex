@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "actor_base.h"
-#include "actor_base_impl.h"
+#include "core_actor.h"
 #include "service_invoker.h"
 #include "coroutine.h"
 #include "core_app.h"
@@ -11,41 +11,41 @@
 namespace core
 {
 	CActorBase::CActorBase()
-		: m_pActorBaseImpl(nullptr)
+		: m_pCoreActor(nullptr)
 	{
 	}
 
 	CActorBase::~CActorBase()
 	{
-		if (this->m_pActorBaseImpl != nullptr)
-			this->m_pActorBaseImpl->getServiceBaseImpl()->getActorScheduler()->destroyActorBase(this->m_pActorBaseImpl);
+		if (this->m_pCoreActor != nullptr)
+			this->m_pCoreActor->getCoreService()->getActorScheduler()->destroyCoreActor(this->m_pCoreActor);
 	}
 
 	uint64_t CActorBase::getID() const
 	{
-		return this->m_pActorBaseImpl->getID();
+		return this->m_pCoreActor->getID();
 	}
 
 	CServiceBase* CActorBase::getServiceBase() const
 	{
-		return this->m_pActorBaseImpl->getServiceBaseImpl()->getServiceBase();
+		return this->m_pCoreActor->getCoreService()->getServiceBase();
 	}
 
 	void CActorBase::registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
 	{
-		this->m_pActorBaseImpl->registerTicker(pTicker, nStartTime, nIntervalTime, nContext);
+		this->m_pCoreActor->registerTicker(pTicker, nStartTime, nIntervalTime, nContext);
 	}
 
 	void CActorBase::unregisterTicker(CTicker* pTicker)
 	{
-		this->m_pActorBaseImpl->unregisterTicker(pTicker);
+		this->m_pCoreActor->unregisterTicker(pTicker);
 	}
 
 	bool CActorBase::send(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage)
 	{
 		DebugAstEx(pMessage != nullptr, false);
 
-		return CCoreApp::Inst()->getLogicRunnable()->getTransporter()->invoke_a(this->m_pActorBaseImpl->getServiceBaseImpl(), 0, this->getID(), eType, nID, pMessage);
+		return CCoreApp::Inst()->getLogicRunnable()->getTransporter()->invoke_a(this->m_pCoreActor->getCoreService(), 0, this->getID(), eType, nID, pMessage);
 	}
 
 	bool CActorBase::send(const SClientSessionInfo& sClientSessionInfo, const google::protobuf::Message* pMessage)
@@ -53,9 +53,9 @@ namespace core
 		return this->getServiceBase()->getServiceInvoker()->send(sClientSessionInfo, pMessage);
 	}
 
-	bool CActorBase::send(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, google::protobuf::Message* pMessage)
+	bool CActorBase::send(const std::string& szServiceType, const std::string& szServiceSelectorType, uint64_t nServiceSelectorContext, google::protobuf::Message* pMessage)
 	{
-		return this->getServiceBase()->getServiceInvoker()->send(szServiceType, nServiceSelectorType, nServiceSelectorContext, pMessage);
+		return this->getServiceBase()->getServiceInvoker()->send(szServiceType, szServiceSelectorType, nServiceSelectorContext, pMessage);
 	}
 
 	bool CActorBase::broadcast(const std::vector<SClientSessionInfo>& vecClientSessionInfo, const google::protobuf::Message* pMessage)
@@ -68,23 +68,14 @@ namespace core
 		this->getServiceBase()->getServiceInvoker()->response(sSessionInfo, pMessage);
 	}
 
-	void CActorBase::release()
-	{
-		this->onDestroy();
-
-		PrintInfo("destroy actor id: "UINT64FMT, this->getID());
-
-		CBaseObject::destroyObject(this);
-	}
-
 	bool CActorBase::invoke(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, uint64_t nCoroutineID, const std::function<void(std::shared_ptr<google::protobuf::Message>&, uint32_t)>& callback)
 	{
 		uint64_t nSessionID = CCoreApp::Inst()->getLogicRunnable()->getTransporter()->genSessionID();
 
-		if (!CCoreApp::Inst()->getLogicRunnable()->getTransporter()->invoke_a(this->m_pActorBaseImpl->getServiceBaseImpl(), nSessionID, this->getID(), eType, nID, pMessage))
+		if (!CCoreApp::Inst()->getLogicRunnable()->getTransporter()->invoke_a(this->m_pCoreActor->getCoreService(), nSessionID, this->getID(), eType, nID, pMessage))
 			return false;
 
-		SPendingResponseInfo* pPendingResponseInfo = this->m_pActorBaseImpl->addPendingResponseInfo(nSessionID, nCoroutineID, nID, pMessage->GetTypeName(), callback);
+		SPendingResponseInfo* pPendingResponseInfo = this->m_pCoreActor->addPendingResponseInfo(nSessionID, nCoroutineID, nID, pMessage->GetTypeName(), callback);
 		DebugAstEx(nullptr != pPendingResponseInfo, false);
 		
 		return true;

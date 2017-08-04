@@ -1,0 +1,7 @@
+syntax = "proto2";
+
+message player_login_response {
+	optional string key = 1;
+	optional uint32 result = 2;
+	optional string gate_addr = 3;
+}

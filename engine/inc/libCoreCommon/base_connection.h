@@ -41,7 +41,11 @@ namespace core
 		/**
 		@brief: 获取连接类型
 		*/
-		uint32_t				getType() const;
+		const std::string&		getType() const;
+		/**
+		@brief: 获取连接模式，主动连接，被动连接
+		*/
+		base::ENetConnecterMode	getMode() const;
 		/**
 		@brief: 发送消息
 		*/
