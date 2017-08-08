@@ -112,9 +112,9 @@ namespace core
 		this->m_pCoreConnection->enableHeartbeat(bEnable);
 	}
 
-	const char* CBaseConnection::getContext() const
+	const std::string& CBaseConnection::getContext() const
 	{
-		return this->m_pCoreConnection->getContext().c_str();
+		return this->m_pCoreConnection->getContext();
 	}
 
 	void CBaseConnection::setSessionID(uint64_t nSessionID)

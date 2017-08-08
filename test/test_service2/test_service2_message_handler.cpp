@@ -1,4 +1,6 @@
 #include "test_service2_message_handler.h"
+#include "libCoreCommon/service_invoker.h"
+
 #include "../proto_src/request_msg1.pb.h"
 #include "../proto_src/response_msg1.pb.h"
 

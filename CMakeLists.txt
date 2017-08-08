@@ -22,10 +22,12 @@ set(CMAKE_CXX_FLAGS "-g -rdynamic -Wall -Wno-reorder -Wno-literal-suffix -finput
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -D _DEBUG")
 #设置C++ Release 版本编译选项
 set(CMAKE_CXX_FLAGS_RELEASE "-O2")
+
 # 设置bin目录
 set(BIN_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin/linux)
 
 #添加子目录
 add_subdirectory(engine/src)
-add_subdirectory(test)
+add_subdirectory(service)
 add_subdirectory(example)
+add_subdirectory(test)

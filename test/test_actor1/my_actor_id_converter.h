@@ -1,5 +1,5 @@
 #pragma once
-#include "libCoreCommon\actor_id_converter.h"
+#include "libCoreCommon/actor_id_converter.h"
 
 class CMyActorIDConverter :
 	public core::CActorIDConverter

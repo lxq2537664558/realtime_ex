@@ -33,11 +33,11 @@ namespace core
 }
 
 #define DEFEND_ACTOR_MESSAGE_FUNCTION(Class) \
-		inline void	onDefaultActorMessageHandler(core::CActorBase* pActorBase, core::SSessionInfo& sSessionInfo, const google::protobuf::Message* pMessage)\
+		inline void	onDefaultActorMessageHandler(core::CActorBase* pActorBase, core::SSessionInfo sSessionInfo, const google::protobuf::Message* pMessage)\
 		{\
 			core::CActorMessageRegistry<Class>::dispatch(this, pActorBase, sSessionInfo, pMessage); \
 		}\
-		inline void	onDefaultActorForwardHandler(core::CActorBase* pActorBase, core::SClientSessionInfo& sClientSessionInfo, const google::protobuf::Message* pMessage)\
+		inline void	onDefaultActorForwardHandler(core::CActorBase* pActorBase, core::SClientSessionInfo sClientSessionInfo, const google::protobuf::Message* pMessage)\
 		{\
 			core::CActorMessageRegistry<Class>::forward(this, pActorBase, sClientSessionInfo, pMessage);\
 		}

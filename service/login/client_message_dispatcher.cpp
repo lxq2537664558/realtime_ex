@@ -1,9 +1,7 @@
 #include "stdafx.h"
 #include "client_message_dispatcher.h"
-#include "connection_from_client.h"
-#include "gate_service.h"
-#include "client_session.h"
-#include "client_session_mgr.h"
+#include "login_connection_from_client.h"
+#include "login_service.h"
 
 #include "libCoreCommon/base_connection.h"
 #include "libCoreCommon/base_connection_mgr.h"
@@ -11,8 +9,8 @@
 
 using namespace core;
 
-CClientMessageDispatcher::CClientMessageDispatcher(CGateService* pGateService)
-	: m_pGateService(pGateService)
+CClientMessageDispatcher::CClientMessageDispatcher(CLoginService* pLoginService)
+	: m_pLoginService(pLoginService)
 {
 
 }
@@ -39,31 +37,24 @@ void CClientMessageDispatcher::registerMessageHandler(const std::string& szMessa
 	this->m_mapMessageHandler[nMessageID] = sClientMessageHandler;
 }
 
-void CClientMessageDispatcher::dispatch(CConnectionFromClient* pConnectionFromClient, const void* pData, uint16_t nSize)
+void CClientMessageDispatcher::dispatch(CLoginConnectionFromClient* pLoginConnectionFromClient, const void* pData, uint16_t nSize)
 {
 	DebugAst(pData != nullptr);
-	DebugAst(pConnectionFromClient != nullptr);
+	DebugAst(pLoginConnectionFromClient != nullptr);
 
 	const message_header* pHeader = reinterpret_cast<const message_header*>(pData);
 
 	auto iter = this->m_mapMessageHandler.find(pHeader->nMessageID);
 	if (iter == this->m_mapMessageHandler.end())
 	{
-		CClientSession* pClientSession = this->m_pGateService->getClientSessionMgr()->getSessionBySocketID(pConnectionFromClient->getID());
-		if(pClientSession == nullptr || pClientSession->getState() != eCSS_Normal)
-		{
-			pConnectionFromClient->shutdown(true, "invalid session");
-			return;
-		}
-
-		this->forward(pClientSession, pHeader);
+		pLoginConnectionFromClient->shutdown(true, "unknown msg");
 		return;
 	}
 	
 	const char* pMessageData = reinterpret_cast<const char*>(pHeader + 1);
 	const std::string& szMessageName = iter->second.szMessageName;
 
-	google::protobuf::Message* pMessage = this->m_pGateService->getProtobufFactory()->unserialize_protobuf_message_from_buf(szMessageName, pMessageData, nSize - sizeof(message_header));
+	google::protobuf::Message* pMessage = this->m_pLoginService->getProtobufFactory()->unserialize_protobuf_message_from_buf(szMessageName, pMessageData, nSize - sizeof(message_header));
 	if (nullptr == pMessage)
 	{
 		PrintWarning("unserialize_protobuf_message_from_buf error message_name: %s", szMessageName.c_str());
@@ -73,12 +64,5 @@ void CClientMessageDispatcher::dispatch(CConnectionFromClient* pConnectionFromCl
 	ClientCallback& callback = iter->second.callback;
 	DebugAst(callback != nullptr);
 
-	callback(pConnectionFromClient, pMessage);
-}
-
-void CClientMessageDispatcher::forward(CClientSession* pClientSession, const message_header* pHeader)
-{
-	DebugAst(pClientSession != nullptr && pHeader != nullptr);
-
-	this->m_pGateService->getServiceInvoker()->gate_forward(pClientSession->getSessionID(), pClientSession->getSocketID(), pClientSession->getServiceID(), pClientSession->getPlayerID(), pHeader);
+	callback(pLoginConnectionFromClient, pMessage);
 }

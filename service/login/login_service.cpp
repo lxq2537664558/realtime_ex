@@ -1,17 +1,16 @@
 #include "stdafx.h"
 #include "login_service.h"
-#include "connection_from_client.h"
+#include "login_connection_from_client.h"
 
-#include "libCoreCommon\base_app.h"
-#include "libCoreCommon\base_connection_mgr.h"
+#include "libCoreCommon/base_app.h"
+#include "libCoreCommon/base_connection_mgr.h"
 
-#include "tinyxml2\tinyxml2.h"
+#include "tinyxml2/tinyxml2.h"
 
 using namespace core;
 
 CLoginService::CLoginService()
 	: m_pClientConnectionFactory(nullptr)
-	, m_pClientSessionMgr(nullptr)
 	, m_pClientMessageDispatcher(nullptr)
 	, m_pClientMessageHandler(nullptr)
 	, m_pDefaultProtobufFactory(nullptr)
@@ -21,7 +20,6 @@ CLoginService::CLoginService()
 CLoginService::~CLoginService()
 {
 	SAFE_DELETE(this->m_pClientConnectionFactory);
-	SAFE_DELETE(this->m_pClientSessionMgr);
 	SAFE_DELETE(this->m_pClientMessageDispatcher);
 	SAFE_DELETE(this->m_pClientMessageHandler);
 	SAFE_DELETE(this->m_pDefaultProtobufFactory);
@@ -32,10 +30,8 @@ bool CLoginService::onInit()
 	this->m_pClientMessageDispatcher = new CClientMessageDispatcher(this);
 	this->m_pClientMessageHandler = new CClientMessageHandler(this);
 
-	this->m_pClientSessionMgr = new CClientSessionMgr(this);
-
 	this->m_pClientConnectionFactory = new CClientConnectionFactory();
-	CBaseApp::Inst()->getBaseConnectionMgr()->setBaseConnectionFactory(eBCT_ConnectionFromClient, this->m_pClientConnectionFactory);
+	CBaseApp::Inst()->getBaseConnectionMgr()->setBaseConnectionFactory("CLoginConnectionFromClient", this->m_pClientConnectionFactory);
 	this->m_pDefaultProtobufFactory = new CDefaultProtobufFactory();
 	
 	tinyxml2::XMLDocument* pConfigXML = new tinyxml2::XMLDocument();
@@ -63,7 +59,7 @@ bool CLoginService::onInit()
 	base::crt::snprintf(szBuf, _countof(szBuf), "%d", this->getServiceID());
 
 	// 启动客户端连接
-	CBaseApp::Inst()->getBaseConnectionMgr()->listen(szHost, nPort, eBCT_ConnectionFromClient, szBuf, nSendBufSize, nRecvBufSize, default_client_message_parser);
+	CBaseApp::Inst()->getBaseConnectionMgr()->listen(szHost, nPort, "CLoginConnectionFromClient", szBuf, nSendBufSize, nRecvBufSize, default_client_message_parser);
 
 	SAFE_DELETE(pConfigXML);
 
@@ -82,11 +78,6 @@ void CLoginService::onQuit()
 
 }
 
-CClientSessionMgr* CLoginService::getClientSessionMgr() const
-{
-	return this->m_pClientSessionMgr;
-}
-
 CClientMessageDispatcher* CLoginService::getClientMessageDispatcher() const
 {
 	return this->m_pClientMessageDispatcher;
@@ -102,7 +93,11 @@ CProtobufFactory* CLoginService::getProtobufFactory() const
 	return this->m_pDefaultProtobufFactory;
 }
 
-extern "C" __declspec(dllexport) CServiceBase* createServiceBase()
+extern "C" 
+#ifdef _WIN32
+__declspec(dllexport)
+#endif
+CServiceBase* createServiceBase()
 {
 	return new CLoginService();
 }

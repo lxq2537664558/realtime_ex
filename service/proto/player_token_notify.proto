@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+message player_token_notify {
+	uint64 player_id = 1;
+	uint32 gas_id = 2;
+	string token = 3;
+}

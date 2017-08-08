@@ -44,7 +44,11 @@ void CTestService3::onQuit()
 	PrintInfo("CTestService2::onQuit");
 }
 
-extern "C" __declspec(dllexport) CServiceBase* createServiceBase()
+extern "C" 
+#ifdef _WIN32
+__declspec(dllexport)
+#endif
+CServiceBase* createServiceBase()
 {
 	return new CTestService3();
 }

@@ -1,9 +1,9 @@
 #pragma once
-#include "libCoreCommon\service_message_registry.h"
-#include "libCoreCommon\service_base.h"
+#include "libCoreCommon/service_message_registry.h"
+#include "libCoreCommon/service_base.h"
 
-#include "..\..\service\gate\proto_src\player_enter_request.pb.h"
-#include "..\..\service\gate\proto_src\player_leave.pb.h"
+#include "proto_src/player_enter_gas_request.pb.h"
+#include "proto_src/player_leave_gas_notify.pb.h"
 
 using namespace core;
 
@@ -17,6 +17,6 @@ public:
 	~CWatchdogServiceMessageHandler();
 
 private:
-	void player_enter_handler(CServiceBase* pServiceBase, SSessionInfo sSessionInfo, const player_enter_request* pRequest);
-	void player_leave_handler(CServiceBase* pServiceBase, SSessionInfo sSessionInfo, const player_leave* pMessage);
+	void player_enter_gas_handler(CServiceBase* pServiceBase, SSessionInfo sSessionInfo, const player_enter_gas_request* pRequest);
+	void player_leave_gas_handler(CServiceBase* pServiceBase, SSessionInfo sSessionInfo, const player_leave_gas_notify* pMessage);
 };

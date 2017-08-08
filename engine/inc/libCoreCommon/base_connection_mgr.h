@@ -2,7 +2,7 @@
 
 #include <functional>
 
-#include "libBaseCommon\noncopyable.h"
+#include "libBaseCommon/noncopyable.h"
 
 #include "core_common.h"
 
@@ -46,10 +46,6 @@ namespace core
 		*/
 		CBaseConnection*				getBaseConnectionBySocketID(uint64_t nID) const;
 		/**
-		@brief: 根据服务ID获取一个连接
-		*/
-		CBaseConnection*				getBaseConnectionByServiceID(uint32_t nID) const;
-		/**
 		@brief: 根据连接的类型枚举连接对象,回调函数返回false停止枚举
 		*/
 		void							enumBaseConnection(const std::string& szType, const std::function<bool(CBaseConnection* pBaseConnection)>& callback) const;
@@ -76,7 +72,7 @@ namespace core
 		/**
 		@brief: 添加全局的连接断开回调
 		*/
-		void							addDisconnectCallback(const std::string& szKey, const std::function<void(CBaseConnection*)>& callback);/**
+		void							addDisconnectCallback(const std::string& szKey, const std::function<void(CBaseConnection*)>& callback);
 		/**
 		@brief: 删除全局的连接断开回调
 		*/

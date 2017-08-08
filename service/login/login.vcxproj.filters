@@ -27,16 +27,7 @@
     <ClInclude Include="targetver.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="connection_from_client.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="client_connection_factory.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="client_session.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="client_session_mgr.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="client_message_dispatcher.h">
@@ -45,30 +36,30 @@
     <ClInclude Include="client_message_handler.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="proto_src\player_login_request.pb.h">
+    <ClInclude Include="..\proto_src\player_login_request.pb.h">
       <Filter>proto_src</Filter>
     </ClInclude>
-    <ClInclude Include="proto_src\player_login_response.pb.h">
+    <ClInclude Include="..\proto_src\player_login_response.pb.h">
       <Filter>proto_src</Filter>
     </ClInclude>
     <ClInclude Include="login_service.h">
       <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="login_connection_from_client.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\proto_src\validate_login_request.pb.h">
+      <Filter>proto_src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\proto_src\validate_login_response.pb.h">
+      <Filter>proto_src</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="connection_from_client.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="client_connection_factory.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="client_session.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="client_session_mgr.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="client_message_dispatcher.cpp">
@@ -77,14 +68,23 @@
     <ClCompile Include="client_message_handler.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="proto_src\player_login_request.pb.cc">
+    <ClCompile Include="..\proto_src\player_login_request.pb.cc">
       <Filter>proto_src</Filter>
     </ClCompile>
-    <ClCompile Include="proto_src\player_login_response.pb.cc">
+    <ClCompile Include="..\proto_src\player_login_response.pb.cc">
       <Filter>proto_src</Filter>
     </ClCompile>
     <ClCompile Include="login_service.cpp">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="login_connection_from_client.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\proto_src\validate_login_request.pb.cc">
+      <Filter>proto_src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\proto_src\validate_login_response.pb.cc">
+      <Filter>proto_src</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -3,7 +3,6 @@
 #include "libCoreCommon/core_common.h"
 
 #include "gate_connection_from_client.h"
-#include "proto_src/player_enter_response.pb.h"
 
 class CGateService;
 class CClientMessageHandler

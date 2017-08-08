@@ -1,6 +1,6 @@
 #pragma once
-#include "libCoreCommon\service_message_registry.h"
-#include "libCoreCommon\service_base.h"
+#include "libCoreCommon/service_message_registry.h"
+#include "libCoreCommon/service_base.h"
 #include "../proto_src/request_msg2.pb.h"
 #include "../proto_src/response_msg2.pb.h"
 

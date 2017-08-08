@@ -1,0 +1,5 @@
+syntax = "proto3";
+
+message gate_online_count_notify {
+	uint32 count = 1;
+}

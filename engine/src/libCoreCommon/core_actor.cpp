@@ -21,6 +21,8 @@ namespace core
 		, m_pActorBase(pActorBase)
 		, m_pCoreService(pCoreService)
 		, m_pSyncPendingResponseInfo(nullptr)
+		, m_nSyncPendingResponseHolderID(0)
+		, m_nSyncPendingResponseResult(0)
 		, m_eState(eABS_Normal)
 	{
 
@@ -28,7 +30,7 @@ namespace core
 
 	CCoreActor::~CCoreActor()
 	{
-		SAFE_DELETE(this->m_pPendingResponseMessage);
+		SAFE_DELETE(this->m_pSyncPendingResponseMessage);
 
 		while (true)
 		{
@@ -80,15 +82,15 @@ namespace core
 			this->m_eState = eABS_Normal;
 
 			SActorMessagePacket sActorMessagePacket;
-			sActorMessagePacket.nData = this->m_nPendingResponseResult;
-			sActorMessagePacket.nSessionID = this->getPendingResponseSessionID();
+			sActorMessagePacket.nData = this->m_nSyncPendingResponseResult;
+			sActorMessagePacket.nSessionID = this->getSyncPendingResponseSessionID();
 			sActorMessagePacket.nType = eMT_RESPONSE;
-			sActorMessagePacket.pMessage = this->m_pPendingResponseMessage;
+			sActorMessagePacket.pMessage = this->m_pSyncPendingResponseMessage;
 
 			this->dispatch(sActorMessagePacket);
 
-			this->m_pPendingResponseMessage = nullptr;
-			this->m_nPendingResponseResult = 0;
+			this->m_pSyncPendingResponseMessage = nullptr;
+			this->m_nSyncPendingResponseResult = 0;
 		}
 
 		while (this->m_eState == eABS_Normal)
@@ -126,7 +128,7 @@ namespace core
 		else if (sActorMessagePacket.nType == eMT_RESPONSE)
 		{
 			auto pMessage = std::shared_ptr<google::protobuf::Message>(sActorMessagePacket.pMessage);
-			auto pPendingResponseInfo = std::unique_ptr<SPendingResponseInfo>(this->getPendingResponseInfo(sActorMessagePacket.nSessionID, true));
+			auto pPendingResponseInfo = std::unique_ptr<SPendingResponseInfo>(this->getPendingResponseInfo(sActorMessagePacket.nSessionID));
 			if (nullptr != pPendingResponseInfo)
 			{
 				if (pPendingResponseInfo->nCoroutineID != 0)
@@ -207,7 +209,7 @@ namespace core
 		return &this->m_channel;
 	}
 
-	uint64_t CCoreActor::getPendingResponseSessionID() const
+	uint64_t CCoreActor::getSyncPendingResponseSessionID() const
 	{
 		if (this->m_pSyncPendingResponseInfo == nullptr)
 			return 0;
@@ -215,12 +217,12 @@ namespace core
 		return this->m_pSyncPendingResponseInfo->nSessionID;
 	}
 
-	void CCoreActor::setPendingResponseMessage(uint8_t nResult, google::protobuf::Message* pMessage)
+	void CCoreActor::setSyncPendingResponseMessage(uint8_t nResult, google::protobuf::Message* pMessage)
 	{
 		DebugAst(this->m_eState == eABS_Pending);
 
-		this->m_nPendingResponseResult = nResult;
-		this->m_pPendingResponseMessage = pMessage;
+		this->m_nSyncPendingResponseResult = nResult;
+		this->m_pSyncPendingResponseMessage = pMessage;
 
 		this->m_eState = eABS_RecvPending;
 	}
@@ -250,7 +252,7 @@ namespace core
 		this->m_channel.send(sActorMessagePacket);
 	}
 
-	SPendingResponseInfo* CCoreActor::addPendingResponseInfo(uint64_t nSessionID, uint64_t nCoroutineID, uint64_t nToID, const std::string& szMessageName, const std::function<void(std::shared_ptr<google::protobuf::Message>&, uint32_t)>& callback)
+	SPendingResponseInfo* CCoreActor::addPendingResponseInfo(uint64_t nSessionID, uint64_t nCoroutineID, uint64_t nToID, const std::string& szMessageName, const std::function<void(std::shared_ptr<google::protobuf::Message>, uint32_t)>& callback, uint64_t nHolderID)
 	{
 		if (nCoroutineID == 0)
 		{
@@ -269,6 +271,14 @@ namespace core
 
 			this->m_mapPendingResponseInfo[pPendingResponseInfo->nSessionID] = pPendingResponseInfo;
 
+			if (nHolderID != 0)
+			{
+				std::list<uint64_t>& listSessionID = this->m_mapHolderSessionIDList[nHolderID];
+				listSessionID.push_back(nSessionID);
+				pPendingResponseInfo->iterHolder = (--listSessionID.end());
+				pPendingResponseInfo->nHolderID = nHolderID;
+			}
+
 			return pPendingResponseInfo;
 		}
 		else
@@ -286,19 +296,21 @@ namespace core
 			this->m_pSyncPendingResponseInfo->szMessageName = szMessageName;
 			this->m_pSyncPendingResponseInfo->nBeginTime = base::getGmtTime();
 
+			this->m_nSyncPendingResponseHolderID = nHolderID;
+
 			this->m_pCoreService->getActorScheduler()->addPendingCoreActor(this);
 
 			return this->m_pSyncPendingResponseInfo;
 		}
 	}
 
-	SPendingResponseInfo* CCoreActor::getPendingResponseInfo(uint64_t nSessionID, bool bErase)
+	SPendingResponseInfo* CCoreActor::getPendingResponseInfo(uint64_t nSessionID)
 	{
 		if (this->m_pSyncPendingResponseInfo != nullptr && this->m_pSyncPendingResponseInfo->nSessionID == nSessionID)
 		{
 			SPendingResponseInfo* pPendingResponseInfo = this->m_pSyncPendingResponseInfo;
-			if (bErase)
-				this->m_pSyncPendingResponseInfo = nullptr;
+			this->m_pSyncPendingResponseInfo = nullptr;
+			this->m_nSyncPendingResponseHolderID = 0;
 
 			return pPendingResponseInfo;
 		}
@@ -308,10 +320,47 @@ namespace core
 			return nullptr;
 
 		SPendingResponseInfo* pPendingResponseInfo = iter->second;
-		if (bErase)
-			this->m_mapPendingResponseInfo.erase(iter);
+		this->m_mapPendingResponseInfo.erase(iter);
+		if (pPendingResponseInfo->nHolderID != 0)
+		{
+			auto iter = this->m_mapHolderSessionIDList.find(pPendingResponseInfo->nHolderID);
+			if (iter != this->m_mapHolderSessionIDList.end())
+			{
+				std::list<uint64_t>& listSessionID = iter->second;
+				listSessionID.erase(pPendingResponseInfo->iterHolder);
+			}
+		}
 
 		return pPendingResponseInfo;
+	}
+
+	void CCoreActor::delPendingResponseInfo(uint64_t nHolderID)
+	{
+		if (this->m_nSyncPendingResponseHolderID == nHolderID)
+		{
+			this->m_nSyncPendingResponseHolderID = 0;
+			SAFE_DELETE(this->m_pSyncPendingResponseInfo);
+			this->m_eState = eABS_Normal;
+		}
+
+		auto iter = this->m_mapHolderSessionIDList.find(nHolderID);
+		if (iter == this->m_mapHolderSessionIDList.end())
+			return;
+
+		std::list<uint64_t>& listSessionID = iter->second;
+		for (auto iter = listSessionID.begin(); iter != listSessionID.end(); ++iter)
+		{
+			auto iterPendingResponseInfo = this->m_mapPendingResponseInfo.find(*iter);
+			if (iterPendingResponseInfo == this->m_mapPendingResponseInfo.end())
+				continue;
+
+			SPendingResponseInfo* pPendingResponseInfo = iterPendingResponseInfo->second;
+			this->m_mapPendingResponseInfo.erase(iterPendingResponseInfo);
+
+			SAFE_DELETE(pPendingResponseInfo);
+		}
+
+		this->m_mapHolderSessionIDList.erase(iter);
 	}
 
 	bool CCoreActor::onPendingTimer(int64_t nCurTime)
@@ -322,7 +371,7 @@ namespace core
 		if (nCurTime - this->m_pSyncPendingResponseInfo->nBeginTime < CCoreApp::Inst()->getInvokeTimeout())
 			return false;
 		
-		this->setPendingResponseMessage(eRRT_TIME_OUT, nullptr);
+		this->setSyncPendingResponseMessage(eRRT_TIME_OUT, nullptr);
 		
 		this->m_pCoreService->getActorScheduler()->addWorkCoreActor(this);
 
@@ -333,5 +382,4 @@ namespace core
 	{
 		return this->m_pActorBase;
 	}
-
 }

@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "service_invoker.h"
 #include "core_common_define.h"
+#include "service_invoke_holder.h"
 #include "actor_base.h"
 #include "coroutine.h"
 #include "core_app.h"
@@ -28,6 +29,17 @@ namespace core
 		return CCoreApp::Inst()->getLogicRunnable()->getTransporter()->invoke(this->m_pServiceBase->m_pCoreService, 0, eMTT_Service, this->m_pServiceBase->getServiceID(), eType, nID, pMessage);
 	}
 
+	void CServiceInvoker::broadcast(const std::string& szServiceType, const google::protobuf::Message* pMessage)
+	{
+		DebugAst(pMessage != nullptr);
+
+		const std::vector<uint32_t>& vecServiceID = CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->getServiceIDByTypeName(szServiceType);
+		for (size_t i = 0; i < vecServiceID.size(); ++i)
+		{
+			this->send(eMTT_Service, vecServiceID[i], pMessage);
+		}
+	}
+
 	void CServiceInvoker::response(const SSessionInfo& sSessionInfo, const google::protobuf::Message* pMessage)
 	{
 		DebugAst(pMessage != nullptr);
@@ -45,19 +57,6 @@ namespace core
 
 	bool CServiceInvoker::send(const std::string& szServiceType, const std::string& szServiceSelectorType, uint64_t nServiceSelectorContext, google::protobuf::Message* pMessage)
 	{
-		if (szServiceSelectorType == "broadcast")
-		{
-			DebugAstEx(pMessage != nullptr, false);
-
-			const std::vector<uint32_t>& vecServiceID = CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->getServiceIDByTypeName(szServiceType);
-			for (size_t i = 0; i < vecServiceID.size(); ++i)
-			{
-				this->send(eMTT_Service, vecServiceID[i], pMessage);
-			}
-
-			return true;
-		}
-
 		CServiceSelector* pServiceSelector = this->m_pServiceBase->getServiceSelector(szServiceSelectorType);
 		DebugAstEx(pServiceSelector != nullptr, false);
 
@@ -85,13 +84,13 @@ namespace core
 		return bRet;
 	}
 
-	bool CServiceInvoker::invoke(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, const std::function<void(std::shared_ptr<google::protobuf::Message>&, uint32_t)>& callback)
+	bool CServiceInvoker::invoke(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, const std::function<void(std::shared_ptr<google::protobuf::Message>, uint32_t)>& callback, CServiceInvokeHolder* pServiceInvokeHolder)
 	{
 		uint64_t nSessionID = CCoreApp::Inst()->getLogicRunnable()->getTransporter()->genSessionID();
 		if (!CCoreApp::Inst()->getLogicRunnable()->getTransporter()->invoke(this->m_pServiceBase->m_pCoreService, nSessionID, eMTT_Service, this->m_pServiceBase->getServiceID(), eType, nID, pMessage))
 			return false;
 
-		SPendingResponseInfo* pPendingResponseInfo = CCoreApp::Inst()->getLogicRunnable()->getTransporter()->addPendingResponseInfo(nSessionID, nID, pMessage->GetTypeName(), callback);
+		SPendingResponseInfo* pPendingResponseInfo = CCoreApp::Inst()->getLogicRunnable()->getTransporter()->addPendingResponseInfo(nSessionID, nID, pMessage->GetTypeName(), callback, pServiceInvokeHolder != nullptr ? pServiceInvokeHolder->getHolderID() : 0);
 		DebugAstEx(pPendingResponseInfo != nullptr, false);
 		
 		return true;

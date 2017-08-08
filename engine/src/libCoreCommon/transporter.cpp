@@ -9,7 +9,7 @@
 #include "base_app.h"
 #include "core_app.h"
 
-#include "libBaseCommon\base_time.h"
+#include "libBaseCommon/base_time.h"
 
 namespace core
 {
@@ -82,7 +82,7 @@ namespace core
 			base::crt::strcpy(pCookice->szMessageName, szMessageName.size() + 1, szMessageName.c_str());
 
 			int32_t nCookiceLen = (int32_t)(sizeof(request_cookice)+pCookice->nMessageNameLen);
-			DebugAstEx(nCookiceLen < this->m_szBuf.size(), false);
+			DebugAstEx(nCookiceLen < (int32_t)this->m_szBuf.size(), false);
 
 			int32_t nDataSize = pProtobufFactory->serialize_protobuf_message_to_buf(pMessage, &this->m_szBuf[0] + nCookiceLen, (uint32_t)(this->m_szBuf.size() - nCookiceLen));
 			if (nDataSize < 0)
@@ -153,7 +153,7 @@ namespace core
 			base::crt::strcpy(pCookice->szMessageName, szMessageName.size() + 1, szMessageName.c_str());
 
 			int32_t nCookiceLen = (int32_t)(sizeof(response_cookice)+pCookice->nMessageNameLen);
-			DebugAstEx(nCookiceLen < this->m_szBuf.size(), false);
+			DebugAstEx(nCookiceLen < (int32_t)this->m_szBuf.size(), false);
 
 			int32_t nDataSize = pProtobufFactory->serialize_protobuf_message_to_buf(pMessage, &this->m_szBuf[0] + nCookiceLen, (uint32_t)(this->m_szBuf.size() - nCookiceLen));
 			if (nDataSize < 0)
@@ -279,7 +279,7 @@ namespace core
 
 		if (!CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->isLocalService(nToServiceID))
 		{
-			CBaseConnection* pBaseConnection = CBaseApp::Inst()->getBaseConnectionMgr()->getBaseConnectionByServiceID(nToServiceID);
+			CBaseConnection* pBaseConnection = CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->getBaseConnectionOtherNodeByServiceID(nToServiceID);
 			if (nullptr == pBaseConnection)
 			{
 				PrintWarning("CTransporter::gate_forward error service_id: %d actor_id: "UINT64FMT, nToServiceID, nToActorID);
@@ -462,7 +462,7 @@ namespace core
 
 			nCookiceLen += (int32_t)sizeof(message_header);
 
-			DebugAstEx(nCookiceLen < this->m_szBuf.size(), false);
+			DebugAstEx(nCookiceLen < (int32_t)this->m_szBuf.size(), false);
 
 			int32_t nDataSize = pProtobufFactory->serialize_protobuf_message_to_buf(pMessage, &this->m_szBuf[0] + nCookiceLen, (uint32_t)(this->m_szBuf.size() - nCookiceLen));
 			if (nDataSize < 0)
@@ -525,20 +525,27 @@ namespace core
 		SAFE_DELETE(pPendingResponseInfo);
 	}
 
-	SPendingResponseInfo* CTransporter::getPendingResponseInfo(uint64_t nSessionID, bool bErase)
+	SPendingResponseInfo* CTransporter::getPendingResponseInfo(uint64_t nSessionID)
 	{
 		auto iter = this->m_mapPendingResponseInfo.find(nSessionID);
 		if (iter == this->m_mapPendingResponseInfo.end())
 			return nullptr;
 
 		SPendingResponseInfo* pPendingResponseInfo = iter->second;
-		if (bErase)
-			this->m_mapPendingResponseInfo.erase(iter);
-
+		this->m_mapPendingResponseInfo.erase(iter);
+		if (pPendingResponseInfo->nHolderID != 0)
+		{
+			auto iter = this->m_mapHolderSessionIDList.find(pPendingResponseInfo->nHolderID);
+			if (iter != this->m_mapHolderSessionIDList.end())
+			{
+				std::list<uint64_t>& listSessionID = iter->second;
+				listSessionID.erase(pPendingResponseInfo->iterHolder);
+			}
+		}
 		return pPendingResponseInfo;
 	}
 
-	SPendingResponseInfo* CTransporter::addPendingResponseInfo(uint64_t nSessionID, uint64_t nToID, const std::string& szMessageName, const std::function<void(std::shared_ptr<google::protobuf::Message>&, uint32_t)>& callback)
+	SPendingResponseInfo* CTransporter::addPendingResponseInfo(uint64_t nSessionID, uint64_t nToID, const std::string& szMessageName, const std::function<void(std::shared_ptr<google::protobuf::Message>, uint32_t)>& callback, uint64_t nHolderID)
 	{
 		auto iter = this->m_mapPendingResponseInfo.find(nSessionID);
 		DebugAstEx(iter == this->m_mapPendingResponseInfo.end(), nullptr);
@@ -546,8 +553,9 @@ namespace core
 		SPendingResponseInfo* pPendingResponseInfo = new SPendingResponseInfo();
 		pPendingResponseInfo->callback = callback;
 		pPendingResponseInfo->nSessionID = nSessionID;
-		pPendingResponseInfo->nToID = nToID;
 		pPendingResponseInfo->nCoroutineID = 0;
+		pPendingResponseInfo->nHolderID = nHolderID;
+		pPendingResponseInfo->nToID = nToID;
 		pPendingResponseInfo->szMessageName = szMessageName;
 		pPendingResponseInfo->nBeginTime = base::getGmtTime();
 		pPendingResponseInfo->tickTimeout.setCallback(std::bind(&CTransporter::onRequestMessageTimeout, this, std::placeholders::_1));
@@ -555,7 +563,36 @@ namespace core
 
 		this->m_mapPendingResponseInfo[pPendingResponseInfo->nSessionID] = pPendingResponseInfo;
 
+		if (nHolderID != 0)
+		{
+			std::list<uint64_t>& listSessionID = this->m_mapHolderSessionIDList[nHolderID];
+			listSessionID.push_back(nSessionID);
+			pPendingResponseInfo->iterHolder = (--listSessionID.end());
+			pPendingResponseInfo->nHolderID = nHolderID;
+		}
+
 		return pPendingResponseInfo;
 	}
 
+	void CTransporter::delPendingResponseInfo(uint64_t nHolderID)
+	{
+		auto iter = this->m_mapHolderSessionIDList.find(nHolderID);
+		if (iter == this->m_mapHolderSessionIDList.end())
+			return;
+
+		std::list<uint64_t>& listSessionID = iter->second;
+		for (auto iter = listSessionID.begin(); iter != listSessionID.end(); ++iter)
+		{
+			auto iterPendingResponseInfo = this->m_mapPendingResponseInfo.find(*iter);
+			if (iterPendingResponseInfo == this->m_mapPendingResponseInfo.end())
+				continue;
+
+			SPendingResponseInfo* pPendingResponseInfo = iterPendingResponseInfo->second;
+			this->m_mapPendingResponseInfo.erase(iterPendingResponseInfo);
+
+			SAFE_DELETE(pPendingResponseInfo);
+		}
+
+		this->m_mapHolderSessionIDList.erase(iter);
+	}
 }

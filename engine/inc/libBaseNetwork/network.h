@@ -56,14 +56,14 @@ namespace base
 #ifdef _WIN32
 
 #	ifdef __BUILD_BASE_NETWORK_DLL__
-#		define __NETWORK_API__ __declspec(dllexport)
+#		define __BASE_NETWORK_API__ __declspec(dllexport)
 #	else
-#		define __NETWORK_API__ __declspec(dllimport)
+#		define __BASE_NETWORK_API__ __declspec(dllimport)
 #	endif
 
 #else
 
-#	define __BASE_COMMON_API__
+#	define __BASE_NETWORK_API__
 
 #endif
 
@@ -277,8 +277,8 @@ namespace base
 		this->m_pNetConnecter->send(pData, nSize, bCache);
 	}
 
-	__NETWORK_API__ bool			startupNetwork();
-	__NETWORK_API__ void			cleanupNetwork();
+	__BASE_NETWORK_API__ bool			startupNetwork();
+	__BASE_NETWORK_API__ void			cleanupNetwork();
 
-	__NETWORK_API__ INetEventLoop*	createNetEventLoop();
+	__BASE_NETWORK_API__ INetEventLoop*	createNetEventLoop();
 }

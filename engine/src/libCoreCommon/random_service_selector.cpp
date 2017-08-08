@@ -2,7 +2,7 @@
 #include "random_service_selector.h"
 #include "core_app.h"
 
-#include "libBaseCommon\rand_gen.h"
+#include "libBaseCommon/rand_gen.h"
 
 namespace core
 {

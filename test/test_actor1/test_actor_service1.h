@@ -1,7 +1,7 @@
 #pragma once
-#include "libCoreCommon\service_base.h"
-#include "libCoreCommon\ticker.h"
-#include "libCoreCommon\default_protobuf_factory.h"
+#include "libCoreCommon/service_base.h"
+#include "libCoreCommon/ticker.h"
+#include "libCoreCommon/default_protobuf_factory.h"
 
 #include "test_actor1.h"
 #include "test_actor0.h"

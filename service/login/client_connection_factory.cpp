@@ -1,28 +1,17 @@
 #include "stdafx.h"
 #include "client_connection_factory.h"
-#include "connection_from_client.h"
+#include "login_connection_from_client.h"
 
-#include "libBaseCommon\logger.h"
+#include "libBaseCommon/logger.h"
+#include "libBaseCommon/debug_helper.h"
 
 using namespace core;
 
-CBaseConnection* CClientConnectionFactory::createBaseConnection(uint32_t nType)
+CBaseConnection* CClientConnectionFactory::createBaseConnection(const std::string& szType)
 {
-	switch (nType)
-	{
-	case eBCT_ConnectionFromClient:
-		{
-			CConnectionFromClient* pConnectionFromClient = new CConnectionFromClient();
-			
-			return pConnectionFromClient;
-		}
-		break;
+	DebugAstEx(szType == "CLoginConnectionFromClient", nullptr);
 
-	default:
-		{
-			PrintWarning("CClientConnectionFactory::createBaseConnection error type: %d", nType);
-		}
-	}
+	CLoginConnectionFromClient* pLoginConnectionFromClient = new CLoginConnectionFromClient();
 
-	return nullptr;
+	return pLoginConnectionFromClient;
 }

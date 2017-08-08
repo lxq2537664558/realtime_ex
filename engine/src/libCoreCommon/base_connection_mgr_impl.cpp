@@ -27,7 +27,7 @@ namespace core
 
 		if (this->m_mapConnectCalback.find(szKey) != this->m_mapConnectCalback.end())
 		{
-			PrintWarning("dup connect callback key: %s", szKey);
+			PrintWarning("dup connect callback key: %s", szKey.c_str());
 		}
 
 		this->m_mapConnectCalback[szKey] = callback;
@@ -44,7 +44,7 @@ namespace core
 
 		if (this->m_mapDisconnectCallback.find(szKey) != this->m_mapDisconnectCallback.end())
 		{
-			PrintWarning("dup disconnect callback key: %s", szKey);
+			PrintWarning("dup disconnect callback key: %s", szKey.c_str());
 		}
 
 		this->m_mapDisconnectCallback[szKey] = callback;
@@ -61,7 +61,7 @@ namespace core
 		
 		if (this->m_mapConnectFailCallback.find(szKey) != this->m_mapConnectFailCallback.end())
 		{
-			PrintWarning("dup connect fail callback key: %s", szKey);
+			PrintWarning("dup connect fail callback key: %s", szKey.c_str());
 		}
 
 		this->m_mapConnectFailCallback[szKey] = callback;
@@ -78,13 +78,13 @@ namespace core
 		CBaseConnectionFactory* pBaseConnectionFactory = this->getBaseConnectionFactory(pCoreConnection->getType());
 		if (nullptr == pBaseConnectionFactory)
 		{
-			PrintWarning("can't find base connection factory type: %d context: %s", pCoreConnection->getType(), pCoreConnection->getContext().c_str());
+			PrintWarning("can't find base connection factory type: %s context: %s", pCoreConnection->getType().c_str(), pCoreConnection->getContext().c_str());
 			return false;
 		}
 		CBaseConnection* pBaseConnection = pBaseConnectionFactory->createBaseConnection(pCoreConnection->getType());
 		if (nullptr == pBaseConnection)
 		{
-			PrintWarning("create base connection error type: %d context: %s", pCoreConnection->getType(), pCoreConnection->getContext().c_str());
+			PrintWarning("create base connection error type: %s context: %s", pCoreConnection->getType().c_str(), pCoreConnection->getContext().c_str());
 			return false;
 		}
 
@@ -218,7 +218,7 @@ namespace core
 		SNodeGlobalFilterInfo& sNodeGlobalFilterInfo = this->m_mapGlobalFilterInfo[nMessageType];
 		if (sNodeGlobalFilterInfo.mapGlobalBeforeFilter.find(szKey) != sNodeGlobalFilterInfo.mapGlobalBeforeFilter.end())
 		{
-			PrintWarning("dup global before filter type: %d key: %s", nMessageType, szKey);
+			PrintWarning("dup global before filter type: %d key: %s", nMessageType, szKey.c_str());
 		}
 
 		sNodeGlobalFilterInfo.mapGlobalBeforeFilter[szKey] = callback;
@@ -242,7 +242,7 @@ namespace core
 		SNodeGlobalFilterInfo& sNodeGlobalFilterInfo = this->m_mapGlobalFilterInfo[nMessageType];
 		if (sNodeGlobalFilterInfo.mapGlobalAfterFilter.find(szKey) != sNodeGlobalFilterInfo.mapGlobalAfterFilter.end())
 		{
-			PrintWarning("dup global after filter type: %d key: %s", nMessageType, szKey);
+			PrintWarning("dup global after filter type: %d key: %s", nMessageType, szKey.c_str());
 		}
 
 		sNodeGlobalFilterInfo.mapGlobalAfterFilter[szKey] = callback;

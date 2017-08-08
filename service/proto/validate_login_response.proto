@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+message validate_login_response {
+	string key = 1;
+	uint32 result = 2;
+	string gate_addr = 3;
+}

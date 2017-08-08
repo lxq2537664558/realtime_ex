@@ -5,7 +5,11 @@
 #include <string>
 #include <vector>
 
-#include "google\protobuf\message.h"
+#include "google/protobuf/message.h"
+
+#include "libBaseNetwork/network.h"
+
+using namespace base;
 
 #pragma pack(push,1)
 // ÏûÏ¢Í·
@@ -16,7 +20,6 @@ struct message_header
 };
 #pragma pack(pop)
 
-class CConnectToGate;
 class CMessageHandler
 {
 public:
@@ -25,26 +28,29 @@ public:
 
 	static CMessageHandler* Inst();
 
-	void	init();
+	void	init(INetEventLoop* pNetEventLoop);
 
-	void	dispatch(CConnectToGate* pConnectToGate, const message_header* pData);
+	void	dispatch(INetConnecterHandler* pConnection, const message_header* pData);
 
-	void	sendMessage(CConnectToGate* pConnectToGate, const google::protobuf::Message* pMessage);
+	void	sendMessage(INetConnecterHandler* pConnection, const google::protobuf::Message* pMessage);
 
 private:
-	void	registerMessageHandler(const std::string& szMessageName, const std::function<void(CConnectToGate*, const google::protobuf::Message*)>& callback);
+	void	registerMessageHandler(const std::string& szMessageName, const std::function<void(INetConnecterHandler*, const google::protobuf::Message*)>& callback);
 
-	void	handshake_response_handler(CConnectToGate* pConnectToGate, const google::protobuf::Message* pMessage);
-	void	update_name_response_handler(CConnectToGate* pConnectToGate, const google::protobuf::Message* pMessage);
+	void	login_response_handler(INetConnecterHandler* pConnectToLogin, const google::protobuf::Message* pMessage);
+	void	handshake_response_handler(INetConnecterHandler* pConnectToGate, const google::protobuf::Message* pMessage);
+	void	update_name_response_handler(INetConnecterHandler* pConnectToGate, const google::protobuf::Message* pMessage);
 
 private:
 	struct SMessageHandler
 	{
 		std::string	szMessageName;
-		std::function<void(CConnectToGate*, const google::protobuf::Message*)>
+		std::function<void(INetConnecterHandler*, const google::protobuf::Message*)>
 					callback;
 	};
 
 	std::map<uint32_t, SMessageHandler>	m_mapMessageHandler;
 	std::vector<char>					m_szBuf;
+
+	INetEventLoop*						m_pNetEventLoop;
 };

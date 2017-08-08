@@ -2,22 +2,21 @@
 
 #include "libCoreCommon/core_common.h"
 
-#include "connection_from_client.h"
-#include "proto_src/player_enter_response.pb.h"
+#include "login_connection_from_client.h"
 
-class CGateService;
+class CLoginService;
 class CClientMessageHandler
 {
 public:
-	CClientMessageHandler(CGateService*	pGateService);
+	CClientMessageHandler(CLoginService* pLoginService);
 	~CClientMessageHandler();
 
 	void	sendClientMessage(core::CBaseConnection* pBaseConnection, const google::protobuf::Message* pMessage);
 
 private:
-	void	handshake(CConnectionFromClient* pConnectionFromClient, const google::protobuf::Message* pMessage);
+	void	login(CLoginConnectionFromClient* pConnectionFromClient, const google::protobuf::Message* pMessage);
 
 private:
-	CGateService*		m_pGateService;
+	CLoginService*		m_pLoginService;
 	std::vector<char>	m_szBuf;
 };

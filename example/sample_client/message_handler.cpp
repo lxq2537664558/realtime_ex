@@ -1,13 +1,17 @@
 #include "stdafx.h"
 #include "message_handler.h"
-#include "libBaseCommon\debug_helper.h"
-#include "libBaseCommon\base_function.h"
 #include "connection_to_gate.h"
 
-#include "..\..\service\gate\proto_src\gate_handshake_response.pb.h"
-#include "..\sample_gas\proto_src\update_name_request.pb.h"
-#include "..\sample_gas\proto_src\update_name_response.pb.h"
+#include "libBaseCommon/debug_helper.h"
+#include "libBaseCommon/base_function.h"
 
+#include "proto_src/gate_handshake_response.pb.h"
+#include "proto_src/update_name_request.pb.h"
+#include "proto_src/update_name_response.pb.h"
+#include "proto_src/player_login_response.pb.h"
+#include "proto_src/gate_handshake_request.pb.h"
+
+#include "libBaseCommon/token_parser.h"
 
 google::protobuf::Message* create_protobuf_message(const std::string& szMessageName)
 {
@@ -52,6 +56,7 @@ int32_t serialize_protobuf_message_to_buf(const google::protobuf::Message* pMess
 CMessageHandler::CMessageHandler()
 {
 	this->m_szBuf.resize(UINT16_MAX);
+	this->m_pNetEventLoop = nullptr;
 }
 
 CMessageHandler::~CMessageHandler()
@@ -66,13 +71,17 @@ CMessageHandler* CMessageHandler::Inst()
 	return &s_Inst;
 }
 
-void CMessageHandler::init()
+void CMessageHandler::init(INetEventLoop* pNetEventLoop)
 {
+	this->m_pNetEventLoop = pNetEventLoop;
+
+	this->registerMessageHandler("player_login_response", std::bind(&CMessageHandler::login_response_handler, this, std::placeholders::_1, std::placeholders::_2));
+
 	this->registerMessageHandler("gate_handshake_response", std::bind(&CMessageHandler::handshake_response_handler, this, std::placeholders::_1, std::placeholders::_2));
 	this->registerMessageHandler("update_name_response", std::bind(&CMessageHandler::update_name_response_handler, this, std::placeholders::_1, std::placeholders::_2));
 }
 
-void CMessageHandler::dispatch(CConnectToGate* pConnectToGate, const message_header* pData)
+void CMessageHandler::dispatch(INetConnecterHandler* pConnection, const message_header* pData)
 {
 	auto iter = this->m_mapMessageHandler.find(pData->nMessageID);
 	if (iter == this->m_mapMessageHandler.end())
@@ -91,10 +100,10 @@ void CMessageHandler::dispatch(CConnectToGate* pConnectToGate, const message_hea
 	auto& callback = iter->second.callback;
 	DebugAst(callback != nullptr);
 
-	callback(pConnectToGate, pMessage);
+	callback(pConnection, pMessage);
 }
 
-void CMessageHandler::sendMessage(CConnectToGate* pConnectToGate, const google::protobuf::Message* pMessage)
+void CMessageHandler::sendMessage(INetConnecterHandler* pConnection, const google::protobuf::Message* pMessage)
 {
 	message_header* pHeader = reinterpret_cast<message_header*>(&this->m_szBuf[0]);
 
@@ -107,10 +116,10 @@ void CMessageHandler::sendMessage(CConnectToGate* pConnectToGate, const google::
 	pHeader->nMessageSize = uint16_t(sizeof(message_header) + nDataSize);
 	pHeader->nMessageID = base::hash(pMessage->GetTypeName().c_str());
 
-	pConnectToGate->send(&this->m_szBuf[0], pHeader->nMessageSize, false);
+	pConnection->send(&this->m_szBuf[0], pHeader->nMessageSize, false);
 }
 
-void CMessageHandler::registerMessageHandler(const std::string& szMessageName, const std::function<void(CConnectToGate*, const google::protobuf::Message*)>& callback)
+void CMessageHandler::registerMessageHandler(const std::string& szMessageName, const std::function<void(INetConnecterHandler*, const google::protobuf::Message*)>& callback)
 {
 	DebugAst(callback != nullptr);
 
@@ -128,7 +137,29 @@ void CMessageHandler::registerMessageHandler(const std::string& szMessageName, c
 	this->m_mapMessageHandler[nMessageID] = sMessageHandler;
 }
 
-void CMessageHandler::handshake_response_handler(CConnectToGate* pConnectToGate, const google::protobuf::Message* pMessage)
+void CMessageHandler::login_response_handler(INetConnecterHandler* pConnectToLogin, const google::protobuf::Message* pMessage)
+{
+	const player_login_response* pResponse = dynamic_cast<const player_login_response*>(pMessage);
+	DebugAst(pResponse != nullptr);
+
+	if (pResponse->result() != 0)
+	{
+		PrintWarning("");
+		return;
+	}
+
+	base::CTokenParser token;
+	token.parse(pResponse->gate_addr().c_str(), ':');
+	uint32_t nPort = 0;
+	SNetAddr netAddr;
+	token.getStringElement(0, netAddr.szHost, _countof(netAddr.szHost));
+	token.getUint32Element(1, nPort);
+	netAddr.nPort = (uint16_t)nPort;
+	
+	this->m_pNetEventLoop->connect(netAddr, 1024, 1024, new CConnectToGate(pResponse->key()));
+}
+
+void CMessageHandler::handshake_response_handler(INetConnecterHandler* pConnectToGate, const google::protobuf::Message* pMessage)
 {
 	const gate_handshake_response* pResponse = dynamic_cast<const gate_handshake_response*>(pMessage);
 	DebugAst(pResponse != nullptr);
@@ -136,10 +167,12 @@ void CMessageHandler::handshake_response_handler(CConnectToGate* pConnectToGate,
 	update_name_request request_msg;
 	request_msg.set_name("aaa");
 
+	PrintInfo("CMessageHandler::handshake_response_handler ok");
+
 	this->sendMessage(pConnectToGate, &request_msg);
 }
 
-void CMessageHandler::update_name_response_handler(CConnectToGate* pConnectToGate, const google::protobuf::Message* pMessage)
+void CMessageHandler::update_name_response_handler(INetConnecterHandler* pConnectToGate, const google::protobuf::Message* pMessage)
 {
 	const update_name_response* pResponse = dynamic_cast<const update_name_response*>(pMessage);
 	DebugAst(pResponse != nullptr);

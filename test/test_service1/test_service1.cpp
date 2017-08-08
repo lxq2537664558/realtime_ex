@@ -5,6 +5,7 @@
 #include "../proto_src/request_msg2.pb.h"
 
 #include "libCoreCommon/when_all.h"
+#include "libCoreCommon/service_invoker.h"
 
 CTestService1::CTestService1()
 	: m_pDefaultProtobufFactory(nullptr)
@@ -202,7 +203,11 @@ void CTestService1::onServiceDisconnect(const std::string& szType, uint32_t nSer
 	this->unregisterTicker(&this->m_ticker3);
 }
 
-extern "C" __declspec(dllexport) CServiceBase* createServiceBase()
+extern "C" 
+#ifdef _WIN32
+__declspec(dllexport)
+#endif
+CServiceBase* createServiceBase()
 {
 	return new CTestService1();
 }

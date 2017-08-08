@@ -104,7 +104,7 @@ namespace core
 		sNodeProxyInfo.sNodeBaseInfo = sNodeBaseInfo;
 		sNodeProxyInfo.vecServiceBaseInfo = vecServiceBaseInfo;
 		
-		sNodeProxyInfo.pTicker = std::make_unique<CTicker>();
+		sNodeProxyInfo.pTicker = std::unique_ptr<CTicker>();
 		// 不用担心sNodeProxyInfo的生命周期问题
 		sNodeProxyInfo.pTicker->setCallback([&sNodeProxyInfo](uint64_t nContext)
 		{

@@ -32,7 +32,7 @@ uint32_t CConnectionFromNode::getNodeID() const
 void CConnectionFromNode::onConnect()
 {
 	uint32_t nServiceID = 0;
-	base::crt::atoui(this->getContext(), nServiceID);
+	base::crt::atoui(this->getContext().c_str(), nServiceID);
 	this->m_pMasterService = dynamic_cast<CMasterService*>(CBaseApp::Inst()->getServiceBase(nServiceID));
 	if (nullptr == this->m_pMasterService)
 	{

@@ -3,6 +3,7 @@
 #include "core_app.h"
 #include "core_service.h"
 #include "actor_base.h"
+#include "service_invoker.h"
 
 namespace core
 {

@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "google\protobuf\message.h"
+#include "google/protobuf/message.h"
 
 namespace core
 {

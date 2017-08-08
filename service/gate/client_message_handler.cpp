@@ -3,17 +3,17 @@
 #include "client_message_dispatcher.h"
 #include "gate_service.h"
 
-#include "libBaseCommon\token_parser.h"
-#include "libBaseCommon\rand_gen.h"
-#include "libCoreCommon\base_connection.h"
-#include "libCoreCommon\base_connection_mgr.h"
-#include "libCoreCommon\base_app.h"
-#include "libCoreCommon\service_base.h"
+#include "libBaseCommon/token_parser.h"
+#include "libBaseCommon/rand_gen.h"
+#include "libCoreCommon/base_connection.h"
+#include "libCoreCommon/base_connection_mgr.h"
+#include "libCoreCommon/base_app.h"
+#include "libCoreCommon/service_base.h"
 
-#include "proto_src\gate_handshake_request.pb.h"
-#include "proto_src\player_enter_request.pb.h"
-#include "proto_src\player_enter_response.pb.h"
-#include "proto_src\gate_handshake_response.pb.h"
+#include "proto_src/gate_handshake_request.pb.h"
+#include "proto_src/gate_handshake_response.pb.h"
+#include "proto_src/player_enter_gas_request.pb.h"
+#include "proto_src/player_enter_gas_response.pb.h"
 
 using namespace core;
 
@@ -76,75 +76,51 @@ void CClientMessageHandler::handshake(CGateConnectionFromClient* pGateConnection
 		return;
 	}
 
-	const std::vector<uint32_t>& vecServiceID = CBaseApp::Inst()->getServiceIDByTypeName("gas");
-	if (vecServiceID.empty())
+	PrintInfo("CClientMessageHandler::handshake player_id: "UINT64FMT, nPlayerID);
+
+	CClientSession* pClientSession = this->m_pGateService->getClientSessionMgr()->getSessionByPlayerID(nPlayerID);
+	if (nullptr != pClientSession)
 	{
-		PrintWarning("CClientMessageHandler::handshake error gas service not find socket_id: "UINT64FMT" key: %s", pGateConnectionFromClient->getID(), szKey.c_str());
-		pGateConnectionFromClient->shutdown(true, "token error");
-		return;
+		// 顶号
+		if ((pClientSession->getState()&eCSS_ClientEnter) != 0)
+		{
+			// 这里先直接踢掉
+			CBaseConnection* pBaseConnection = CBaseApp::Inst()->getBaseConnectionMgr()->getBaseConnectionBySocketID(pClientSession->getSocketID());
+			if (nullptr == pBaseConnection)
+			{
+				PrintWarning("CClientMessageHandler::handshake nullptr == pBaseConnection player_id: "UINT64FMT, pClientSession->getPlayerID());
+				this->m_pGateService->getClientSessionMgr()->delSessionByPlayerID(pClientSession->getPlayerID());
+				return;
+			}
+			pBaseConnection->shutdown(true, "dup");
+			pGateConnectionFromClient->shutdown(true, "dup");
+			return;
+		}
+		DebugAst(pClientSession->getState() == eCSS_TokenEnter);
+
+		if (pClientSession->getToken() != szTokenBuf)
+		{
+			PrintWarning("CClientMessageHandler::handshake token error player_id: "UINT64FMT, nPlayerID);
+
+			pGateConnectionFromClient->shutdown(true, "token error");
+			return;
+		}
+
+		this->m_pGateService->getClientSessionMgr()->bindSocketID(nPlayerID, pGateConnectionFromClient->getID());
+		pClientSession->setState(eCSS_ClientEnter);
+		pClientSession->enterGas(this->m_pGateService);
 	}
-
-	uint32_t nIndex = base::CRandGen::getGlobalRand((uint32_t)vecServiceID.size());
-	uint32_t nServiceID = vecServiceID[nIndex];
-
-	CClientSession* pClientSession = this->m_pGateService->getClientSessionMgr()->createSession(pGateConnectionFromClient->getID(), nServiceID, nPlayerID, szTokenBuf, pGateConnectionFromClient);
-	if (nullptr == pClientSession)
+	else
 	{
-		PrintWarning("CClientMessageHandler::handshake error create session error socket_id: "UINT64FMT" key: %s", pGateConnectionFromClient->getID(), szKey.c_str());
-		pGateConnectionFromClient->shutdown(true, "token error");
-		return;
-	}
-
-	PrintInfo("CClientMessageHandler::handshake ok wait player enter response service_id: %d player_id: "UINT64FMT" session_id: "UINT64FMT" socket_id: "UINT64FMT, pClientSession->getServiceID(), pClientSession->getPlayerID(), pClientSession->getSessionID(), pClientSession->getSocketID());
-
-	player_enter_request request_msg;
-	request_msg.set_player_id(nPlayerID);
-	bool bRet = this->m_pGateService->getServiceInvoker()->async_call<player_enter_response>(eMTT_Service, nServiceID, &request_msg, [this, nPlayerID](const player_enter_response* pResponse, uint32_t nErrorCode)
-	{
-		CClientSession* pClientSession = this->m_pGateService->getClientSessionMgr()->getSessionByPlayerID(nPlayerID);
+		pClientSession = this->m_pGateService->getClientSessionMgr()->createSession(nPlayerID, szTokenBuf);
 		if (nullptr == pClientSession)
 		{
-			PrintInfo("CClientMessageHandler::handshake not find session player_id: "UINT64FMT, nPlayerID);
+			PrintWarning("CClientMessageHandler::handshake error create session error socket_id: "UINT64FMT" key: %s", pGateConnectionFromClient->getID(), szKey.c_str());
+			pGateConnectionFromClient->shutdown(true, "token error");
 			return;
 		}
 
-		if (nErrorCode != eRRT_OK || pResponse == nullptr)
-		{
-			PrintWarning("CClientMessageHandler::handshake error enter player error player_id: "UINT64FMT, nPlayerID);
-
-			CBaseConnection* pBaseConnection = CBaseApp::Inst()->getBaseConnectionMgr()->getBaseConnectionBySocketID(pClientSession->getSocketID());
-			if (nullptr != pBaseConnection)
-			{
-				pBaseConnection->shutdown(true, "wait player enter error");
-			}
-
-			return;
-		}
-
-		gate_handshake_response response_msg;
-		response_msg.set_player_id(nPlayerID);
-		response_msg.set_result(pResponse->result());
-		CBaseConnection* pBaseConnection = CBaseApp::Inst()->getBaseConnectionMgr()->getBaseConnectionBySocketID(pClientSession->getSocketID());
-		DebugAst(pBaseConnection != nullptr);
-
-		if (pResponse->result() != 0)
-		{
-			PrintInfo("CClientMessageHandler::handshake result error result: %d service_id: %d player_id: "UINT64FMT" session_id: "UINT64FMT" socket_id: "UINT64FMT, pClientSession->getServiceID(), pResponse->result(), pClientSession->getPlayerID(), pClientSession->getSessionID(), pClientSession->getSocketID());
-			
-			this->sendClientMessage(pBaseConnection, &response_msg);
-			pBaseConnection->shutdown(false, "wait player enter error");
-
-			return;
-		}
-		pClientSession->setState(eCSS_Normal);
-
-		this->sendClientMessage(pBaseConnection, &response_msg);
-		PrintInfo("CClientMessageHandler::handshake ok service_id: %d player_id: "UINT64FMT" session_id: "UINT64FMT" socket_id: "UINT64FMT, pClientSession->getServiceID(), pClientSession->getPlayerID(), pClientSession->getSessionID(), pClientSession->getSocketID());
-	});
-
-	if (!bRet)
-	{
-		PrintWarning("CClientMessageHandler::handshake call enter player error player_id: "UINT64FMT, nPlayerID);
-		pGateConnectionFromClient->shutdown(true, "call enter player error");
+		this->m_pGateService->getClientSessionMgr()->bindSocketID(nPlayerID, pGateConnectionFromClient->getID());
+		pClientSession->setState(eCSS_ClientEnter);
 	}
 }

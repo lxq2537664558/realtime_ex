@@ -87,7 +87,7 @@ namespace core
 					return;
 				}
 
-				if (pResponseContext->nSessionID != pCoreActor->getPendingResponseSessionID())
+				if (pResponseContext->nSessionID != pCoreActor->getSyncPendingResponseSessionID())
 				{
 					SActorMessagePacket sActorMessagePacket;
 					sActorMessagePacket.nData = pResponseContext->nResult;
@@ -101,7 +101,7 @@ namespace core
 				}
 				else
 				{
-					pCoreActor->setPendingResponseMessage(pResponseContext->nResult, pMessage);
+					pCoreActor->setSyncPendingResponseMessage(pResponseContext->nResult, pMessage);
 
 					this->m_pCoreService->getActorScheduler()->addWorkCoreActor(pCoreActor);
 				}
@@ -111,7 +111,7 @@ namespace core
 				// 这里有暂存消息的需求，所以需要用shared_ptr
 				auto pMessage = std::shared_ptr<google::protobuf::Message>(pResponseContext->pMessage);
 				
-				auto pPendingResponseInfo = std::unique_ptr<SPendingResponseInfo>(CCoreApp::Inst()->getLogicRunnable()->getTransporter()->getPendingResponseInfo(pResponseContext->nSessionID, true));
+				auto pPendingResponseInfo = std::unique_ptr<SPendingResponseInfo>(CCoreApp::Inst()->getLogicRunnable()->getTransporter()->getPendingResponseInfo(pResponseContext->nSessionID));
 				if (nullptr == pPendingResponseInfo)
 					return;
 

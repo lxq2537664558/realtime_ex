@@ -7,8 +7,8 @@
 
 #include "core_common.h"
 
-#include "libBaseCommon\noncopyable.h"
-#include "libBaseNetwork\network.h"
+#include "libBaseCommon/noncopyable.h"
+#include "libBaseNetwork/network.h"
 
 namespace core
 {

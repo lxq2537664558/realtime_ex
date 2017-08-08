@@ -1,6 +1,6 @@
 #pragma once
 
-#include "libCoreCommon\service_base.h"
+#include "libCoreCommon/service_base.h"
 
 #include "service_registry.h"
 #include "node_connection_factory.h"

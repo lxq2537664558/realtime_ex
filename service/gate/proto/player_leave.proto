@@ -1,5 +1,0 @@
-syntax = "proto2";
-
-message player_leave {
-	optional uint64 player_id = 1;
-}

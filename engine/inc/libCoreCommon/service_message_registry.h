@@ -38,11 +38,11 @@ namespace core
 }
 
 #define DEFEND_SERVICE_MESSAGE_FUNCTION(Class) \
-		inline void	onDefaultServiceMessageHandler(CServiceBase* pServiceBase, core::SSessionInfo sSessionInfo, const google::protobuf::Message* pMessage)\
+		inline void	onDefaultServiceMessageHandler(core::CServiceBase* pServiceBase, core::SSessionInfo sSessionInfo, const google::protobuf::Message* pMessage)\
 		{\
 			core::CServiceMessageRegistry<Class>::dispatch(this, pServiceBase, sSessionInfo, pMessage); \
 		}\
-		inline void	onDefaultServiceForwardHandler(CServiceBase* pServiceBase, core::SClientSessionInfo sClientSessionInfo, const google::protobuf::Message* pMessage)\
+		inline void	onDefaultServiceForwardHandler(core::CServiceBase* pServiceBase, core::SClientSessionInfo sClientSessionInfo, const google::protobuf::Message* pMessage)\
 		{\
 			core::CServiceMessageRegistry<Class>::forward(this, pServiceBase, sClientSessionInfo, pMessage);\
 		}

@@ -5,12 +5,15 @@
 #include "core_common.h"
 #include "future.h"
 #include "promise.h"
+#include "service_selector.h"
+#include "service_base.h"
 
 #include "google/protobuf/message.h"
 
 namespace core
 {
 	class CServiceBase;
+	class CServiceInvokeHolder;
 	class __CORE_COMMON_API__ CServiceInvoker :
 		public base::noncopyable
 	{
@@ -25,15 +28,19 @@ namespace core
 		*/
 		bool				send(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage);
 		/**
+		@brief: 给某个类型的服务广播消息
+		*/
+		void				broadcast(const std::string& szServiceType, const google::protobuf::Message* pMessage);
+		/**
 		@brief: 通过callback的方式进行远程调用，调用的时候请用返回消息类型来实例化模板函数
 		*/
 		template<class T>
-		inline bool			async_call(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, const std::function<void(const T*, uint32_t)>& callback);
+		inline void			async_call(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, const std::function<void(const T*, uint32_t)>& callback, CServiceInvokeHolder* pServiceInvokeHolder = nullptr);
 		/**
 		@brief: 通过future的方式进行远程调用
 		*/
 		template<class T>
-		inline bool			async_call(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, CFuture<T>& sFuture);
+		inline void			async_call(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, CFuture<T>& sFuture, CServiceInvokeHolder* pServiceInvokeHolder = nullptr);
 		//==================================指定服务之间调用=======================================//
 
 
@@ -47,12 +54,12 @@ namespace core
 		@brief: 通过callback的方式进行远程调用，调用的时候请用返回消息类型来实例化模板函数
 		*/
 		template<class T>
-		inline bool			async_call(const std::string& szServiceType, const std::string& szServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, const std::function<void(const T*, uint32_t)>& callback);
+		inline void			async_call(const std::string& szServiceType, const std::string& szServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, const std::function<void(const T*, uint32_t)>& callback, CServiceInvokeHolder* pServiceInvokeHolder = nullptr);
 		/**
 		@brief: 通过future的方式进行远程调用
 		*/
 		template<class T>
-		inline bool			async_call(const std::string& szServiceType, const std::string& szServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, CFuture<T>& sFuture);
+		inline void			async_call(const std::string& szServiceType, const std::string& szServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, CFuture<T>& sFuture, CServiceInvokeHolder* pServiceInvokeHolder = nullptr);
 		//==================================指定服务类型之间调用=======================================//
 
 		
@@ -83,7 +90,7 @@ namespace core
 
 
 	private:
-		bool				invoke(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, const std::function<void(std::shared_ptr<google::protobuf::Message>&, uint32_t)>& callback);
+		bool				invoke(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, const std::function<void(std::shared_ptr<google::protobuf::Message>, uint32_t)>& callback, CServiceInvokeHolder* pServiceInvokeHolder);
 
 	private:
 		CServiceBase*	m_pServiceBase;

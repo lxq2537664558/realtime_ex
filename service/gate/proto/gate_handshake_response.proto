@@ -1,6 +1,0 @@
-syntax = "proto2";
-
-message gate_handshake_response {
-	optional uint64 player_id = 1;
-	optional uint32 result = 2;
-}

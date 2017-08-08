@@ -1,7 +1,7 @@
 #pragma once
-#include "libCoreCommon\service_base.h"
-#include "libCoreCommon\actor_base.h"
-#include "libCoreCommon\ticker.h"
+#include "libCoreCommon/service_base.h"
+#include "libCoreCommon/actor_base.h"
+#include "libCoreCommon/ticker.h"
 
 using namespace std;
 using namespace core;

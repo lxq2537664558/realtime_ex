@@ -2,8 +2,8 @@
 
 #include "core_common.h"
 
-#include "libBaseNetwork\network.h"
-#include "libBaseCommon\noncopyable.h"
+#include "libBaseNetwork/network.h"
+#include "libBaseCommon/noncopyable.h"
 
 namespace core
 {
@@ -81,7 +81,7 @@ namespace core
 		/**
 		@brief: 获取上下文
 		*/
-		const char*				getContext() const;
+		const std::string&		getContext() const;
 		/**
 		@brief: 设置session_id
 		*/

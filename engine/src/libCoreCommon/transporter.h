@@ -7,6 +7,7 @@
 #include "core_common_define.h"
 
 #include <map>
+#include <list>
 
 namespace core
 {
@@ -29,8 +30,9 @@ namespace core
 
 		bool					broadcast(CCoreService* pCoreService, const std::vector<std::pair<uint64_t, uint64_t>>& vecSessionID, uint32_t nToServiceID, const google::protobuf::Message* pMessage);
 
-		SPendingResponseInfo*	getPendingResponseInfo(uint64_t nSessionID, bool bErase);
-		SPendingResponseInfo*	addPendingResponseInfo(uint64_t nSessionID, uint64_t nToID, const std::string& szMessageName, const std::function<void(std::shared_ptr<google::protobuf::Message>&, uint32_t)>& callback);
+		SPendingResponseInfo*	getPendingResponseInfo(uint64_t nSessionID);
+		SPendingResponseInfo*	addPendingResponseInfo(uint64_t nSessionID, uint64_t nToID, const std::string& szMessageName, const std::function<void(std::shared_ptr<google::protobuf::Message>, uint32_t)>& callback, uint64_t nHolderID);
+		void					delPendingResponseInfo(uint64_t nHolderID);
 
 		uint64_t				genSessionID();
 
@@ -40,6 +42,7 @@ namespace core
 	private:
 		uint64_t									m_nNextSessionID;
 		std::map<uint64_t, SPendingResponseInfo*>	m_mapPendingResponseInfo;
+		std::map<uint64_t, std::list<uint64_t>>		m_mapHolderSessionIDList;
 		std::vector<char>							m_szBuf;
 	};
 }

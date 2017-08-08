@@ -5,7 +5,7 @@
 #include <list>
 #include <map>
 
-#include "tinyxml2\tinyxml2.h"
+#include "tinyxml2/tinyxml2.h"
 
 namespace core
 {

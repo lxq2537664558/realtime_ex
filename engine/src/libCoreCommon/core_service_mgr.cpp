@@ -1,6 +1,10 @@
 #include "stdafx.h"
 #include "core_service_mgr.h"
 
+#ifndef _WIN32
+#include<dlfcn.h>
+#endif
+
 namespace core
 {
 	typedef CServiceBase*(*funcCreateServiceBase)();
@@ -22,7 +26,6 @@ namespace core
 		for (tinyxml2::XMLElement* pServiceInfoXML = pNodeInfoXML->FirstChildElement("service_info"); pServiceInfoXML != nullptr; pServiceInfoXML = pServiceInfoXML->NextSiblingElement("service_info"))
 		{
 			std::string szLibName = pServiceInfoXML->Attribute("lib_name");
-
 #ifdef _WIN32
 			szLibName += ".dll";
 			HMODULE hModule = LoadLibraryA(szLibName.c_str());
@@ -38,6 +41,37 @@ namespace core
 				PrintWarning("nullptr == pCreateServiceBase lib_name: %s", szLibName.c_str());
 				return false;
 			}
+#else
+			szLibName += ".so";
+			void* hModule = dlopen(szLibName.c_str(), RTLD_LAZY);
+			if (hModule == nullptr)
+			{
+				PrintWarning("hModule == nullptr lib_name: %s", szLibName.c_str());
+				return false;
+			}
+
+			const char* szErr = dlerror();
+			if (szErr != nullptr)
+			{
+				PrintWarning("hModule == nullptr lib_name: %s error: %s", szLibName.c_str(), szErr);
+				return false;
+			}
+
+			//获取函数的地址
+			funcCreateServiceBase pCreateServiceBase = reinterpret_cast<funcCreateServiceBase>(dlsym(hModule, "createServiceBase"));
+			if (nullptr == pCreateServiceBase)
+			{
+				PrintWarning("nullptr == pCreateServiceBase lib_name: %s", szLibName.c_str());
+				return false;
+			}
+			
+			szErr = dlerror();
+			if (szErr != nullptr)
+			{
+				PrintWarning("nullptr == pCreateServiceBase lib_name: %s error: %s", szLibName.c_str(), szErr);
+				return false;
+			}
+#endif
 
 			CServiceBase* pServiceBase = pCreateServiceBase();
 			if (nullptr == pServiceBase)
@@ -45,9 +79,6 @@ namespace core
 				PrintWarning("create service_base error: lib_name: %s", szLibName.c_str());
 				return false;
 			}
-#else
-			szLibName += ".so";
-#endif
 
 			SServiceBaseInfo sServiceBaseInfo;
 			sServiceBaseInfo.nID = pServiceInfoXML->UnsignedAttribute("service_id");

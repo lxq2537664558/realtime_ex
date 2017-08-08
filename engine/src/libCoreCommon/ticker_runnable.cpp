@@ -4,6 +4,9 @@
 #include "core_connection.h"
 #include "core_connection_mgr.h"
 #include "core_app.h"
+#include "message_command.h"
+#include "net_runnable.h"
+#include "logic_runnable.h"
 
 #include "libBaseCommon/debug_helper.h"
 #include "libBaseCommon/base_time.h"
@@ -11,9 +14,6 @@
 
 #include <algorithm>
 #include <thread>
-#include "message_command.h"
-#include "net_runnable.h"
-#include "logic_runnable.h"
 
 // 放这里为了调试或者看dump的时候方便
 core::CTickerRunnable*	g_pTickerRunnable;
@@ -233,7 +233,7 @@ namespace core
 			for (size_t i = 0; i < nCount; ++i)
 			{
 				CCoreTickerNode* pTickerNode = this->m_vecTempTickerNode[i];
-				this->insertTicker(this->m_vecTempTickerNode[i]);
+				this->insertTicker(pTickerNode);
 			}
 		}
 	}

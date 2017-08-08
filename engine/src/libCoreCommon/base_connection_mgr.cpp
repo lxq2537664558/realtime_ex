@@ -171,9 +171,4 @@ namespace core
 	{
 		return CCoreApp::Inst()->getLogicRunnable()->getBaseConnectionMgrImpl()->getBaseConnectionFactory(szType);
 	}
-
-	CBaseConnection* CBaseConnectionMgr::getBaseConnectionByServiceID(uint32_t nID) const
-	{
-		return CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->getBaseConnectionOtherNodeByServiceID(nID);
-	}
 }

@@ -1,13 +1,15 @@
 #include "stdafx.h"
 #include "connection_to_gate.h"
-#include "libBaseCommon\logger.h"
-#include "libBaseCommon\debug_helper.h"
-#include "libBaseCommon\base_function.h"
+#include "libBaseCommon/logger.h"
+#include "libBaseCommon/debug_helper.h"
+#include "libBaseCommon/base_function.h"
 #include "message_handler.h"
-#include "..\..\service\gate\proto_src\gate_handshake_request.pb.h"
 
-CConnectToGate::CConnectToGate()
+#include "proto_src/gate_handshake_request.pb.h"
+
+CConnectToGate::CConnectToGate(const std::string& szKey)
 	: m_nPlayerID(0)
+	, m_szKey(szKey)
 {
 }
 
@@ -21,7 +23,7 @@ void CConnectToGate::onConnect()
 	PrintInfo("CConnectToGate::onConnect");
 
 	gate_handshake_request request_msg;
-	request_msg.set_key("123|scr");
+	request_msg.set_key(this->m_szKey);
 
 	CMessageHandler::Inst()->sendMessage(this, &request_msg);
 }

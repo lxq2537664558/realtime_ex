@@ -9,15 +9,17 @@
 	</base_info>
 	
 	<!--节点信息-->
-	<node_info node_id = "2" node_name = "test_node_2" host = "127.0.0.1" port = "6000" send_buf_size = "1024" recv_buf_size = "1024">
-		<service_info service_id = "8" service_name = "sample_gas_1" service_type = "gas" lib_name = "sample_gas" class_name = "CWatchdogService"/>
+	<node_info node_id = "1" node_name = "test_node_1" host = "127.0.0.1" port = "6000" send_buf_size = "1024" recv_buf_size = "1024">
+		<service_info service_id = "8" service_name = "sample_gas_1" service_type = "gas" lib_name = "sample_gas"/>
+		<service_info service_id = "9" service_name = "test_dispatch_1" service_type = "dispatch" lib_name = "sample_dispatch"/>
 		<service_info service_id = "10001" service_name = "test_master_1" service_type = "master" lib_name = "master" config_file_name = "master_config.xml"/>
+		<service_info service_id = "20001" service_name = "test_gate_1" service_type = "gate" lib_name = "gate" config_file_name = "gate_config.xml"/>
+		<service_info service_id = "30001" service_name = "test_login_1" service_type = "login" lib_name = "login" config_file_name = "login_config.xml"/>
 	</node_info>
 	
 	<!--本节点需要连接的服务-->
 	<connect_service_info>
 		<!--如果需要连接所有某一个类型的服务，用*通配-->
-		<service_info service_name = "*" service_type = "gate" invoke_timeout = "10000"/>
 	</connect_service_info>
 	
 	<!--连接master地址-->

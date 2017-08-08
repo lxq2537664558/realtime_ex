@@ -1,7 +1,7 @@
 #pragma once
-#include "libCoreCommon\service_base.h"
-#include "libCoreCommon\ticker.h"
-#include "libCoreCommon\default_protobuf_factory.h"
+#include "libCoreCommon/service_base.h"
+#include "libCoreCommon/ticker.h"
+#include "libCoreCommon/default_protobuf_factory.h"
 
 #include "player_factory.h"
 
@@ -27,9 +27,14 @@ private:
 	virtual void					onFrame();
 	virtual void					onQuit();
 
+	void							onServiceConnect(const std::string& szType, uint32_t nServiceID);
+	void							onNotifyGateOnlineCount(uint64_t nContext);
+
 private:
 	CWatchdogServiceMessageHandler*	m_pWatchdogServiceMessageHandler;
 	CPlayerMessageHandler*			m_pPlayerMessageHandler;
 	CDefaultProtobufFactory*		m_pDefaultProtobufFactory;
 	CPlayerFactory*					m_pPlayerFactory;
+
+	core::CTicker					m_tickerNotifyGateOnlineCount;
 };

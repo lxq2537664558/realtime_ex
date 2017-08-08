@@ -35,7 +35,7 @@ namespace core
 		ConvertFiberToThread();
 		this->m_pMainContext = nullptr;
 #else
-		delete this->m_pMainContext;
+		delete reinterpret_cast<context*>(this->m_pMainContext);
 		uint32_t nValgrindID = this->m_nValgrindID;
 		CCoroutineMgr::freeStack(this->m_pMainStack, this->m_nMainStackSize, nValgrindID);
 #endif

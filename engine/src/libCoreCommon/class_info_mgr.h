@@ -5,7 +5,7 @@
 #include "base_object.h"
 #include "fix_memory_pool.h"
 
-#include "libBaseCommon\singleton.h"
+#include "libBaseCommon/singleton.h"
 
 namespace core
 {

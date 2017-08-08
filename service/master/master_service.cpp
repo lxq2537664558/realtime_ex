@@ -2,10 +2,10 @@
 #include "master_service.h"
 #include "connection_from_node.h"
 
-#include "libCoreCommon\base_app.h"
-#include "libCoreCommon\base_connection_mgr.h"
+#include "libCoreCommon/base_app.h"
+#include "libCoreCommon/base_connection_mgr.h"
 
-#include "tinyxml2\tinyxml2.h"
+#include "tinyxml2/tinyxml2.h"
 
 using namespace core;
 
@@ -102,7 +102,11 @@ core::CProtobufFactory* CMasterService::getProtobufFactory() const
 	return nullptr;
 }
 
-extern "C" __declspec(dllexport) CServiceBase* createServiceBase()
+extern "C" 
+#ifdef _WIN32
+__declspec(dllexport)
+#endif
+CServiceBase* createServiceBase()
 {
 	return new CMasterService();
 }

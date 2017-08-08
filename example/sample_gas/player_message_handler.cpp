@@ -1,6 +1,6 @@
 #include "player_message_handler.h"
 #include "player.h"
-#include "proto_src\update_name_response.pb.h"
+#include "proto_src/update_name_response.pb.h"
 
 CPlayerMessageHandler::CPlayerMessageHandler(CServiceBase* pServiceBase)
 {

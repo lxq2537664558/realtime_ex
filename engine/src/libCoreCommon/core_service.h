@@ -8,7 +8,7 @@
 #include "logic_message_queue.h"
 #include "message_dispatcher.h"
 
-#include "libBaseCommon\spin_lock.h"
+#include "libBaseCommon/spin_lock.h"
 
 #include <map>
 

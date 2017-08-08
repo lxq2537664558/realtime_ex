@@ -1,7 +1,7 @@
 #pragma once
 
-#include "google\protobuf\message.h"
-#include "libBaseNetwork\network.h"
+#include "google/protobuf/message.h"
+#include "libBaseNetwork/network.h"
 
 #include <functional>
 #include <string>
@@ -13,7 +13,7 @@ class CConnectToGate :
 	public base::INetConnecterHandler
 {
 public:
-	CConnectToGate();
+	CConnectToGate(const std::string& szKey);
 	virtual ~CConnectToGate();
 
 	virtual void		onSendComplete(uint32_t nSize) { }
@@ -31,5 +31,6 @@ private:
 	void				onDispatch(const message_header* pData);
 
 private:
-	uint64_t							m_nPlayerID;
+	uint64_t	m_nPlayerID;
+	std::string	m_szKey;
 };

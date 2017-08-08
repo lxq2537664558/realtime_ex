@@ -15,4 +15,4 @@ mkdir -p lib
 mkdir -p lib/linux
 
 cp -rf tinyxml2_src/install/include/* include/tinyxml2
-cp -rf tinyxml2_src/install/lib64/libtinyxml2.so.5.0.0 lib/linux/libtinyxml2.so
+cp -rf tinyxml2_src/install/lib64/libtinyxml2.so.5.0.* lib/linux/libtinyxml2.so

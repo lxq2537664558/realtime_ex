@@ -1,5 +1,0 @@
-syntax = "proto2";
-
-message update_name_response {
-	optional string name = 1;
-}

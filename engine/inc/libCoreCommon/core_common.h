@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "google/protobuf/message.h"
+
 #include "libBaseCommon/base_function.h"
 
 #ifdef _WIN32

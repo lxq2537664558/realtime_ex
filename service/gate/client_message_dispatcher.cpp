@@ -7,6 +7,7 @@
 
 #include "libCoreCommon/base_connection.h"
 #include "libCoreCommon/base_connection_mgr.h"
+#include "libCoreCommon/service_invoker.h"
 #include "libCoreCommon/base_app.h"
 
 using namespace core;
@@ -50,7 +51,7 @@ void CClientMessageDispatcher::dispatch(CGateConnectionFromClient* pGateConnecti
 	if (iter == this->m_mapMessageHandler.end())
 	{
 		CClientSession* pClientSession = this->m_pGateService->getClientSessionMgr()->getSessionBySocketID(pGateConnectionFromClient->getID());
-		if(pClientSession == nullptr || pClientSession->getState() != eCSS_Normal)
+		if(pClientSession == nullptr || (pClientSession->getState()&eCSS_Normal) == 0)
 		{
 			pGateConnectionFromClient->shutdown(true, "invalid session");
 			return;

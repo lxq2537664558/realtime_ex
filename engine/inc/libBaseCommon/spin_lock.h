@@ -23,7 +23,11 @@ namespace base
 			{
 				while (this->m_lock.load(std::memory_order_relaxed));
 				{
+#ifdef _WIN32
 					_mm_pause();	// 相当于nop，这里为了避退
+#else
+					__asm__("pause");
+#endif
 				}
 			} while (this->m_lock.exchange(true, std::memory_order_acquire));
 

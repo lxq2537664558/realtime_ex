@@ -109,8 +109,8 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;PROTOBUF_USE_DLLS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../../engine/inc;../../3rd/tinyxml2/include;../../3rd/protobuf/include;</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>../../engine/inc;../../3rd/tinyxml2/include;../../3rd/protobuf/include;../;../../service;</AdditionalIncludeDirectories>
       <ExceptionHandling>Sync</ExceptionHandling>
       <StringPooling>true</StringPooling>
       <DisableSpecificWarnings>4251</DisableSpecificWarnings>
@@ -122,7 +122,7 @@
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <AdditionalLibraryDirectories>..\..\3rd\tinyxml2\lib\win32\$(Configuration);..\..\3rd\protobuf\lib\win32\$(Configuration);$(OutDir);</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(OutDir)$(TargetName).pdb</ProgramDatabaseFile>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;libBaseCommon.lib;libBaseNetwork.lib;libCoreCommon.lib;tinyxml2.lib;libprotobufd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;libBaseCommon.lib;libBaseNetwork.lib;libCoreCommon.lib;tinyxml2d.lib;libprotobufd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -172,24 +172,27 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\service\gate\proto_src\player_enter_request.pb.cc">
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4800;4267;</DisableSpecificWarnings>
+    <ClCompile Include="..\..\service\proto_src\player_enter_gas_request.pb.cc">
+      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4251;4800;4267;</DisableSpecificWarnings>
     </ClCompile>
-    <ClCompile Include="..\..\service\gate\proto_src\player_enter_response.pb.cc">
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4800;4267;</DisableSpecificWarnings>
+    <ClCompile Include="..\..\service\proto_src\player_enter_gas_response.pb.cc">
+      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4251;4800;4267;</DisableSpecificWarnings>
     </ClCompile>
-    <ClCompile Include="..\..\service\gate\proto_src\player_leave.pb.cc">
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4800;4267;</DisableSpecificWarnings>
+    <ClCompile Include="..\..\service\proto_src\player_leave_gas_notify.pb.cc">
+      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4251;4800;4267;</DisableSpecificWarnings>
+    </ClCompile>
+    <ClCompile Include="..\proto_src\gas_online_count_notify.pb.cc">
+      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4251;4800;4267;</DisableSpecificWarnings>
+    </ClCompile>
+    <ClCompile Include="..\proto_src\update_name_request.pb.cc">
+      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4251;4800;4267;</DisableSpecificWarnings>
+    </ClCompile>
+    <ClCompile Include="..\proto_src\update_name_response.pb.cc">
+      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4251;4800;4267;</DisableSpecificWarnings>
     </ClCompile>
     <ClCompile Include="player.cpp" />
     <ClCompile Include="player_factory.cpp" />
     <ClCompile Include="player_message_handler.cpp" />
-    <ClCompile Include="proto_src\update_name_request.pb.cc">
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4800;4267;</DisableSpecificWarnings>
-    </ClCompile>
-    <ClCompile Include="proto_src\update_name_response.pb.cc">
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4800;4267;</DisableSpecificWarnings>
-    </ClCompile>
     <ClCompile Include="watchdog_service.cpp" />
     <ClCompile Include="watchdog_service_message_handler.cpp" />
   </ItemGroup>
@@ -205,14 +208,15 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\service\gate\proto_src\player_enter_request.pb.h" />
-    <ClInclude Include="..\..\service\gate\proto_src\player_enter_response.pb.h" />
-    <ClInclude Include="..\..\service\gate\proto_src\player_leave.pb.h" />
+    <ClInclude Include="..\..\service\proto_src\player_enter_gas_request.pb.h" />
+    <ClInclude Include="..\..\service\proto_src\player_enter_gas_response.pb.h" />
+    <ClInclude Include="..\..\service\proto_src\player_leave_gas_notify.pb.h" />
+    <ClInclude Include="..\proto_src\gas_online_count_notify.pb.h" />
+    <ClInclude Include="..\proto_src\update_name_request.pb.h" />
+    <ClInclude Include="..\proto_src\update_name_response.pb.h" />
     <ClInclude Include="player.h" />
     <ClInclude Include="player_factory.h" />
     <ClInclude Include="player_message_handler.h" />
-    <ClInclude Include="proto_src\update_name_request.pb.h" />
-    <ClInclude Include="proto_src\update_name_response.pb.h" />
     <ClInclude Include="watchdog_service_message_handler.h" />
     <ClInclude Include="watchdog_service.h" />
   </ItemGroup>

@@ -14,6 +14,7 @@
     <ClInclude Include="..\..\inc\libCoreCommon\actor_base.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\actor_factory.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\actor_id_converter.h" />
+    <ClInclude Include="..\..\inc\libCoreCommon\actor_invoke_holder.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\actor_message_registry.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\base_connection.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\base_connection_factory.h" />
@@ -30,6 +31,7 @@
     <ClInclude Include="..\..\inc\libCoreCommon\service_base.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\service_id_converter.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\service_invoker.h" />
+    <ClInclude Include="..\..\inc\libCoreCommon\service_invoke_holder.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\service_message_registry.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\service_selector.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\ticker.h" />
@@ -82,6 +84,7 @@
     <ClCompile Include="base_connection_to_master.cpp" />
     <ClCompile Include="hash_service_selector.cpp" />
     <ClCompile Include="random_service_selector.cpp" />
+    <ClCompile Include="service_invoke_holder.cpp" />
     <ClCompile Include="service_registry_proxy.cpp" />
     <ClCompile Include="coroutine.cpp" />
     <ClCompile Include="coroutine_impl.cpp" />
@@ -104,6 +107,7 @@
     <ClCompile Include="ticker.cpp" />
     <ClCompile Include="ticker_runnable.cpp" />
     <ClCompile Include="transporter.cpp" />
+    <ClCompile Include="actor_invoke_holder.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\libBaseNetwork\libBaseNetwork.vcxproj">
@@ -112,11 +116,13 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\inc\libCoreCommon\actor_base.inl" />
+    <None Include="..\..\inc\libCoreCommon\actor_invoke_holder.inl" />
     <None Include="..\..\inc\libCoreCommon\actor_message_registry.inl" />
     <None Include="..\..\inc\libCoreCommon\default_protobuf_factory.inl" />
     <None Include="..\..\inc\libCoreCommon\future.inl" />
     <None Include="..\..\inc\libCoreCommon\promise.inl" />
     <None Include="..\..\inc\libCoreCommon\service_invoker.inl" />
+    <None Include="..\..\inc\libCoreCommon\service_invoke_holder.inl" />
     <None Include="..\..\inc\libCoreCommon\service_message_registry.inl" />
     <None Include="..\..\inc\libCoreCommon\when_all.inl" />
   </ItemGroup>
@@ -161,7 +167,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;__BUILD_CORE_COMMON_DLL__;PROTOBUF_USE_DLLS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;__BUILD_CORE_COMMON_DLL__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>../../inc;../../inc/libCoreCommon;../../../3rd/tinyxml2/include;../../../3rd/protobuf/include;</AdditionalIncludeDirectories>
       <StringPooling>true</StringPooling>
@@ -175,15 +181,11 @@
       <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;libBaseCommon.lib;libBaseNetwork.lib;tinyxml2d.lib;libprotobufd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>del /a $(OutDir)libprotobufd.dll
-del /a $(OutDir)libprotobufd.pdb
-del /a $(OutDir)tinyxml2d.dll
+      <Command>del /a $(OutDir)tinyxml2d.dll
 del /a $(OutDir)tinyxml2d.pdb</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>copy /y ..\..\..\3rd\protobuf\\lib\win32\$(Configuration)\libprotobufd.dll $(OutDir) 
-copy /y ..\..\..\3rd\protobuf\\lib\win32\$(Configuration)\libprotobufd.pdb $(OutDir) 
-copy /y ..\..\..\3rd\tinyxml2\lib\win32\$(Configuration)\tinyxml2d.dll $(OutDir) 
+      <Command>copy /y ..\..\..\3rd\tinyxml2\lib\win32\$(Configuration)\tinyxml2d.dll $(OutDir) 
 copy /y ..\..\..\3rd\tinyxml2\lib\win32\$(Configuration)\tinyxml2d.pdb $(OutDir) </Command>
     </PostBuildEvent>
     <Lib>

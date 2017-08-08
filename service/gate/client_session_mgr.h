@@ -12,10 +12,15 @@ public:
 	CClientSessionMgr(CGateService* pGateService);
 	~CClientSessionMgr();
 
-	CClientSession*	createSession(uint64_t nSocketID, uint32_t nServiceID, uint64_t nPlayerID, const std::string& szToken, CGateConnectionFromClient* pGateConnectionFromClient);
-	CClientSession*	getSessionByPlayerID(uint64_t nActorID) const;
+	CClientSession*	createSession(uint64_t nPlayerID, const std::string& szToken);
+	CClientSession*	getSessionByPlayerID(uint64_t nPlayerID) const;
 	CClientSession*	getSessionBySocketID(uint64_t nSocketID) const;
-	void			delSessionbySocketID(uint64_t nSocketID);
+	void			delSessionByPlayerID(uint64_t nPlayerID);
+
+	void			bindSocketID(uint64_t nPlayerID, uint64_t nSocketID);
+	void			unbindSocketID(uint64_t nPlayerID);
+
+	uint32_t		getSessionCount() const;
 
 private:
 	uint32_t							m_nNextSessionID;

@@ -1,8 +1,7 @@
 #pragma once
-#include "libCoreCommon\service_base.h"
+#include "libCoreCommon/service_base.h"
 
 #include "client_connection_factory.h"
-#include "client_session_mgr.h"
 #include "client_message_dispatcher.h"
 #include "client_message_handler.h"
 
@@ -13,7 +12,6 @@ public:
 	CLoginService();
 	virtual ~CLoginService();
 
-	CClientSessionMgr*				getClientSessionMgr() const;
 	CClientMessageDispatcher*		getClientMessageDispatcher() const;
 	virtual core::CProtobufFactory*	getProtobufFactory() const;
 	
@@ -26,7 +24,6 @@ private:
 
 private:
 	CClientConnectionFactory*		m_pClientConnectionFactory;
-	CClientSessionMgr*				m_pClientSessionMgr;
 	CClientMessageDispatcher*		m_pClientMessageDispatcher;
 	CClientMessageHandler*			m_pClientMessageHandler;
 	core::CDefaultProtobufFactory*	m_pDefaultProtobufFactory;

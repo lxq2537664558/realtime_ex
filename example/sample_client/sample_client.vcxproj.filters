@@ -33,16 +33,25 @@
     <ClInclude Include="message_handler.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\service\gate\proto_src\gate_handshake_request.pb.h">
+    <ClInclude Include="..\..\service\proto_src\gate_handshake_request.pb.h">
       <Filter>proto_src</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\service\gate\proto_src\gate_handshake_response.pb.h">
+    <ClInclude Include="..\..\service\proto_src\gate_handshake_response.pb.h">
       <Filter>proto_src</Filter>
     </ClInclude>
-    <ClInclude Include="..\sample_gas\proto_src\update_name_request.pb.h">
+    <ClInclude Include="..\proto_src\update_name_request.pb.h">
       <Filter>proto_src</Filter>
     </ClInclude>
-    <ClInclude Include="..\sample_gas\proto_src\update_name_response.pb.h">
+    <ClInclude Include="..\proto_src\update_name_response.pb.h">
+      <Filter>proto_src</Filter>
+    </ClInclude>
+    <ClInclude Include="connection_to_login.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\service\proto_src\player_login_request.pb.h">
+      <Filter>proto_src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\service\proto_src\player_login_response.pb.h">
       <Filter>proto_src</Filter>
     </ClInclude>
   </ItemGroup>
@@ -56,19 +65,28 @@
     <ClCompile Include="message_handler.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\service\gate\proto_src\gate_handshake_request.pb.cc">
-      <Filter>proto_src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\service\gate\proto_src\gate_handshake_response.pb.cc">
-      <Filter>proto_src</Filter>
-    </ClCompile>
     <ClCompile Include="sample_client.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\sample_gas\proto_src\update_name_request.pb.cc">
+    <ClCompile Include="..\..\service\proto_src\gate_handshake_request.pb.cc">
       <Filter>proto_src</Filter>
     </ClCompile>
-    <ClCompile Include="..\sample_gas\proto_src\update_name_response.pb.cc">
+    <ClCompile Include="..\..\service\proto_src\gate_handshake_response.pb.cc">
+      <Filter>proto_src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\proto_src\update_name_request.pb.cc">
+      <Filter>proto_src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\proto_src\update_name_response.pb.cc">
+      <Filter>proto_src</Filter>
+    </ClCompile>
+    <ClCompile Include="connection_to_login.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\service\proto_src\player_login_request.pb.cc">
+      <Filter>proto_src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\service\proto_src\player_login_response.pb.cc">
       <Filter>proto_src</Filter>
     </ClCompile>
   </ItemGroup>

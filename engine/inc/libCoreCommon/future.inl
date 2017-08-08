@@ -80,7 +80,7 @@ namespace core
 
 		this->m_pContext->callback = fn;
 
-		if (this->m_pContext->bReady && this->m_pContext->nErrorCode == 0)
+		if (this->m_pContext->bReady)
 			this->m_pContext->callback(this->m_pContext->val.get(), this->m_pContext->nErrorCode);
 	}
 

@@ -1,9 +1,10 @@
 #pragma once
 
-#include "actor_base.h"
+#include <string>
 
 namespace core
 {
+	class CActorBase;
 	class CActorFactory
 	{
 	public:

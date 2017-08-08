@@ -40,14 +40,17 @@ namespace core
 		void					unregisterTicker(CTicker* pTicker);
 
 		void					process();
-		CChannel*				getChannel();
-		SPendingResponseInfo*	addPendingResponseInfo(uint64_t nSessionID, uint64_t nCoroutineID, uint64_t nToID, const std::string& szMessageName, const std::function<void(std::shared_ptr<google::protobuf::Message>&, uint32_t)>& callback);
-		SPendingResponseInfo*	getPendingResponseInfo(uint64_t nSessionID, bool bErase);
 		
-		void					setPendingResponseMessage(uint8_t nResult, google::protobuf::Message* pMessage);
+		CChannel*				getChannel();
 
-		uint64_t				getPendingResponseSessionID() const;
+		SPendingResponseInfo*	addPendingResponseInfo(uint64_t nSessionID, uint64_t nCoroutineID, uint64_t nToID, const std::string& szMessageName, const std::function<void(std::shared_ptr<google::protobuf::Message>, uint32_t)>& callback, uint64_t nHolderID);
+		SPendingResponseInfo*	getPendingResponseInfo(uint64_t nSessionID);
+		void					delPendingResponseInfo(uint64_t nHolderID);
 
+		void					setSyncPendingResponseMessage(uint8_t nResult, google::protobuf::Message* pMessage);
+		uint64_t				getSyncPendingResponseSessionID() const;
+
+		// 必须要用轮训的方式，因为定时器在actor塞住的时候也不是被塞住了的
 		bool					onPendingTimer(int64_t nCurTime);
 
 	private:
@@ -62,7 +65,9 @@ namespace core
 		EActorBaseState								m_eState;
 		std::map<uint64_t, SPendingResponseInfo*>	m_mapPendingResponseInfo;
 		SPendingResponseInfo*						m_pSyncPendingResponseInfo;	// 同步调用
-		uint8_t										m_nPendingResponseResult;
-		google::protobuf::Message*					m_pPendingResponseMessage;
+		uint64_t									m_nSyncPendingResponseHolderID;
+		uint8_t										m_nSyncPendingResponseResult;
+		google::protobuf::Message*					m_pSyncPendingResponseMessage;
+		std::map<uint64_t, std::list<uint64_t>>		m_mapHolderSessionIDList;
 	};
 }

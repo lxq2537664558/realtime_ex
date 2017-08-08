@@ -44,7 +44,11 @@ void CTestService2::release()
 	delete this;
 }
 
-extern "C" __declspec(dllexport) CServiceBase* createServiceBase()
+extern "C" 
+#ifdef _WIN32
+__declspec(dllexport)
+#endif
+CServiceBase* createServiceBase()
 {
 	return new CTestService2();
 }

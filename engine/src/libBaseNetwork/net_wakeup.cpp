@@ -54,7 +54,7 @@ namespace base
 			int32_t nRet = ::read(this->m_nWakeup, &nData, sizeof(nData));
 			if (nRet != sizeof(nData))
 			{
-				g_pLog->printWarning("read event fd err ret: %d", nRet);
+				PrintWarning("read event fd err ret: %d", nRet);
 			}
 		}
 #endif
@@ -70,7 +70,7 @@ namespace base
 		int32_t nRet = ::write(this->m_nWakeup, &nData, sizeof(nData));
 		if (nRet != sizeof(nData))
 		{
-			g_pLog->printWarning("write event fd err ret: %d", nRet);
+			PrintWarning("write event fd err ret: %d", nRet);
 		}
 
 		this->wait(false);

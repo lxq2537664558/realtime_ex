@@ -1,13 +1,13 @@
 #include "watchdog_service_message_handler.h"
 
-#include "libCoreCommon\actor_base.h"
+#include "libCoreCommon/actor_base.h"
 
-#include "..\..\service\gate\proto_src\player_enter_response.pb.h"
-
+#include "proto_src/player_enter_gas_response.pb.h"
 
 CWatchdogServiceMessageHandler::CWatchdogServiceMessageHandler(CServiceBase* pServiceBase)
 {
-	REGISTER_SERVICE_MESSAGE_HANDLER(pServiceBase, CWatchdogServiceMessageHandler, "player_enter_request", &CWatchdogServiceMessageHandler::player_enter_handler);
+	REGISTER_SERVICE_MESSAGE_HANDLER(pServiceBase, CWatchdogServiceMessageHandler, "player_enter_gas_request", &CWatchdogServiceMessageHandler::player_enter_gas_handler);
+	REGISTER_SERVICE_MESSAGE_HANDLER(pServiceBase, CWatchdogServiceMessageHandler, "player_leave_gas_notify", &CWatchdogServiceMessageHandler::player_leave_gas_handler);
 }
 
 CWatchdogServiceMessageHandler::~CWatchdogServiceMessageHandler()
@@ -15,9 +15,9 @@ CWatchdogServiceMessageHandler::~CWatchdogServiceMessageHandler()
 
 }
 
-void CWatchdogServiceMessageHandler::player_enter_handler(CServiceBase* pServiceBase, SSessionInfo sSessionInfo, const player_enter_request* pRequest)
+void CWatchdogServiceMessageHandler::player_enter_gas_handler(CServiceBase* pServiceBase, SSessionInfo sSessionInfo, const player_enter_gas_request* pRequest)
 {
-	player_enter_response response_msg;
+	player_enter_gas_response response_msg;
 	response_msg.set_player_id(pRequest->player_id());
 
 	CActorBase* pActorBase = pServiceBase->createActor("CPlayer", pRequest->player_id(), "");
@@ -32,7 +32,7 @@ void CWatchdogServiceMessageHandler::player_enter_handler(CServiceBase* pService
 	pServiceBase->getServiceInvoker()->response(sSessionInfo, &response_msg);
 }
 
-void CWatchdogServiceMessageHandler::player_leave_handler(CServiceBase* pServiceBase, SSessionInfo sSessionInfo, const player_leave* pMessage)
+void CWatchdogServiceMessageHandler::player_leave_gas_handler(CServiceBase* pServiceBase, SSessionInfo sSessionInfo, const player_leave_gas_notify* pMessage)
 {
 	CActorBase* pActorBase = pServiceBase->getActorBase(pMessage->player_id());
 	if (nullptr == pActorBase)

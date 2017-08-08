@@ -1,5 +1,7 @@
 #include "test_actor_service2_message_handler.h"
 
+#include "libCoreCommon/service_invoker.h"
+
 CTestActorService2MessageHandler::CTestActorService2MessageHandler(CServiceBase* pServiceBase)
 {
 	REGISTER_SERVICE_MESSAGE_HANDLER(pServiceBase, CTestActorService2MessageHandler, "request_msg2", &CTestActorService2MessageHandler::request_msg2_handler);

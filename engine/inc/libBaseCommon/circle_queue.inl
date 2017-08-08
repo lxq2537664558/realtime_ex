@@ -23,7 +23,7 @@ namespace base
 	template<class T, bool FIX>
 	bool CCircleQueue<T, FIX>::send(const T& sValue)
 	{
-		if (FIX && this->size() == this->m_nQueueCapacity)
+		if (FIX && (int32_t)this->size() == this->m_nQueueCapacity)
 			return false;
 
 		this->m_pQueue[this->m_nQueueEnd] = sValue;

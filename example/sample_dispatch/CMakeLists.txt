@@ -1,19 +1,30 @@
 # 查找当前目录下的所有源文件
 # 并将名称保存到 DIR_SRCS 变量
-aux_source_directory(. LIST_SRCS)
+aux_source_directory(. DIR_SRCS)
+aux_source_directory(../proto_src PROTO_SRCS1)
+list(APPEND DIR_SRCS ${PROTO_SRCS1})
+aux_source_directory(../../service/proto_src PROTO_SRCS2)
+list(APPEND DIR_SRCS ${PROTO_SRCS2})
 
 # 设置头文件
 include_directories(../../engine/inc)
 include_directories(../../3rd/tinyxml2/include)
+include_directories(../../3rd/protobuf/include)
+include_directories(../../service)
+include_directories(../)
 
 # 设置输出目录
-set(EXECUTABLE_OUTPUT_PATH ${BIN_OUTPUT_PATH})
-# 设置链接的库
-set(LINK_LIBS ${BIN_OUTPUT_PATH}/libBaseCommon.so ${BIN_OUTPUT_PATH}/libBaseNetwork.so ${BIN_OUTPUT_PATH}/libCoreCommon.a ${PROJECT_SOURCE_DIR}/3rd/tinyxml2/lib/linux/libtinyxml2.a rt dl)
-# 设置链接选项
-set(CMAKE_EXE_LINKER_FLAGS "-Wl,-rpath=./ ")
-# 生成gate
-add_executable(TestCoreCommon ${LIST_SRCS})
+SET(LIBRARY_OUTPUT_PATH ${BIN_OUTPUT_PATH})
 
-# 链接库
-target_link_libraries(TestCoreCommon ${LINK_LIBS})
+set(LINK_LIBS ${PROJECT_SOURCE_DIR}/3rd/protobuf/lib/linux/libprotobuf.a)
+
+# 生成sample_dispatch.so
+add_library(sample_dispatch SHARED ${DIR_SRCS})
+
+target_link_libraries(sample_dispatch ${LINK_LIBS})
+
+add_custom_command(
+	TARGET sample_dispatch
+    POST_BUILD
+    COMMAND mv ${LIBRARY_OUTPUT_PATH}/libsample_dispatch.so ${LIBRARY_OUTPUT_PATH}/sample_dispatch.so
+)
