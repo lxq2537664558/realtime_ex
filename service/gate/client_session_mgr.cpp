@@ -43,7 +43,7 @@ CClientSession* CClientSessionMgr::createSession(uint64_t nPlayerID, const std::
 	}
 	this->m_mapClientSessionByPlayerID[nPlayerID] = pClientSession;
 
-	PrintInfo("create session player_id: "UINT64FMT"session_id: "UINT64FMT, nPlayerID, nSessionID);
+	PrintInfo("create session player_id: "UINT64FMT" session_id: "UINT64FMT, nPlayerID, nSessionID);
 
 	return pClientSession;
 }

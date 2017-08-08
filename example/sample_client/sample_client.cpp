@@ -22,7 +22,7 @@ int main()
 
 	SNetAddr netAddr;
 	netAddr.nPort = 8000;
-	base::crt::strcpy(netAddr.szHost, _countof(netAddr.szHost), "127.0.0.1");
+	base::crt::strcpy(netAddr.szHost, _countof(netAddr.szHost), "192.168.222.137");
 	pNetEventLoop->connect(netAddr, 1024, 1024, new CConnectToLogin());
 
 	while (true)

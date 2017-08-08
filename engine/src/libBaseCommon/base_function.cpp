@@ -19,6 +19,7 @@
 #include <iostream>
 #include <mutex>
 #include <thread>
+#include <sstream>
 
 #include "debug_helper.h"
 #include "base_function.h"
@@ -399,6 +400,7 @@ namespace base
 		{
 			return strncpy(szDest, nDestSize, szSource, _TRUNCATE);
 		}
+
 		// 如果目标字符串足以放下源字符串的内容（包括\0），那么就直接拷贝，不然就会截断以保证目标字符串一定是以\0结尾
 		bool strncpy(char* szDest, size_t nDestSize, const char* szSource, size_t nCount)
 		{
@@ -448,78 +450,115 @@ namespace base
 #endif
 		}
 
-		bool itoa(int32_t nValue, char* szBuf, size_t nBufSize, uint32_t nRadix)
+		bool itoa(int32_t nValue, char* szBuf, size_t nBufSize)
 		{
-#ifdef _WIN32
-			return (::_itoa_s(nValue, szBuf, nBufSize, nRadix) == 0);
-#else
-			return true;
-#endif
+			if (szBuf == nullptr)
+				return false;
+
+			std::ostringstream oss;
+			oss << nValue;
+			if (oss.str().size() >= nBufSize)
+				return false;
+
+			return base::crt::strcpy(szBuf, nBufSize, oss.str().c_str());
 		}
 
-		bool uitoa(uint32_t nValue, char* szBuf, size_t nBufSize, uint32_t nRadix)
+		bool uitoa(uint32_t nValue, char* szBuf, size_t nBufSize)
 		{
-#ifdef _WIN32
-			int64_t n64Value = nValue;
-			return (::_ui64toa_s(n64Value, szBuf, nBufSize, nRadix) == 0);
-#else
-			return true;
-#endif
+			std::ostringstream oss;
+			oss << nValue;
+			if (oss.str().size() >= nBufSize)
+				return false;
+
+			return base::crt::strcpy(szBuf, nBufSize, oss.str().c_str());
 		}
 
-		bool i64toa(int64_t nValue, char* szBuf, size_t nBufSize, uint32_t nRadix)
+		bool i64toa(int64_t nValue, char* szBuf, size_t nBufSize)
 		{
-#ifdef _WIN32
-			return (::_i64toa_s(nValue, szBuf, nBufSize, nRadix) == 0);
-#else
-			return true;
-#endif
+			std::ostringstream oss;
+			oss << nValue;
+			if (oss.str().size() >= nBufSize)
+				return false;
+
+			return base::crt::strcpy(szBuf, nBufSize, oss.str().c_str());
 		}
 
-		bool ui64toa(uint64_t nValue, char* szBuf, size_t nBufSize, uint32_t nRadix)
+		bool ui64toa(uint64_t nValue, char* szBuf, size_t nBufSize)
 		{
-#ifdef _WIN32
-			return (::_ui64toa_s(nValue, szBuf, nBufSize, nRadix) == 0);
-#else
-			return true;
-#endif
+			std::ostringstream oss;
+			oss << nValue;
+			if (oss.str().size() >= nBufSize)
+				return false;
+
+			return base::crt::strcpy(szBuf, nBufSize, oss.str().c_str());
 		}
 
 		bool atoi(const char* szBuf, int32_t& nVal)
 		{
-			errno = 0;
-			nVal = ::strtol(szBuf, nullptr, 10);
+			if (szBuf == nullptr)
+				return false;
 
-			return errno == 0;
+			std::istringstream iss(szBuf);
+			if (iss.bad())
+				return false;
+
+			iss >> nVal;
+
+			if (iss.fail())
+				return false;
+
+			return true;
 		}
 
 		bool atoui(const char* szBuf, uint32_t& nVal)
 		{
-			errno = 0;
-			nVal = ::strtoul(szBuf, nullptr, 10);
-			return errno == 0;
+			if (szBuf == nullptr)
+				return false;
+
+			std::istringstream iss(szBuf);
+			if (iss.bad())
+				return false;
+
+			iss >> nVal;
+
+			if (iss.fail())
+				return false;
+
+			return true;
 		}
 
 		bool atoi64(const char* szBuf, int64_t& nVal)
 		{
-#ifdef _WIN32
-			errno = 0;
-			nVal = ::_strtoi64(szBuf, nullptr, 10);
-			return errno == 0;
-#else
+			if (szBuf == nullptr)
+				return false;
+
+			std::istringstream iss(szBuf);
+			if (iss.bad())
+				return false;
+
+			iss >> nVal;
+
+			if (iss.fail())
+				return false;
+
 			return true;
-#endif
 		}
 
 		bool atoui64(const char* szBuf, uint64_t& nVal)
 		{
-#ifdef _WIN32
-			errno = 0;
-			nVal = ::_strtoui64(szBuf, nullptr, 10);
-			return errno == 0;
-#else
+			if (szBuf == nullptr)
+				return false;
+
+			std::istringstream iss(szBuf);
+			if (iss.bad())
+				return false;
+
+			iss >> nVal;
+
+			if (iss.fail())
+				return false;
+
 			return true;
-#endif
 		}
 	}
 }

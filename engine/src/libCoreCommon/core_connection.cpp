@@ -108,11 +108,9 @@ namespace core
 
 			} while (true);
 		}
-		catch (base::CBaseException& exp)
+		catch (...)
 		{
-			char szBuf[1024] = { 0 };
-			base::crt::snprintf(szBuf, _countof(szBuf), "dispatch data error %s", exp.getInfo());
-			this->shutdown(true, szBuf);
+			this->shutdown(true, "cache");
 		}
 		// 这里不能catch ... 因为一旦这里捕获的如果逻辑代码中有存在不是异常安全的代码 轻则资源泄露，重则服务器没有在第一现场崩溃，等下跑了一段时间崩溃了
 

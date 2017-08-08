@@ -97,7 +97,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\inc\libBaseCommon\base_exception.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\base_function.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\buf_file.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\base_time.h" />
@@ -132,7 +131,6 @@
     <None Include="..\..\inc\libBaseCommon\link.inl" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="base_exception.cpp" />
     <ClCompile Include="base_function.cpp" />
     <ClCompile Include="base_time.cpp" />
     <ClCompile Include="buf_file.cpp" />

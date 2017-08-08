@@ -5,7 +5,6 @@
 #endif
 
 #include "base_function.h"
-#include "base_exception.h"
 #include "exception_handler.h"
 #include "logger.h"
 

@@ -47,12 +47,12 @@ namespace base
 
 		__BASE_COMMON_API__ size_t	vsnprintf(char* szBuf, size_t nBufSize, const char* szFormat, va_list arg);
 
-		__BASE_COMMON_API__ bool	itoa(int32_t nValue, char* szBuf, size_t nBufSize, uint32_t nRadix);
+		__BASE_COMMON_API__ bool	itoa(int32_t nValue, char* szBuf, size_t nBufSize);
 
-		__BASE_COMMON_API__ bool	uitoa(uint32_t nValue, char* szBuf, size_t nBufSize, uint32_t nRadix);
+		__BASE_COMMON_API__ bool	uitoa(uint32_t nValue, char* szBuf, size_t nBufSize);
 
-		__BASE_COMMON_API__ bool	i64toa(int64_t nValue, char* szBuf, size_t nBufSize, uint32_t nRadix);
-		__BASE_COMMON_API__ bool	ui64toa(uint64_t nValue, char* szBuf, size_t nBufSize, uint32_t nRadix);
+		__BASE_COMMON_API__ bool	i64toa(int64_t nValue, char* szBuf, size_t nBufSize);
+		__BASE_COMMON_API__ bool	ui64toa(uint64_t nValue, char* szBuf, size_t nBufSize);
 
 		__BASE_COMMON_API__ bool	atoi(const char* szBuf, int32_t& nVal);
 		__BASE_COMMON_API__ bool	atoui(const char* szBuf, uint32_t& nVal);

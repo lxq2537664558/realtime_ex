@@ -13,7 +13,7 @@ add_custom_command(TARGET ALL
 # 设置C++编译器
 set(CMAKE_CXX_COMPILER "g++")
 # 输出编译选项
-set(CMAKE_VERBOSE_MAKEFILE on)
+set(CMAKE_VERBOSE_MAKEFILE off)
 #设置编译版本类型
 set(CMAKE_BUILD_TYPE "Debug")
 #设置C++ 通用 版本编译选项

@@ -15,9 +15,6 @@
     <ClInclude Include="..\..\inc\libBaseCommon\vector_map.h">
       <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\inc\libBaseCommon\base_exception.h">
-      <Filter>inc</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\inc\libBaseCommon\base_function.h">
       <Filter>inc</Filter>
     </ClInclude>
@@ -98,9 +95,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="base_exception.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="base_function.cpp">
       <Filter>src</Filter>
     </ClCompile>
