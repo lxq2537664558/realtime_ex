@@ -66,10 +66,10 @@ typedef unsigned long		_ulong;
 
 #	define Sleep(t) usleep((t)*1000)
 
-#	define stricmp(a,b) strcasecmp( a, b )
-#	define strnicmp(a,b, c) strncasecmp( a, b, c )
-#	define _strnicmp(a,b,c) strncasecmp( a, b, c )
-#	define strncmp(a,b,c) strncmp( a, b, c )
+#	define stricmp(a,b) strcasecmp(a, b)
+#	define strnicmp(a,b, c) strncasecmp(a, b, c)
+#	define _strnicmp(a,b,c) strncasecmp(a, b, c)
+#	define strncmp(a,b,c) strncmp(a, b, c)
 #	define _chdir	chdir
 #	define _getcwd	getcwd
 

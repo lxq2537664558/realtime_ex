@@ -250,7 +250,7 @@ namespace base
 		/**
 		@brief: 发起一个监听
 		*/
-		virtual bool	listen(const SNetAddr& netAddr, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, INetAccepterHandler* pHandler) = 0;
+		virtual bool	listen(const SNetAddr& netAddr, bool bReusePort, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, INetAccepterHandler* pHandler) = 0;
 		/**
 		@brief: 发起一个连接
 		*/

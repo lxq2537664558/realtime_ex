@@ -1,6 +1,6 @@
 namespace core
 {
-	google::protobuf::Message* CDefaultProtobufFactory::create_protobuf_message(const std::string& szMessageName)
+	google::protobuf::Message* CNormalProtobufFactory::create_protobuf_message(const std::string& szMessageName)
 	{
 		const google::protobuf::Descriptor* pDescriptor = google::protobuf::DescriptorPool::generated_pool()->FindMessageTypeByName(szMessageName);
 		if (pDescriptor == nullptr)
@@ -13,11 +13,11 @@ namespace core
 		return pProtoType->New();
 	}
 
-	google::protobuf::Message* CDefaultProtobufFactory::clone_protobuf_message(const google::protobuf::Message* pMessage)
+	google::protobuf::Message* CNormalProtobufFactory::clone_protobuf_message(const google::protobuf::Message* pMessage)
 	{
 		DebugAstEx(pMessage != nullptr, nullptr);
 
-		google::protobuf::Message* pNewMessage = create_protobuf_message(pMessage->GetTypeName());
+		google::protobuf::Message* pNewMessage = this->create_protobuf_message(pMessage->GetTypeName());
 		if (nullptr == pNewMessage)
 			return nullptr;
 
@@ -26,11 +26,11 @@ namespace core
 		return pNewMessage;
 	}
 
-	google::protobuf::Message* CDefaultProtobufFactory::unserialize_protobuf_message_from_buf(const std::string& szMessageName, const void* pData, uint32_t nSize)
+	google::protobuf::Message* CNormalProtobufFactory::unserialize_protobuf_message_from_buf(const std::string& szMessageName, const void* pData, uint32_t nSize)
 	{
 		DebugAstEx(pData != nullptr, nullptr);
 
-		google::protobuf::Message* pMessage = create_protobuf_message(szMessageName);
+		google::protobuf::Message* pMessage = this->create_protobuf_message(szMessageName);
 		if (nullptr == pMessage)
 			return nullptr;
 
@@ -43,7 +43,7 @@ namespace core
 		return pMessage;
 	}
 
-	int32_t CDefaultProtobufFactory::serialize_protobuf_message_to_buf(const google::protobuf::Message* pMessage, void* pData, uint32_t nSize)
+	int32_t CNormalProtobufFactory::serialize_protobuf_message_to_buf(const google::protobuf::Message* pMessage, void* pData, uint32_t nSize)
 	{
 		DebugAstEx(pMessage != nullptr && pData != nullptr, -1);
 

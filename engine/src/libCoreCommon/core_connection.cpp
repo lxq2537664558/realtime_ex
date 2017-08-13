@@ -220,7 +220,7 @@ namespace core
 				return;
 			}
 
-			CProtobufFactory* pProtobufFactory = pCoreService->getServiceBase()->getProtobufFactory();
+			CProtobufFactory* pProtobufFactory = pCoreService->getServiceBase()->getServiceProtobufFactory();
 			if (pProtobufFactory == nullptr)
 			{
 				PrintWarning("CCoreConnection::onDispatch eMT_REQUEST error pProtobufFactory == nullptr service_id: %d", pCookice->nToServiceID);
@@ -268,7 +268,7 @@ namespace core
 				return;
 			}
 
-			CProtobufFactory* pProtobufFactory = pCoreService->getServiceBase()->getProtobufFactory();
+			CProtobufFactory* pProtobufFactory = pCoreService->getServiceBase()->getServiceProtobufFactory();
 			if (pProtobufFactory == nullptr)
 			{
 				PrintWarning("CCoreConnection::onDispatch eMT_RESPONSE error pProtobufFactory == nullptr service_id: %d", pCookice->nToServiceID);
@@ -313,7 +313,7 @@ namespace core
 				return;
 			}
 
-			CProtobufFactory* pProtobufFactory = pCoreService->getServiceBase()->getProtobufFactory();
+			CProtobufFactory* pProtobufFactory = pCoreService->getServiceBase()->getForwardProtobufFactory();
 			if (pProtobufFactory == nullptr)
 			{
 				PrintWarning("CCoreConnection::onDispatch eMT_GATE_FORWARD error pProtobufFactory == nullptr service_id: %d", pCookice->nToServiceID);
@@ -496,9 +496,6 @@ namespace core
 
 	void CCoreConnection::shutdown(bool bForce, const std::string& szMsg)
 	{
-		if (this->m_pNetConnecter)
-			return;
-
 		if (this->m_pNetConnecter != nullptr)
 			this->m_pNetConnecter->shutdown(bForce, szMsg.c_str());
 	}

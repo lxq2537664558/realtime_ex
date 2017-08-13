@@ -93,6 +93,12 @@
     <ClInclude Include="..\..\inc\libBaseCommon\spin_lock.h">
       <Filter>inc</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\inc\libBaseCommon\base64.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libBaseCommon\sha1.h">
+      <Filter>inc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="base_function.cpp">
@@ -144,6 +150,12 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="token_parser.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="base64.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="sha1.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

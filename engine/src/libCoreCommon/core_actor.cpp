@@ -20,6 +20,7 @@ namespace core
 		, m_nID(nID)
 		, m_pActorBase(pActorBase)
 		, m_pCoreService(pCoreService)
+		, m_pSyncPendingResponseMessage(nullptr)
 		, m_pSyncPendingResponseInfo(nullptr)
 		, m_nSyncPendingResponseHolderID(0)
 		, m_nSyncPendingResponseResult(0)

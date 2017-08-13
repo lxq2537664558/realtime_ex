@@ -6,6 +6,7 @@
 #include "future.h"
 #include "promise.h"
 #include "service_base.h"
+#include "service_invoker.h"
 
 #include "google/protobuf/message.h"
 
@@ -45,3 +46,5 @@ namespace core
 		uint64_t		m_nID;
 	};
 }
+
+#include "service_invoke_holder.inl"

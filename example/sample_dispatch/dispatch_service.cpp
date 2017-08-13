@@ -3,7 +3,7 @@
 
 CDispatchService::CDispatchService()
 	: m_pDispatchServiceMessageHandler(nullptr)
-	, m_pDefaultProtobufFactory(nullptr)
+	, m_pNormalProtobufFactory(nullptr)
 	, m_pOnlineCountMgr(nullptr)
 {
 
@@ -14,9 +14,9 @@ CDispatchService::~CDispatchService()
 
 }
 
-core::CProtobufFactory* CDispatchService::getProtobufFactory() const
+core::CProtobufFactory* CDispatchService::getServiceProtobufFactory() const
 {
-	return this->m_pDefaultProtobufFactory;
+	return this->m_pNormalProtobufFactory;
 }
 
 void CDispatchService::release()
@@ -31,7 +31,7 @@ COnlineCountMgr* CDispatchService::getOnlineCountMgr() const
 
 bool CDispatchService::onInit()
 {
-	this->m_pDefaultProtobufFactory = new CDefaultProtobufFactory();
+	this->m_pNormalProtobufFactory = new CNormalProtobufFactory();
 	this->m_pDispatchServiceMessageHandler = new CDispatchServiceMessageHandler(this);
 	this->m_pOnlineCountMgr = new COnlineCountMgr();
 

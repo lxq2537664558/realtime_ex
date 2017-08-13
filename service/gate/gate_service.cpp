@@ -14,35 +14,38 @@
 using namespace core;
 
 CGateService::CGateService()
-	: m_pClientConnectionFactory(nullptr)
-	, m_pClientSessionMgr(nullptr)
-	, m_pClientMessageDispatcher(nullptr)
-	, m_pClientMessageHandler(nullptr)
-	, m_pDefaultProtobufFactory(nullptr)
+	: m_pGateClientConnectionFactory(nullptr)
+	, m_pGateClientSessionMgr(nullptr)
+	, m_pGateClientMessageDispatcher(nullptr)
+	, m_pGateClientMessageHandler(nullptr)
+	, m_pNormalProtobufFactory(nullptr)
+	, m_pJsonProtobufFactory(nullptr)
 {
 }
 
 CGateService::~CGateService()
 {
-	SAFE_DELETE(this->m_pClientConnectionFactory);
-	SAFE_DELETE(this->m_pClientSessionMgr);
-	SAFE_DELETE(this->m_pClientMessageDispatcher);
-	SAFE_DELETE(this->m_pClientMessageHandler);
-	SAFE_DELETE(this->m_pDefaultProtobufFactory);
+	SAFE_DELETE(this->m_pGateClientConnectionFactory);
+	SAFE_DELETE(this->m_pGateClientSessionMgr);
+	SAFE_DELETE(this->m_pGateClientMessageDispatcher);
+	SAFE_DELETE(this->m_pGateClientMessageHandler);
+	SAFE_DELETE(this->m_pNormalProtobufFactory);
+	SAFE_DELETE(this->m_pJsonProtobufFactory);
 }
 
 bool CGateService::onInit()
 {
-	this->m_pClientMessageDispatcher = new CClientMessageDispatcher(this);
-	this->m_pClientMessageHandler = new CClientMessageHandler(this);
+	this->m_pGateClientMessageDispatcher = new CGateClientMessageDispatcher(this);
+	this->m_pGateClientMessageHandler = new CGateClientMessageHandler(this);
 	this->m_pGateServiceMessageHandler = new CGateServiceMessageHandler(this);
 
-	this->m_pClientSessionMgr = new CClientSessionMgr(this);
+	this->m_pGateClientSessionMgr = new CGateClientSessionMgr(this);
 
-	this->m_pClientConnectionFactory = new CClientConnectionFactory();
-	CBaseApp::Inst()->getBaseConnectionMgr()->setBaseConnectionFactory("CGateConnectionFromClient", this->m_pClientConnectionFactory);
+	this->m_pGateClientConnectionFactory = new CGateClientConnectionFactory();
+	CBaseApp::Inst()->getBaseConnectionMgr()->setBaseConnectionFactory("CGateConnectionFromClient", this->m_pGateClientConnectionFactory);
 
-	this->m_pDefaultProtobufFactory = new CDefaultProtobufFactory();
+	this->m_pNormalProtobufFactory = new CNormalProtobufFactory();
+	this->m_pJsonProtobufFactory = new CJsonProtobufFactory();
 	
 	this->setServiceConnectCallback(std::bind(&CGateService::onServiceConnect, this, std::placeholders::_1, std::placeholders::_2));
 
@@ -70,15 +73,17 @@ bool CGateService::onInit()
 	uint32_t nSendBufSize = pListenClientAddrXML->IntAttribute("send_buf_size");
 	uint32_t nRecvBufSize = pListenClientAddrXML->IntAttribute("recv_buf_size");
 
+	const std::string szReportHost = pListenClientAddrXML->Attribute("report_host");
+
 	char szAddr[256] = { 0 };
-	base::crt::snprintf(szAddr, _countof(szAddr), "%s:%d", szHost.c_str(), nPort);
+	base::crt::snprintf(szAddr, _countof(szAddr), "%s:%d", szReportHost.c_str(), nPort);
 	this->m_szAddr = szAddr;
 
 	char szBuf[256] = { 0 };
 	base::crt::snprintf(szBuf, _countof(szBuf), "%d", this->getServiceID());
 
 	// 启动客户端连接
-	CBaseApp::Inst()->getBaseConnectionMgr()->listen(szHost, nPort, "CGateConnectionFromClient", szBuf, nSendBufSize, nRecvBufSize, default_client_message_parser);
+	CBaseApp::Inst()->getBaseConnectionMgr()->listen(szHost, nPort, true, "CGateConnectionFromClient", szBuf, nSendBufSize, nRecvBufSize, default_client_message_parser, eCCT_Websocket);
 
 	SAFE_DELETE(pConfigXML);
 
@@ -97,14 +102,14 @@ void CGateService::onQuit()
 
 }
 
-CClientSessionMgr* CGateService::getClientSessionMgr() const
+CGateClientSessionMgr* CGateService::getGateClientSessionMgr() const
 {
-	return this->m_pClientSessionMgr;
+	return this->m_pGateClientSessionMgr;
 }
 
-CClientMessageDispatcher* CGateService::getClientMessageDispatcher() const
+CGateClientMessageDispatcher* CGateService::getGateClientMessageDispatcher() const
 {
-	return this->m_pClientMessageDispatcher;
+	return this->m_pGateClientMessageDispatcher;
 }
 
 void CGateService::release()
@@ -112,14 +117,14 @@ void CGateService::release()
 	delete this;
 }
 
-CProtobufFactory* CGateService::getProtobufFactory() const
+CProtobufFactory* CGateService::getServiceProtobufFactory() const
 {
-	return this->m_pDefaultProtobufFactory;
+	return this->m_pNormalProtobufFactory;
 }
 
-CClientMessageHandler* CGateService::getClientMessageHandler() const
+CGateClientMessageHandler* CGateService::getGateClientMessageHandler() const
 {
-	return this->m_pClientMessageHandler;
+	return this->m_pGateClientMessageHandler;
 }
 
 void CGateService::onServiceConnect(const std::string& szType, uint32_t nServiceID)
@@ -131,7 +136,7 @@ void CGateService::onServiceConnect(const std::string& szType, uint32_t nService
 		this->getServiceInvoker()->send(eMTT_Service, nServiceID, &msg1);
 
 		gate_online_count_notify msg2;
-		msg2.set_count(this->m_pClientSessionMgr->getSessionCount());
+		msg2.set_count(this->m_pGateClientSessionMgr->getSessionCount());
 		this->getServiceInvoker()->send(eMTT_Service, nServiceID, &msg2);
 	}
 }
@@ -139,8 +144,13 @@ void CGateService::onServiceConnect(const std::string& szType, uint32_t nService
 void CGateService::onNotifyGateOnlineCount(uint64_t nContext)
 {
 	gate_online_count_notify msg;
-	msg.set_count(this->m_pClientSessionMgr->getSessionCount());
+	msg.set_count(this->m_pGateClientSessionMgr->getSessionCount());
 	this->getServiceInvoker()->broadcast("dispatch", &msg);
+}
+
+core::CProtobufFactory* CGateService::getForwardProtobufFactory() const
+{
+	return this->m_pJsonProtobufFactory;
 }
 
 extern "C" 

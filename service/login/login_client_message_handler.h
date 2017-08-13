@@ -5,11 +5,11 @@
 #include "login_connection_from_client.h"
 
 class CLoginService;
-class CClientMessageHandler
+class CLoginClientMessageHandler
 {
 public:
-	CClientMessageHandler(CLoginService* pLoginService);
-	~CClientMessageHandler();
+	CLoginClientMessageHandler(CLoginService* pLoginService);
+	~CLoginClientMessageHandler();
 
 	void	sendClientMessage(core::CBaseConnection* pBaseConnection, const google::protobuf::Message* pMessage);
 

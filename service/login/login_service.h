@@ -1,9 +1,11 @@
 #pragma once
 #include "libCoreCommon/service_base.h"
 
-#include "client_connection_factory.h"
-#include "client_message_dispatcher.h"
-#include "client_message_handler.h"
+#include "login_client_connection_factory.h"
+#include "login_client_message_dispatcher.h"
+#include "login_client_message_handler.h"
+
+#include "libCoreCommon/json_protobuf_factory.h"
 
 class CLoginService :
 	public core::CServiceBase
@@ -12,8 +14,10 @@ public:
 	CLoginService();
 	virtual ~CLoginService();
 
-	CClientMessageDispatcher*		getClientMessageDispatcher() const;
-	virtual core::CProtobufFactory*	getProtobufFactory() const;
+	CLoginClientMessageDispatcher*	getLoginClientMessageDispatcher() const;
+
+	virtual core::CProtobufFactory*	getServiceProtobufFactory() const;
+	virtual core::CProtobufFactory*	getForwardProtobufFactory() const;
 	
 	virtual void					release();
 
@@ -23,8 +27,10 @@ private:
 	virtual void					onQuit();
 
 private:
-	CClientConnectionFactory*		m_pClientConnectionFactory;
-	CClientMessageDispatcher*		m_pClientMessageDispatcher;
-	CClientMessageHandler*			m_pClientMessageHandler;
-	core::CDefaultProtobufFactory*	m_pDefaultProtobufFactory;
+	CLoginClientConnectionFactory*		m_pLoginClientConnectionFactory;
+	CLoginClientMessageDispatcher*		m_pLoginClientMessageDispatcher;
+	CLoginClientMessageHandler*			m_pLoginClientMessageHandler;
+
+	core::CNormalProtobufFactory*		m_pNormalProtobufFactory;
+	core::CJsonProtobufFactory*			m_pJsonProtobufFactory;
 };

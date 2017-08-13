@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "client_session_mgr.h"
+#include "gate_client_session_mgr.h"
 #include "gate_service.h"
 #include "gate_connection_from_client.h"
 
@@ -13,19 +13,19 @@
 
 using namespace core;
 
-CClientSessionMgr::CClientSessionMgr(CGateService* pGateService)
+CGateClientSessionMgr::CGateClientSessionMgr(CGateService* pGateService)
 	: m_pGateService(pGateService)
 	, m_nNextSessionID(1)
 {
 
 }
 
-CClientSessionMgr::~CClientSessionMgr()
+CGateClientSessionMgr::~CGateClientSessionMgr()
 {
 
 }
 
-CClientSession* CClientSessionMgr::createSession(uint64_t nPlayerID, const std::string& szToken)
+CGateClientSession* CGateClientSessionMgr::createSession(uint64_t nPlayerID, const std::string& szToken)
 {
 	if (this->getSessionByPlayerID(nPlayerID) != nullptr)
 	{
@@ -35,20 +35,20 @@ CClientSession* CClientSessionMgr::createSession(uint64_t nPlayerID, const std::
 
 	uint64_t nSessionID = (uint64_t)base::CRandGen::getGlobalRand(1000000000) << 32 | this->m_nNextSessionID++;
 
-	CClientSession* pClientSession = new CClientSession();
-	if (!pClientSession->init(nPlayerID, nSessionID, szToken))
+	CGateClientSession* pGateClientSession = new CGateClientSession(this->m_pGateService);
+	if (!pGateClientSession->init(nPlayerID, nSessionID, szToken))
 	{
-		SAFE_DELETE(pClientSession);
+		SAFE_DELETE(pGateClientSession);
 		return nullptr;
 	}
-	this->m_mapClientSessionByPlayerID[nPlayerID] = pClientSession;
+	this->m_mapClientSessionByPlayerID[nPlayerID] = pGateClientSession;
 
 	PrintInfo("create session player_id: "UINT64FMT" session_id: "UINT64FMT, nPlayerID, nSessionID);
 
-	return pClientSession;
+	return pGateClientSession;
 }
 
-CClientSession* CClientSessionMgr::getSessionByPlayerID(uint64_t nPlayerID) const
+CGateClientSession* CGateClientSessionMgr::getSessionByPlayerID(uint64_t nPlayerID) const
 {
 	auto iter = this->m_mapClientSessionByPlayerID.find(nPlayerID);
 	if (iter == this->m_mapClientSessionByPlayerID.end())
@@ -57,7 +57,7 @@ CClientSession* CClientSessionMgr::getSessionByPlayerID(uint64_t nPlayerID) cons
 	return iter->second;
 }
 
-void CClientSessionMgr::delSessionByPlayerID(uint64_t nPlayerID)
+void CGateClientSessionMgr::delSessionByPlayerID(uint64_t nPlayerID)
 {
 	auto iter = this->m_mapClientSessionByPlayerID.find(nPlayerID);
 	if (iter == this->m_mapClientSessionByPlayerID.end())
@@ -65,12 +65,12 @@ void CClientSessionMgr::delSessionByPlayerID(uint64_t nPlayerID)
 
 	this->m_mapClientSessionByPlayerID.erase(iter);
 
-	CClientSession* pClientSession = iter->second;
-	DebugAst(pClientSession != nullptr);
+	CGateClientSession* pGateClientSession = iter->second;
+	DebugAst(pGateClientSession != nullptr);
 	
-	this->m_mapPlayerIDBySocketID.erase(pClientSession->getSocketID());
+	this->m_mapPlayerIDBySocketID.erase(pGateClientSession->getSocketID());
 
-	uint64_t nSocketID = pClientSession->getSocketID();
+	uint64_t nSocketID = pGateClientSession->getSocketID();
 	if (nSocketID != 0)
 	{
 		CBaseConnection* pBaseConnection = CBaseApp::Inst()->getBaseConnectionMgr()->getBaseConnectionBySocketID(nSocketID);
@@ -78,8 +78,8 @@ void CClientSessionMgr::delSessionByPlayerID(uint64_t nPlayerID)
 			pBaseConnection->shutdown(true, "kick");
 	}
 
-	uint32_t nServiceID = pClientSession->getServiceID();
-	SAFE_DELETE(pClientSession);
+	uint32_t nServiceID = pGateClientSession->getServiceID();
+	SAFE_DELETE(pGateClientSession);
 
 	PrintInfo("destroy session player_id: "UINT64FMT" socket_id: "UINT64FMT, nPlayerID, nSocketID);
 
@@ -88,40 +88,40 @@ void CClientSessionMgr::delSessionByPlayerID(uint64_t nPlayerID)
 	this->m_pGateService->getServiceInvoker()->send(eMTT_Service, nServiceID, &msg);
 }
 
-void CClientSessionMgr::bindSocketID(uint64_t nPlayerID, uint64_t nSocketID)
+void CGateClientSessionMgr::bindSocketID(uint64_t nPlayerID, uint64_t nSocketID)
 {
 	auto iter = this->m_mapClientSessionByPlayerID.find(nPlayerID);
 	DebugAst(iter != this->m_mapClientSessionByPlayerID.end());
 
-	CClientSession* pClientSession = iter->second;
-	DebugAst(pClientSession != nullptr);
+	CGateClientSession* pGateClientSession = iter->second;
+	DebugAst(pGateClientSession != nullptr);
 
 	this->m_mapPlayerIDBySocketID[nSocketID] = nPlayerID;
-	pClientSession->setSocketID(nSocketID);
+	pGateClientSession->setSocketID(nSocketID);
 
 	PrintInfo("bind socket id player_id: "UINT64FMT" socket_id: "UINT64FMT, nPlayerID, nSocketID);
 }
 
-void CClientSessionMgr::unbindSocketID(uint64_t nPlayerID)
+void CGateClientSessionMgr::unbindSocketID(uint64_t nPlayerID)
 {
 	auto iter = this->m_mapClientSessionByPlayerID.find(nPlayerID);
 	DebugAst(iter != this->m_mapClientSessionByPlayerID.end());
 
-	CClientSession* pClientSession = iter->second;
-	DebugAst(pClientSession != nullptr);
+	CGateClientSession* pGateClientSession = iter->second;
+	DebugAst(pGateClientSession != nullptr);
 
-	this->m_mapPlayerIDBySocketID.erase(pClientSession->getSocketID());
-	pClientSession->setSocketID(0);
+	this->m_mapPlayerIDBySocketID.erase(pGateClientSession->getSocketID());
+	pGateClientSession->setSocketID(0);
 
 	PrintInfo("unbind socket id player_id: "UINT64FMT, nPlayerID);
 }
 
-uint32_t CClientSessionMgr::getSessionCount() const
+uint32_t CGateClientSessionMgr::getSessionCount() const
 {
 	return (uint32_t)this->m_mapClientSessionByPlayerID.size();
 }
 
-CClientSession* CClientSessionMgr::getSessionBySocketID(uint64_t nSocketID) const
+CGateClientSession* CGateClientSessionMgr::getSessionBySocketID(uint64_t nSocketID) const
 {
 	auto iter = this->m_mapPlayerIDBySocketID.find(nSocketID);
 	if (iter == this->m_mapPlayerIDBySocketID.end())

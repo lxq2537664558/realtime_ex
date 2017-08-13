@@ -23,7 +23,7 @@ namespace core
 		/**
 		@brief: 主动发起一个连接（异步）
 		*/
-		void							connect(const std::string& szHost, uint16_t nPort, const std::string& szType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, const MessageParser& messageParser);
+		void							connect(const std::string& szHost, uint16_t nPort, const std::string& szType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, const MessageParser& messageParser, ECoreConnectionType eCoreConnectionType = eCCT_Normal);
 		/**
 		@brief: 直接连接目标节点
 		*/
@@ -31,7 +31,7 @@ namespace core
 		/**
 		@brief: 发起一个监听
 		*/
-		void							listen(const std::string& szHost, uint16_t nPort, const std::string& szType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser);
+		void							listen(const std::string& szHost, uint16_t nPort, bool bReusePort, const std::string& szType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser, ECoreConnectionType eCoreConnectionType = eCCT_Normal);
 
 		/**
 		@brief: 设置某一个类型的连接创建工厂

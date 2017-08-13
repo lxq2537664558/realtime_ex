@@ -1,7 +1,7 @@
 #pragma once
 #include "libBaseCommon/singleton.h"
 #include "libCoreCommon/core_common.h"
-#include "libCoreCommon/default_protobuf_factory.h"
+#include "libCoreCommon/normal_protobuf_factory.h"
 
 #include "login_connection_from_client.h"
 
@@ -10,11 +10,11 @@
 typedef std::function<void(CLoginConnectionFromClient*, const google::protobuf::Message*)>	ClientCallback;	// 客户端消息处理函数类型
 
 class CGateService;
-class CClientMessageDispatcher
+class CLoginClientMessageDispatcher
 {
 public:
-	CClientMessageDispatcher(CLoginService* pLoginService);
-	~CClientMessageDispatcher();
+	CLoginClientMessageDispatcher(CLoginService* pLoginService);
+	~CLoginClientMessageDispatcher();
 
 	/**
 	@brief: 消息派发函数，由各个消息源调用来派发消息

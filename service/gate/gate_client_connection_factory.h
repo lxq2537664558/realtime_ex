@@ -2,12 +2,12 @@
 
 #include "libCoreCommon/base_connection_factory.h"
 
-class CClientConnectionFactory :
+class CGateClientConnectionFactory :
 	public core::CBaseConnectionFactory
 {
 public:
-	CClientConnectionFactory() { }
-	virtual ~CClientConnectionFactory() { }
+	CGateClientConnectionFactory() { }
+	virtual ~CGateClientConnectionFactory() { }
 
 	virtual core::CBaseConnection*	createBaseConnection(const std::string& szType);
 };

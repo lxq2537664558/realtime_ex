@@ -8,7 +8,7 @@
 #include "libCoreCommon/service_invoker.h"
 
 CTestService1::CTestService1()
-	: m_pDefaultProtobufFactory(nullptr)
+	: m_pNormalProtobufFactory(nullptr)
 {
 	this->m_ticker1.setCallback(std::bind(&CTestService1::onTicker1, this, std::placeholders::_1));
 	this->m_ticker2.setCallback(std::bind(&CTestService1::onTicker2, this, std::placeholders::_1));
@@ -26,7 +26,7 @@ bool CTestService1::onInit()
 {
 	PrintInfo("CTestService1::onInit");
 
-	this->m_pDefaultProtobufFactory = new CDefaultProtobufFactory();
+	this->m_pNormalProtobufFactory = new CNormalProtobufFactory();
 	
 	this->setServiceConnectCallback(std::bind(&CTestService1::onServiceConnect, this, std::placeholders::_1, std::placeholders::_2));
 	this->setServiceDisconnectCallback(std::bind(&CTestService1::onServiceDisconnect, this, std::placeholders::_1, std::placeholders::_2));
@@ -44,9 +44,9 @@ void CTestService1::onQuit()
 	PrintInfo("CTestService1::onQuit");
 }
 
-CProtobufFactory* CTestService1::getProtobufFactory() const
+CProtobufFactory* CTestService1::getServiceProtobufFactory() const
 {
-	return this->m_pDefaultProtobufFactory;
+	return this->m_pNormalProtobufFactory;
 }
 
 void CTestService1::release()

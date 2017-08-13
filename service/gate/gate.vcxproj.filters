@@ -30,26 +30,11 @@
     <ClInclude Include="gate_service.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="client_connection_factory.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="client_session.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="client_session_mgr.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="client_message_dispatcher.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="..\proto_src\gate_handshake_request.pb.h">
       <Filter>proto_src</Filter>
     </ClInclude>
     <ClInclude Include="..\proto_src\gate_handshake_response.pb.h">
       <Filter>proto_src</Filter>
-    </ClInclude>
-    <ClInclude Include="client_message_handler.h">
-      <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="gate_connection_from_client.h">
       <Filter>头文件</Filter>
@@ -75,6 +60,21 @@
     <ClInclude Include="..\proto_src\gate_online_count_notify.pb.h">
       <Filter>proto_src</Filter>
     </ClInclude>
+    <ClInclude Include="gate_client_message_handler.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="gate_client_message_dispatcher.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="gate_client_connection_factory.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="gate_client_session.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="gate_client_session_mgr.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -83,26 +83,11 @@
     <ClCompile Include="gate_service.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="client_connection_factory.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="client_session.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="client_session_mgr.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="client_message_dispatcher.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="..\proto_src\gate_handshake_request.pb.cc">
       <Filter>proto_src</Filter>
     </ClCompile>
     <ClCompile Include="..\proto_src\gate_handshake_response.pb.cc">
       <Filter>proto_src</Filter>
-    </ClCompile>
-    <ClCompile Include="client_message_handler.cpp">
-      <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="gate_connection_from_client.cpp">
       <Filter>源文件</Filter>
@@ -127,6 +112,21 @@
     </ClCompile>
     <ClCompile Include="..\proto_src\gate_online_count_notify.pb.cc">
       <Filter>proto_src</Filter>
+    </ClCompile>
+    <ClCompile Include="gate_client_message_handler.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="gate_client_message_dispatcher.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="gate_client_connection_factory.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="gate_client_session.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="gate_client_session_mgr.cpp">
+      <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

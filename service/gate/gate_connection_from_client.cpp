@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "gate_connection_from_client.h"
-#include "client_message_dispatcher.h"
-#include "client_session_mgr.h"
+#include "gate_client_message_dispatcher.h"
+#include "gate_client_session_mgr.h"
 #include "gate_service.h"
 
 #include "libCoreCommon/base_app.h"
@@ -41,11 +41,11 @@ void CGateConnectionFromClient::onDisconnect()
 {
 	if (this->m_pGateService != nullptr)
 	{
-		CClientSession* pClientSession = this->m_pGateService->getClientSessionMgr()->getSessionBySocketID(this->getID());
-		if (pClientSession != nullptr)
+		CGateClientSession* pGateClientSession = this->m_pGateService->getGateClientSessionMgr()->getSessionBySocketID(this->getID());
+		if (pGateClientSession != nullptr)
 		{
-			this->m_pGateService->getClientSessionMgr()->unbindSocketID(pClientSession->getPlayerID());
-			this->m_pGateService->getClientSessionMgr()->delSessionByPlayerID(pClientSession->getPlayerID());
+			this->m_pGateService->getGateClientSessionMgr()->unbindSocketID(pGateClientSession->getPlayerID());
+			this->m_pGateService->getGateClientSessionMgr()->delSessionByPlayerID(pGateClientSession->getPlayerID());
 		}
 	}
 }
@@ -54,5 +54,5 @@ void CGateConnectionFromClient::onDispatch(uint8_t nMessageType, const void* pDa
 {
 	DebugAst(nMessageType == eMT_CLIENT);
 
-	this->m_pGateService->getClientMessageDispatcher()->dispatch(this, pData, nSize);
+	this->m_pGateService->getGateClientMessageDispatcher()->dispatch(this, pData, nSize);
 }

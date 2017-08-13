@@ -92,14 +92,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\proto_src\gate_online_count_notify.pb.h" />
-    <ClInclude Include="client_message_handler.h" />
+    <ClInclude Include="gate_client_message_handler.h" />
     <ClInclude Include="gate_service_message_handler.h" />
     <ClInclude Include="gate_connection_from_client.h" />
-    <ClInclude Include="client_message_dispatcher.h" />
+    <ClInclude Include="gate_client_message_dispatcher.h" />
     <ClInclude Include="gate_service.h" />
-    <ClInclude Include="client_session.h" />
-    <ClInclude Include="client_session_mgr.h" />
-    <ClInclude Include="client_connection_factory.h" />
+    <ClInclude Include="gate_client_session.h" />
+    <ClInclude Include="gate_client_session_mgr.h" />
+    <ClInclude Include="gate_client_connection_factory.h" />
     <ClInclude Include="..\proto_src\gate_addr_notify.pb.h" />
     <ClInclude Include="..\proto_src\gate_handshake_request.pb.h" />
     <ClInclude Include="..\proto_src\gate_handshake_response.pb.h" />
@@ -115,14 +115,14 @@
       <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4800;4267;</DisableSpecificWarnings>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="client_message_handler.cpp" />
+    <ClCompile Include="gate_client_message_handler.cpp" />
     <ClCompile Include="gate_service_message_handler.cpp" />
     <ClCompile Include="gate_connection_from_client.cpp" />
-    <ClCompile Include="client_message_dispatcher.cpp" />
+    <ClCompile Include="gate_client_message_dispatcher.cpp" />
     <ClCompile Include="gate_service.cpp" />
-    <ClCompile Include="client_session.cpp" />
-    <ClCompile Include="client_session_mgr.cpp" />
-    <ClCompile Include="client_connection_factory.cpp" />
+    <ClCompile Include="gate_client_session.cpp" />
+    <ClCompile Include="gate_client_session_mgr.cpp" />
+    <ClCompile Include="gate_client_connection_factory.cpp" />
     <ClCompile Include="..\proto_src\gate_addr_notify.pb.cc">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4800;4267;</DisableSpecificWarnings>

@@ -81,13 +81,14 @@ namespace core
 			PrintWarning("can't find base connection factory type: %s context: %s", pCoreConnection->getType().c_str(), pCoreConnection->getContext().c_str());
 			return false;
 		}
+
 		CBaseConnection* pBaseConnection = pBaseConnectionFactory->createBaseConnection(pCoreConnection->getType());
 		if (nullptr == pBaseConnection)
 		{
 			PrintWarning("create base connection error type: %s context: %s", pCoreConnection->getType().c_str(), pCoreConnection->getContext().c_str());
 			return false;
 		}
-
+		
 		pBaseConnection->m_pCoreConnection = pCoreConnection;
 
 		this->m_mapBaseConnectionByID[pCoreConnection->getID()] = pBaseConnection;
@@ -123,11 +124,12 @@ namespace core
 		if (iter == this->m_mapBaseConnectionByID.end())
 			return;
 
+		this->m_mapBaseConnectionByID.erase(iter);
+
 		CBaseConnection* pBaseConnection = iter->second;
 		if (pBaseConnection == nullptr)
 		{
 			PrintWarning("CBaseConnectionMgr::onDisconnect error socket_id: "UINT64FMT, nSocketID);
-			this->m_mapBaseConnectionByID.erase(iter);
 			return;
 		}
 
@@ -208,71 +210,5 @@ namespace core
 			return nullptr;
 
 		return iter->second;
-	}
-
-	void CBaseConnectionMgrImpl::addGlobalBeforeFilter(uint8_t nMessageType, const std::string& szKey, const NodeGlobalFilter& callback)
-	{
-		DebugAst(callback != nullptr);
-		DebugAst(nMessageType != eMT_HEARTBEAT && nMessageType != eMT_TICKER);
-
-		SNodeGlobalFilterInfo& sNodeGlobalFilterInfo = this->m_mapGlobalFilterInfo[nMessageType];
-		if (sNodeGlobalFilterInfo.mapGlobalBeforeFilter.find(szKey) != sNodeGlobalFilterInfo.mapGlobalBeforeFilter.end())
-		{
-			PrintWarning("dup global before filter type: %d key: %s", nMessageType, szKey.c_str());
-		}
-
-		sNodeGlobalFilterInfo.mapGlobalBeforeFilter[szKey] = callback;
-	}
-
-	void CBaseConnectionMgrImpl::delGlobalBeforeFilter(uint8_t nMessageType, const std::string& szKey)
-	{
-		auto iter = this->m_mapGlobalFilterInfo.find(nMessageType);
-		if (iter == this->m_mapGlobalFilterInfo.end())
-			return;
-
-		SNodeGlobalFilterInfo& sNodeGlobalFilterInfo = iter->second;
-		sNodeGlobalFilterInfo.mapGlobalBeforeFilter.erase(szKey);
-	}
-
-	void CBaseConnectionMgrImpl::addGlobalAfterFilter(uint8_t nMessageType, const std::string& szKey, const NodeGlobalFilter& callback)
-	{
-		DebugAst(callback != nullptr);
-		DebugAst(nMessageType != eMT_HEARTBEAT && nMessageType != eMT_TICKER);
-
-		SNodeGlobalFilterInfo& sNodeGlobalFilterInfo = this->m_mapGlobalFilterInfo[nMessageType];
-		if (sNodeGlobalFilterInfo.mapGlobalAfterFilter.find(szKey) != sNodeGlobalFilterInfo.mapGlobalAfterFilter.end())
-		{
-			PrintWarning("dup global after filter type: %d key: %s", nMessageType, szKey.c_str());
-		}
-
-		sNodeGlobalFilterInfo.mapGlobalAfterFilter[szKey] = callback;
-	}
-
-	void CBaseConnectionMgrImpl::delGlobalAfterFilter(uint8_t nMessageType, const std::string& szKey)
-	{
-		auto iter = this->m_mapGlobalFilterInfo.find(nMessageType);
-		if (iter == this->m_mapGlobalFilterInfo.end())
-			return;
-
-		SNodeGlobalFilterInfo& sNodeGlobalFilterInfo = iter->second;
-		sNodeGlobalFilterInfo.mapGlobalAfterFilter.erase(szKey);
-	}
-
-	const std::map<std::string, NodeGlobalFilter>* CBaseConnectionMgrImpl::getGlobalBeforeFilter(uint8_t nMessageType) const
-	{
-		auto iter = this->m_mapGlobalFilterInfo.find(nMessageType);
-		if (iter == this->m_mapGlobalFilterInfo.end())
-			return nullptr;
-
-		return &iter->second.mapGlobalBeforeFilter;
-	}
-
-	const std::map<std::string, NodeGlobalFilter>* CBaseConnectionMgrImpl::getGlobalAfterFilter(uint8_t nMessageType) const
-	{
-		auto iter = this->m_mapGlobalFilterInfo.find(nMessageType);
-		if (iter == this->m_mapGlobalFilterInfo.end())
-			return nullptr;
-
-		return &iter->second.mapGlobalAfterFilter;
 	}
 }

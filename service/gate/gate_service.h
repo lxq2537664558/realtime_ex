@@ -1,11 +1,13 @@
 #pragma once
 #include "libCoreCommon/service_base.h"
 
-#include "client_connection_factory.h"
-#include "client_session_mgr.h"
-#include "client_message_dispatcher.h"
-#include "client_message_handler.h"
+#include "gate_client_connection_factory.h"
+#include "gate_client_session_mgr.h"
+#include "gate_client_message_dispatcher.h"
+#include "gate_client_message_handler.h"
 #include "gate_service_message_handler.h"
+
+#include "libCoreCommon/json_protobuf_factory.h"
 
 class CGateService :
 	public core::CServiceBase
@@ -14,11 +16,13 @@ public:
 	CGateService();
 	virtual ~CGateService();
 
-	CClientSessionMgr*				getClientSessionMgr() const;
-	CClientMessageDispatcher*		getClientMessageDispatcher() const;
-	CClientMessageHandler*			getClientMessageHandler() const;
-	virtual core::CProtobufFactory*	getProtobufFactory() const;
-	
+	CGateClientSessionMgr*			getGateClientSessionMgr() const;
+	CGateClientMessageDispatcher*	getGateClientMessageDispatcher() const;
+	CGateClientMessageHandler*		getGateClientMessageHandler() const;
+
+	virtual core::CProtobufFactory*	getServiceProtobufFactory() const;
+	virtual core::CProtobufFactory*	getForwardProtobufFactory() const;
+
 	virtual void					release();
 
 private:
@@ -30,12 +34,14 @@ private:
 	void							onNotifyGateOnlineCount(uint64_t nContext);
 
 private:
-	CClientConnectionFactory*		m_pClientConnectionFactory;
-	CClientSessionMgr*				m_pClientSessionMgr;
-	CClientMessageDispatcher*		m_pClientMessageDispatcher;
-	CClientMessageHandler*			m_pClientMessageHandler;
+	CGateClientConnectionFactory*	m_pGateClientConnectionFactory;
+	CGateClientSessionMgr*			m_pGateClientSessionMgr;
+	CGateClientMessageDispatcher*	m_pGateClientMessageDispatcher;
+	CGateClientMessageHandler*		m_pGateClientMessageHandler;
 	CGateServiceMessageHandler*		m_pGateServiceMessageHandler;
-	core::CDefaultProtobufFactory*	m_pDefaultProtobufFactory;
+
+	core::CNormalProtobufFactory*	m_pNormalProtobufFactory;
+	core::CJsonProtobufFactory*		m_pJsonProtobufFactory;
 
 	core::CTicker					m_tickerNotifyGateOnlineCount;
 	std::string						m_szAddr;

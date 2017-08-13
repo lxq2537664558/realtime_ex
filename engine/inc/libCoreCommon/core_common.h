@@ -81,6 +81,7 @@ public:\
 
 enum EMessageType
 {
+	eMT_NONE				= 0,
 	eMT_HEARTBEAT			= 1,		// 服务之间心跳消息
 	eMT_SYSTEM				= 2,		// 服务之间的系统消息
 	eMT_REQUEST				= 3,		// 服务之间的请求消息
@@ -90,6 +91,13 @@ enum EMessageType
 	eMT_TO_GATE_BROADCAST	= 7,		// 其他服务通过网关服务广播客户端消息
 	eMT_CLIENT				= 8,		// 客户端消息
 	eMT_TICKER				= 9,		// 定时器
+};
+
+enum ECoreConnectionType
+{
+	eCCT_Normal,
+	eCCT_Websocket,
+	eCCT_Http,
 };
 
 namespace core
@@ -158,8 +166,6 @@ namespace core
 				pMessage;
 	};
 
-	typedef std::function<void(uint64_t, uint8_t, const void*, uint16_t)>	NodeGlobalFilter;			// 全局的消息过滤器类型
-	
 #pragma pack(push,1)
 	struct gate_forward_cookice
 	{

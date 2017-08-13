@@ -16,7 +16,7 @@ public:
 	uint32_t						getMasterID() const;
 	base::CWriteBuf&				getWriteBuf();
 
-	virtual core::CProtobufFactory*	getProtobufFactory() const;
+	virtual core::CProtobufFactory*	getServiceProtobufFactory() const;
 
 	virtual void					release();
 

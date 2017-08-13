@@ -1,7 +1,7 @@
 #pragma once
 #include "libCoreCommon/service_base.h"
 #include "libCoreCommon/ticker.h"
-#include "libCoreCommon/default_protobuf_factory.h"
+#include "libCoreCommon/normal_protobuf_factory.h"
 
 using namespace std;
 using namespace core;
@@ -15,7 +15,7 @@ public:
 	CTestService2();
 	virtual ~CTestService2();
 
-	virtual CProtobufFactory*	getProtobufFactory() const;
+	virtual CProtobufFactory*	getServiceProtobufFactory() const;
 	virtual void				release();
 
 private:
@@ -25,5 +25,5 @@ private:
 
 private:
 	CTestService2MessageHandler*	m_pTestService2MessageHandler;
-	CDefaultProtobufFactory*		m_pDefaultProtobufFactory;
+	CNormalProtobufFactory*			m_pNormalProtobufFactory;
 };

@@ -105,7 +105,7 @@ namespace core
 		, m_pNetRunnable(nullptr)
 		, m_pTickerRunnable(nullptr)
 	{
-
+		this->m_vecWebsocketBuf.reserve(UINT16_MAX);
 	}
 
 	CCoreApp::~CCoreApp()
@@ -470,6 +470,11 @@ namespace core
 	uint32_t CCoreApp::getInvokeTimeout() const
 	{
 		return this->m_nInvokeTimeout;
+	}
+
+	std::vector<char>& CCoreApp::getWebsocketBuf()
+	{
+		return this->m_vecWebsocketBuf;
 	}
 
 }

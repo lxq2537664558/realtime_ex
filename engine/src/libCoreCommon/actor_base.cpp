@@ -18,8 +18,6 @@ namespace core
 
 	CActorBase::~CActorBase()
 	{
-		if (this->m_pCoreActor != nullptr)
-			this->m_pCoreActor->getCoreService()->getActorScheduler()->destroyCoreActor(this->m_pCoreActor);
 	}
 
 	uint64_t CActorBase::getID() const

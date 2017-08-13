@@ -12,13 +12,13 @@ namespace base
 	{
 		if ((eNET_Recv&nEvent) == 0)
 		{
-			PrintInfo("event type error socket_id: %d error code[%d]", this->GetSocketID(), getLastError());
+			PrintInfo("event type error socket_id: %d error code[%d]", this->getSocketID(), getLastError());
 			return;
 		}
 
 		for (uint32_t i = 0; i < 10; ++i)
 		{
-			int32_t nSocketID = (int32_t)::accept(this->GetSocketID(), nullptr, nullptr);
+			int32_t nSocketID = (int32_t)::accept(this->getSocketID(), nullptr, nullptr);
 
 			if (_Invalid_SocketID == nSocketID)
 			{
@@ -29,7 +29,7 @@ namespace base
 				{
 					// 这么做主要是为了解决在fd数量不足时，有丢弃这个新的连接机会
 					::close(this->m_nIdleID);
-					nSocketID = (int32_t)::accept(this->GetSocketID(), nullptr, nullptr);
+					nSocketID = (int32_t)::accept(this->getSocketID(), nullptr, nullptr);
 					::close(nSocketID);
 					nSocketID = _Invalid_SocketID;
 					this->m_nIdleID = ::open("/dev/null", O_RDONLY | O_CLOEXEC);
@@ -119,58 +119,58 @@ namespace base
 
 	CNetAccepter::~CNetAccepter()
 	{
-		DebugAst(this->GetSocketID() == _Invalid_SocketID);
+		DebugAst(this->getSocketID() == _Invalid_SocketID);
 #ifndef _WIN32
 		::close(this->m_nIdleID);
 #endif
 	}
 
-	bool CNetAccepter::listen(const SNetAddr& netAddr)
+	bool CNetAccepter::listen(const SNetAddr& netAddr, bool bReusePort)
 	{
 		if (!this->open())
 			return false;
 		
 		if (!this->reuseAddr())
 		{
-			::closesocket(this->GetSocketID());
+			::closesocket(this->getSocketID());
 			return false;
 		}
 		
-		this->reusePort();
+		if (bReusePort)
+			this->reusePort();
 		
 		if (!this->nonblock())
 		{
-			::closesocket(this->GetSocketID());
+			::closesocket(this->getSocketID());
 			return false;
 		}
 		// 监听到的连接会继承缓冲区大小
 		if (!this->setBufferSize())
 		{
-			::closesocket(this->GetSocketID());
+			::closesocket(this->getSocketID());
 			return false;
 		}
 
 		this->m_sLocalAddr = netAddr;
 		struct sockaddr_in listenAddr;
 		listenAddr.sin_family = AF_INET;
-		// 不能用::htons https://bbs.archlinux.org/viewtopic.php?id=53751
-		listenAddr.sin_port = htons(this->m_sLocalAddr.nPort);
-		listenAddr.sin_addr.s_addr = this->m_sLocalAddr.isAnyIP() ? htonl(INADDR_ANY) : inet_addr(this->m_sLocalAddr.szHost);
+		listenAddr.sin_port = base::hton16(this->m_sLocalAddr.nPort);
+		listenAddr.sin_addr.s_addr = this->m_sLocalAddr.isAnyIP() ? INADDR_ANY : inet_addr(this->m_sLocalAddr.szHost);
 		memset(listenAddr.sin_zero, 0, sizeof(listenAddr.sin_zero));
-		if (0 != ::bind(this->GetSocketID(), (sockaddr*)&listenAddr, sizeof(listenAddr)))
+		if (0 != ::bind(this->getSocketID(), (sockaddr*)&listenAddr, sizeof(listenAddr)))
 		{
 			PrintWarning("bind socket to %s %d error %d", this->m_sLocalAddr.szHost, this->m_sLocalAddr.nPort, getLastError());
-			::closesocket(this->GetSocketID());
+			::closesocket(this->getSocketID());
 			return false;
 		}
 
-		if (0 != ::listen(this->GetSocketID(), SOMAXCONN))
+		if (0 != ::listen(this->getSocketID(), SOMAXCONN))
 		{
 			PrintWarning("listen socket to %s %d error %d", this->m_sLocalAddr.szHost, this->m_sLocalAddr.nPort, getLastError());
-			::closesocket(this->GetSocketID());
+			::closesocket(this->getSocketID());
 			return false;
 		}
-		PrintInfo("start listen %s %d socket_id: %d ", this->m_sLocalAddr.szHost, this->m_sLocalAddr.nPort, this->GetSocketID());
+		PrintInfo("start listen %s %d socket_id: %d ", this->m_sLocalAddr.szHost, this->m_sLocalAddr.nPort, this->getSocketID());
 
 		this->m_pNetEventLoop->addSocket(this);
 

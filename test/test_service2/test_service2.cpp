@@ -3,7 +3,7 @@
 
 CTestService2::CTestService2()
 	: m_pTestService2MessageHandler(nullptr)
-	, m_pDefaultProtobufFactory(nullptr)
+	, m_pNormalProtobufFactory(nullptr)
 {
 
 }
@@ -17,7 +17,7 @@ bool CTestService2::onInit()
 {
 	PrintInfo("CTestService2::onInit");
 
-	this->m_pDefaultProtobufFactory = new CDefaultProtobufFactory();
+	this->m_pNormalProtobufFactory = new CNormalProtobufFactory();
 	
 	this->m_pTestService2MessageHandler = new CTestService2MessageHandler(this);
 	
@@ -34,9 +34,9 @@ void CTestService2::onQuit()
 	PrintInfo("CTestService2::onQuit");
 }
 
-CProtobufFactory* CTestService2::getProtobufFactory() const
+CProtobufFactory* CTestService2::getServiceProtobufFactory() const
 {
-	return this->m_pDefaultProtobufFactory;
+	return this->m_pNormalProtobufFactory;
 }
 
 void CTestService2::release()

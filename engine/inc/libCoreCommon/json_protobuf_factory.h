@@ -2,15 +2,17 @@
 
 #include "protobuf_factory.h"
 
+#include "google/protobuf/util/json_util.h"
+
 #include "libBaseCommon/debug_helper.h"
 
 namespace core
 {
-	class CDefaultProtobufFactory :
+	class CJsonProtobufFactory :
 		public CProtobufFactory
 	{
 	public:
-		virtual ~CDefaultProtobufFactory() { }
+		virtual ~CJsonProtobufFactory() { }
 
 		inline google::protobuf::Message*	create_protobuf_message(const std::string& szMessageName);
 		inline google::protobuf::Message*	clone_protobuf_message(const google::protobuf::Message* pMessage);
@@ -19,4 +21,4 @@ namespace core
 	};
 }
 
-#include "default_protobuf_factory.inl"
+#include "json_protobuf_factory.inl"

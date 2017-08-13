@@ -22,54 +22,54 @@ void CGateServiceMessageHandler::player_token_handler(core::CServiceBase* pServi
 	CGateService* pGateService = dynamic_cast<CGateService*>(pServiceBase);
 	DebugAst(pGateService != nullptr);
 
-	CClientSession* pClientSession = pGateService->getClientSessionMgr()->getSessionByPlayerID(pRequest->player_id());
-	if (pClientSession != nullptr)
+	CGateClientSession* pGateClientSession = pGateService->getGateClientSessionMgr()->getSessionByPlayerID(pRequest->player_id());
+	if (pGateClientSession != nullptr)
 	{
 		// 顶号
-		if ((pClientSession->getState()&eCSS_TokenEnter) != 0)
+		if ((pGateClientSession->getState()&eCSS_TokenEnter) != 0)
 		{
 			// 这里先直接踢掉
-			CBaseConnection* pBaseConnection = CBaseApp::Inst()->getBaseConnectionMgr()->getBaseConnectionBySocketID(pClientSession->getSocketID());
+			CBaseConnection* pBaseConnection = CBaseApp::Inst()->getBaseConnectionMgr()->getBaseConnectionBySocketID(pGateClientSession->getSocketID());
 			if (nullptr == pBaseConnection)
 			{
-				PrintWarning("nullptr == pBaseConnection player_id: "UINT64FMT, pClientSession->getPlayerID());
-				pGateService->getClientSessionMgr()->delSessionByPlayerID(pClientSession->getPlayerID());
+				PrintWarning("nullptr == pBaseConnection player_id: "UINT64FMT, pGateClientSession->getPlayerID());
+				pGateService->getGateClientSessionMgr()->delSessionByPlayerID(pGateClientSession->getPlayerID());
 				return;
 			}
 			pBaseConnection->shutdown(true, "dup");
 			return;
 		}
-		DebugAst(pClientSession->getState() == eCSS_ClientEnter);
+		DebugAst(pGateClientSession->getState() == eCSS_ClientEnter);
 
-		if (pClientSession->getToken() != pRequest->token())
+		if (pGateClientSession->getToken() != pRequest->token())
 		{
 			PrintWarning("CGateServiceMessageHandler::player_token_handler token error player_id: "UINT64FMT, pRequest->player_id());
 
-			CBaseConnection* pBaseConnection = CBaseApp::Inst()->getBaseConnectionMgr()->getBaseConnectionBySocketID(pClientSession->getSocketID());
+			CBaseConnection* pBaseConnection = CBaseApp::Inst()->getBaseConnectionMgr()->getBaseConnectionBySocketID(pGateClientSession->getSocketID());
 			if (nullptr == pBaseConnection)
 			{
-				PrintWarning("nullptr == pBaseConnection player_id: "UINT64FMT, pClientSession->getPlayerID());
-				pGateService->getClientSessionMgr()->delSessionByPlayerID(pClientSession->getPlayerID());
+				PrintWarning("nullptr == pBaseConnection player_id: "UINT64FMT, pGateClientSession->getPlayerID());
+				pGateService->getGateClientSessionMgr()->delSessionByPlayerID(pGateClientSession->getPlayerID());
 				return;
 			}
 			pBaseConnection->shutdown(true, "token error");
 			return;
 		}
 
-		pClientSession->setServiceID(pRequest->gas_id());
-		pClientSession->setState(eCSS_TokenEnter);
-		pClientSession->enterGas(pGateService);
+		pGateClientSession->setServiceID(pRequest->gas_id());
+		pGateClientSession->setState(eCSS_TokenEnter);
+		pGateClientSession->enterGas();
 	}
 	else
 	{
-		pClientSession = pGateService->getClientSessionMgr()->createSession(pRequest->player_id(), pRequest->token());
-		if (nullptr == pClientSession)
+		pGateClientSession = pGateService->getGateClientSessionMgr()->createSession(pRequest->player_id(), pRequest->token());
+		if (nullptr == pGateClientSession)
 		{
 			PrintWarning("CGateServiceMessageHandler::player_token_handler error create session error player_id: "UINT64FMT, pRequest->player_id());
 			return;
 		}
 
-		pClientSession->setServiceID(pRequest->gas_id());
-		pClientSession->setState(eCSS_TokenEnter);
+		pGateClientSession->setServiceID(pRequest->gas_id());
+		pGateClientSession->setState(eCSS_TokenEnter);
 	}
 }

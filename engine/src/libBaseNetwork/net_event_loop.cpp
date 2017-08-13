@@ -71,7 +71,7 @@ namespace base
 		return true;
 	}
 
-	bool CNetEventLoop::listen(const SNetAddr& netAddr, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, INetAccepterHandler* pHandler)
+	bool CNetEventLoop::listen(const SNetAddr& netAddr, bool bReusePort, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, INetAccepterHandler* pHandler)
 	{
 		CNetAccepter* pNetAccepter = new CNetAccepter();
 		if (!pNetAccepter->init(nSendBufferSize, nRecvBufferSize, this))
@@ -81,7 +81,7 @@ namespace base
 		}
 		pNetAccepter->setHandler(pHandler);
 
-		if (!pNetAccepter->listen(netAddr))
+		if (!pNetAccepter->listen(netAddr, bReusePort))
 		{
 			delete pNetAccepter;
 			return false;
@@ -161,9 +161,9 @@ namespace base
 			if (nullptr == pNetSocket)
 				continue;
 
-			FD_SET(pNetSocket->GetSocketID(), &writefds);
-			FD_SET(pNetSocket->GetSocketID(), &readfds);
-			FD_SET(pNetSocket->GetSocketID(), &exceptfds);
+			FD_SET(pNetSocket->getSocketID(), &writefds);
+			FD_SET(pNetSocket->getSocketID(), &readfds);
+			FD_SET(pNetSocket->getSocketID(), &exceptfds);
 		}
 
 		struct timeval timeout;
@@ -186,11 +186,11 @@ namespace base
 				continue;
 
 			uint32_t nEvent = 0;
-			if (FD_ISSET(pNetSocket->GetSocketID(), &readfds))
+			if (FD_ISSET(pNetSocket->getSocketID(), &readfds))
 				nEvent |= eNET_Recv;
-			if (FD_ISSET(pNetSocket->GetSocketID(), &writefds))
+			if (FD_ISSET(pNetSocket->getSocketID(), &writefds))
 				nEvent |= eNET_Send;
-			if (FD_ISSET(pNetSocket->GetSocketID(), &exceptfds))
+			if (FD_ISSET(pNetSocket->getSocketID(), &exceptfds))
 				nEvent |= eNET_Error;
 			
 			if (nEvent != 0)
@@ -255,7 +255,7 @@ namespace base
 		DebugAstEx(pNetSocket != nullptr, false);
 		DebugAstEx(pNetSocket->getSocketIndex() == _Invalid_SocketIndex, false);
 
-		if (pNetSocket->GetSocketID() == _Invalid_SocketID)
+		if (pNetSocket->getSocketID() == _Invalid_SocketID)
 			return false;
 
 		if (this->m_nSocketCount >= (int32_t)this->m_vecSocket.size())
@@ -264,7 +264,7 @@ namespace base
 		pNetSocket->setSocketIndex(this->m_nSocketCount);
 		this->m_vecSocket[this->m_nSocketCount++] = pNetSocket;
 
-		PrintInfo("addSocket socket_id %d socket_index %d", pNetSocket->GetSocketID(), pNetSocket->getSocketIndex());
+		PrintInfo("addSocket socket_id %d socket_index %d", pNetSocket->getSocketID(), pNetSocket->getSocketIndex());
 
 #ifndef _WIN32
 		this->m_vecEpollEvent.resize(this->m_nSocketCount + this->m_nExtraSocketCount);
@@ -275,7 +275,7 @@ namespace base
 			event.events = EPOLLIN|POLLPRI|EPOLLOUT|EPOLLET;
 		else
 			event.events = EPOLLIN|POLLPRI|EPOLLOUT;
-		if (::epoll_ctl(this->m_nEpoll, EPOLL_CTL_ADD, pNetSocket->GetSocketID(), &event) < 0)
+		if (::epoll_ctl(this->m_nEpoll, EPOLL_CTL_ADD, pNetSocket->getSocketID(), &event) < 0)
 			PrintWarning("epoll_ctl error EPOLL_CTL_ADD error %d", getLastError());
 #endif
 		return true;
@@ -285,13 +285,13 @@ namespace base
 	{
 		DebugAst(pNetSocket != nullptr);
 		DebugAst(pNetSocket->getSocketIndex() != _Invalid_SocketIndex);
-		if (pNetSocket->GetSocketID() == _Invalid_SocketID)
+		if (pNetSocket->getSocketID() == _Invalid_SocketID)
 			return;
 
 		if (pNetSocket->getSocketIndex() >= this->m_nSocketCount)
 			return;
 
-		PrintInfo("delSocket socket_id %d socket_index %d", pNetSocket->GetSocketID(), pNetSocket->getSocketIndex());
+		PrintInfo("delSocket socket_id %d socket_index %d", pNetSocket->getSocketID(), pNetSocket->getSocketIndex());
 
 		this->m_vecSocket[pNetSocket->getSocketIndex()] = this->m_vecSocket[this->m_nSocketCount - 1];
 		if (this->m_vecSocket[this->m_nSocketCount - 1] != nullptr)
@@ -305,7 +305,7 @@ namespace base
 		memset(&event, 0, sizeof(event));
 		event.data.ptr = pNetSocket;
 		event.events = 0;
-		if (::epoll_ctl(this->m_nEpoll, EPOLL_CTL_DEL, pNetSocket->GetSocketID(), &event) < 0)
+		if (::epoll_ctl(this->m_nEpoll, EPOLL_CTL_DEL, pNetSocket->getSocketID(), &event) < 0)
 			PrintWarning("epoll_ctl error EPOLL_CTL_DEL error %d", getLastError());
 #endif
 	}

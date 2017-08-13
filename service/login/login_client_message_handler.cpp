@@ -1,6 +1,6 @@
 #include "stdafx.h"
-#include "client_message_handler.h"
-#include "client_message_dispatcher.h"
+#include "login_client_message_handler.h"
+#include "login_client_message_dispatcher.h"
 #include "login_service.h"
 
 #include "libBaseCommon/token_parser.h"
@@ -18,26 +18,26 @@
 
 using namespace core;
 
-CClientMessageHandler::CClientMessageHandler(CLoginService*	pLoginService)
+CLoginClientMessageHandler::CLoginClientMessageHandler(CLoginService*	pLoginService)
 	: m_pLoginService(pLoginService)
 {
 	this->m_szBuf.resize(UINT16_MAX);
 
-	this->m_pLoginService->getClientMessageDispatcher()->registerMessageHandler("player_login_request", std::bind(&CClientMessageHandler::login, this, std::placeholders::_1, std::placeholders::_2));
+	this->m_pLoginService->getLoginClientMessageDispatcher()->registerMessageHandler("player_login_request", std::bind(&CLoginClientMessageHandler::login, this, std::placeholders::_1, std::placeholders::_2));
 }
 
-CClientMessageHandler::~CClientMessageHandler()
+CLoginClientMessageHandler::~CLoginClientMessageHandler()
 {
 
 }
 
-void CClientMessageHandler::sendClientMessage(CBaseConnection* pBaseConnection, const google::protobuf::Message* pMessage)
+void CLoginClientMessageHandler::sendClientMessage(CBaseConnection* pBaseConnection, const google::protobuf::Message* pMessage)
 {
 	DebugAst(pMessage != nullptr && pBaseConnection != nullptr);
 
 	message_header* pHeader = reinterpret_cast<message_header*>(&this->m_szBuf[0]);
 
-	int32_t nDataSize = this->m_pLoginService->getProtobufFactory()->serialize_protobuf_message_to_buf(pMessage, &this->m_szBuf[0] + sizeof(message_header), (uint32_t)(this->m_szBuf.size() - sizeof(message_header)));
+	int32_t nDataSize = this->m_pLoginService->getForwardProtobufFactory()->serialize_protobuf_message_to_buf(pMessage, &this->m_szBuf[0] + sizeof(message_header), (uint32_t)(this->m_szBuf.size() - sizeof(message_header)));
 	if (nDataSize < 0)
 		return;
 
@@ -47,7 +47,7 @@ void CClientMessageHandler::sendClientMessage(CBaseConnection* pBaseConnection, 
 	pBaseConnection->send(eMT_CLIENT, &this->m_szBuf[0], pHeader->nMessageSize);
 }
 
-void CClientMessageHandler::login(CLoginConnectionFromClient* pLoginConnectionFromClient, const google::protobuf::Message* pMessage)
+void CLoginClientMessageHandler::login(CLoginConnectionFromClient* pLoginConnectionFromClient, const google::protobuf::Message* pMessage)
 {
 	const player_login_request* pRequest = dynamic_cast<const player_login_request*>(pMessage);
 	DebugAst(pRequest != nullptr);
@@ -56,7 +56,7 @@ void CClientMessageHandler::login(CLoginConnectionFromClient* pLoginConnectionFr
 	uint64_t nAccountID = pRequest->account_id();
 
 	pLoginConnectionFromClient->setAccountID(nAccountID);
-	PrintInfo("CClientMessageHandler::login account_id: "UINT64FMT" server_id: %d socket_id: "UINT64FMT, nAccountID, pRequest->server_id(), nSocketID);
+	PrintInfo("CLoginClientMessageHandler::login account_id: "UINT64FMT" server_id: %d socket_id: "UINT64FMT, nAccountID, pRequest->server_id(), nSocketID);
 
 	validate_login_request request_msg;
 	request_msg.set_account_id(pRequest->account_id());
@@ -67,13 +67,13 @@ void CClientMessageHandler::login(CLoginConnectionFromClient* pLoginConnectionFr
 		CLoginConnectionFromClient* pLoginConnectionFromClient = dynamic_cast<CLoginConnectionFromClient*>(CBaseApp::Inst()->getBaseConnectionMgr()->getBaseConnectionBySocketID(nSocketID));
 		if (nullptr == pLoginConnectionFromClient)
 		{
-			PrintInfo("CClientMessageHandler::login not find connection account_id: "UINT64FMT" socket_id: "UINT64FMT, nAccountID, nSocketID);
+			PrintInfo("CLoginClientMessageHandler::login not find connection account_id: "UINT64FMT" socket_id: "UINT64FMT, nAccountID, nSocketID);
 			return;
 		}
 
 		if (nErrorCode != eRRT_OK || pResponse == nullptr)
 		{
-			PrintInfo("CClientMessageHandler::login validate error account_id: "UINT64FMT" socket_id: "UINT64FMT, nAccountID, nSocketID);
+			PrintInfo("CLoginClientMessageHandler::login validate error account_id: "UINT64FMT" socket_id: "UINT64FMT, nAccountID, nSocketID);
 			
 			player_login_response response_msg;
 			response_msg.set_result(1);
@@ -90,6 +90,6 @@ void CClientMessageHandler::login(CLoginConnectionFromClient* pLoginConnectionFr
 		response_msg.set_gate_addr(pResponse->gate_addr());
 
 		this->sendClientMessage(pLoginConnectionFromClient, &response_msg);
-		PrintInfo("CClientMessageHandler::login validate ok result: %d account_id: "UINT64FMT" socket_id: "UINT64FMT, pResponse->result(), nAccountID, nSocketID);
+		PrintInfo("CLoginClientMessageHandler::login validate ok result: %d account_id: "UINT64FMT" socket_id: "UINT64FMT, pResponse->result(), nAccountID, nSocketID);
 	});
 }

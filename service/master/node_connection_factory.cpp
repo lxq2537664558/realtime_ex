@@ -10,7 +10,7 @@ CBaseConnection* CNodeConnectionFactory::createBaseConnection(const std::string&
 {
 	DebugAstEx(szType == "CConnectionFromNode", nullptr);
 
-	CConnectionFromNode* pConnectionFromService = new CConnectionFromNode();
+	CConnectionFromNode* pConnectionFromNode = new CConnectionFromNode();
 
-	return pConnectionFromService;
+	return pConnectionFromNode;
 }

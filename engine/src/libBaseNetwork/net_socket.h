@@ -49,7 +49,7 @@ namespace base
 		void				setRemoteAddr();
 		void				setLocalAddr();
 		void				setSocketID(int32_t nSocketID);
-		int32_t				GetSocketID() const;
+		int32_t				getSocketID() const;
 		void				setSocketIndex(int32_t nIndex);
 		int32_t				getSocketIndex() const;
 		uint32_t			getSendBufferSize() const;

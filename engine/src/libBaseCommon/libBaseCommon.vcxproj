@@ -97,6 +97,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\inc\libBaseCommon\base64.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\base_function.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\buf_file.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\base_time.h" />
@@ -114,6 +115,7 @@
     <ClInclude Include="..\..\inc\libBaseCommon\profiling.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\rand_gen.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\safe_queue.h" />
+    <ClInclude Include="..\..\inc\libBaseCommon\sha1.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\singleton.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\spin_lock.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\table_file.h" />
@@ -131,6 +133,7 @@
     <None Include="..\..\inc\libBaseCommon\link.inl" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="base64.cpp" />
     <ClCompile Include="base_function.cpp" />
     <ClCompile Include="base_time.cpp" />
     <ClCompile Include="buf_file.cpp" />
@@ -142,6 +145,7 @@
     <ClCompile Include="memory_new.cpp" />
     <ClCompile Include="profiling.cpp" />
     <ClCompile Include="rand_gen.cpp" />
+    <ClCompile Include="sha1.cpp" />
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="table_file.cpp" />
     <ClCompile Include="thread_base.cpp" />

@@ -45,22 +45,6 @@ namespace core
 		@brief: 获取连接管理器
 		*/
 		CBaseConnectionMgr*			getBaseConnectionMgr() const;
-		/**
-		@brief: 添加服务之间的特定消息的前置过滤器（排除掉定时器，心跳，request，response，gate_forward）
-		*/
-		void						addGlobalBeforeFilter(uint8_t nMessageType, const std::string& szKey, const NodeGlobalFilter& callback);
-		/**
-		@brief: 删除服务之间的特定消息的前置过滤器（排除掉定时器，心跳，request，response，gate_forward）
-		*/
-		void						delGlobalBeforeFilter(uint8_t nMessageType, const std::string& szKey);
-		/**
-		@brief: 添加服务之间的特定消息的后置过滤器（排除掉定时器，心跳，request，response，gate_forward）
-		*/
-		void						addGlobalAfterFilter(uint8_t nMessageType, const std::string& szKey, const NodeGlobalFilter& callback);
-		/**
-		@brief: 删除服务之间的特定消息的后置过滤器（排除掉定时器，心跳，request，response，gate_forward）
-		*/
-		void						delGlobalAfterFilter(uint8_t nMessageType, const std::string& szKey);
 		/*
 		@brief: 根据服务ID获取服务
 		*/

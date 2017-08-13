@@ -29,11 +29,11 @@ namespace core
 
 	public:
 		CCoreConnection();
-		~CCoreConnection();
+		virtual ~CCoreConnection();
 
 		bool				init(const std::string& szType, uint64_t nID, const std::string& szContext, const MessageParser& messageParser);
-		void				send(uint8_t nMessageType, const void* pData, uint16_t nSize);
-		void				send(uint8_t nMessageType, const void* pData, uint16_t nSize, const void* pExtraBuf, uint16_t nExtraSize);
+		virtual void		send(uint8_t nMessageType, const void* pData, uint16_t nSize);
+		virtual void		send(uint8_t nMessageType, const void* pData, uint16_t nSize, const void* pExtraBuf, uint16_t nExtraSize);
 		
 		void				setMessageParser(MessageParser& parser);
 
@@ -74,7 +74,7 @@ namespace core
 
 		void				onHeartbeat(uint64_t nContext);
 
-	private:
+	protected:
 		std::atomic<uint8_t>	m_bHeartbeat;
 		CTicker					m_heartbeat;
 		uint32_t				m_nSendHeartbeatCount;

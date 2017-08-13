@@ -22,7 +22,7 @@ namespace base
 		virtual const SNetAddr& getListenAddr() const;
 		virtual void            shutdown();
 
-		bool                    listen(const SNetAddr& netAddr);
+		bool                    listen(const SNetAddr& netAddr, bool bReusePort);
 
 	private:
 		INetAccepterHandler*	m_pHandler;

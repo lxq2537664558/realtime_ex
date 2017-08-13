@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "client_message_dispatcher.h"
+#include "login_client_message_dispatcher.h"
 #include "login_connection_from_client.h"
 #include "login_service.h"
 
@@ -9,17 +9,17 @@
 
 using namespace core;
 
-CClientMessageDispatcher::CClientMessageDispatcher(CLoginService* pLoginService)
+CLoginClientMessageDispatcher::CLoginClientMessageDispatcher(CLoginService* pLoginService)
 	: m_pLoginService(pLoginService)
 {
 
 }
 
-CClientMessageDispatcher::~CClientMessageDispatcher()
+CLoginClientMessageDispatcher::~CLoginClientMessageDispatcher()
 {
 }
 
-void CClientMessageDispatcher::registerMessageHandler(const std::string& szMessageName, const ClientCallback& callback)
+void CLoginClientMessageDispatcher::registerMessageHandler(const std::string& szMessageName, const ClientCallback& callback)
 {
 	DebugAst(callback != nullptr);
 
@@ -37,7 +37,7 @@ void CClientMessageDispatcher::registerMessageHandler(const std::string& szMessa
 	this->m_mapMessageHandler[nMessageID] = sClientMessageHandler;
 }
 
-void CClientMessageDispatcher::dispatch(CLoginConnectionFromClient* pLoginConnectionFromClient, const void* pData, uint16_t nSize)
+void CLoginClientMessageDispatcher::dispatch(CLoginConnectionFromClient* pLoginConnectionFromClient, const void* pData, uint16_t nSize)
 {
 	DebugAst(pData != nullptr);
 	DebugAst(pLoginConnectionFromClient != nullptr);
@@ -54,7 +54,7 @@ void CClientMessageDispatcher::dispatch(CLoginConnectionFromClient* pLoginConnec
 	const char* pMessageData = reinterpret_cast<const char*>(pHeader + 1);
 	const std::string& szMessageName = iter->second.szMessageName;
 
-	google::protobuf::Message* pMessage = this->m_pLoginService->getProtobufFactory()->unserialize_protobuf_message_from_buf(szMessageName, pMessageData, nSize - sizeof(message_header));
+	google::protobuf::Message* pMessage = this->m_pLoginService->getForwardProtobufFactory()->unserialize_protobuf_message_from_buf(szMessageName, pMessageData, nSize - sizeof(message_header));
 	if (nullptr == pMessage)
 	{
 		PrintWarning("unserialize_protobuf_message_from_buf error message_name: %s", szMessageName.c_str());

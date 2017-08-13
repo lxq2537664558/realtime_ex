@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "client_connection_factory.h"
+#include "gate_client_connection_factory.h"
 #include "gate_connection_from_client.h"
 
 #include "libBaseCommon/logger.h"
@@ -7,7 +7,7 @@
 
 using namespace core;
 
-CBaseConnection* CClientConnectionFactory::createBaseConnection(const std::string& szType)
+CBaseConnection* CGateClientConnectionFactory::createBaseConnection(const std::string& szType)
 {
 	DebugAstEx(szType == "CGateConnectionFromClient", nullptr);
 

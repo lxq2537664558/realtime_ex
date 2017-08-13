@@ -7,7 +7,7 @@ CTestActorService2::CTestActorService2()
 	, m_pTestActor2MessageHandler(nullptr)
 	, m_pTestActor2(nullptr)
 	, m_pMyActorFactory(nullptr)
-	, m_pDefaultProtobufFactory(nullptr)
+	, m_pNormalProtobufFactory(nullptr)
 {
 }
 
@@ -16,9 +16,9 @@ CTestActorService2::~CTestActorService2()
 
 }
 
-CProtobufFactory* CTestActorService2::getProtobufFactory() const
+CProtobufFactory* CTestActorService2::getServiceProtobufFactory() const
 {
-	return this->m_pDefaultProtobufFactory;
+	return this->m_pNormalProtobufFactory;
 }
 
 CActorFactory* CTestActorService2::getActorFactory(const std::string& szType) const
@@ -39,7 +39,7 @@ bool CTestActorService2::onInit()
 	
 	this->m_pTestActor2MessageHandler = new CTestActor2MessageHandler(this);
 	
-	this->m_pDefaultProtobufFactory = new CDefaultProtobufFactory();
+	this->m_pNormalProtobufFactory = new CNormalProtobufFactory();
 	this->m_pMyActorFactory = new CMyActorFactory();
 
 	char szBuf[256] = {};

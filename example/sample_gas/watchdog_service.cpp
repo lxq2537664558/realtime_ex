@@ -8,20 +8,27 @@
 CWatchdogService::CWatchdogService()
 	: m_pWatchdogServiceMessageHandler(nullptr)
 	, m_pPlayerMessageHandler(nullptr)
-	, m_pDefaultProtobufFactory(nullptr)
+	, m_pNormalProtobufFactory(nullptr)
 	, m_pPlayerFactory(nullptr)
+	, m_pJsonProtobufFactory(nullptr)
 {
 
 }
 
 CWatchdogService::~CWatchdogService()
 {
-
+	SAFE_DELETE(this->m_pNormalProtobufFactory);
+	SAFE_DELETE(this->m_pJsonProtobufFactory);
 }
 
-core::CProtobufFactory* CWatchdogService::getProtobufFactory() const
+core::CProtobufFactory* CWatchdogService::getServiceProtobufFactory() const
 {
-	return this->m_pDefaultProtobufFactory;
+	return this->m_pNormalProtobufFactory;
+}
+
+core::CProtobufFactory* CWatchdogService::getForwardProtobufFactory() const
+{
+	return this->m_pJsonProtobufFactory;
 }
 
 CActorFactory* CWatchdogService::getActorFactory(const std::string& szType) const
@@ -36,7 +43,9 @@ void CWatchdogService::release()
 
 bool CWatchdogService::onInit()
 {
-	this->m_pDefaultProtobufFactory = new CDefaultProtobufFactory();
+	this->m_pNormalProtobufFactory = new CNormalProtobufFactory();
+	this->m_pJsonProtobufFactory = new CJsonProtobufFactory();
+
 	this->m_pPlayerFactory = new CPlayerFactory();
 	this->m_pWatchdogServiceMessageHandler = new CWatchdogServiceMessageHandler(this);
 	this->m_pPlayerMessageHandler = new CPlayerMessageHandler(this);

@@ -1,9 +1,11 @@
 #pragma once
 #include "libCoreCommon/service_base.h"
 #include "libCoreCommon/ticker.h"
-#include "libCoreCommon/default_protobuf_factory.h"
+#include "libCoreCommon/normal_protobuf_factory.h"
 
 #include "player_factory.h"
+
+#include "libCoreCommon/json_protobuf_factory.h"
 
 using namespace std;
 using namespace core;
@@ -18,7 +20,9 @@ public:
 	CWatchdogService();
 	virtual ~CWatchdogService();
 
-	virtual core::CProtobufFactory*	getProtobufFactory() const;
+	virtual core::CProtobufFactory*	getServiceProtobufFactory() const;
+	virtual core::CProtobufFactory*	getForwardProtobufFactory() const;
+
 	virtual CActorFactory*			getActorFactory(const std::string& szType) const;
 	virtual void					release();
 
@@ -33,7 +37,8 @@ private:
 private:
 	CWatchdogServiceMessageHandler*	m_pWatchdogServiceMessageHandler;
 	CPlayerMessageHandler*			m_pPlayerMessageHandler;
-	CDefaultProtobufFactory*		m_pDefaultProtobufFactory;
+	CNormalProtobufFactory*			m_pNormalProtobufFactory;
+	core::CJsonProtobufFactory*		m_pJsonProtobufFactory;
 	CPlayerFactory*					m_pPlayerFactory;
 
 	core::CTicker					m_tickerNotifyGateOnlineCount;

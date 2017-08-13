@@ -1,5 +1,5 @@
 <!--服务器配置-->
 <root>
 	<!--监听客户端地址-->
-	<client host = "192.168.222.137" port = "8001" send_buf_size = "200000" recv_buf_size = "200000"/>
+	<client host = "0.0.0.0" port = "8001" report_host = "123.207.68.252" send_buf_size = "200000" recv_buf_size = "200000"/>
 </root>

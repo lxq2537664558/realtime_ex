@@ -19,7 +19,6 @@ namespace core
 	public:
 		CActorInvokeHolder(CActorBase* pActorBase);
 		virtual ~CActorInvokeHolder();
-
 		
 		template<class T>
 		inline void		async_call(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, const std::function<void(const T*, uint32_t)>& callback);
@@ -44,3 +43,5 @@ namespace core
 		uint64_t		m_nID;
 	};
 }
+
+#include "actor_invoke_holder.inl"

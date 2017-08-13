@@ -31,8 +31,10 @@ namespace core
 	{
 		std::string			szHost;
 		uint16_t			nPort;
+		uint8_t				nReusePort;
 		std::string			szContext;
 		std::string			szType;
+		uint8_t				nCoreConnectionType;
 		uint32_t			nSendBufferSize;
 		uint32_t			nRecvBufferSize;
 		MessageParser		messageParser;
@@ -44,6 +46,7 @@ namespace core
 		uint16_t			nPort;
 		std::string			szContext;
 		std::string			szType;
+		uint8_t				nCoreConnectionType;
 		uint32_t			nSendBufferSize;
 		uint32_t			nRecvBufferSize;
 		MessageParser		messageParser;

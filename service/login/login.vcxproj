@@ -90,11 +90,11 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="client_message_handler.h" />
+    <ClInclude Include="login_client_message_handler.h" />
     <ClInclude Include="login_connection_from_client.h" />
-    <ClInclude Include="client_message_dispatcher.h" />
+    <ClInclude Include="login_client_message_dispatcher.h" />
     <ClInclude Include="login_service.h" />
-    <ClInclude Include="client_connection_factory.h" />
+    <ClInclude Include="login_client_connection_factory.h" />
     <ClInclude Include="..\proto_src\player_login_request.pb.h" />
     <ClInclude Include="..\proto_src\player_login_response.pb.h" />
     <ClInclude Include="..\proto_src\validate_login_request.pb.h" />
@@ -103,11 +103,11 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="client_message_handler.cpp" />
+    <ClCompile Include="login_client_message_dispatcher.cpp" />
+    <ClCompile Include="login_client_message_handler.cpp" />
     <ClCompile Include="login_connection_from_client.cpp" />
-    <ClCompile Include="client_message_dispatcher.cpp" />
     <ClCompile Include="login_service.cpp" />
-    <ClCompile Include="client_connection_factory.cpp" />
+    <ClCompile Include="login_client_connection_factory.cpp" />
     <ClCompile Include="..\proto_src\player_login_request.pb.cc">
       <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4800;4267;</DisableSpecificWarnings>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>

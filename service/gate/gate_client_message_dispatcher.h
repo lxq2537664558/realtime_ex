@@ -1,9 +1,9 @@
 #pragma once
 #include "libBaseCommon/singleton.h"
 #include "libCoreCommon/core_common.h"
-#include "libCoreCommon/default_protobuf_factory.h"
+#include "libCoreCommon/normal_protobuf_factory.h"
 
-#include "client_session.h"
+#include "gate_client_session.h"
 #include "gate_connection_from_client.h"
 
 #include <map>
@@ -11,11 +11,11 @@
 typedef std::function<void(CGateConnectionFromClient*, const google::protobuf::Message*)>	ClientCallback;	// 客户端消息处理函数类型
 
 class CGateService;
-class CClientMessageDispatcher
+class CGateClientMessageDispatcher
 {
 public:
-	CClientMessageDispatcher(CGateService* pGateService);
-	~CClientMessageDispatcher();
+	CGateClientMessageDispatcher(CGateService* pGateService);
+	~CGateClientMessageDispatcher();
 
 	/**
 	@brief: 消息派发函数，由各个消息源调用来派发消息
@@ -27,7 +27,7 @@ public:
 	void	registerMessageHandler(const std::string& szMessageName, const ClientCallback& callback);
 
 private:
-	void	forward(CClientSession* pClientSession, const core::message_header* pHeader);
+	void	forward(CGateClientSession* pGateClientSession, const core::message_header* pHeader);
 
 private:
 	struct SClientMessageHandler

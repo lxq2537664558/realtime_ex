@@ -58,7 +58,7 @@ bool CMasterService::onInit()
 	char szBuf[256] = { 0 };
 	base::crt::snprintf(szBuf, _countof(szBuf), "%d", this->getServiceID());
 
-	CBaseApp::Inst()->getBaseConnectionMgr()->listen(szHost, nPort, "CConnectionFromNode", szBuf, 10 * 1024, 10 * 1024, nullptr);
+	CBaseApp::Inst()->getBaseConnectionMgr()->listen(szHost, nPort, false, "CConnectionFromNode", szBuf, 10 * 1024, 10 * 1024, nullptr);
 
 	SAFE_DELETE(pConfigXML);
 
@@ -97,7 +97,7 @@ void CMasterService::release()
 	delete this;
 }
 
-core::CProtobufFactory* CMasterService::getProtobufFactory() const
+core::CProtobufFactory* CMasterService::getServiceProtobufFactory() const
 {
 	return nullptr;
 }

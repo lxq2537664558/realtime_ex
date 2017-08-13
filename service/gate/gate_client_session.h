@@ -1,5 +1,6 @@
 #pragma once
 #include "libCoreCommon/core_common.h"
+#include "libCoreCommon/service_invoke_holder.h"
 
 enum EClientSessionState
 {
@@ -10,11 +11,12 @@ enum EClientSessionState
 };
 
 class CGateService;
-class CClientSession
+class CGateClientSession :
+	public core::CServiceInvokeHolder
 {
 public:
-	CClientSession();
-	~CClientSession();
+	CGateClientSession(CGateService* pGateService);
+	~CGateClientSession();
 
 	bool		init(uint64_t nPlayerID, uint64_t nSessionID, const std::string& szToken);
 	
@@ -34,7 +36,13 @@ public:
 	uint32_t	getState() const;
 	void		setState(EClientSessionState eState);
 
-	void		enterGas(CGateService* pGateService);
+	void		enterGas();
+
+private:
+	void		onTokenTimeout(uint64_t nContext);
+
+	CGateService*
+				getGateService() const;
 
 private:
 	uint64_t			m_nSessionID;
@@ -43,4 +51,6 @@ private:
 	uint32_t			m_nServiceID;
 	uint64_t			m_nPlayerID;
 	uint32_t			m_nState;
+
+	core::CTicker		m_tickerTokenTimeout;
 };

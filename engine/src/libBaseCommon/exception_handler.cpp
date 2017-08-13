@@ -49,7 +49,7 @@ static void createErrorLog(const char* szFileName, struct _EXCEPTION_POINTERS *p
 
 	base::getMemoryUsage(nSMem, nVMen);
 	base::getIOBytes(nReadBytes, nWriteBytes);
-	nCpu = base::getCpuUsage();
+	nCpu = base::getCPUUsage();
 
 	nLen += _snprintf(g_pExceptionBuf + nLen, _MAX_EXCEPTION_BUF_SIZE - nLen, "Error Code: %d\r\n", (uint32_t)GetLastError());
 	nLen += _snprintf(g_pExceptionBuf + nLen, _MAX_EXCEPTION_BUF_SIZE - nLen, "smem:%I64d vmem:%I64d read:%I64d write:%I64d cpu:%d\r\n", nSMem / 1024, nVMen / 1024, nReadBytes / 1024, nWriteBytes / 1024, nCpu);

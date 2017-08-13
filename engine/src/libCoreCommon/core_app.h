@@ -37,6 +37,8 @@ namespace core
 		const std::string&			getConfigFileName() const;
 		
 		base::CWriteBuf&			getWriteBuf() const;
+
+		std::vector<char>&			getWebsocketBuf();
 		
 		void						doQuit();
 		
@@ -60,6 +62,7 @@ namespace core
 		std::string							m_szConfig;
 		std::string							m_szPID;
 		base::CWriteBuf						m_writeBuf;
+		std::vector<char>					m_vecWebsocketBuf;
 		uint32_t							m_nCycleCount;
 		int64_t								m_nTotalSamplingTime;
 		uint32_t							m_nSamplingTime;

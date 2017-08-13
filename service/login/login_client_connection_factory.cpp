@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "client_connection_factory.h"
+#include "login_client_connection_factory.h"
 #include "login_connection_from_client.h"
 
 #include "libBaseCommon/logger.h"
@@ -7,7 +7,7 @@
 
 using namespace core;
 
-CBaseConnection* CClientConnectionFactory::createBaseConnection(const std::string& szType)
+CBaseConnection* CLoginClientConnectionFactory::createBaseConnection(const std::string& szType)
 {
 	DebugAstEx(szType == "CLoginConnectionFromClient", nullptr);
 

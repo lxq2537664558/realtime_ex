@@ -90,7 +90,7 @@ namespace core
 					PROFILING_GUARD(eMCT_REQUEST_SOCKET_LISTEN)
 					SMCT_REQUEST_SOCKET_LISTEN* pContext = reinterpret_cast<SMCT_REQUEST_SOCKET_LISTEN*>(sMessagePacket.pData);
 
-					this->m_pCoreConnectionMgr->listen(pContext->szHost, pContext->nPort, pContext->szType, pContext->szContext, pContext->nSendBufferSize, pContext->nSendBufferSize, pContext->messageParser);
+					this->m_pCoreConnectionMgr->listen(pContext->szHost, pContext->nPort, pContext->nReusePort != 0, pContext->szType, pContext->szContext, pContext->nSendBufferSize, pContext->nSendBufferSize, pContext->messageParser, pContext->nCoreConnectionType);
 					
 					SAFE_DELETE(pContext);
 				}
@@ -101,7 +101,7 @@ namespace core
 					PROFILING_GUARD(eMCT_REQUEST_SOCKET_CONNECT)
 					SMCT_REQUEST_SOCKET_CONNECT* pContext = reinterpret_cast<SMCT_REQUEST_SOCKET_CONNECT*>(sMessagePacket.pData);
 					
-					this->m_pCoreConnectionMgr->connect(pContext->szHost, pContext->nPort, pContext->szType, pContext->szContext, pContext->nSendBufferSize, pContext->nSendBufferSize, pContext->messageParser);
+					this->m_pCoreConnectionMgr->connect(pContext->szHost, pContext->nPort, pContext->szType, pContext->szContext, pContext->nSendBufferSize, pContext->nSendBufferSize, pContext->messageParser, pContext->nCoreConnectionType);
 					
 					SAFE_DELETE(pContext);
 				}

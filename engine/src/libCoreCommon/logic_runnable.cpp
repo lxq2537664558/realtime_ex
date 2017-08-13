@@ -83,7 +83,7 @@ namespace core
 		const SNodeBaseInfo& sNodeBaseInfo = CCoreApp::Inst()->getNodeBaseInfo();
 
 		if (!sNodeBaseInfo.szHost.empty())
-			this->m_pBaseConnectionMgr->listen(sNodeBaseInfo.szHost, sNodeBaseInfo.nPort, "CBaseConnectionToMaster", "", sNodeBaseInfo.nSendBufSize, sNodeBaseInfo.nRecvBufSize, nullptr);
+			this->m_pBaseConnectionMgr->listen(sNodeBaseInfo.szHost, sNodeBaseInfo.nPort, false, "CBaseConnectionOtherNode", "", sNodeBaseInfo.nSendBufSize, sNodeBaseInfo.nRecvBufSize, nullptr);
 
 		this->m_pThreadBase = base::CThreadBase::createNew(this);
 		return nullptr != this->m_pThreadBase;
@@ -297,16 +297,6 @@ namespace core
 					SAFE_DELETE_ARRAY(pBuf);
 				});
 
-				const auto mapGlobalBeforeFilter = this->m_pBaseConnectionMgrImpl->getGlobalBeforeFilter(pContext->nMessageType);
-				if (mapGlobalBeforeFilter != nullptr)
-				{
-					for (auto iter = mapGlobalBeforeFilter->begin(); iter != mapGlobalBeforeFilter->end(); ++iter)
-					{
-						const NodeGlobalFilter& callback = iter->second;
-						callback(pContext->nSocketID, pContext->nMessageType, pContext->pData, pContext->nDataSize);
-					}
-				}
-
 				CBaseConnection* pBaseConnection = this->m_pBaseConnectionMgrImpl->getBaseConnectionBySocketID(pContext->nSocketID);
 				if (pBaseConnection == nullptr)
 				{
@@ -315,15 +305,6 @@ namespace core
 				}
 
 				pBaseConnection->onDispatch(pContext->nMessageType, pContext->pData, pContext->nDataSize);
-				const auto mapGlobalAfterFilter = this->m_pBaseConnectionMgrImpl->getGlobalAfterFilter(pContext->nMessageType);
-				if (mapGlobalAfterFilter != nullptr)
-				{
-					for (auto iter = mapGlobalAfterFilter->begin(); iter != mapGlobalAfterFilter->end(); ++iter)
-					{
-						const NodeGlobalFilter& callback = iter->second;
-						callback(pContext->nSocketID, pContext->nMessageType, pContext->pData, pContext->nDataSize);
-					}
-				}
 			}
 			break;
 

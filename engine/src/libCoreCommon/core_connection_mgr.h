@@ -26,8 +26,8 @@ namespace core
 		~CCoreConnectionMgr();
 
 		bool				init(uint32_t nMaxConnectionCount);
-		bool				connect(const std::string& szHost, uint16_t nPort, const std::string& szType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser);
-		bool				listen(const std::string& szHost, uint16_t nPort, const std::string& szType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser);
+		bool				connect(const std::string& szHost, uint16_t nPort, const std::string& szType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser, uint8_t nCoreConnectionType);
+		bool				listen(const std::string& szHost, uint16_t nPort, bool bReusePort, const std::string& szType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser, uint8_t nCoreConnectionType);
 		void				update(uint32_t nTime);
 
 		void				broadcast(const std::string& szType, uint8_t nMessageType, const void* pData, uint16_t nSize, uint64_t* pExcludeID, uint16_t nExcludeIDCount);
@@ -44,6 +44,7 @@ namespace core
 		{
 			std::string			szContext;
 			std::string			szType;
+			uint8_t				nCoreConnectionType;
 			CCoreConnectionMgr*	pCoreConnectionMgr;
 			MessageParser		messageParser;
 
@@ -58,6 +59,7 @@ namespace core
 		{
 			std::string			szContext;
 			std::string			szType;
+			uint8_t				nCoreConnectionType;
 			CCoreConnectionMgr*	pCoreConnectionMgr;
 			MessageParser		messageParser;
 
@@ -81,6 +83,6 @@ namespace core
 		void						onConnect( SNetActiveWaitConnecterHandler* pNetActiveWaitConnecterHandler );
 		void						delActiveWaitConnecterHandler( SNetActiveWaitConnecterHandler* pWaitActiveConnecterHandler );
 
-		CCoreConnection*			createCoreConnection(const std::string& szType, const std::string& szContext, const MessageParser& messageParser);
+		CCoreConnection*			createCoreConnection(const std::string& szType, const std::string& szContext, const MessageParser& messageParser, uint8_t nCoreConnectionType);
 	};
 }

@@ -30,7 +30,14 @@ namespace base
 	__BASE_COMMON_API__ int32_t			getProcessorNumber();
 	__BASE_COMMON_API__ bool			getMemoryUsage(uint64_t& nMem, uint64_t& nVMen);
 	__BASE_COMMON_API__ bool			getIOBytes(uint64_t& nReadBytes, uint64_t& nWriteBytes);
-	__BASE_COMMON_API__ int32_t			getCpuUsage();
+	__BASE_COMMON_API__ int32_t			getCPUUsage();
+
+	__BASE_COMMON_API__ uint16_t		ntoh16(uint16_t x);
+	__BASE_COMMON_API__ uint16_t		hton16(uint16_t x);
+	__BASE_COMMON_API__ uint32_t		ntoh32(uint32_t x);
+	__BASE_COMMON_API__ uint32_t		hton32(uint32_t x);
+	__BASE_COMMON_API__ uint64_t		ntoh64(uint64_t x);
+	__BASE_COMMON_API__ uint64_t		hton64(uint64_t x);
 
 	template<class T>
 	T									limit(T n, T min, T max) { return (n < min) ? min : ((n > max) ? max : n); }

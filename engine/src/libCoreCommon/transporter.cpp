@@ -37,7 +37,7 @@ namespace core
 	{
 		DebugAstEx(pMessage != nullptr && pCoreService != nullptr, false);
 
-		CProtobufFactory* pProtobufFactory = pCoreService->getServiceBase()->getProtobufFactory();
+		CProtobufFactory* pProtobufFactory = pCoreService->getServiceBase()->getServiceProtobufFactory();
 		DebugAstEx(pProtobufFactory != nullptr, false);
 		
 		uint32_t nToServiceID = 0;
@@ -126,7 +126,7 @@ namespace core
 	{
 		DebugAstEx(pMessage != nullptr && pCoreService != nullptr, false);
 		
-		CProtobufFactory* pProtobufFactory = pCoreService->getServiceBase()->getProtobufFactory();
+		CProtobufFactory* pProtobufFactory = pCoreService->getServiceBase()->getServiceProtobufFactory();
 		DebugAstEx(pProtobufFactory != nullptr, false);
 
 		CServiceIDConverter* pServiceIDConverter = pCoreService->getServiceBase()->getServiceIDConverter();
@@ -192,7 +192,7 @@ namespace core
 	{
 		DebugAstEx(pMessage != nullptr && pCoreService != nullptr, false);
 
-		CProtobufFactory* pProtobufFactory = pCoreService->getServiceBase()->getProtobufFactory();
+		CProtobufFactory* pProtobufFactory = pCoreService->getServiceBase()->getForwardProtobufFactory();
 		DebugAstEx(pProtobufFactory != nullptr, false);
 
 		uint32_t nToServiceID = 0;
@@ -300,7 +300,7 @@ namespace core
 			CCoreService* pCoreService = CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->getCoreServiceByID(nToServiceID);
 			DebugAstEx(pCoreService != nullptr, false);
 
-			CProtobufFactory* pProtobufFactory = pCoreService->getServiceBase()->getProtobufFactory();
+			CProtobufFactory* pProtobufFactory = pCoreService->getServiceBase()->getForwardProtobufFactory();
 			DebugAstEx(pProtobufFactory != nullptr, false);
 
 			const std::string& szMessageName = pCoreService->getForwardMessageName(pData->nMessageID);
@@ -340,7 +340,7 @@ namespace core
 	{
 		DebugAstEx(pCoreService != nullptr, false);
 
-		CProtobufFactory* pProtobufFactory = pCoreService->getServiceBase()->getProtobufFactory();
+		CProtobufFactory* pProtobufFactory = pCoreService->getServiceBase()->getServiceProtobufFactory();
 		DebugAstEx(pProtobufFactory != nullptr, false);
 
 		if (eToType == eMTT_Actor)
@@ -380,7 +380,7 @@ namespace core
 	{
 		DebugAstEx(pMessage != nullptr && pCoreService != nullptr, false);
 		
-		CProtobufFactory* pProtobufFactory = pCoreService->getServiceBase()->getProtobufFactory();
+		CProtobufFactory* pProtobufFactory = pCoreService->getServiceBase()->getForwardProtobufFactory();
 		DebugAstEx(pProtobufFactory != nullptr, false);
 
 		if (!CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->isLocalService(nToServiceID))
@@ -442,7 +442,7 @@ namespace core
 
 		DebugAstEx(pMessage != nullptr && pCoreService != nullptr, false);
 
-		CProtobufFactory* pProtobufFactory = pCoreService->getServiceBase()->getProtobufFactory();
+		CProtobufFactory* pProtobufFactory = pCoreService->getServiceBase()->getForwardProtobufFactory();
 		DebugAstEx(pProtobufFactory != nullptr, false);
 
 		if (!CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->isLocalService(nToServiceID))

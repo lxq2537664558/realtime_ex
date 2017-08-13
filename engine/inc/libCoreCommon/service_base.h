@@ -128,10 +128,15 @@ namespace core
 		void				doQuit();
 
 		/**
-		@brief: 获取protobuf生成器
+		@brief: 获取service消息的protobuf生成器
 		*/
 		virtual CProtobufFactory*
-							getProtobufFactory() const = 0;
+							getServiceProtobufFactory() const { return nullptr; }
+		/**
+		@brief: 获取forward消息的protobuf生成器
+		*/
+		virtual CProtobufFactory*
+							getForwardProtobufFactory() const { return nullptr; }
 
 		/**
 		@brief: 获取actor_id转换器

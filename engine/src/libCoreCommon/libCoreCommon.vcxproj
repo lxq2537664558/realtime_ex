@@ -23,8 +23,9 @@
     <ClInclude Include="..\..\inc\libCoreCommon\base_object.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\core_common.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\coroutine.h" />
-    <ClInclude Include="..\..\inc\libCoreCommon\default_protobuf_factory.h" />
+    <ClInclude Include="..\..\inc\libCoreCommon\normal_protobuf_factory.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\future.h" />
+    <ClInclude Include="..\..\inc\libCoreCommon\json_protobuf_factory.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\promise.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\protobuf_factory.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\proto_system.h" />
@@ -45,7 +46,12 @@
     <ClInclude Include="core_connection_monitor.h" />
     <ClInclude Include="base_connection_other_node.h" />
     <ClInclude Include="base_connection_to_master.h" />
+    <ClInclude Include="core_websocket_connection.h" />
     <ClInclude Include="hash_service_selector.h" />
+    <ClInclude Include="http_base.h" />
+    <ClInclude Include="http_request.h" />
+    <ClInclude Include="http_request_parser.h" />
+    <ClInclude Include="http_response.h" />
     <ClInclude Include="random_service_selector.h" />
     <ClInclude Include="service_registry_proxy.h" />
     <ClInclude Include="core_common_define.h" />
@@ -82,7 +88,11 @@
     <ClCompile Include="core_connection_monitor.cpp" />
     <ClCompile Include="base_connection_other_node.cpp" />
     <ClCompile Include="base_connection_to_master.cpp" />
+    <ClCompile Include="core_websocket_connection.cpp" />
     <ClCompile Include="hash_service_selector.cpp" />
+    <ClCompile Include="http_request.cpp" />
+    <ClCompile Include="http_request_parser.cpp" />
+    <ClCompile Include="http_response.cpp" />
     <ClCompile Include="random_service_selector.cpp" />
     <ClCompile Include="service_invoke_holder.cpp" />
     <ClCompile Include="service_registry_proxy.cpp" />
@@ -118,8 +128,9 @@
     <None Include="..\..\inc\libCoreCommon\actor_base.inl" />
     <None Include="..\..\inc\libCoreCommon\actor_invoke_holder.inl" />
     <None Include="..\..\inc\libCoreCommon\actor_message_registry.inl" />
-    <None Include="..\..\inc\libCoreCommon\default_protobuf_factory.inl" />
+    <None Include="..\..\inc\libCoreCommon\normal_protobuf_factory.inl" />
     <None Include="..\..\inc\libCoreCommon\future.inl" />
+    <None Include="..\..\inc\libCoreCommon\json_protobuf_factory.inl" />
     <None Include="..\..\inc\libCoreCommon\promise.inl" />
     <None Include="..\..\inc\libCoreCommon\service_invoker.inl" />
     <None Include="..\..\inc\libCoreCommon\service_invoke_holder.inl" />

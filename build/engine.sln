@@ -48,6 +48,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "login", "..\service\login\l
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sample_dispatch", "..\example\sample_dispatch\sample_dispatch.vcxproj", "{9DD30D5B-F7E6-4646-ACB8-B07D6BB88510}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_websocket", "..\test\test_websocket\test_websocket.vcxproj", "{1FD5694F-297E-4536-A4F7-8D9CEEEAED39}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -164,6 +166,12 @@ Global
 		{9DD30D5B-F7E6-4646-ACB8-B07D6BB88510}.Release|x64.Build.0 = Release|x64
 		{9DD30D5B-F7E6-4646-ACB8-B07D6BB88510}.Release|x86.ActiveCfg = Release|Win32
 		{9DD30D5B-F7E6-4646-ACB8-B07D6BB88510}.Release|x86.Build.0 = Release|Win32
+		{1FD5694F-297E-4536-A4F7-8D9CEEEAED39}.Debug|x64.ActiveCfg = Debug|x64
+		{1FD5694F-297E-4536-A4F7-8D9CEEEAED39}.Debug|x64.Build.0 = Debug|x64
+		{1FD5694F-297E-4536-A4F7-8D9CEEEAED39}.Debug|x86.ActiveCfg = Debug|x64
+		{1FD5694F-297E-4536-A4F7-8D9CEEEAED39}.Release|x64.ActiveCfg = Release|x64
+		{1FD5694F-297E-4536-A4F7-8D9CEEEAED39}.Release|x64.Build.0 = Release|x64
+		{1FD5694F-297E-4536-A4F7-8D9CEEEAED39}.Release|x86.ActiveCfg = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -184,5 +192,6 @@ Global
 		{4FE6AA09-5A09-40DF-8D75-63E6D6DA04E0} = {B5D8E8F2-62C4-4D97-AB28-3016539D9BD8}
 		{9030B5D9-EAEC-47F0-9AA2-BA9C9AF02BAE} = {216086F1-3D14-42E1-B4CF-45A5766F0FDE}
 		{9DD30D5B-F7E6-4646-ACB8-B07D6BB88510} = {B5D8E8F2-62C4-4D97-AB28-3016539D9BD8}
+		{1FD5694F-297E-4536-A4F7-8D9CEEEAED39} = {9B243426-3FEB-467D-91E9-43F5532C5FD4}
 	EndGlobalSection
 EndGlobal

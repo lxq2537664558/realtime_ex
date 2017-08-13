@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "login_connection_from_client.h"
-#include "client_message_dispatcher.h"
+#include "login_client_message_dispatcher.h"
 #include "login_service.h"
 
 #include "libCoreCommon/base_app.h"
@@ -47,8 +47,7 @@ void CLoginConnectionFromClient::onDisconnect()
 void CLoginConnectionFromClient::onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize)
 {
 	DebugAst(nMessageType == eMT_CLIENT);
-
-	this->m_pLoginService->getClientMessageDispatcher()->dispatch(this, pData, nSize);
+	this->m_pLoginService->getLoginClientMessageDispatcher()->dispatch(this, pData, nSize);
 }
 
 void CLoginConnectionFromClient::setAccountID(uint64_t nAccountID)

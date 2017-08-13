@@ -19,7 +19,7 @@ namespace base
 		base::crt::vsnprintf(szBuf, _countof(szBuf), szFormat, arg);
 		va_end(arg);
 
-		PrintInfo("%s connect state: %d flag：%d local addr: %s %d remote addr: %s %d socket_id: %d error code[%d] send_index: %d send_count: %d", szBuf, this->m_eConnecterState, this->m_nFlag, this->getLocalAddr().szHost, this->getLocalAddr().nPort, this->getRemoteAddr().szHost, this->getRemoteAddr().nPort, this->GetSocketID(), getLastError(), this->m_nSendConnecterIndex, this->m_pNetEventLoop->getSendConnecterCount());
+		PrintInfo("%s connect state: %d flag：%d local addr: %s %d remote addr: %s %d socket_id: %d error code[%d] send_index: %d send_count: %d", szBuf, this->m_eConnecterState, this->m_nFlag, this->getLocalAddr().szHost, this->getLocalAddr().nPort, this->getRemoteAddr().szHost, this->getRemoteAddr().nPort, this->getSocketID(), getLastError(), this->m_nSendConnecterIndex, this->m_pNetEventLoop->getSendConnecterCount());
 	}
 
 	void CNetConnecter::onEvent(uint32_t nEvent)
@@ -30,6 +30,12 @@ namespace base
 			if (nEvent&(eNET_Send|eNET_Error))
 			{
 				this->onConnect();
+			}
+
+			// 连接成功了，并且数据也顺带来了
+			if ((this->m_eConnecterState == eNCS_Connected) && (nEvent&eNET_Recv) != 0)
+			{
+				this->onRecv();
 			}
 			break;
 
@@ -68,12 +74,12 @@ namespace base
 		{
 			if ((this->m_nFlag&eNCF_ConnectFail) == 0) 
 			{
-				PrintInfo("disconnect local addr: %s %d remote addr: %s %d socket_id: %d send_index: %d send_count: %d", this->getLocalAddr().szHost, this->getLocalAddr().nPort, this->getRemoteAddr().szHost, this->getRemoteAddr().nPort, this->GetSocketID(), this->m_nSendConnecterIndex, this->m_pNetEventLoop->getSendConnecterCount());
+				PrintInfo("disconnect local addr: %s %d remote addr: %s %d socket_id: %d send_index: %d send_count: %d", this->getLocalAddr().szHost, this->getLocalAddr().nPort, this->getRemoteAddr().szHost, this->getRemoteAddr().nPort, this->getSocketID(), this->m_nSendConnecterIndex, this->m_pNetEventLoop->getSendConnecterCount());
 				this->m_pHandler->onDisconnect();
 			}
 			else
 			{
-				PrintInfo("connect fail local addr: %s %d remote addr: %s %d socket_id: %d send_index: %d send_count: %d", this->getLocalAddr().szHost, this->getLocalAddr().nPort, this->getRemoteAddr().szHost, this->getRemoteAddr().nPort, this->GetSocketID(), this->m_nSendConnecterIndex, this->m_pNetEventLoop->getSendConnecterCount());
+				PrintInfo("connect fail local addr: %s %d remote addr: %s %d socket_id: %d send_index: %d send_count: %d", this->getLocalAddr().szHost, this->getLocalAddr().nPort, this->getRemoteAddr().szHost, this->getRemoteAddr().nPort, this->getSocketID(), this->m_nSendConnecterIndex, this->m_pNetEventLoop->getSendConnecterCount());
 				this->m_pHandler->onConnectFail();
 			}
 			this->m_pHandler = nullptr;
@@ -119,7 +125,7 @@ namespace base
 		{
 			int32_t err;
 			socklen_t len = sizeof(err);
-			if (getsockopt(this->GetSocketID(), SOL_SOCKET, SO_ERROR, reinterpret_cast<char*>(&err), (socklen_t*)&len) < 0)
+			if (getsockopt(this->getSocketID(), SOL_SOCKET, SO_ERROR, reinterpret_cast<char*>(&err), (socklen_t*)&len) < 0)
 			{
 				this->m_nFlag |= eNCF_ConnectFail;
 				this->shutdown(true, "SO_ERROR getsockopt error %d", getLastError());
@@ -141,7 +147,7 @@ namespace base
 			return;
 		}
 		this->m_eConnecterState = eNCS_Connected;
-		PrintInfo("connect local addr: %s %d remote addr: %s %d socket_id: %d", this->getLocalAddr().szHost, this->getLocalAddr().nPort, this->getRemoteAddr().szHost, this->getRemoteAddr().nPort, this->GetSocketID());
+		PrintInfo("connect local addr: %s %d remote addr: %s %d socket_id: %d", this->getLocalAddr().szHost, this->getLocalAddr().nPort, this->getRemoteAddr().szHost, this->getRemoteAddr().nPort, this->getSocketID());
 
 		if (nullptr != this->m_pHandler)
 			this->m_pHandler->onConnect();
@@ -160,9 +166,9 @@ namespace base
 			}
 			char* pBuf = this->m_pRecvBuffer->getWritableBuffer();
 #ifdef _WIN32
-			int32_t nRet = ::recv(this->GetSocketID(), pBuf, (int32_t)nBufSize, MSG_NOSIGNAL);
+			int32_t nRet = ::recv(this->getSocketID(), pBuf, (int32_t)nBufSize, MSG_NOSIGNAL);
 #else
-			int32_t nRet = ::read(this->GetSocketID(), pBuf, nBufSize);
+			int32_t nRet = ::read(this->getSocketID(), pBuf, nBufSize);
 #endif
 			// 对端已经关闭
 			if (0 == nRet)
@@ -209,9 +215,9 @@ namespace base
 
 			this->m_nFlag &= ~eNCF_DisableWrite;
 #ifdef _WIN32
-			int32_t nRet = ::send(this->GetSocketID(), pData, (int32_t)nDataSize, MSG_NOSIGNAL);
+			int32_t nRet = ::send(this->getSocketID(), pData, (int32_t)nDataSize, MSG_NOSIGNAL);
 #else
-			int32_t nRet = ::write(this->GetSocketID(), pData, nDataSize);
+			int32_t nRet = ::write(this->getSocketID(), pData, nDataSize);
 #endif
 			if (SOCKET_ERROR == nRet)
 			{
@@ -281,25 +287,24 @@ namespace base
 
 		if (!this->nonblock())
 		{
-			::closesocket(this->GetSocketID());
+			::closesocket(this->getSocketID());
 			return false;
 		}
 		if (!this->setBufferSize())
 		{
-			::closesocket(this->GetSocketID());
+			::closesocket(this->getSocketID());
 			return false;
 		}
 		this->m_sRemoteAddr = sNetAddr;
 
 		struct sockaddr_in romateAddr;
 		romateAddr.sin_family = AF_INET;
-		// 不能用::htons https://bbs.archlinux.org/viewtopic.php?id=53751
-		romateAddr.sin_port = htons(this->m_sRemoteAddr.nPort);
+		romateAddr.sin_port = base::hton16(this->m_sRemoteAddr.nPort);
 		romateAddr.sin_addr.s_addr = inet_addr(this->m_sRemoteAddr.szHost);
 		memset(romateAddr.sin_zero, 0, sizeof(romateAddr.sin_zero));
 
 		// connect在信号中断的时候不重启
-		int32_t nRet = ::connect(this->GetSocketID(), (sockaddr*)&romateAddr, sizeof(romateAddr));
+		int32_t nRet = ::connect(this->getSocketID(), (sockaddr*)&romateAddr, sizeof(romateAddr));
 
 		if (0 != nRet)
 		{
@@ -320,8 +325,8 @@ namespace base
 				break;
 
 			default:
-				PrintInfo("connect error socket_id: %d remote addr: %s %d err: %d", this->GetSocketID(), this->m_sRemoteAddr.szHost, this->m_sRemoteAddr.nPort, getLastError());
-				::closesocket(this->GetSocketID());
+				PrintInfo("connect error socket_id: %d remote addr: %s %d err: %d", this->getSocketID(), this->m_sRemoteAddr.szHost, this->m_sRemoteAddr.nPort, getLastError());
+				::closesocket(this->getSocketID());
 				return false;
 			}
 		}
@@ -351,9 +356,9 @@ namespace base
 				do
 				{
 #ifdef _WIN32
-					nRet = ::send(this->GetSocketID(), reinterpret_cast<const char*>(pData), (int32_t)nDataSize, MSG_NOSIGNAL);
+					nRet = ::send(this->getSocketID(), reinterpret_cast<const char*>(pData), (int32_t)nDataSize, MSG_NOSIGNAL);
 #else
-					nRet = ::write(this->GetSocketID(), pData, (int32_t)nDataSize);
+					nRet = ::write(this->getSocketID(), pData, (int32_t)nDataSize);
 #endif
 				} while (nRet == SOCKET_ERROR && getLastError() == NW_EINTR);
 

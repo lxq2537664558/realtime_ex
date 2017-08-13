@@ -6,33 +6,38 @@
 #include "libCoreCommon/base_connection_mgr.h"
 
 #include "tinyxml2/tinyxml2.h"
+#include "proto_src/player_login_request.pb.h"
 
 using namespace core;
 
 CLoginService::CLoginService()
-	: m_pClientConnectionFactory(nullptr)
-	, m_pClientMessageDispatcher(nullptr)
-	, m_pClientMessageHandler(nullptr)
-	, m_pDefaultProtobufFactory(nullptr)
+	: m_pLoginClientConnectionFactory(nullptr)
+	, m_pLoginClientMessageDispatcher(nullptr)
+	, m_pLoginClientMessageHandler(nullptr)
+	, m_pNormalProtobufFactory(nullptr)
+	, m_pJsonProtobufFactory(nullptr)
 {
 }
 
 CLoginService::~CLoginService()
 {
-	SAFE_DELETE(this->m_pClientConnectionFactory);
-	SAFE_DELETE(this->m_pClientMessageDispatcher);
-	SAFE_DELETE(this->m_pClientMessageHandler);
-	SAFE_DELETE(this->m_pDefaultProtobufFactory);
+	SAFE_DELETE(this->m_pLoginClientConnectionFactory);
+	SAFE_DELETE(this->m_pLoginClientMessageDispatcher);
+	SAFE_DELETE(this->m_pLoginClientMessageHandler);
+	SAFE_DELETE(this->m_pNormalProtobufFactory);
+	SAFE_DELETE(this->m_pJsonProtobufFactory);
 }
 
 bool CLoginService::onInit()
 {
-	this->m_pClientMessageDispatcher = new CClientMessageDispatcher(this);
-	this->m_pClientMessageHandler = new CClientMessageHandler(this);
+	this->m_pLoginClientMessageDispatcher = new CLoginClientMessageDispatcher(this);
+	this->m_pLoginClientMessageHandler = new CLoginClientMessageHandler(this);
 
-	this->m_pClientConnectionFactory = new CClientConnectionFactory();
-	CBaseApp::Inst()->getBaseConnectionMgr()->setBaseConnectionFactory("CLoginConnectionFromClient", this->m_pClientConnectionFactory);
-	this->m_pDefaultProtobufFactory = new CDefaultProtobufFactory();
+	this->m_pLoginClientConnectionFactory = new CLoginClientConnectionFactory();
+	CBaseApp::Inst()->getBaseConnectionMgr()->setBaseConnectionFactory("CLoginConnectionFromClient", this->m_pLoginClientConnectionFactory);
+	
+	this->m_pNormalProtobufFactory = new CNormalProtobufFactory();
+	this->m_pJsonProtobufFactory = new CJsonProtobufFactory();
 	
 	tinyxml2::XMLDocument* pConfigXML = new tinyxml2::XMLDocument();
 	if (pConfigXML->LoadFile(this->getConfigFileName().c_str()) != tinyxml2::XML_SUCCESS)
@@ -59,11 +64,18 @@ bool CLoginService::onInit()
 	base::crt::snprintf(szBuf, _countof(szBuf), "%d", this->getServiceID());
 
 	// 启动客户端连接
-	CBaseApp::Inst()->getBaseConnectionMgr()->listen(szHost, nPort, "CLoginConnectionFromClient", szBuf, nSendBufSize, nRecvBufSize, default_client_message_parser);
+	CBaseApp::Inst()->getBaseConnectionMgr()->listen(szHost, nPort, true, "CLoginConnectionFromClient", szBuf, nSendBufSize, nRecvBufSize, default_client_message_parser, eCCT_Websocket);
 
 	SAFE_DELETE(pConfigXML);
 
 	PrintInfo("CGateService::onInit");
+
+	player_login_request request_msg;
+	request_msg.set_account_id(1);
+	request_msg.set_server_id(1);
+	char szBuf1[256] = { 0 };
+	int32_t nRet = this->m_pJsonProtobufFactory->serialize_protobuf_message_to_buf(&request_msg, szBuf1, _countof(szBuf1));
+	auto pMsg = this->m_pJsonProtobufFactory->unserialize_protobuf_message_from_buf("player_login_request", szBuf1, nRet);
 
 	return true;
 }
@@ -78,9 +90,9 @@ void CLoginService::onQuit()
 
 }
 
-CClientMessageDispatcher* CLoginService::getClientMessageDispatcher() const
+CLoginClientMessageDispatcher* CLoginService::getLoginClientMessageDispatcher() const
 {
-	return this->m_pClientMessageDispatcher;
+	return this->m_pLoginClientMessageDispatcher;
 }
 
 void CLoginService::release()
@@ -88,9 +100,14 @@ void CLoginService::release()
 	delete this;
 }
 
-CProtobufFactory* CLoginService::getProtobufFactory() const
+CProtobufFactory* CLoginService::getServiceProtobufFactory() const
 {
-	return this->m_pDefaultProtobufFactory;
+	return this->m_pNormalProtobufFactory;
+}
+
+core::CProtobufFactory* CLoginService::getForwardProtobufFactory() const
+{
+	return this->m_pJsonProtobufFactory;
 }
 
 extern "C" 

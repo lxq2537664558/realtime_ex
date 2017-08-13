@@ -180,8 +180,7 @@ namespace base
 		struct sockaddr remoteAddr;
 		socklen_t nPeerAddrLen = sizeof(remoteAddr);
 		::getpeername(this->m_nSocketID, &remoteAddr, &nPeerAddrLen);
-		// 不能用::htons https://bbs.archlinux.org/viewtopic.php?id=53751
-		this->m_sRemoteAddr.nPort = ntohs((reinterpret_cast<sockaddr_in*>(&remoteAddr))->sin_port);
+		this->m_sRemoteAddr.nPort = base::ntoh16((reinterpret_cast<sockaddr_in*>(&remoteAddr))->sin_port);
 		strncpy(this->m_sRemoteAddr.szHost, inet_ntoa((reinterpret_cast<sockaddr_in*>(&remoteAddr))->sin_addr), _countof(this->m_sRemoteAddr.szHost));
 	}
 
@@ -190,8 +189,7 @@ namespace base
 		struct sockaddr localAddr;
 		socklen_t nLocalAddrLen = sizeof(localAddr);
 		::getsockname(this->m_nSocketID, &localAddr, &nLocalAddrLen);
-		// 不能用::htons https://bbs.archlinux.org/viewtopic.php?id=53751
-		this->m_sLocalAddr.nPort = ntohs((reinterpret_cast<sockaddr_in*>(&localAddr))->sin_port);
+		this->m_sLocalAddr.nPort = base::ntoh16((reinterpret_cast<sockaddr_in*>(&localAddr))->sin_port);
 		strncpy(this->m_sLocalAddr.szHost, inet_ntoa((reinterpret_cast<sockaddr_in*>(&localAddr))->sin_addr), _countof(this->m_sRemoteAddr.szHost));
 	}
 
@@ -200,7 +198,7 @@ namespace base
 		this->m_nSocketID = nSocketID;
 	}
 
-	int32_t CNetSocket::GetSocketID() const
+	int32_t CNetSocket::getSocketID() const
 	{
 		return this->m_nSocketID;
 	}

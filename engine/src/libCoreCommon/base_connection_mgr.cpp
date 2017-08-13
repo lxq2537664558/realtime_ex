@@ -50,13 +50,14 @@ namespace core
 		CCoreApp::Inst()->getLogicRunnable()->getBaseConnectionMgrImpl()->delConnectFailCallback(szKey);
 	}
 
-	void CBaseConnectionMgr::connect(const std::string& szHost, uint16_t nPort, const std::string& szType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, const MessageParser& messageParser)
+	void CBaseConnectionMgr::connect(const std::string& szHost, uint16_t nPort, const std::string& szType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, const MessageParser& messageParser, ECoreConnectionType eCoreConnectionType /* = eCCT_Normal */)
 	{
 		SMCT_REQUEST_SOCKET_CONNECT* pContext = new SMCT_REQUEST_SOCKET_CONNECT();
 		pContext->szHost = szHost;
 		pContext->nPort = nPort;
 		pContext->szContext = szContext;
 		pContext->szType = szType;
+		pContext->nCoreConnectionType = (uint8_t)eCoreConnectionType;
 		pContext->nRecvBufferSize = nRecvBufferSize;
 		pContext->nSendBufferSize = nSendBufferSize;
 		pContext->messageParser = messageParser;
@@ -74,13 +75,15 @@ namespace core
 		this->connect(szHost, nPort, "CBaseConnectionOtherNode", "", nSendBufferSize, nRecvBufferSize, nullptr);
 	}
 
-	void CBaseConnectionMgr::listen(const std::string& szHost, uint16_t nPort, const std::string& szType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser)
+	void CBaseConnectionMgr::listen(const std::string& szHost, uint16_t nPort, bool bReusePort, const std::string& szType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser, ECoreConnectionType eCoreConnectionType /* = eCCT_Normal */)
 	{
 		SMCT_REQUEST_SOCKET_LISTEN* pContext = new SMCT_REQUEST_SOCKET_LISTEN();
 		pContext->szHost = szHost;
 		pContext->nPort = nPort;
+		pContext->nReusePort = bReusePort;
 		pContext->szContext = szContext;
 		pContext->szType = szType;
+		pContext->nCoreConnectionType = (uint8_t)eCoreConnectionType;
 		pContext->nRecvBufferSize = nRecvBufferSize;
 		pContext->nSendBufferSize = nSendBufferSize;
 		pContext->messageParser = messageParser;

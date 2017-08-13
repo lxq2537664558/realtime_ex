@@ -1,7 +1,7 @@
 #pragma once
 #include "libCoreCommon/service_base.h"
 #include "libCoreCommon/ticker.h"
-#include "libCoreCommon/default_protobuf_factory.h"
+#include "libCoreCommon/normal_protobuf_factory.h"
 
 #include <map>
 
@@ -21,7 +21,7 @@ private:
 	virtual void				onFrame();
 	virtual void				onQuit();
 
-	virtual CProtobufFactory*	getProtobufFactory() const;
+	virtual CProtobufFactory*	getServiceProtobufFactory() const;
 	virtual void				release();
 
 	void						onServiceConnect(const std::string& szType, uint32_t nServiceID);
@@ -36,5 +36,5 @@ private:
 	CTicker						m_ticker2;
 	CTicker						m_ticker3;
 	std::map<uint32_t, bool>	m_mapConnectFlag;
-	CDefaultProtobufFactory*	m_pDefaultProtobufFactory;
+	CNormalProtobufFactory*		m_pNormalProtobufFactory;
 };

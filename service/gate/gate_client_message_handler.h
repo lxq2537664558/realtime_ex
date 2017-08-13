@@ -5,11 +5,11 @@
 #include "gate_connection_from_client.h"
 
 class CGateService;
-class CClientMessageHandler
+class CGateClientMessageHandler
 {
 public:
-	CClientMessageHandler(CGateService*	pGateService);
-	~CClientMessageHandler();
+	CGateClientMessageHandler(CGateService*	pGateService);
+	~CGateClientMessageHandler();
 
 	void	sendClientMessage(core::CBaseConnection* pBaseConnection, const google::protobuf::Message* pMessage);
 
