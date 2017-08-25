@@ -165,52 +165,6 @@ namespace base
 			}
 		}
 
-		struct PushArgs
-		{
-			template<class T, class...Args>
-			static bool push(std::vector<std::string> &vec, const T& t, const Args&... args)
-			{
-				std::ostringstream oss;
-				oss << t;
-				vec.push_back(oss.str().c_str());
-
-				return PushArgs::push(vec, args...);
-			}
-
-			static bool push(std::vector<std::string> &vec)
-			{
-				return true;
-			}
-		};
-
-		template<class ...Args>
-		std::string	format(const char* fmt, const Args&... args)
-		{
-			std::vector<std::string> vecArg;
-			PushArgs::push(vecArg, args...);
-
-			// ½âÎö²ÎÊý
-			size_t size = vecArg.size();
-			std::string::size_type pos = 0;
-			size_t index = 0;
-			std::string szResult = fmt;
-
-			while (std::string::npos != (pos = szResult.find("{}", pos)) && index < size)
-			{
-				szResult.replace(pos, 2, vecArg[index]);
-				pos += vecArg[index].size();
-				index++;
-			}
-
-			return szResult;
-		}
-
-		template<class ...Args>
-		std::string	format(const std::string& fmt, const Args&... args)
-		{
-			return format(fmt.c_str(), args...);
-		}
-
 		bool string_cmp_nocase::operator ()(const std::string& lhs, const std::string& rhs) const
 		{
 			std::string::const_iterator p = lhs.begin();

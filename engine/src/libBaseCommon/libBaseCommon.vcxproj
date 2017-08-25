@@ -135,6 +135,7 @@
   <ItemGroup>
     <None Include="..\..\inc\libBaseCommon\circle_queue.inl" />
     <None Include="..\..\inc\libBaseCommon\link.inl" />
+    <None Include="..\..\inc\libBaseCommon\string_format.inl" />
     <None Include="..\..\inc\libBaseCommon\string_util.inl" />
   </ItemGroup>
   <ItemGroup>

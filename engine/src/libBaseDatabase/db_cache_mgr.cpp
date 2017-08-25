@@ -184,7 +184,7 @@ namespace base
 		if (vecElement.empty())
 			return;
 
-		uint32_t nPos = base::CRandGen::getGlobalRand(vecElement.size());
+		uint32_t nPos = base::CRandGen::getGlobalRand((uint32_t)vecElement.size());
 		auto pDbCache = vecElement[nPos]->second;
 		uint64_t nID = vecElement[nPos]->first;
 		this->m_nDataSize -= pDbCache->getDataSize();

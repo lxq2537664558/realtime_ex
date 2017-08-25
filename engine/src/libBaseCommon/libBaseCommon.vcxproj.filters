@@ -190,5 +190,8 @@
     <None Include="..\..\inc\libBaseCommon\string_util.inl">
       <Filter>inc</Filter>
     </None>
+    <None Include="..\..\inc\libBaseCommon\string_format.inl">
+      <Filter>inc</Filter>
+    </None>
   </ItemGroup>
 </Project>

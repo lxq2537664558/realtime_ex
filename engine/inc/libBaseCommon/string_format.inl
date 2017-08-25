@@ -2,15 +2,54 @@ namespace base
 {
 	namespace string_util
 	{
+		template<size_t N, class T>
+		inline void push2Special(std::string& strfmt, const T& val)
+		{
+			//static_assert(false, "not suppert val object");
+			std::ostringstream oss;
+			oss << val;
+
+			// 替换参数
+			std::string::size_type pos = 0;
+			if (std::string::npos != (pos = strfmt.find("{}")))
+			{
+				strfmt.replace(pos, 2, oss.str().c_str());
+			}
+		}
 
 		template<class T>
-		inline void push2Special(std::string& strfmt, T val)
+		inline void push2Special(std::string& strfmt, const T& val)
 		{
-			static_assert(false, "not suppert val object");
-			
+			//static_assert(false, "not suppert val object");
+			std::ostringstream oss;
+			oss << val;
+
+			// 替换参数
+			std::string::size_type pos = 0;
+			if (std::string::npos != (pos = strfmt.find("{}")))
+			{
+				strfmt.replace(pos, 2, oss.str().c_str());
+			}
 		}
 
-		template<> inline void push2Special(std::string& strfmt, int8_t val)
+		template<> inline void push2Special(std::string& strfmt, const bool& val)
+		{
+			// 替换参数
+			std::string::size_type pos = 0;
+			if (std::string::npos != (pos = strfmt.find("{}")))
+			{
+				if (val)
+				{
+					strfmt.replace(pos, 2, "true");
+				}
+				else
+				{
+					strfmt.replace(pos, 2, "false");
+				}
+			}
+		}
+
+		template<> inline void push2Special(std::string& strfmt, const int8_t& val)
 		{
 			char sta_buffer[16];
 			base::function_util::snprintf(sta_buffer, _countof(sta_buffer), "%d", val);
@@ -23,7 +62,7 @@ namespace base
 			}
 		}
 
-		template<> inline void push2Special(std::string& strfmt, uint8_t val)
+		template<> inline void push2Special(std::string& strfmt, const uint8_t& val)
 		{
 			char sta_buffer[16];
 			base::function_util::snprintf(sta_buffer, _countof(sta_buffer), "%u", val);
@@ -36,7 +75,7 @@ namespace base
 			}
 		}
 
-		template<> inline void push2Special(std::string& strfmt, int16_t val)
+		template<> inline void push2Special(std::string& strfmt, const int16_t& val)
 		{
 			char sta_buffer[16];
 			base::function_util::snprintf(sta_buffer, _countof(sta_buffer), "%d", val);
@@ -49,7 +88,7 @@ namespace base
 			}
 		}
 
-		template<> inline void push2Special(std::string& strfmt, uint16_t val)
+		template<> inline void push2Special(std::string& strfmt, const uint16_t& val)
 		{
 			char sta_buffer[16];
 			base::function_util::snprintf(sta_buffer, _countof(sta_buffer), "%u", val);
@@ -62,7 +101,7 @@ namespace base
 			}
 		}
 
-		template<> inline void push2Special(std::string& strfmt, int32_t val)
+		template<> inline void push2Special(std::string& strfmt, const int32_t& val)
 		{
 			char sta_buffer[16];
 			base::function_util::snprintf(sta_buffer, _countof(sta_buffer), "%d", val);
@@ -75,7 +114,7 @@ namespace base
 			}
 		}
 
-		template<> inline void push2Special(std::string& strfmt, uint32_t val)
+		template<> inline void push2Special(std::string& strfmt, const uint32_t& val)
 		{
 			char sta_buffer[16];
 			base::function_util::snprintf(sta_buffer, _countof(sta_buffer), "%u", val);
@@ -88,10 +127,10 @@ namespace base
 			}
 		}
 
-		template<> inline void push2Special(std::string& strfmt, int64_t val)
+		template<> inline void push2Special(std::string& strfmt, const int64_t& val)
 		{
 			char sta_buffer[32];
-			base::function_util::snprintf(sta_buffer, _countof(sta_buffer), "%I64d", val);
+			base::function_util::snprintf(sta_buffer, _countof(sta_buffer), INT64FMT, val);
 
 			// 替换参数
 			std::string::size_type pos = 0;
@@ -101,11 +140,10 @@ namespace base
 			}
 		}
 
-		template<> inline void push2Special(std::string& strfmt, uint64_t val)
+		template<> inline void push2Special(std::string& strfmt, const uint64_t& val)
 		{
 			char sta_buffer[32];
-
-			sprintf_s(sta_buffer, "%I64u", val);
+			base::function_util::snprintf(sta_buffer, _countof(sta_buffer), UINT64FMT, val);
 
 			// 替换参数
 			std::string::size_type pos = 0;
@@ -115,10 +153,10 @@ namespace base
 			}
 		}
 
-		template<> inline void push2Special(std::string& strfmt, double val)
+		template<> inline void push2Special(std::string& strfmt, const double& val)
 		{
 			char sta_buffer[16];
-			sprintf_s(sta_buffer, "%f", val);
+			base::function_util::snprintf(sta_buffer, _countof(sta_buffer), "%f", val);
 
 			// 替换参数
 			std::string::size_type pos = 0;
@@ -128,28 +166,46 @@ namespace base
 			}
 		}
 
-		template<> inline void push2Special(std::string& strfmt, float val)
+		template<> inline void push2Special(std::string& strfmt, const float& val)
 		{
 			push2Special(strfmt, static_cast<double>(val));
 		}
 
-		template<> inline void push2Special(std::string& strfmt, char* val)
+		template<size_t N> inline void push2Special(std::string& strfmt, const char(&val)[N])
 		{
-			push2Special(strfmt, val);
+			push2Special(strfmt, reinterpret_cast<const char* const>(val));
 		}
 
-		template<> inline void push2Special(std::string& strfmt, const char* val)
+		template<> inline void push2Special(std::string& strfmt, const char* const& val)
 		{
 			char sta_buffer[1024];
-			sprintf_s(sta_buffer, "%s", val);
+			if (val == nullptr)
+			{
+				base::function_util::snprintf(sta_buffer, _countof(sta_buffer), "%s", "NULL");
+			}
+			else
+			{
+				sprintf_s(sta_buffer, "%s", val);
+			}
 
 			// 替换参数
 			std::string::size_type pos = 0;
-			if (std::string::npos != (pos = strfmt.find("{}")) )
+			if (std::string::npos != (pos = strfmt.find("{}")))
 			{
-				strfmt.replace(pos, 2, sta_buffer);
+				if (val == nullptr)
+				{
+					strfmt.replace(pos, 2, "NULL");
+				}
+				else
+				{
+					strfmt.replace(pos, 2, val);
+				}
 			}
+		}
 
+		template<> inline void push2Special(std::string& strfmt, char* const& val)
+		{
+			push2Special(strfmt, reinterpret_cast<const char* const>(val));
 		}
 
 		template<> inline void push2Special(std::string& strfmt, const std::string& val)
@@ -157,16 +213,10 @@ namespace base
 			push2Special(strfmt, val.c_str());
 		}
 
-		template<> inline void push2Special(std::string& strfmt, std::string val)
-		{
-			push2Special(strfmt, val.c_str());
-		}
-
-
 		struct PushArgs
 		{
 			template<class T, class...Args>
-			static bool push(std::string& strfmt, T& t, Args&... args)
+			static bool push(std::string& strfmt, const T& t, const Args&... args)
 			{
 				push2Special(strfmt, t);
 
@@ -180,7 +230,7 @@ namespace base
 		};
 
 		template<class ...Args>
-		std::string	format(const char* szfmt, Args... args)
+		std::string	format(const char* szfmt, const Args&...args)
 		{
 			std::string str_format = szfmt;
 
@@ -191,10 +241,26 @@ namespace base
 		}
 
 		template<class ...Args>
-		std::string	format(const std::string& strfmt, Args... args)
+		std::string	format(const std::string& strfmt, const Args&... args)
 		{
 
 			return format(strfmt.c_str(), args...);
 		}
+
+
+		template<class ...Args>
+		inline std::string	format(char *buff, uint16_t buffSize, char* fmt, const Args&... args)
+		{
+
+
+		}
+
+		template<class ...Args>
+		inline std::string	format(char *buff, uint16_t buffSize, const std::string& fmt, const Args&... args)
+		{
+
+
+		}
+
 	}
 }

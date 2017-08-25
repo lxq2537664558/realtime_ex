@@ -76,3 +76,4 @@ namespace base
 }
 
 #include "string_util.inl"
+#include "string_format.inl"
