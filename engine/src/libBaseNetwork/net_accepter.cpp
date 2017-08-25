@@ -12,7 +12,7 @@ namespace base
 	{
 		if ((eNET_Recv&nEvent) == 0)
 		{
-			PrintInfo("event type error socket_id: %d error code[%d]", this->getSocketID(), getLastError());
+			PrintInfo("event type error socket_id: {} error code: {}", this->getSocketID(), getLastError());
 			return;
 		}
 
@@ -39,19 +39,19 @@ namespace base
 					&& getLastError() != NW_ECONNABORTED
 					&& getLastError() != NW_EPROTO)
 				{
-					PrintWarning("CNetAccepter::onEvent Error: %d", getLastError());
+					PrintWarning("CNetAccepter::onEvent Error: {}", getLastError());
 				}
 				break;
 			}
 
 			if (this->m_pNetEventLoop->getSocketCount() >= this->m_pNetEventLoop->getMaxSocketCount())
 			{
-				PrintWarning("out of max connection[%d]", this->m_pNetEventLoop->getMaxSocketCount());
+				PrintWarning("out of max connection: {}", this->m_pNetEventLoop->getMaxSocketCount());
 				::closesocket(nSocketID);
 				break;
 			}
 
-			PrintInfo("new connection accept listen addr: %s %d cur connection[%d]", this->getListenAddr().szHost, this->getListenAddr().nPort, this->m_pNetEventLoop->getSocketCount());
+			PrintInfo("new connection accept listen addr: {} {} cur connection: {}", this->getListenAddr().szHost, this->getListenAddr().nPort, this->m_pNetEventLoop->getSocketCount());
 
 			CNetConnecter* pNetConnecter = new CNetConnecter();
 			if (!pNetConnecter->init(this->getSendBufferSize(), this->getRecvBufferSize(), this->m_pNetEventLoop))
@@ -154,23 +154,23 @@ namespace base
 		this->m_sLocalAddr = netAddr;
 		struct sockaddr_in listenAddr;
 		listenAddr.sin_family = AF_INET;
-		listenAddr.sin_port = base::hton16(this->m_sLocalAddr.nPort);
+		listenAddr.sin_port = base::function_util::hton16(this->m_sLocalAddr.nPort);
 		listenAddr.sin_addr.s_addr = this->m_sLocalAddr.isAnyIP() ? INADDR_ANY : inet_addr(this->m_sLocalAddr.szHost);
 		memset(listenAddr.sin_zero, 0, sizeof(listenAddr.sin_zero));
 		if (0 != ::bind(this->getSocketID(), (sockaddr*)&listenAddr, sizeof(listenAddr)))
 		{
-			PrintWarning("bind socket to %s %d error %d", this->m_sLocalAddr.szHost, this->m_sLocalAddr.nPort, getLastError());
+			PrintWarning("bind socket to {} {} error {}", this->m_sLocalAddr.szHost, this->m_sLocalAddr.nPort, getLastError());
 			::closesocket(this->getSocketID());
 			return false;
 		}
 
 		if (0 != ::listen(this->getSocketID(), SOMAXCONN))
 		{
-			PrintWarning("listen socket to %s %d error %d", this->m_sLocalAddr.szHost, this->m_sLocalAddr.nPort, getLastError());
+			PrintWarning("listen socket to {} {} error {}", this->m_sLocalAddr.szHost, this->m_sLocalAddr.nPort, getLastError());
 			::closesocket(this->getSocketID());
 			return false;
 		}
-		PrintInfo("start listen %s %d socket_id: %d ", this->m_sLocalAddr.szHost, this->m_sLocalAddr.nPort, this->getSocketID());
+		PrintInfo("start listen {} {} socket_id: {} ", this->m_sLocalAddr.szHost, this->m_sLocalAddr.nPort, this->getSocketID());
 
 		this->m_pNetEventLoop->addSocket(this);
 

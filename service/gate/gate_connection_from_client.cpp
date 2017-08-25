@@ -1,10 +1,10 @@
-#include "stdafx.h"
 #include "gate_connection_from_client.h"
 #include "gate_client_message_dispatcher.h"
 #include "gate_client_session_mgr.h"
 #include "gate_service.h"
 
 #include "libCoreCommon/base_app.h"
+#include "libBaseCommon/string_util.h"
 
 using namespace core;
 
@@ -27,11 +27,11 @@ void CGateConnectionFromClient::release()
 void CGateConnectionFromClient::onConnect()
 {
 	uint32_t nServiceID = 0;
-	base::crt::atoui(this->getContext().c_str(), nServiceID);
+	base::string_util::convert_to_value(this->getContext(), nServiceID);
 	this->m_pGateService = dynamic_cast<CGateService*>(CBaseApp::Inst()->getServiceBase(nServiceID));
 	if (nullptr == this->m_pGateService)
 	{
-		PrintWarning("gate service id error service_id: %d", nServiceID);
+		PrintWarning("gate service id error service_id: {}", nServiceID);
 		this->shutdown(true, "nullptr == this->m_pGateService");
 		return;
 	}
@@ -42,10 +42,10 @@ void CGateConnectionFromClient::onDisconnect()
 	if (this->m_pGateService != nullptr)
 	{
 		CGateClientSession* pGateClientSession = this->m_pGateService->getGateClientSessionMgr()->getSessionBySocketID(this->getID());
-		if (pGateClientSession != nullptr)
+		if (pGateClientSession != nullptr && pGateClientSession->getSocketID() == this->getID())
 		{
 			this->m_pGateService->getGateClientSessionMgr()->unbindSocketID(pGateClientSession->getPlayerID());
-			this->m_pGateService->getGateClientSessionMgr()->delSessionByPlayerID(pGateClientSession->getPlayerID());
+			this->m_pGateService->getGateClientSessionMgr()->destroySession(pGateClientSession->getPlayerID(), "client disconnect");
 		}
 	}
 }

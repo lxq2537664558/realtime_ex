@@ -5,7 +5,7 @@
 
 #include "google/protobuf/message.h"
 
-#include "libBaseCommon/base_function.h"
+#include "libBaseCommon/function_util.h"
 
 #ifdef _WIN32
 
@@ -21,13 +21,13 @@
 
 #endif
 
-#define _GET_MESSAGE_ID(szMessageName) (base::hash(szMessageName.c_str()))
+#define _GET_MESSAGE_ID(szMessageName) (base::function_util::hash(szMessageName.c_str()))
 
 enum EResponseResultType
 {
-	eRRT_OK,
-	eRRT_TIME_OUT,
-	eRRT_ERROR,
+	eRRT_OK			= 1,
+	eRRT_TIME_OUT	= 2,
+	eRRT_ERROR		= 3,
 };
 
 namespace core
@@ -97,7 +97,12 @@ enum ECoreConnectionType
 {
 	eCCT_Normal,
 	eCCT_Websocket,
-	eCCT_Http,
+};
+
+enum EServiceSelectorType
+{
+	eSST_Random = 1,
+	eSST_Hash	= 2,
 };
 
 namespace core
@@ -148,7 +153,6 @@ namespace core
 	{
 		uint32_t	nGateServiceID;
 		uint64_t	nSessionID;
-		uint64_t	nSocketID;
 	};
 
 	struct SSessionInfo
@@ -170,7 +174,6 @@ namespace core
 	struct gate_forward_cookice
 	{
 		uint64_t	nSessionID;
-		uint64_t	nSocketID;
 		uint32_t	nFromServiceID;
 		uint64_t	nToActorID;
 		uint32_t	nToServiceID;
@@ -179,15 +182,13 @@ namespace core
 	struct gate_send_cookice
 	{
 		uint64_t	nSessionID;
-		uint64_t	nSocketID;
+		uint32_t	nToServiceID;
 	};
 
-	struct gate_broadcast_cookice :
-		public message_header
+	struct gate_broadcast_cookice
 	{
+		uint32_t	nToServiceID;
 		uint16_t	nSessionCount;
-		// uint64_t session_id
-		// uint64_t socket_id
 	};
 
 	struct request_cookice

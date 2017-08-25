@@ -14,7 +14,6 @@
     <ClInclude Include="..\..\inc\libCoreCommon\actor_base.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\actor_factory.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\actor_id_converter.h" />
-    <ClInclude Include="..\..\inc\libCoreCommon\actor_invoke_holder.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\actor_message_registry.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\base_connection.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\base_connection_factory.h" />
@@ -23,6 +22,7 @@
     <ClInclude Include="..\..\inc\libCoreCommon\base_object.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\core_common.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\coroutine.h" />
+    <ClInclude Include="..\..\inc\libCoreCommon\db_service_invoke_holder.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\normal_protobuf_factory.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\future.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\json_protobuf_factory.h" />
@@ -52,6 +52,14 @@
     <ClInclude Include="http_request.h" />
     <ClInclude Include="http_request_parser.h" />
     <ClInclude Include="http_response.h" />
+    <ClInclude Include="proto_src\call_command.pb.h" />
+    <ClInclude Include="proto_src\delete_command.pb.h" />
+    <ClInclude Include="proto_src\flush_command.pb.h" />
+    <ClInclude Include="proto_src\insert_command.pb.h" />
+    <ClInclude Include="proto_src\nop_command.pb.h" />
+    <ClInclude Include="proto_src\query_command.pb.h" />
+    <ClInclude Include="proto_src\select_command.pb.h" />
+    <ClInclude Include="proto_src\update_command.pb.h" />
     <ClInclude Include="random_service_selector.h" />
     <ClInclude Include="service_registry_proxy.h" />
     <ClInclude Include="core_common_define.h" />
@@ -89,10 +97,19 @@
     <ClCompile Include="base_connection_other_node.cpp" />
     <ClCompile Include="base_connection_to_master.cpp" />
     <ClCompile Include="core_websocket_connection.cpp" />
+    <ClCompile Include="db_service_invoke_holder.cpp" />
     <ClCompile Include="hash_service_selector.cpp" />
     <ClCompile Include="http_request.cpp" />
     <ClCompile Include="http_request_parser.cpp" />
     <ClCompile Include="http_response.cpp" />
+    <ClCompile Include="proto_src\call_command.pb.cc" />
+    <ClCompile Include="proto_src\delete_command.pb.cc" />
+    <ClCompile Include="proto_src\flush_command.pb.cc" />
+    <ClCompile Include="proto_src\insert_command.pb.cc" />
+    <ClCompile Include="proto_src\nop_command.pb.cc" />
+    <ClCompile Include="proto_src\query_command.pb.cc" />
+    <ClCompile Include="proto_src\select_command.pb.cc" />
+    <ClCompile Include="proto_src\update_command.pb.cc" />
     <ClCompile Include="random_service_selector.cpp" />
     <ClCompile Include="service_invoke_holder.cpp" />
     <ClCompile Include="service_registry_proxy.cpp" />
@@ -117,7 +134,6 @@
     <ClCompile Include="ticker.cpp" />
     <ClCompile Include="ticker_runnable.cpp" />
     <ClCompile Include="transporter.cpp" />
-    <ClCompile Include="actor_invoke_holder.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\libBaseNetwork\libBaseNetwork.vcxproj">
@@ -125,8 +141,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\inc\libCoreCommon\actor_base.inl" />
-    <None Include="..\..\inc\libCoreCommon\actor_invoke_holder.inl" />
     <None Include="..\..\inc\libCoreCommon\actor_message_registry.inl" />
     <None Include="..\..\inc\libCoreCommon\normal_protobuf_factory.inl" />
     <None Include="..\..\inc\libCoreCommon\future.inl" />
@@ -180,7 +194,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;__BUILD_CORE_COMMON_DLL__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>../../inc;../../inc/libCoreCommon;../../../3rd/tinyxml2/include;../../../3rd/protobuf/include;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../inc;../../inc/libCoreCommon;./proto_src;../../../3rd/tinyxml2/include;../../../3rd/protobuf/include;</AdditionalIncludeDirectories>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <DisableSpecificWarnings>4251;</DisableSpecificWarnings>

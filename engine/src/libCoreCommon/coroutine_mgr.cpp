@@ -11,6 +11,7 @@
 #endif
 
 #include "libBaseCommon/debug_helper.h"
+#include "libBaseCommon/process_util.h"
 
 #define _MAX_CO_RECYCLE_COUNT	100
 
@@ -91,7 +92,7 @@ namespace core
 			nStackSize = 64 * 1024;
 #endif
 
-		uint32_t nPageSize = CCoroutineMgr::getPageSize();
+		uint32_t nPageSize = base::process_util::getPageSize();
 		nStackSize = (nStackSize + nPageSize - 1) / nPageSize * nPageSize;
 
 		for (auto iter = this->m_listRecycleCoroutine.begin(); iter != this->m_listRecycleCoroutine.end(); ++iter)
@@ -162,33 +163,10 @@ namespace core
 		}
 	}
 
-	uint32_t CCoroutineMgr::getPageSize()
-	{
-		struct SPageSize 
-		{
-			SPageSize()
-			{
-#ifdef _WIN32
-				SYSTEM_INFO systemInfo;
-				GetSystemInfo(&systemInfo);
-				nPageSize = systemInfo.dwPageSize;
-#else
-				nPageSize = getpagesize();
-#endif
-			}
-
-			uint32_t	nPageSize;
-		};
-
-		static SPageSize sPageSize;
-
-		return sPageSize.nPageSize;
-	}
-
 #ifndef _WIN32
 	char* CCoroutineMgr::allocStack(uint32_t& nStackSize, uint32_t& nValgrindID)
 	{
-		uint32_t nPageSize = CCoroutineMgr::getPageSize();
+		uint32_t nPageSize = base::process_util::getPageSize();
 		nStackSize = (nStackSize + nPageSize - 1) / nPageSize * nPageSize;
 
 		char* pStack = reinterpret_cast<char*>(mmap(nullptr, nStackSize + 2 * nPageSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0));
@@ -207,7 +185,7 @@ namespace core
 
 	void CCoroutineMgr::freeStack(char* pStack, uint32_t nStackSize, uint32_t nValgrindID)
 	{
-		uint32_t nPageSize = CCoroutineMgr::getPageSize();
+		uint32_t nPageSize = base::process_util::getPageSize();
 
 		munmap(pStack - nPageSize, nStackSize + 2 * nPageSize);
 

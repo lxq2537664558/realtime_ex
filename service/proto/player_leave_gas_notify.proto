@@ -1,5 +1,0 @@
-syntax = "proto3";
-
-message player_leave_gas_notify {
-	uint64 player_id = 1;
-}

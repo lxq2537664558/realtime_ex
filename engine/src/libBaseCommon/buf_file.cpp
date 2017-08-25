@@ -200,7 +200,7 @@ namespace base
 	{
 		DebugAst(szBuf != nullptr);
 
-		uint16_t nBufLen = (uint16_t)base::crt::strnlen(szBuf, _TRUNCATE);
+		uint16_t nBufLen = (uint16_t)base::function_util::strnlen(szBuf, _TRUNCATE);
 		DebugAst(nBufLen < UINT16_MAX);
 
 		int32_t nRemainSize = this->m_nBufSize - this->m_nCurPos;

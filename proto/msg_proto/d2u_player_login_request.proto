@@ -1,0 +1,6 @@
+syntax = "proto2";
+
+message d2u_player_login_request {
+	required uint64 player_id = 1;
+	required uint32	gas_id = 2;
+}

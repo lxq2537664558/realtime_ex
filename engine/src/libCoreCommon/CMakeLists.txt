@@ -2,6 +2,8 @@
 # 并将名称保存到 DIR_SRCS 变量
 aux_source_directory(. DIR_SRCS)
 list(APPEND DIR_SRCS ./context_linux.S)
+aux_source_directory(./proto_src PROTO_SRCS)
+list(APPEND DIR_SRCS ${PROTO_SRCS})
 
 # 设置头文件
 include_directories(../../../engine/inc/libCoreCommon)
@@ -15,7 +17,7 @@ SET(LIBRARY_OUTPUT_PATH ${BIN_OUTPUT_PATH})
 set(CMAKE_ASM_FLAGS "${CFLAGS} -x assembler-with-cpp")
 enable_language(C ASM)
 
-set(LINK_LIBS ${PROJECT_SOURCE_DIR}/3rd/protobuf/lib/linux/libprotobuf.a)
+set(LINK_LIBS ${PROJECT_SOURCE_DIR}/3rd/protobuf/lib/linux/libprotobuf.a ${BIN_OUTPUT_PATH}/libBaseCommon.so ${BIN_OUTPUT_PATH}/libBaseNetwork.so)
 
 # 生成libCoreCommon.so
 add_library(CoreCommon SHARED ${DIR_SRCS})

@@ -22,6 +22,8 @@ namespace core
 		eMCT_REQUEST,
 		eMCT_RESPONSE,
 		eMCT_GATE_FORWARD,
+		eMCT_TO_GATE,
+		eMCT_TO_GATE_BROADCAST,
 		eMCT_BROADCAST_SOCKET_DATA1,
 		eMCT_BROADCAST_SOCKET_DATA2,
 		eMCT_TICKER,
@@ -46,7 +48,6 @@ namespace core
 		uint16_t			nPort;
 		std::string			szContext;
 		std::string			szType;
-		uint8_t				nCoreConnectionType;
 		uint32_t			nSendBufferSize;
 		uint32_t			nRecvBufferSize;
 		MessageParser		messageParser;
@@ -115,10 +116,25 @@ namespace core
 					pMessage;
 	};
 
+	struct SMCT_TO_GATE
+	{
+		uint64_t	nSessionID;
+		uint32_t	nToServiceID;
+		uint16_t	nDataSize;
+		char*		pData;
+	};
+
+	struct SMCT_TO_GATE_BROADCAST
+	{
+		uint32_t	nToServiceID;
+		uint16_t	nSessionCount;
+		uint16_t	nDataSize;
+		char*		pData;
+	};
+
 	struct SMCT_GATE_FORWARD
 	{
 		uint64_t	nSessionID;
-		uint64_t	nSocketID;
 		uint32_t	nFromServiceID;
 		uint64_t	nToActorID;
 		uint32_t	nToServiceID;

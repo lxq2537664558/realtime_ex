@@ -17,9 +17,10 @@ public:
 	virtual void		onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize);
 
 
-	void				setAccountID(uint64_t nAccountID);
+	void				setAccountInfo(const std::string& szAccountName, uint32_t nServerID);
 
 private:
 	CLoginService*	m_pLoginService;
-	uint64_t		m_nAccountID;
+	std::string		m_szAccountName;
+	uint32_t		m_nServerID;
 };

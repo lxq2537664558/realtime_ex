@@ -1,11 +1,12 @@
 #include "stdafx.h"
 #include "variant.h"
 #include "debug_helper.h"
-#include "base_function.h"
+#include "function_util.h"
+
+#include <sstream>
 
 namespace base
 {
-
 	CVariant::CVariant()
 		: m_eType(eVVT_None)
 	{
@@ -19,7 +20,7 @@ namespace base
 
 	CVariant::CVariant(uint8_t value)
 	{
-		this->m_eType = eVVT_Int32;
+		this->m_eType = eVVT_UInt32;
 		this->m_nValue = value;
 	}
 
@@ -31,7 +32,7 @@ namespace base
 
 	CVariant::CVariant(uint16_t value)
 	{
-		this->m_eType = eVVT_Int32;
+		this->m_eType = eVVT_UInt32;
 		this->m_nValue = value;
 	}
 
@@ -43,7 +44,7 @@ namespace base
 
 	CVariant::CVariant(uint32_t value)
 	{
-		this->m_eType = eVVT_Int32;
+		this->m_eType = eVVT_UInt32;
 		this->m_nValue = value;
 	}
 
@@ -55,7 +56,7 @@ namespace base
 
 	CVariant::CVariant(uint64_t value)
 	{
-		this->m_eType = eVVT_Int64;
+		this->m_eType = eVVT_UInt64;
 		this->m_nValue = value;
 	}
 
@@ -65,28 +66,18 @@ namespace base
 		this->m_fValue = value;
 	}
 
-	CVariant::CVariant(const char* value)
+	CVariant::CVariant(const char* value, uint32_t nLen)
 	{
-		// 必须设置成None，不然Clear函数中会删除一个无效的指针
+		// 必须设置成None，不然clear函数中会删除一个无效的指针
 		this->m_eType = eVVT_None;
-		this->setString(value);
+		this->setString(value, nLen);
 	}
 
-	CVariant::CVariant(char* value, size_t len)
+	CVariant::CVariant(const char* value)
 	{
-		if (value == nullptr || len == 0)
-		{
-			// 必须设置成None，不然Clear函数中会删除一个无效的指针
-			this->m_eType = eVVT_None;
-			this->clear();
-		}
-		else
-		{
-			this->m_eType = eVVT_Blob;
-			this->m_pBlob = new char[len];
-			this->m_nLen = len;
-			memcpy(this->m_pBlob, value, len);
-		}
+		// 必须设置成None，不然clear函数中会删除一个无效的指针
+		this->m_eType = eVVT_None;
+		this->setString(value, (uint32_t)base::function_util::strnlen(value, _TRUNCATE));
 	}
 
 	CVariant::CVariant(const CVariant& rhs)
@@ -120,7 +111,9 @@ namespace base
 		switch (rhs.m_eType)
 		{
 		case eVVT_Int32:
+		case eVVT_UInt32:
 		case eVVT_Int64:
+		case eVVT_UInt64:
 			this->m_nValue = rhs.m_nValue;
 			break;
 
@@ -129,22 +122,11 @@ namespace base
 			break;
 
 		case eVVT_String:
-			this->setString(rhs.m_szStr);
-			break;
-
-		case eVVT_Blob:
-			{
-				this->m_nLen = rhs.m_nLen;
-				SAFE_DELETE_ARRAY(this->m_pBlob);
-				this->m_pBlob = new char[this->m_nLen];
-				memcpy(this->m_pBlob, rhs.m_pBlob, this->m_nLen);
-			}
+			this->setString(rhs.m_sText.szStr, rhs.m_sText.nLen);
 			break;
 
 		default:
-			{
-				PrintWarning("CVariant::operator = & invalid type %d", (int32_t)rhs.m_eType);
-			}
+			PrintWarning("CVariant::operator = & invalid type {}", (int32_t)rhs.m_eType);
 		}
 
 		return *this;
@@ -160,7 +142,9 @@ namespace base
 		switch (rhs.m_eType)
 		{
 		case eVVT_Int32:
+		case eVVT_UInt32:
 		case eVVT_Int64:
+		case eVVT_UInt64:
 			{
 				this->m_nValue = rhs.m_nValue;
 				rhs.m_nValue = 0;
@@ -176,24 +160,15 @@ namespace base
 
 		case eVVT_String:
 			{
-				this->m_szStr = rhs.m_szStr;
-				rhs.m_szStr = nullptr;
-			}
-			break;
-
-		case eVVT_Blob:
-			{
-				this->m_nLen = rhs.m_nLen;
-				this->m_pBlob = rhs.m_pBlob;
-				rhs.m_pBlob = nullptr;
-				rhs.m_nLen = 0;
+				this->m_sText.szStr = rhs.m_sText.szStr;
+				this->m_sText.nLen = rhs.m_sText.nLen;
+				rhs.m_sText.szStr = nullptr;
+				rhs.m_sText.nLen = 0;
 			}
 			break;
 
 		default:
-			{
-				PrintWarning("CVariant::operator = && invalid type %d", (int32_t)rhs.m_eType);
-			}
+			PrintWarning("CVariant::operator = && invalid type {}", (int32_t)rhs.m_eType);
 		}
 
 		rhs.m_eType = eVVT_None;
@@ -206,11 +181,8 @@ namespace base
 		switch (this->m_eType)
 		{
 		case eVVT_String:
-			SAFE_DELETE_ARRAY(this->m_szStr);
-			break;
-
-		case eVVT_Blob:
-			SAFE_DELETE_ARRAY(this->m_pBlob);
+			delete[] this->m_sText.szStr;
+			this->m_sText.nLen = 0;
 			break;
 
 		default:
@@ -220,9 +192,7 @@ namespace base
 		this->m_eType = eVVT_None;
 		this->m_fValue = 0.0;
 		this->m_nValue = 0;
-		this->m_szStr = nullptr;
-		this->m_pBlob = nullptr;
-		this->m_nLen = 0;
+		this->m_sText.szStr = nullptr;
 	}
 
 	CVariant::operator int8_t() const
@@ -260,16 +230,16 @@ namespace base
 		switch (this->m_eType)
 		{
 		case eVVT_Int32:
+		case eVVT_UInt32:
 		case eVVT_Int64:
+		case eVVT_UInt64:
 			return this->m_nValue;
 
 		case eVVT_Double:
 			return (int64_t)this->m_fValue;
 
 		default:
-			{
-				PrintWarning("operator int64_t invalid type %d", (int32_t)this->m_eType);
-			}
+			PrintWarning("operator int64_t invalid type {}", (int32_t)this->m_eType);
 		}
 		return 0;
 	}
@@ -284,16 +254,16 @@ namespace base
 		switch (this->m_eType)
 		{
 		case eVVT_Int32:
+		case eVVT_UInt32:
 		case eVVT_Int64:
+		case eVVT_UInt64:
 			return (double)this->m_nValue;
 
 		case eVVT_Double:
 			return this->m_fValue;
 
 		default:
-			{
-				PrintWarning("operator double invalid type %d", (int32_t)this->m_eType);
-			}
+			PrintWarning("operator double invalid type {}", (int32_t)this->m_eType);
 		}
 		return 0.0;
 	}
@@ -303,12 +273,10 @@ namespace base
 		switch (this->m_eType)
 		{
 		case eVVT_String:
-			return this->m_szStr;
+			return this->m_sText.szStr;
 
 		default:
-			{
-				PrintWarning("operator const char* invalid type %d", (int32_t)this->m_eType);
-			}
+			PrintWarning("operator const char* invalid type {}", (int32_t)this->m_eType);
 		}
 		return nullptr;
 	}
@@ -318,17 +286,14 @@ namespace base
 		switch (this->m_eType)
 		{
 		case eVVT_String:
-			if (this->m_szStr == nullptr)
-				return 0;
-			return strlen(this->m_szStr);
-
-		case eVVT_Blob:
-			return this->m_nLen;
+			return this->m_sText.nLen;
 
 		case eVVT_Int32:
+		case eVVT_UInt32:
 			return sizeof(uint32_t);
 
 		case eVVT_Int64:
+		case eVVT_UInt64:
 			return sizeof(int64_t);
 
 		case eVVT_Double:
@@ -338,14 +303,6 @@ namespace base
 			break;
 		}
 		return 0;
-	}
-
-	const char* CVariant::getBlob() const
-	{
-		if (this->m_eType != eVVT_Blob)
-			return nullptr;
-
-		return this->m_pBlob;
 	}
 
 	CVariant& CVariant::operator = (int8_t value)
@@ -359,7 +316,7 @@ namespace base
 	CVariant& CVariant::operator = (uint8_t value)
 	{
 		this->clear();
-		this->m_eType = eVVT_Int32;
+		this->m_eType = eVVT_UInt32;
 		this->m_nValue = value;
 		return *this;
 	}
@@ -375,7 +332,7 @@ namespace base
 	CVariant& CVariant::operator = (uint16_t value)
 	{
 		this->clear();
-		this->m_eType = eVVT_Int32;
+		this->m_eType = eVVT_UInt32;
 		this->m_nValue = value;
 		return *this;
 	}
@@ -391,7 +348,7 @@ namespace base
 	CVariant& CVariant::operator = (uint32_t value)
 	{
 		this->clear();
-		this->m_eType = eVVT_Int32;
+		this->m_eType = eVVT_UInt32;
 		this->m_nValue = value;
 		return *this;
 	}
@@ -407,7 +364,7 @@ namespace base
 	CVariant& CVariant::operator = (uint64_t value)
 	{
 		this->clear();
-		this->m_eType = eVVT_Int64;
+		this->m_eType = eVVT_UInt64;
 		this->m_nValue = value;
 		return *this;
 	}
@@ -420,30 +377,22 @@ namespace base
 		return *this;
 	}
 
-	CVariant& CVariant::operator = (const char* szStr)
-	{
-		this->setString(szStr);
-
-		return *this;
-	}
-
-	void CVariant::setString(const char* value)
+	void CVariant::setString(const char* szStr, uint32_t nLen)
 	{
 		this->clear();
 
+		if (szStr == nullptr)
+			return;
+
 		this->m_eType = eVVT_String;
 
-		// 有可能默认是nullptr
-		if (nullptr == value)
-		{
-			this->m_szStr = new char[1];
-			this->m_szStr[0] = 0;
-		}
-		else
-		{
-			size_t nLen = base::crt::strnlen(value, -1) + 1;
-			this->m_szStr = new char[nLen];
-			base::crt::strcpy(this->m_szStr, nLen, value);
-		}
+		this->m_sText.szStr = new char[nLen];
+		memcpy(this->m_sText.szStr, szStr, nLen);
+		this->m_sText.nLen = nLen;
+	}
+
+	bool CVariant::isVaild() const
+	{
+		return this->m_eType != eVVT_None;
 	}
 }

@@ -36,9 +36,6 @@ namespace core
 
 		CCoreService*			getCoreService() const;
 
-		void					registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
-		void					unregisterTicker(CTicker* pTicker);
-
 		void					process();
 		
 		CChannel*				getChannel();

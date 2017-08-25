@@ -8,7 +8,7 @@
 #include "ticker_runnable.h"
 
 #include "libBaseCommon/debug_helper.h"
-#include "libBaseCommon/base_time.h"
+#include "libBaseCommon/time_util.h"
 #include "libBaseCommon/profiling.h"
 
 #include <algorithm>
@@ -44,7 +44,7 @@ namespace core
 		if (!this->m_pCoreConnectionMgr->init(nMaxSocketCount))
 			return false;
 
-		this->m_nLastCheckTime = base::getGmtTime();
+		this->m_nLastCheckTime = base::time_util::getGmtTime();
 
 		this->m_pThreadBase = base::CThreadBase::createNew(this);
 		return nullptr != this->m_pThreadBase;
@@ -72,7 +72,7 @@ namespace core
 
 	bool CNetRunnable::onProcess()
 	{
-		int64_t nBeginSamplingTime = base::getProcessPassTime();
+		int64_t nBeginSamplingTime = base::time_util::getProcessPassTime();
 
 		this->m_pCoreConnectionMgr->update(_CYCLE_TIME);
 		
@@ -101,7 +101,7 @@ namespace core
 					PROFILING_GUARD(eMCT_REQUEST_SOCKET_CONNECT)
 					SMCT_REQUEST_SOCKET_CONNECT* pContext = reinterpret_cast<SMCT_REQUEST_SOCKET_CONNECT*>(sMessagePacket.pData);
 					
-					this->m_pCoreConnectionMgr->connect(pContext->szHost, pContext->nPort, pContext->szType, pContext->szContext, pContext->nSendBufferSize, pContext->nSendBufferSize, pContext->messageParser, pContext->nCoreConnectionType);
+					this->m_pCoreConnectionMgr->connect(pContext->szHost, pContext->nPort, pContext->szType, pContext->szContext, pContext->nSendBufferSize, pContext->nSendBufferSize, pContext->messageParser);
 					
 					SAFE_DELETE(pContext);
 				}
@@ -183,7 +183,7 @@ namespace core
 					char* szBuf = reinterpret_cast<char*>(sMessagePacket.pData);
 					SMCT_BROADCAST_SOCKET_DATA2* pContext = reinterpret_cast<SMCT_BROADCAST_SOCKET_DATA2*>(sMessagePacket.pData);
 					
-					void* pData = szBuf + sizeof(SMCT_BROADCAST_SOCKET_DATA2) + sizeof(uint64_t)*pContext->nExcludeIDCount;
+					void* pData = szBuf + sizeof(SMCT_BROADCAST_SOCKET_DATA2) + sizeof(uint64_t)*pContext->nExcludeIDCount + pContext->nTypeLen;
 					uint64_t* pExcludeID = reinterpret_cast<uint64_t*>(szBuf + sizeof(SMCT_BROADCAST_SOCKET_DATA2) + pContext->nTypeLen);
 					
 					this->m_pCoreConnectionMgr->broadcast(pContext->szType, pContext->nMessageType, pData, (uint16_t)(sMessagePacket.nDataSize - sizeof(SMCT_BROADCAST_SOCKET_DATA2) - pContext->nTypeLen - sizeof(uint64_t)*pContext->nExcludeIDCount), pExcludeID, pContext->nExcludeIDCount);
@@ -215,11 +215,11 @@ namespace core
 				break;
 
 			default:
-				PrintWarning("invalid cmd type: %d", sMessagePacket.nType);
+				PrintWarning("invalid cmd type: {}", sMessagePacket.nType);
 			}
 		}
 
-		int64_t nEndSamplingTime = base::getProcessPassTime();
+		int64_t nEndSamplingTime = base::time_util::getProcessPassTime();
 		this->m_nTotalSamplingTime = this->m_nTotalSamplingTime + (uint32_t)(nEndSamplingTime - nBeginSamplingTime);
 
 		if (this->m_nTotalSamplingTime / 1000 >= CCoreApp::Inst()->getSamplingTime())

@@ -1,11 +1,10 @@
-#include "stdafx.h"
 #include "connection_to_gate.h"
 #include "libBaseCommon/logger.h"
 #include "libBaseCommon/debug_helper.h"
-#include "libBaseCommon/base_function.h"
+#include "libBaseCommon/function_util.h"
 #include "message_handler.h"
 
-#include "proto_src/gate_handshake_request.pb.h"
+#include "msg_proto_src/gate_handshake_request.pb.h"
 
 CConnectToGate::CConnectToGate(const std::string& szKey)
 	: m_nPlayerID(0)

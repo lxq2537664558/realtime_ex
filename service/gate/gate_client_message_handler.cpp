@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "gate_client_message_handler.h"
 #include "gate_client_message_dispatcher.h"
 #include "gate_service.h"
@@ -10,10 +9,8 @@
 #include "libCoreCommon/base_app.h"
 #include "libCoreCommon/service_base.h"
 
-#include "proto_src/gate_handshake_request.pb.h"
-#include "proto_src/gate_handshake_response.pb.h"
-#include "proto_src/player_enter_gas_request.pb.h"
-#include "proto_src/player_enter_gas_response.pb.h"
+#include "msg_proto_src/gate_handshake_request.pb.h"
+#include "msg_proto_src/gate_handshake_response.pb.h"
 
 using namespace core;
 
@@ -40,8 +37,9 @@ void CGateClientMessageHandler::sendClientMessage(CBaseConnection* pBaseConnecti
 	if (nDataSize < 0)
 		return;
 
+	std::string szMessageName = pMessage->GetTypeName();
 	pHeader->nMessageSize = uint16_t(sizeof(message_header) + nDataSize);
-	pHeader->nMessageID = base::hash(pMessage->GetTypeName().c_str());
+	pHeader->nMessageID = _GET_MESSAGE_ID(szMessageName);
 
 	pBaseConnection->send(eMT_CLIENT, &this->m_szBuf[0], pHeader->nMessageSize);
 }
@@ -53,9 +51,9 @@ void CGateClientMessageHandler::handshake(CGateConnectionFromClient* pGateConnec
 
 	const std::string& szKey = pRequest->key();
 	base::CTokenParser sTokenParser;
-	if (!sTokenParser.parse(szKey.c_str(), '|') || sTokenParser.getElementCount() != 2)
+	if (!sTokenParser.parse(szKey.c_str(), "|") || sTokenParser.getElementCount() != 2)
 	{
-		PrintWarning("CGateClientMessageHandler::handshake error token parse error socket_id: "UINT64FMT" key: %s", pGateConnectionFromClient->getID(), szKey.c_str());
+		PrintWarning("CGateClientMessageHandler::handshake error token parse error socket_id: {} key: {}", pGateConnectionFromClient->getID(), szKey);
 		pGateConnectionFromClient->shutdown(true, "token error");
 		return;
 	}
@@ -63,7 +61,7 @@ void CGateClientMessageHandler::handshake(CGateConnectionFromClient* pGateConnec
 	uint64_t nPlayerID = 0;
 	if (!sTokenParser.getUint64Element(0, nPlayerID))
 	{
-		PrintWarning("CGateClientMessageHandler::handshake error parse player_id error socket_id: "UINT64FMT" key: %s", pGateConnectionFromClient->getID(), szKey.c_str());
+		PrintWarning("CGateClientMessageHandler::handshake error parse player_id error socket_id: {} key: {}", pGateConnectionFromClient->getID(), szKey);
 		pGateConnectionFromClient->shutdown(true, "token error");
 		return;
 	}
@@ -71,51 +69,65 @@ void CGateClientMessageHandler::handshake(CGateConnectionFromClient* pGateConnec
 	char szTokenBuf[256] = { 0 };
 	if (!sTokenParser.getStringElement(1, szTokenBuf, _countof(szTokenBuf)))
 	{
-		PrintWarning("CGateClientMessageHandler::handshake error parse token error socket_id: "UINT64FMT" key: %s", pGateConnectionFromClient->getID(), szKey.c_str());
+		PrintWarning("CGateClientMessageHandler::handshake error parse token error socket_id: {} key: {}", pGateConnectionFromClient->getID(), szKey);
 		pGateConnectionFromClient->shutdown(true, "token error");
 		return;
 	}
 
-	PrintInfo("CGateClientMessageHandler::handshake player_id: "UINT64FMT, nPlayerID);
+	PrintInfo("CGateClientMessageHandler::handshake 1 player_id: {} token: {}", nPlayerID, szTokenBuf);
 
 	CGateClientSession* pGateClientSession = this->m_pGateService->getGateClientSessionMgr()->getSessionByPlayerID(nPlayerID);
 	if (nullptr != pGateClientSession)
 	{
-		// 顶号
-		if ((pGateClientSession->getState()&eCSS_ClientEnter) != 0)
+		if ((pGateClientSession->getState()&eCSS_TokenEnter) != 0)
 		{
-			// 这里先直接踢掉
-			CBaseConnection* pBaseConnection = CBaseApp::Inst()->getBaseConnectionMgr()->getBaseConnectionBySocketID(pGateClientSession->getSocketID());
-			if (nullptr == pBaseConnection)
+			// token不一致，直接踢掉
+			if (pGateClientSession->getToken() != szTokenBuf)
 			{
-				PrintWarning("CGateClientMessageHandler::handshake nullptr == pBaseConnection player_id: "UINT64FMT, pGateClientSession->getPlayerID());
-				this->m_pGateService->getGateClientSessionMgr()->delSessionByPlayerID(pGateClientSession->getPlayerID());
+				PrintWarning("CGateClientMessageHandler::handshake token error player_id: {} old_token: {} new_token: {}", nPlayerID, pGateClientSession->getToken(), szTokenBuf);
+
+				pGateConnectionFromClient->shutdown(true, "token error");
 				return;
 			}
-			pBaseConnection->shutdown(true, "dup");
-			pGateConnectionFromClient->shutdown(true, "dup");
+
+			PrintInfo("CGateClientMessageHandler::handshake 2 player_id: {} token: {} gas_id: {}", nPlayerID, pGateClientSession->getToken(), pGateClientSession->getGasID());
+
+			this->m_pGateService->getGateClientSessionMgr()->bindSocketID(nPlayerID, pGateConnectionFromClient->getID());
+			pGateClientSession->setState(eCSS_ClientEnter | eCSS_TokenEnter);
+			pGateClientSession->enterGas();
 			return;
 		}
-		DebugAst(pGateClientSession->getState() == eCSS_TokenEnter);
 
-		if (pGateClientSession->getToken() != szTokenBuf)
+		if (pGateClientSession->getState() != eCSS_Normal)
 		{
-			PrintWarning("CGateClientMessageHandler::handshake token error player_id: "UINT64FMT, nPlayerID);
+			PrintInfo("CGateClientMessageHandler::handshake 3 player_id: {} token: {} gas_id: {}", nPlayerID, pGateClientSession->getToken(), pGateClientSession->getGasID());
 
-			pGateConnectionFromClient->shutdown(true, "token error");
+			pGateConnectionFromClient->shutdown(true, "state error");
 			return;
 		}
+		
+		PrintInfo("CGateClientMessageHandler::handshake 4 player_id: {} token: {} gas_id: {}", nPlayerID, pGateClientSession->getToken(), pGateClientSession->getGasID());
+		// 顶号
+		uint64_t nOldSocketID = pGateClientSession->getSocketID();
+		this->m_pGateService->getGateClientSessionMgr()->unbindSocketID(pGateClientSession->getPlayerID());
 
-		this->m_pGateService->getGateClientSessionMgr()->bindSocketID(nPlayerID, pGateConnectionFromClient->getID());
+		// 把老的链接踢掉
+		CBaseConnection* pBaseConnection = CBaseApp::Inst()->getBaseConnectionMgr()->getBaseConnectionBySocketID(nOldSocketID);
+		if (nullptr != pBaseConnection)
+			pBaseConnection->shutdown(true, "dup");
+
 		pGateClientSession->setState(eCSS_ClientEnter);
-		pGateClientSession->enterGas();
+		pGateClientSession->setToken(szTokenBuf);
+		this->m_pGateService->getGateClientSessionMgr()->bindSocketID(nPlayerID, pGateConnectionFromClient->getID());
 	}
 	else
 	{
+		PrintInfo("CGateClientMessageHandler::handshake 5 player_id: {} token: {}", nPlayerID, szTokenBuf);
+
 		pGateClientSession = this->m_pGateService->getGateClientSessionMgr()->createSession(nPlayerID, szTokenBuf);
 		if (nullptr == pGateClientSession)
 		{
-			PrintWarning("CGateClientMessageHandler::handshake error create session error socket_id: "UINT64FMT" key: %s", pGateConnectionFromClient->getID(), szKey.c_str());
+			PrintWarning("CGateClientMessageHandler::handshake error create session error socket_id: {} key: {}", pGateConnectionFromClient->getID(), szKey);
 			pGateConnectionFromClient->shutdown(true, "token error");
 			return;
 		}

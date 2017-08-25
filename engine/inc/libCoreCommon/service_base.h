@@ -49,11 +49,11 @@ namespace core
 		/**
 		@brief: 添加服务选择器
 		*/
-		void				setServiceSelector(const std::string& szType, CServiceSelector* pServiceSelector);
+		void				setServiceSelector(uint32_t nType, CServiceSelector* pServiceSelector);
 		/**
 		@brief: 获取服务选择器
 		*/
-		CServiceSelector*	getServiceSelector(const std::string& szType) const;
+		CServiceSelector*	getServiceSelector(uint32_t nType) const;
 
 		/**
 		@brief: 注册定时器
@@ -99,6 +99,15 @@ namespace core
 		void				setServiceDisconnectCallback(const std::function<void(const std::string&, uint32_t)>& callback);
 
 		/**
+		@brief: 设置ToGate消息回调
+		*/
+		void				setToGateMessageCallback(const std::function<void(uint64_t, const void*, uint16_t)>& callback);
+		/**
+		@brief: 设置ToGate广播消息回调
+		*/
+		void				setToGateBroadcastMessageCallback(const std::function<void(const uint64_t*, uint16_t, const void*, uint16_t)>& callback);
+		
+		/**
 		@brief: 获取服务调用器
 		*/
 		CServiceInvoker*	getServiceInvoker() const;
@@ -110,6 +119,7 @@ namespace core
 		@brief: 销毁actor
 		*/
 		void				destroyActor(CActorBase* pActorBase);
+
 		/**
 		@brief: 根据id获取actor
 		*/

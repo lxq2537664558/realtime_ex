@@ -51,7 +51,7 @@ namespace core
 		CTransporter*								m_pTransporter;
 		CServiceRegistryProxy*						m_pServiceRegistryProxy;
 		CNodeConnectionFactory*						m_pNodeConnectionFactory;
-		base::CCircleQueue<SMessagePacket, false>	m_insideQueue;
+		base::CCircleQueue<SMessagePacket, false>	m_insideMessageQueue;
 
 		int64_t										m_nTotalSamplingTime;
 	};

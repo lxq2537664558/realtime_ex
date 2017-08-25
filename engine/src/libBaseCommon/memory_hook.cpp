@@ -2,7 +2,7 @@
 
 #include "memory_hook.h"
 #include "link.h"
-#include "base_time.h"
+#include "time_util.h"
 #include "spin_lock.h"
 
 #include <stdio.h>
@@ -98,7 +98,7 @@ namespace base
 
 		if (this->m_bCheck)
 		{
-			pMemoryHookInfoNode->Value.nAllocTime = base::getGmtTime();
+			pMemoryHookInfoNode->Value.nAllocTime = base::time_util::getGmtTime();
 
 			this->m_lock.lock();
 			this->m_listMemoryHookInfo.pushTail(pMemoryHookInfoNode);
@@ -169,13 +169,13 @@ namespace base
 						continue;
 
 					char szInfo[1024] = { 0 };
-					size_t nCount = crt::snprintf(szInfo, _countof(szInfo), "%s\r\n", szBuf);
+					size_t nCount = base::function_util::snprintf(szInfo, _countof(szInfo), "%s\r\n", szBuf);
 					fwrite(szInfo, 1, nCount, pFile);
 				}
 				char szTime[64] = { 0 };
-				formatGmtTime(szTime, pNode->Value.nAllocTime);
+				base::time_util::formatGmtTime(szTime, pNode->Value.nAllocTime);
 				char szInfo[1024] = { 0 };
-				size_t nCount = crt::snprintf(szInfo, _countof(szInfo), "%s size: %d\r\n", szTime, pNode->Value.nSize);
+				size_t nCount = base::function_util::snprintf(szInfo, _countof(szInfo), "%s size: %d\r\n", szTime, pNode->Value.nSize);
 				fwrite(szInfo, 1, nCount, pFile);
 			}
 			else
@@ -185,14 +185,14 @@ namespace base
 					continue;
 
 				char szTime[64] = { 0 };
-				base::formatGmtTime(szTime, pNode->Value.nAllocTime);
+				base::time_util::formatGmtTime(szTime, pNode->Value.nAllocTime);
 				char szInfo[1024] = { 0 };
-				size_t nCount = crt::snprintf(szInfo, _countof(szInfo), "%s %s size: %d\r\n", szTime, szBuf, pNode->Value.nSize);
+				size_t nCount = base::function_util::snprintf(szInfo, _countof(szInfo), "%s %s size: %d\r\n", szTime, szBuf, pNode->Value.nSize);
 				fwrite(szInfo, 1, nCount, pFile);
 			}
 		}
 		char szInfo[1024] = { 0 };
-		size_t nCount = crt::snprintf(szInfo, _countof(szInfo), "total leak size: %d", nTotalSize);
+		size_t nCount = base::function_util::snprintf(szInfo, _countof(szInfo), "total leak size: %d", nTotalSize);
 		fwrite(szInfo, 1, nCount, pFile);
 
 		this->m_lock.unlock();

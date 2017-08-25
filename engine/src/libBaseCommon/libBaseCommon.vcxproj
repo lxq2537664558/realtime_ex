@@ -98,31 +98,35 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\inc\libBaseCommon\base64.h" />
-    <ClInclude Include="..\..\inc\libBaseCommon\base_function.h" />
+    <ClInclude Include="..\..\inc\libBaseCommon\crc32.h" />
+    <ClInclude Include="..\..\inc\libBaseCommon\function_util.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\buf_file.h" />
-    <ClInclude Include="..\..\inc\libBaseCommon\base_time.h" />
+    <ClInclude Include="..\..\inc\libBaseCommon\time_util.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\base_common.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\circle_queue.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\debug_helper.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\encryptor.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\exception_handler.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\defer.h" />
+    <ClInclude Include="..\..\inc\libBaseCommon\file_util.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\logger.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\md5.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\memory_hook.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\noncopyable.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\noninheritable.h" />
+    <ClInclude Include="..\..\inc\libBaseCommon\process_util.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\profiling.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\rand_gen.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\safe_queue.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\sha1.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\singleton.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\spin_lock.h" />
+    <ClInclude Include="..\..\inc\libBaseCommon\string_util.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\table_file.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\thread_base.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\link.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\token_parser.h" />
-    <ClInclude Include="..\..\inc\libBaseCommon\utf8_string.h" />
+    <ClInclude Include="..\..\inc\libBaseCommon\utf8.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\variant.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\vector2.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\vector_map.h" />
@@ -131,18 +135,22 @@
   <ItemGroup>
     <None Include="..\..\inc\libBaseCommon\circle_queue.inl" />
     <None Include="..\..\inc\libBaseCommon\link.inl" />
+    <None Include="..\..\inc\libBaseCommon\string_util.inl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="base64.cpp" />
-    <ClCompile Include="base_function.cpp" />
-    <ClCompile Include="base_time.cpp" />
+    <ClCompile Include="crc32.cpp" />
+    <ClCompile Include="function_util.cpp" />
+    <ClCompile Include="time_util.cpp" />
     <ClCompile Include="buf_file.cpp" />
     <ClCompile Include="encryptor.cpp" />
     <ClCompile Include="exception_handler.cpp" />
+    <ClCompile Include="file_util.cpp" />
     <ClCompile Include="logger.cpp" />
     <ClCompile Include="md5.cpp" />
     <ClCompile Include="memory_hook.cpp" />
     <ClCompile Include="memory_new.cpp" />
+    <ClCompile Include="process_util.cpp" />
     <ClCompile Include="profiling.cpp" />
     <ClCompile Include="rand_gen.cpp" />
     <ClCompile Include="sha1.cpp" />
@@ -150,7 +158,7 @@
     <ClCompile Include="table_file.cpp" />
     <ClCompile Include="thread_base.cpp" />
     <ClCompile Include="token_parser.cpp" />
-    <ClCompile Include="utf8_string.cpp" />
+    <ClCompile Include="utf8.cpp" />
     <ClCompile Include="variant.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

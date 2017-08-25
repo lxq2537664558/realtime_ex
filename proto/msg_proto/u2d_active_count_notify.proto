@@ -1,0 +1,5 @@
+syntax = "proto2";
+
+message u2d_active_count_notify {
+	required uint32 count = 1;
+}

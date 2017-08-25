@@ -110,7 +110,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../../engine/inc;../../3rd/tinyxml2/include;../../3rd/protobuf/include;../;../../service;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../engine/inc;../../3rd/tinyxml2/include;../../3rd/protobuf/include;../../proto;</AdditionalIncludeDirectories>
       <ExceptionHandling>Sync</ExceptionHandling>
       <StringPooling>true</StringPooling>
       <DisableSpecificWarnings>4251</DisableSpecificWarnings>
@@ -172,21 +172,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\service\proto_src\gate_online_count_notify.pb.cc">
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4251;4800;4267;</DisableSpecificWarnings>
-    </ClCompile>
-    <ClCompile Include="..\..\service\proto_src\player_token_notify.pb.cc">
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4800;4267;</DisableSpecificWarnings>
-    </ClCompile>
-    <ClCompile Include="..\..\service\proto_src\validate_login_request.pb.cc">
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4251;4800;4267;</DisableSpecificWarnings>
-    </ClCompile>
-    <ClCompile Include="..\..\service\proto_src\validate_login_response.pb.cc">
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4251;4800;4267;</DisableSpecificWarnings>
-    </ClCompile>
-    <ClCompile Include="..\proto_src\gas_online_count_notify.pb.cc">
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4251;4800;4267;</DisableSpecificWarnings>
-    </ClCompile>
+    <ClCompile Include="..\..\proto\db_proto_src\result_set.pb.cc" />
+    <ClCompile Include="..\..\proto\msg_proto_src\d2g_player_token_notify.pb.cc" />
+    <ClCompile Include="..\..\proto\msg_proto_src\d2u_player_login_request.pb.cc" />
+    <ClCompile Include="..\..\proto\msg_proto_src\d2u_player_login_response.pb.cc" />
+    <ClCompile Include="..\..\proto\msg_proto_src\g2d_addr_notify.pb.cc" />
+    <ClCompile Include="..\..\proto\msg_proto_src\g2d_online_count_notify.pb.cc" />
+    <ClCompile Include="..\..\proto\msg_proto_src\l2d_validate_login_request.pb.cc" />
+    <ClCompile Include="..\..\proto\msg_proto_src\l2d_validate_login_response.pb.cc" />
+    <ClCompile Include="..\..\proto\msg_proto_src\s2d_online_count_notify.pb.cc" />
+    <ClCompile Include="..\..\proto\msg_proto_src\u2d_active_count_notify.pb.cc" />
     <ClCompile Include="dispatch_service.cpp" />
     <ClCompile Include="online_count_mgr.cpp" />
     <ClCompile Include="dispatch_service_message_handler.cpp" />
@@ -203,11 +198,17 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\service\proto_src\gate_online_count_notify.pb.h" />
-    <ClInclude Include="..\..\service\proto_src\player_token_notify.pb.h" />
-    <ClInclude Include="..\..\service\proto_src\validate_login_request.pb.h" />
-    <ClInclude Include="..\..\service\proto_src\validate_login_response.pb.h" />
-    <ClInclude Include="..\proto_src\gas_online_count_notify.pb.h" />
+    <ClInclude Include="..\..\proto\db_proto_src\result_set.pb.h" />
+    <ClInclude Include="..\..\proto\msg_proto_src\d2g_player_token_notify.pb.h" />
+    <ClInclude Include="..\..\proto\msg_proto_src\d2u_player_login_request.pb.h" />
+    <ClInclude Include="..\..\proto\msg_proto_src\d2u_player_login_response.pb.h" />
+    <ClInclude Include="..\..\proto\msg_proto_src\g2d_addr_notify.pb.h" />
+    <ClInclude Include="..\..\proto\msg_proto_src\g2d_online_count_notify.pb.h" />
+    <ClInclude Include="..\..\proto\msg_proto_src\l2d_validate_login_request.pb.h" />
+    <ClInclude Include="..\..\proto\msg_proto_src\l2d_validate_login_response.pb.h" />
+    <ClInclude Include="..\..\proto\msg_proto_src\s2d_online_count_notify.pb.h" />
+    <ClInclude Include="..\..\proto\msg_proto_src\u2d_active_count_notify.pb.h" />
+    <ClInclude Include="..\common\common.h" />
     <ClInclude Include="online_count_mgr.h" />
     <ClInclude Include="dispatch_service_message_handler.h" />
     <ClInclude Include="dispatch_service.h" />

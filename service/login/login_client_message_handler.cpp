@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "login_client_message_handler.h"
 #include "login_client_message_dispatcher.h"
 #include "login_service.h"
@@ -11,10 +10,10 @@
 #include "libCoreCommon/service_base.h"
 #include "libCoreCommon/service_invoker.h"
 
-#include "proto_src/player_login_request.pb.h"
-#include "proto_src/validate_login_request.pb.h"
-#include "proto_src/validate_login_response.pb.h"
-#include "proto_src/player_login_response.pb.h"
+#include "msg_proto_src/player_login_request.pb.h"
+#include "msg_proto_src/player_login_response.pb.h"
+#include "msg_proto_src/l2d_validate_login_request.pb.h"
+#include "msg_proto_src/l2d_validate_login_response.pb.h"
 
 using namespace core;
 
@@ -42,7 +41,7 @@ void CLoginClientMessageHandler::sendClientMessage(CBaseConnection* pBaseConnect
 		return;
 
 	pHeader->nMessageSize = uint16_t(sizeof(message_header) + nDataSize);
-	pHeader->nMessageID = base::hash(pMessage->GetTypeName().c_str());
+	pHeader->nMessageID = _GET_MESSAGE_ID(pMessage->GetTypeName());
 
 	pBaseConnection->send(eMT_CLIENT, &this->m_szBuf[0], pHeader->nMessageSize);
 }
@@ -53,43 +52,46 @@ void CLoginClientMessageHandler::login(CLoginConnectionFromClient* pLoginConnect
 	DebugAst(pRequest != nullptr);
 
 	uint64_t nSocketID = pLoginConnectionFromClient->getID();
-	uint64_t nAccountID = pRequest->account_id();
+	uint32_t nServerID = pRequest->server_id();
+	const std::string& szAccountName = pRequest->account_name();
 
-	pLoginConnectionFromClient->setAccountID(nAccountID);
-	PrintInfo("CLoginClientMessageHandler::login account_id: "UINT64FMT" server_id: %d socket_id: "UINT64FMT, nAccountID, pRequest->server_id(), nSocketID);
+	pLoginConnectionFromClient->setAccountInfo(szAccountName, nServerID);
+	PrintInfo("CLoginClientMessageHandler::login account_name: {} server_id: {} socket_id: {}", szAccountName, nServerID, nSocketID);
 
-	validate_login_request request_msg;
-	request_msg.set_account_id(pRequest->account_id());
-	request_msg.set_server_id(pRequest->server_id());
+	l2d_validate_login_request request_msg;
+	request_msg.set_account_name(szAccountName);
+	request_msg.set_server_id(nServerID);
 
-	this->m_pLoginService->getServiceInvoker()->async_call<validate_login_response>("dispatch", "random", 0, &request_msg, [this, nSocketID, nAccountID](const validate_login_response* pResponse, uint32_t nErrorCode)
+	std::shared_ptr<const l2d_validate_login_response> pResponseMessage;
+	this->m_pLoginService->getServiceInvoker()->sync_invoke("dispatch", eSST_Random, 0, &request_msg, pResponseMessage);
+	
+	pLoginConnectionFromClient = dynamic_cast<CLoginConnectionFromClient*>(CBaseApp::Inst()->getBaseConnectionMgr()->getBaseConnectionBySocketID(nSocketID));
+	if (nullptr == pLoginConnectionFromClient)
 	{
-		CLoginConnectionFromClient* pLoginConnectionFromClient = dynamic_cast<CLoginConnectionFromClient*>(CBaseApp::Inst()->getBaseConnectionMgr()->getBaseConnectionBySocketID(nSocketID));
-		if (nullptr == pLoginConnectionFromClient)
-		{
-			PrintInfo("CLoginClientMessageHandler::login not find connection account_id: "UINT64FMT" socket_id: "UINT64FMT, nAccountID, nSocketID);
-			return;
-		}
+		PrintInfo("CLoginClientMessageHandler::login nullptr == pLoginConnectionFromClient account_name: {} server_id: {} socket_id: {}", szAccountName, nServerID, nSocketID);
+		return;
+	}
 
-		if (nErrorCode != eRRT_OK || pResponse == nullptr)
-		{
-			PrintInfo("CLoginClientMessageHandler::login validate error account_id: "UINT64FMT" socket_id: "UINT64FMT, nAccountID, nSocketID);
-			
-			player_login_response response_msg;
-			response_msg.set_result(1);
-			this->sendClientMessage(pLoginConnectionFromClient, &response_msg);
-
-			pLoginConnectionFromClient->shutdown(false, "validate login error");
-
-			return;
-		}
+	if (pResponseMessage == nullptr)
+	{
+		PrintInfo("CLoginClientMessageHandler::login nErrorCode != eRRT_OK || pResponse == nullptr account_name: {} server_id: {} socket_id: {}", szAccountName, nServerID, nSocketID);
 
 		player_login_response response_msg;
-		response_msg.set_result(pResponse->result());
-		response_msg.set_key(pResponse->key());
-		response_msg.set_gate_addr(pResponse->gate_addr());
-
+		response_msg.set_result(1);
+		response_msg.set_key("");
+		response_msg.set_gate_addr("");
 		this->sendClientMessage(pLoginConnectionFromClient, &response_msg);
-		PrintInfo("CLoginClientMessageHandler::login validate ok result: %d account_id: "UINT64FMT" socket_id: "UINT64FMT, pResponse->result(), nAccountID, nSocketID);
-	});
+
+		pLoginConnectionFromClient->shutdown(false, "validate login error");
+
+		return;
+	}
+
+	player_login_response response_msg;
+	response_msg.set_result(pResponseMessage->result());
+	response_msg.set_key(pResponseMessage->key());
+	response_msg.set_gate_addr(pResponseMessage->gate_addr());
+
+	this->sendClientMessage(pLoginConnectionFromClient, &response_msg);
+	PrintInfo("CLoginClientMessageHandler::login ok account_name: {} server_id: {} socket_id: {}", szAccountName, nServerID, nSocketID);
 }

@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "token_parser.h"
 #include "debug_helper.h"
+#include "string_util.h"
 
 #include <algorithm> 
 #include <functional> 
@@ -11,37 +12,8 @@
 #include <iostream>
 #include <sstream>
 
-static std::string& ltrim(std::string &s)
-{
-	s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](const std::string::value_type& value) { return (value != 0x20); }));
-	
-	return s;
-}
-
-static std::string& rtrim(std::string &s)
-{
-	s.erase(std::find_if(s.rbegin(), s.rend(), [](const std::string::value_type& value) { return (value != 0x20); }).base(), s.end());
-
-	return s;
-}
-
 namespace base
 {
-	std::string &trim(std::string& s)
-	{
-		return ltrim(rtrim(s));
-	}
-
-	void splitString(const std::string& s, char delim, std::vector<std::string>& elements)
-	{
-		std::stringstream ss(s);
-		std::string item;
-		while (std::getline(ss, item, delim))
-		{
-			elements.push_back(item);
-		}
-	}
-
 	CTokenParser::CTokenParser()
 		: m_szElement(nullptr)
 		, m_nCount(0)
@@ -53,19 +25,19 @@ namespace base
 		this->reset();
 	}
 
-	bool CTokenParser::parse(const char* szBuf, char nDelim)
+	bool CTokenParser::parse(const char* szBuf, const char* szDelim)
 	{
-		DebugAstEx(szBuf != nullptr, false);
+		DebugAstEx(szBuf != nullptr && szDelim != nullptr, false);
 
 		std::vector<std::string> vecElement;
-		splitString(szBuf, nDelim, vecElement);
+		base::string_util::split(szBuf, vecElement, szDelim);
 
 		this->m_nCount = vecElement.size();
 		this->m_szElement = new char*[this->m_nCount];
 		for (size_t i = 0; i < vecElement.size(); ++i)
 		{
 			this->m_szElement[i] = new char[vecElement[i].size()+1];
-			crt::strcpy(this->m_szElement[i], vecElement[i].size() + 1, vecElement[i].c_str());
+			base::function_util::strcpy(this->m_szElement[i], vecElement[i].size() + 1, vecElement[i].c_str());
 		}
 
 		return true;
@@ -93,8 +65,8 @@ namespace base
 			return false;
 
 		std::string str = this->m_szElement[nIndex];
-		str = trim(str);
-		return base::crt::atoi(str.c_str(), nValue);
+		str = base::string_util::trim(str);
+		return base::string_util::convert_to_value(str, nValue);
 	}
 
 	bool CTokenParser::getUint32Element(size_t nIndex, uint32_t& nValue)
@@ -103,8 +75,8 @@ namespace base
 			return false;
 
 		std::string str = this->m_szElement[nIndex];
-		str = trim(str);
-		return base::crt::atoui(str.c_str(), nValue);
+		str = base::string_util::trim(str);
+		return base::string_util::convert_to_value(str, nValue);
 	}
 
 	bool CTokenParser::getInt64Element(size_t nIndex, int64_t& nValue)
@@ -113,8 +85,8 @@ namespace base
 			return false;
 
 		std::string str = this->m_szElement[nIndex];
-		str = trim(str);
-		return base::crt::atoi64(str.c_str(), nValue);
+		str = base::string_util::trim(str);
+		return base::string_util::convert_to_value(str, nValue);
 	}
 
 	bool CTokenParser::getUint64Element(size_t nIndex, uint64_t& nValue)
@@ -123,8 +95,8 @@ namespace base
 			return false;
 
 		std::string str = this->m_szElement[nIndex];
-		str = trim(str);
-		return base::crt::atoui64(str.c_str(), nValue);
+		str = base::string_util::trim(str);
+		return base::string_util::convert_to_value(str, nValue);
 	}
 
 	bool CTokenParser::getStringElement(size_t nIndex, char* szBuf, size_t nBufSize)
@@ -132,11 +104,11 @@ namespace base
 		if (nIndex >= this->m_nCount)
 			return false;
 
-		size_t nLen = crt::strnlen(this->m_szElement[nIndex], _TRUNCATE);
+		size_t nLen = base::function_util::strnlen(this->m_szElement[nIndex], _TRUNCATE);
 		if (nLen >= nBufSize)
 			return false;
 
-		crt::strcpy(szBuf, nBufSize, this->m_szElement[nIndex]);
+		base::function_util::strcpy(szBuf, nBufSize, this->m_szElement[nIndex]);
 		return true;
 	}
 }

@@ -1,15 +1,18 @@
 #include "test_actor1.h"
+
 #include "../proto_src/request_msg1.pb.h"
 #include "../proto_src/response_msg1.pb.h"
 #include "../proto_src/response_msg2.pb.h"
 #include "../proto_src/request_msg2.pb.h"
 #include "../proto_src/request_msg0.pb.h"
 #include "../proto_src/request_msg3.pb.h"
+#include "../proto_src/response_msg0.pb.h"
+#include "../proto_src/response_msg3.pb.h"
 
 #include "libCoreCommon/when_all.h"
 #include "libCoreCommon/base_app.h"
-#include "../proto_src/response_msg0.pb.h"
-#include "../proto_src/response_msg3.pb.h"
+#include "libCoreCommon/service_base.h"
+#include "libCoreCommon/service_invoker.h"
 
 CTestActor1::CTestActor1()
 {
@@ -27,9 +30,9 @@ void CTestActor1::onInit(const std::string& szContext)
 {
 	PrintInfo("CTestActor1::onInit");
 
-	this->registerTicker(&this->m_ticker1, 1000, 5000, 0);
- 	this->registerTicker(&this->m_ticker2, 1000, 5000, 0);
- 	this->registerTicker(&this->m_ticker3, 1000, 5000, 0);
+	this->getServiceBase()->registerTicker(&this->m_ticker1, 1000, 5000, 0);
+	this->getServiceBase()->registerTicker(&this->m_ticker2, 1000, 5000, 0);
+	this->getServiceBase()->registerTicker(&this->m_ticker3, 1000, 5000, 0);
 }
 
 void CTestActor1::onDestroy()
@@ -51,7 +54,7 @@ void CTestActor1::onTicker1(uint64_t nContext)
 	msg1.set_name("aaa");
 
 	CFuture<response_msg0> sFuture;
-	this->async_call(eMTT_Actor, 3, &msg1, sFuture);
+	this->getServiceBase()->getServiceInvoker()->async_invoke(eMTT_Actor, 3, &msg1, sFuture);
 	sFuture.then_r([this](const response_msg0* pMsg, uint32_t nErrorCode)
 	{
 		CFuture<response_msg3> sFuture;
@@ -67,7 +70,7 @@ void CTestActor1::onTicker1(uint64_t nContext)
 		msg2.set_id(pMsg->id());
 		msg2.set_name(pMsg->name());
 
-		this->async_call(eMTT_Actor, 2, &msg2, sFuture);
+		this->getServiceBase()->getServiceInvoker()->async_invoke(eMTT_Actor, 2, &msg2, sFuture);
 
 		return sFuture;
 
@@ -92,14 +95,14 @@ void CTestActor1::onTicker2(uint64_t nContext)
 	msg1.set_name("aaa");
 
 	CFuture<response_msg0> sFuture1;
-	this->async_call(eMTT_Actor, 3, &msg1, sFuture1);
+	this->getServiceBase()->getServiceInvoker()->async_invoke(eMTT_Actor, 3, &msg1, sFuture1);
 
 	request_msg3 msg2;
 	msg2.set_id(200);
 	msg2.set_name("bbb");
 
 	CFuture<response_msg3> sFuture2;
-	this->async_call(eMTT_Actor, 2, &msg2, sFuture2);
+	this->getServiceBase()->getServiceInvoker()->async_invoke(eMTT_Actor, 2, &msg2, sFuture2);
 
 	auto sFuture = whenAll(sFuture1, sFuture2);
 
@@ -129,7 +132,7 @@ void CTestActor1::onTicker3(uint64_t nContext)
 	msg1.set_id(100);
 	msg1.set_name("aaa");
 
-	this->async_call<response_msg0>(eMTT_Actor, 3, &msg1, [&](const response_msg0* pMsg, uint32_t nErrorCode)
+	this->getServiceBase()->getServiceInvoker()->async_invoke<response_msg0>(eMTT_Actor, 3, &msg1, [&](const response_msg0* pMsg, uint32_t nErrorCode)
 	{
 		if (nErrorCode != eRRT_OK)
 		{
@@ -145,7 +148,7 @@ void CTestActor1::onTicker3(uint64_t nContext)
 	msg2.set_name("bbb");
 
 	std::shared_ptr<response_msg2> pResponse2;
-	this->sync_call(5, &msg2, pResponse2);
+	this->getServiceBase()->getServiceInvoker()->sync_invoke(5, &msg2, pResponse2);
 	if (pResponse2 == nullptr)
 	{
 		PrintInfo("pResponse2 == nullptr");

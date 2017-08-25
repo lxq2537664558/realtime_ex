@@ -1,0 +1,10 @@
+syntax = "proto2";
+
+package proto.db;
+
+message query_command {
+	required uint32 channel_id = 1;
+	required string table_name = 2;
+	required string where_clause = 3;
+	repeated bytes args = 4;
+}

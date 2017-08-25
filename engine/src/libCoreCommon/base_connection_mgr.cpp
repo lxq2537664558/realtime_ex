@@ -7,7 +7,7 @@
 #include "message_command.h"
 #include "net_runnable.h"
 
-#include "libBaseCommon/base_time.h"
+#include "libBaseCommon/time_util.h"
 
 namespace core
 {
@@ -50,14 +50,13 @@ namespace core
 		CCoreApp::Inst()->getLogicRunnable()->getBaseConnectionMgrImpl()->delConnectFailCallback(szKey);
 	}
 
-	void CBaseConnectionMgr::connect(const std::string& szHost, uint16_t nPort, const std::string& szType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, const MessageParser& messageParser, ECoreConnectionType eCoreConnectionType /* = eCCT_Normal */)
+	void CBaseConnectionMgr::connect(const std::string& szHost, uint16_t nPort, const std::string& szType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, const MessageParser& messageParser)
 	{
 		SMCT_REQUEST_SOCKET_CONNECT* pContext = new SMCT_REQUEST_SOCKET_CONNECT();
 		pContext->szHost = szHost;
 		pContext->nPort = nPort;
 		pContext->szContext = szContext;
 		pContext->szType = szType;
-		pContext->nCoreConnectionType = (uint8_t)eCoreConnectionType;
 		pContext->nRecvBufferSize = nRecvBufferSize;
 		pContext->nSendBufferSize = nSendBufferSize;
 		pContext->messageParser = messageParser;
@@ -123,7 +122,7 @@ namespace core
 
 		SMCT_BROADCAST_SOCKET_DATA2* pContext = reinterpret_cast<SMCT_BROADCAST_SOCKET_DATA2*>(szBuf);
 		pContext->nTypeLen = (uint16_t)szType.size();
-		base::crt::strcpy(pContext->szType, szType.size() + 1, szType.c_str());
+		base::function_util::strcpy(pContext->szType, szType.size() + 1, szType.c_str());
 		pContext->nMessageType = nMessageType;
 		pContext->nExcludeIDCount = 0;
 		if (vecExcludeID != nullptr && !vecExcludeID->empty())
@@ -137,7 +136,7 @@ namespace core
 		sMessagePacket.nType = eMCT_BROADCAST_SOCKET_DATA2;
 		sMessagePacket.pData = pContext;
 		if (vecExcludeID != nullptr)
-			sMessagePacket.nDataSize = (uint32_t)(sizeof(SMCT_BROADCAST_SOCKET_DATA2) + szType.size() + szType.size() + nDataSize + sizeof(uint64_t)*vecExcludeID->size());
+			sMessagePacket.nDataSize = (uint32_t)(sizeof(SMCT_BROADCAST_SOCKET_DATA2) + szType.size() + nDataSize + sizeof(uint64_t)*vecExcludeID->size());
 		else
 			sMessagePacket.nDataSize = (uint32_t)(sizeof(SMCT_BROADCAST_SOCKET_DATA2) + szType.size() + nDataSize);
 

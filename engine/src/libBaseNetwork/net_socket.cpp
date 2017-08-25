@@ -43,7 +43,7 @@ namespace base
 
 		if (this->m_nSocketID != _Invalid_SocketID)
 		{
-			PrintInfo("closesocket socket_id %d", this->m_nSocketID);
+			PrintInfo("closesocket socket_id: {}", this->m_nSocketID);
 			::closesocket(this->m_nSocketID);
 			this->m_nSocketID = _Invalid_SocketID;
 		}
@@ -63,14 +63,14 @@ namespace base
 	{
 		if (this->m_pNetEventLoop->getSocketCount() >= this->m_pNetEventLoop->getMaxSocketCount())
 		{
-			PrintWarning("out of max socket count %d", this->m_pNetEventLoop->getMaxSocketCount());
+			PrintWarning("out of max socket count {}", this->m_pNetEventLoop->getMaxSocketCount());
 			return false;
 		}
 
 		this->m_nSocketID = (int32_t)::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 		if (_Invalid_SocketID == this->m_nSocketID)
 		{
-			PrintWarning("create socket error %d", getLastError());
+			PrintWarning("create socket error {}", getLastError());
 			return false;
 		}
 
@@ -79,7 +79,7 @@ namespace base
 
 	void CNetSocket::close()
 	{
-		PrintInfo("CNetSocket::close socketid %d wait_close: %d", this->m_nSocketID, this->m_bWaitClose);
+		PrintInfo("CNetSocket::close socket_id: {} wait_close: {}", this->m_nSocketID, this->m_bWaitClose);
 
 		if (this->m_bWaitClose)
 			return;
@@ -99,14 +99,14 @@ namespace base
 		nRet = ::ioctlsocket(this->m_nSocketID, FIONBIO, &nFlag);
 		if (0 != nRet)
 		{
-			PrintWarning("set socket nonblock error %d", getLastError());
+			PrintWarning("set socket nonblock error {}", getLastError());
 			return false;
 		}
 #else
 		int32_t nFlag = ::fcntl(this->m_nSocketID, F_GETFL, 0);
 		if (-1 == nFlag)
 		{
-			PrintWarning("set socket nonblock error %d", getLastError());
+			PrintWarning("set socket nonblock error {}", getLastError());
 			return false;
 		}
 
@@ -114,7 +114,7 @@ namespace base
 
 		if (-1 == nFlag)
 		{
-			PrintWarning("set socket nonblock error %d", getLastError());
+			PrintWarning("set socket nonblock error {}", getLastError());
 			return false;
 		}
 #endif
@@ -129,7 +129,7 @@ namespace base
 		int32_t nFlag = 1;
 		if (0 != ::setsockopt(this->m_nSocketID, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<char*>(&nFlag), sizeof(nFlag)))
 		{
-			PrintWarning("set socket to reuse addr mode error %d", getLastError());
+			PrintWarning("set socket to reuse addr mode error {}", getLastError());
 			return false;
 		}
 
@@ -142,7 +142,7 @@ namespace base
 		int32_t nFlag = 1;
 		if (0 != ::setsockopt(this->m_nSocketID, SOL_SOCKET, SO_REUSEPORT, reinterpret_cast<char*>(&nFlag), sizeof(nFlag)))
 		{
-			PrintWarning("set socket to reuse port mode error %d", getLastError());
+			PrintWarning("set socket to reuse port mode error {}", getLastError());
 			return false;
 		}
 #endif
@@ -156,13 +156,13 @@ namespace base
 
 		if (this->m_nRecvBufferSize != 0 && 0 != ::setsockopt(this->m_nSocketID, SOL_SOCKET, SO_RCVBUF, reinterpret_cast<char*>(&this->m_nRecvBufferSize), sizeof(this->m_nRecvBufferSize)))
 		{
-			PrintWarning("set socket recvbuf error %d", getLastError());
+			PrintWarning("set socket recvbuf error {}", getLastError());
 			return false;
 		}
 
 		if (this->m_nSendBufferSize != 0 && 0 != ::setsockopt(this->m_nSocketID, SOL_SOCKET, SO_SNDBUF, reinterpret_cast<char*>(&this->m_nSendBufferSize), sizeof(this->m_nSendBufferSize)))
 		{
-			PrintWarning("set socket sendbuf error %d", getLastError());
+			PrintWarning("set socket sendbuf error {}", getLastError());
 			return false;
 		}
 
@@ -180,7 +180,7 @@ namespace base
 		struct sockaddr remoteAddr;
 		socklen_t nPeerAddrLen = sizeof(remoteAddr);
 		::getpeername(this->m_nSocketID, &remoteAddr, &nPeerAddrLen);
-		this->m_sRemoteAddr.nPort = base::ntoh16((reinterpret_cast<sockaddr_in*>(&remoteAddr))->sin_port);
+		this->m_sRemoteAddr.nPort = base::function_util:: ntoh16((reinterpret_cast<sockaddr_in*>(&remoteAddr))->sin_port);
 		strncpy(this->m_sRemoteAddr.szHost, inet_ntoa((reinterpret_cast<sockaddr_in*>(&remoteAddr))->sin_addr), _countof(this->m_sRemoteAddr.szHost));
 	}
 
@@ -189,7 +189,7 @@ namespace base
 		struct sockaddr localAddr;
 		socklen_t nLocalAddrLen = sizeof(localAddr);
 		::getsockname(this->m_nSocketID, &localAddr, &nLocalAddrLen);
-		this->m_sLocalAddr.nPort = base::ntoh16((reinterpret_cast<sockaddr_in*>(&localAddr))->sin_port);
+		this->m_sLocalAddr.nPort = base::function_util::ntoh16((reinterpret_cast<sockaddr_in*>(&localAddr))->sin_port);
 		strncpy(this->m_sLocalAddr.szHost, inet_ntoa((reinterpret_cast<sockaddr_in*>(&localAddr))->sin_addr), _countof(this->m_sRemoteAddr.szHost));
 	}
 

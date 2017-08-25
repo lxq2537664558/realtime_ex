@@ -21,7 +21,13 @@ namespace core
 		if (nullptr == pNewMessage)
 			return nullptr;
 		
-		pNewMessage->CopyFrom(*pMessage);
+		// 这里不能调用CopyFrom函数，因为 有可能有些服务是以proto的方式动态的创建的，有些是以源代码的方式创建的，两者的Descriptor不一致
+		std::string szData = pMessage->SerializeAsString();
+		if (!pNewMessage->ParseFromString(szData))
+		{
+			SAFE_DELETE(pNewMessage);
+			return nullptr;
+		}
 
 		return pNewMessage;
 	}

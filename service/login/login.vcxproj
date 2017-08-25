@@ -50,12 +50,12 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>../../engine/inc;../../3rd/tinyxml2/include;../../3rd/protobuf/include;../;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../engine/inc;../../3rd/tinyxml2/include;../../3rd/protobuf/include;../../proto;</AdditionalIncludeDirectories>
       <StringPooling>true</StringPooling>
     </ClCompile>
     <Link>
@@ -90,44 +90,30 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\proto\msg_proto_src\l2d_validate_login_request.pb.h" />
+    <ClInclude Include="..\..\proto\msg_proto_src\l2d_validate_login_response.pb.h" />
+    <ClInclude Include="..\..\proto\msg_proto_src\player_login_request.pb.h" />
+    <ClInclude Include="..\..\proto\msg_proto_src\player_login_response.pb.h" />
     <ClInclude Include="login_client_message_handler.h" />
     <ClInclude Include="login_connection_from_client.h" />
     <ClInclude Include="login_client_message_dispatcher.h" />
     <ClInclude Include="login_service.h" />
     <ClInclude Include="login_client_connection_factory.h" />
-    <ClInclude Include="..\proto_src\player_login_request.pb.h" />
-    <ClInclude Include="..\proto_src\player_login_response.pb.h" />
-    <ClInclude Include="..\proto_src\validate_login_request.pb.h" />
-    <ClInclude Include="..\proto_src\validate_login_response.pb.h" />
-    <ClInclude Include="stdafx.h" />
-    <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="login_client_message_dispatcher.cpp" />
+    <ClCompile Include="..\..\proto\msg_proto_src\l2d_validate_login_request.pb.cc" />
+    <ClCompile Include="..\..\proto\msg_proto_src\l2d_validate_login_response.pb.cc" />
+    <ClCompile Include="..\..\proto\msg_proto_src\player_login_request.pb.cc">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\proto\msg_proto_src\player_login_response.pb.cc">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="login_client_message_handler.cpp" />
     <ClCompile Include="login_connection_from_client.cpp" />
+    <ClCompile Include="login_client_message_dispatcher.cpp" />
     <ClCompile Include="login_service.cpp" />
     <ClCompile Include="login_client_connection_factory.cpp" />
-    <ClCompile Include="..\proto_src\player_login_request.pb.cc">
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4800;4267;</DisableSpecificWarnings>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="..\proto_src\player_login_response.pb.cc">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4800;4267;</DisableSpecificWarnings>
-    </ClCompile>
-    <ClCompile Include="..\proto_src\validate_login_request.pb.cc">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4800;4267;</DisableSpecificWarnings>
-    </ClCompile>
-    <ClCompile Include="..\proto_src\validate_login_response.pb.cc">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4800;4267;</DisableSpecificWarnings>
-    </ClCompile>
-    <ClCompile Include="stdafx.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\engine\src\libCoreCommon\libCoreCommon.vcxproj">

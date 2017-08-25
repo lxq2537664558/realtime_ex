@@ -3,19 +3,43 @@
 #include "libCoreCommon/actor_base.h"
 #include "libCoreCommon/ticker.h"
 
-using namespace std;
-using namespace core;
-using namespace base;
+#include "player_module.h"
+
+enum EPlayerModuleType
+{
+	ePMT_Attribute = 0,
+
+	ePMT_Count,
+};
+
+enum EPlayerStatusType
+{
+	ePST_None,
+	ePST_Init,
+	ePST_LoadData,
+	ePST_Login,
+	ePST_Normal,
+	ePST_Logout,
+	ePST_Destroy,
+};
 
 class CPlayer :
-	public CActorBase
+	public core::CActorBase
 {
 public:
 	CPlayer();
 	virtual ~CPlayer();
 
-	void				setName(const std::string& szName);
-	const std::string&	getName() const;
+	virtual void		onLoadData();
+	virtual void		onBackup();
+	virtual void		onPlayerLogin();
+	virtual void		onPlayerLogout();
+
+	EPlayerStatusType	getStatus() const;
+	void				setGateServiceID(uint32_t nGateServiceID);
+	uint32_t			getGateServiceID() const;
+
+	void				sendClientMessage(const google::protobuf::Message* pMessage);
 
 private:
 	virtual void		onInit(const std::string& szContext);
@@ -23,6 +47,11 @@ private:
 
 	virtual void		release();
 
+	void				onHeartbeat(uint64_t nContext);
+
 private:
-	std::string m_szName;
+	core::CTicker		m_tickHeartbeat;
+	EPlayerStatusType	m_eStatus;
+	uint32_t			m_nGateServiceID;
+	CPlayerModule*		m_zPlayerModule[ePMT_Count];
 };

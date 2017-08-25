@@ -31,7 +31,7 @@ private:
 	virtual void					onQuit();
 
 	void							onServiceConnect(const std::string& szType, uint32_t nServiceID);
-	void							onNotifyGateOnlineCount(uint64_t nContext);
+	void							onNotifyOnlineCount(uint64_t nContext);
 
 private:
 	CGateClientConnectionFactory*	m_pGateClientConnectionFactory;
@@ -43,6 +43,6 @@ private:
 	core::CNormalProtobufFactory*	m_pNormalProtobufFactory;
 	core::CJsonProtobufFactory*		m_pJsonProtobufFactory;
 
-	core::CTicker					m_tickerNotifyGateOnlineCount;
+	core::CTicker					m_tickerNotifyOnlineCount;
 	std::string						m_szAddr;
 };

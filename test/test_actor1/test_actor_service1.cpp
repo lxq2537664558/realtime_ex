@@ -52,7 +52,7 @@ void CTestActorService1::onServiceConnect(const std::string&, uint32_t nServiceI
 	PrintInfo("ServiceConnect service_id: %d", nServiceID);
 
 	char szBuf[256] = {};
-	base::crt::snprintf(szBuf, _countof(szBuf), "%d", this->getServiceID());
+	base::function_util::snprintf(szBuf, _countof(szBuf), "%d", this->getServiceID());
 
 	CActorBase* pActorBase = this->createActor("CTestActor1", 1, szBuf);
 	DebugAst(pActorBase != nullptr);

@@ -1,0 +1,7 @@
+syntax = "proto2";
+
+message d2g_player_token_notify {
+	required uint64 player_id = 1;
+	required uint32 gas_id = 2;
+	required string token = 3;
+}

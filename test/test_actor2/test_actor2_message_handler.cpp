@@ -1,4 +1,6 @@
 #include "test_actor2_message_handler.h"
+#include "libCoreCommon/service_base.h"
+#include "libCoreCommon/service_invoker.h"
 
 CTestActor2MessageHandler::CTestActor2MessageHandler(CServiceBase* pServiceBase)
 {
@@ -16,7 +18,7 @@ bool CTestActor2MessageHandler::request_msg3_handler(CActorBase* pActorBase, SSe
 	msg1.set_id(pRequest->id());
 	msg1.set_name(pRequest->name());
 
-	pActorBase->response(sSessionInfo, &msg1);
+	pActorBase->getServiceBase()->getServiceInvoker()->response(sSessionInfo, &msg1);
 
 	return true;
 }

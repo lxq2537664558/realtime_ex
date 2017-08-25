@@ -9,7 +9,7 @@
 
 #include "libCoreCommon/base_app.h"
 #include "libBaseCommon/defer.h"
-#include "libBaseCommon/base_time.h"
+#include "libBaseCommon/time_util.h"
 
 #define _DEFAULT_CHANNEL_CAP 256
 
@@ -63,21 +63,8 @@ namespace core
 		return this->m_pCoreService;
 	}
 
-	void CCoreActor::registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
-	{
-		CCoreApp::Inst()->registerTicker(CTicker::eTT_Actor, this->m_pCoreService->getServiceID(), this->getID(), pTicker, nStartTime, nIntervalTime, nContext);
-	}
-
-	void CCoreActor::unregisterTicker(CTicker* pTicker)
-	{
-		CCoreApp::Inst()->unregisterTicker(pTicker);
-	}
-
 	void CCoreActor::process()
 	{
-		if (this->m_channel.empty())
-			return;
-
 		if (this->m_eState == eABS_RecvPending)
 		{
 			this->m_eState = eABS_Normal;
@@ -113,7 +100,7 @@ namespace core
 			auto callback = this->m_pCoreService->getActorMessageHandler(pMessage->GetTypeName());
 			if (callback == nullptr)
 			{
-				PrintWarning("CCoreActor::dispatch error unknown request message actor_id: "UINT64FMT", message_name: %s", this->getID(), pMessage->GetTypeName().c_str());
+				PrintWarning("CCoreActor::dispatch error unknown request message actor_id: {}, message_name: {}", this->getID(), pMessage->GetTypeName());
 				return;
 			}
 
@@ -129,7 +116,12 @@ namespace core
 		else if (sActorMessagePacket.nType == eMT_RESPONSE)
 		{
 			auto pMessage = std::shared_ptr<google::protobuf::Message>(sActorMessagePacket.pMessage);
-			auto pPendingResponseInfo = std::unique_ptr<SPendingResponseInfo>(this->getPendingResponseInfo(sActorMessagePacket.nSessionID));
+			SPendingResponseInfo* pPendingResponseInfo = this->getPendingResponseInfo(sActorMessagePacket.nSessionID);
+			defer([&]() 
+			{
+				SAFE_DELETE(pPendingResponseInfo);
+			});
+
 			if (nullptr != pPendingResponseInfo)
 			{
 				if (pPendingResponseInfo->nCoroutineID != 0)
@@ -158,7 +150,7 @@ namespace core
 				}
 				else
 				{
-					PrintWarning("invalid response session_id: "UINT64FMT" actor_id: "UINT64FMT" message_name: %s", pPendingResponseInfo->nSessionID, this->getID(), pPendingResponseInfo->szMessageName.c_str());
+					PrintWarning("invalid response session_id: {} actor_id: {} message_name: {}", pPendingResponseInfo->nSessionID, this->getID(), pPendingResponseInfo->szMessageName);
 				}
 			}
 		}
@@ -169,14 +161,14 @@ namespace core
 			auto callback = this->m_pCoreService->getActorForwardHandler(pMessage->GetTypeName());
 			if (callback == nullptr)
 			{
-				PrintWarning("CCoreActor::dispatch error unknown gate forawrd message actor_id: "UINT64FMT", message_name: %s", this->getID(), pMessage->GetTypeName().c_str());
+				PrintWarning("CCoreActor::dispatch error unknown gate forawrd message actor_id: {}, message_name: {}", this->getID(), pMessage->GetTypeName());
 				return;
 			}
 			
 			SClientSessionInfo sClientSessionInfo;
 			sClientSessionInfo.nSessionID = sActorMessagePacket.nSessionID;
-			sClientSessionInfo.nSocketID = sActorMessagePacket.nData;
 			sClientSessionInfo.nGateServiceID = sActorMessagePacket.nFromServiceID;
+			
 			uint64_t nCoroutineID = coroutine::create(0, [&callback, this, pMessage, sClientSessionInfo](uint64_t){ callback(this->m_pActorBase, sClientSessionInfo, pMessage.get()); });
 			coroutine::resume(nCoroutineID, 0);
 		}
@@ -185,7 +177,7 @@ namespace core
 			CCoreTickerNode* pCoreTickerNode = reinterpret_cast<CCoreTickerNode*>(sActorMessagePacket.nSessionID);
 			if (pCoreTickerNode == nullptr)
 			{
-				PrintWarning("CCoreActor::dispatch error pCoreTickerNode == nullptr actor_id: "UINT64FMT, this->getID());
+				PrintWarning("CCoreActor::dispatch error pCoreTickerNode == nullptr actor_id: {}", this->getID());
 				return;
 			}
 
@@ -233,14 +225,14 @@ namespace core
 		auto iter = this->m_mapPendingResponseInfo.find(nContext);
 		if (iter == this->m_mapPendingResponseInfo.end())
 		{
-			PrintWarning("iter == this->m_mapResponseWaitInfo.end() session_id: "UINT64FMT, nContext);
+			PrintWarning("iter == this->m_mapResponseWaitInfo.end() session_id: {}", nContext);
 			return;
 		}
 
 		SPendingResponseInfo* pPendingResponseInfo = iter->second;
 		if (nullptr == pPendingResponseInfo)
 		{
-			PrintWarning("nullptr == pPendingResponseInfo session_id: "UINT64FMT, nContext);
+			PrintWarning("nullptr == pPendingResponseInfo session_id: {}", nContext);
 			return;
 		}
 
@@ -266,9 +258,9 @@ namespace core
 			pPendingResponseInfo->nCoroutineID = nCoroutineID;
 			pPendingResponseInfo->nToID = nToID;
 			pPendingResponseInfo->szMessageName = szMessageName;
-			pPendingResponseInfo->nBeginTime = base::getGmtTime();
+			pPendingResponseInfo->nBeginTime = base::time_util::getGmtTime();
 			pPendingResponseInfo->tickTimeout.setCallback(std::bind(&CCoreActor::onRequestMessageTimeout, this, std::placeholders::_1));
-			this->registerTicker(&pPendingResponseInfo->tickTimeout, CCoreApp::Inst()->getInvokeTimeout(), 0, nSessionID);
+			this->getCoreService()->registerTicker(&pPendingResponseInfo->tickTimeout, CCoreApp::Inst()->getInvokeTimeout(), 0, nSessionID);
 
 			this->m_mapPendingResponseInfo[pPendingResponseInfo->nSessionID] = pPendingResponseInfo;
 
@@ -295,7 +287,7 @@ namespace core
 			this->m_pSyncPendingResponseInfo->nCoroutineID = nCoroutineID;
 			this->m_pSyncPendingResponseInfo->nToID = nToID;
 			this->m_pSyncPendingResponseInfo->szMessageName = szMessageName;
-			this->m_pSyncPendingResponseInfo->nBeginTime = base::getGmtTime();
+			this->m_pSyncPendingResponseInfo->nBeginTime = base::time_util::getGmtTime();
 
 			this->m_nSyncPendingResponseHolderID = nHolderID;
 

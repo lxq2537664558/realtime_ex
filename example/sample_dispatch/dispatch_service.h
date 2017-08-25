@@ -22,6 +22,9 @@ public:
 
 	COnlineCountMgr*				getOnlineCountMgr() const;
 
+	uint32_t						getGlobalDbServiceID() const;
+	uint32_t						getAccountTblCount() const;
+
 private:
 	virtual bool					onInit();
 	virtual void					onFrame();
@@ -31,4 +34,6 @@ private:
 	CDispatchServiceMessageHandler*	m_pDispatchServiceMessageHandler;
 	CNormalProtobufFactory*			m_pNormalProtobufFactory;
 	COnlineCountMgr*				m_pOnlineCountMgr;
+	uint32_t						m_nGlobalDbServiceID;
+	uint32_t						m_nAccountTblCount;
 };

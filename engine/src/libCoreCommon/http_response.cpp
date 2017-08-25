@@ -1,6 +1,6 @@
 #include "http_response.h"
 
-#include "libBaseCommon/base_function.h"
+#include "libBaseCommon/function_util.h"
 
 namespace core
 {
@@ -43,7 +43,7 @@ namespace core
 
 		if (!this->m_szBody.empty())
 		{
-			base::crt::snprintf(szBuf, sizeof(szBuf), "Content-Length: %d\r\n", this->m_szBody.size());
+			base::function_util::snprintf(szBuf, sizeof(szBuf), "Content-Length: %d\r\n", this->m_szBody.size());
 			szData += szBuf;
 		}
 

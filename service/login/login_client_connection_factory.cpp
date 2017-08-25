@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "login_client_connection_factory.h"
 #include "login_connection_from_client.h"
 

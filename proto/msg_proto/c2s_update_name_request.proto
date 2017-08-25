@@ -1,0 +1,5 @@
+syntax = "proto2";
+
+message c2s_update_name_request {
+	required string name = 1;
+}

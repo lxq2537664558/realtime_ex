@@ -4,7 +4,7 @@
 #include "master_service.h"
 
 #include "libCoreCommon/base_connection_mgr.h"
-#include "libBaseCommon/base_function.h"
+#include "libBaseCommon/function_util.h"
 #include "libCoreCommon/proto_system.h"
 #include "libCoreCommon/base_app.h"
 
@@ -28,7 +28,7 @@ bool CServiceRegistry::addNode(CConnectionFromNode* pConnectionFromNode, const S
 	auto iter = this->m_mapNodeInfo.find(sNodeBaseInfo.nID);
 	if (iter != this->m_mapNodeInfo.end())
 	{
-		PrintWarning("CServiceRegistry::addNode dup node id: %d", sNodeBaseInfo.nID);
+		PrintWarning("CServiceRegistry::addNode dup node id: {}", sNodeBaseInfo.nID);
 		return false;
 	}
 
@@ -37,13 +37,13 @@ bool CServiceRegistry::addNode(CConnectionFromNode* pConnectionFromNode, const S
 		const SServiceBaseInfo& sServiceBaseInfo = vecServiceBaseInfo[i];
 		if (this->m_setServiceName.find(sServiceBaseInfo.szName) != this->m_setServiceName.end())
 		{
-			PrintWarning("CServiceRegistry::addNode dup service name: %s node id: %d", sServiceBaseInfo.szName.c_str(), sNodeBaseInfo.nID);
+			PrintWarning("CServiceRegistry::addNode dup service name: {} node id: {}", sServiceBaseInfo.szName, sNodeBaseInfo.nID);
 			return false;
 		}
 
 		if (this->m_setServiceID.find(sServiceBaseInfo.nID) != this->m_setServiceID.end())
 		{
-			PrintWarning("CServiceRegistry::addNode dup service id: %s node id: %d", sServiceBaseInfo.nID, sNodeBaseInfo.nID);
+			PrintWarning("CServiceRegistry::addNode dup service id: {} node id: {}", sServiceBaseInfo.nID, sNodeBaseInfo.nID);
 			return false;
 		}
 	}
@@ -94,7 +94,7 @@ bool CServiceRegistry::addNode(CConnectionFromNode* pConnectionFromNode, const S
 	vecExcludeID.push_back(pConnectionFromNode->getID());
 	CBaseApp::Inst()->getBaseConnectionMgr()->broadcast("CConnectionFromNode", eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize(), &vecExcludeID);
 	
-	PrintInfo("register node node_id: %d node_name: %s local addr: %s %d remote addr: %s %d", sNodeBaseInfo.nID, sNodeBaseInfo.szName.c_str(), pConnectionFromNode->getLocalAddr().szHost, pConnectionFromNode->getLocalAddr().nPort, pConnectionFromNode->getRemoteAddr().szHost, pConnectionFromNode->getRemoteAddr().nPort);
+	PrintInfo("register node node_id: {} node_name: {} local addr: {} {} remote addr: {} {}", sNodeBaseInfo.nID, sNodeBaseInfo.szName, pConnectionFromNode->getLocalAddr().szHost, pConnectionFromNode->getLocalAddr().nPort, pConnectionFromNode->getRemoteAddr().szHost, pConnectionFromNode->getRemoteAddr().nPort);
 
 	return true;
 }
@@ -104,7 +104,7 @@ void CServiceRegistry::delNode(uint32_t nNodeID)
 	auto iter = this->m_mapNodeInfo.find(nNodeID);
 	if (iter == this->m_mapNodeInfo.end())
 	{
-		PrintWarning("CServiceRegistry::delNode unknown node id: %d", nNodeID);
+		PrintWarning("CServiceRegistry::delNode unknown node id: {}", nNodeID);
 		return;
 	}
 
@@ -127,5 +127,5 @@ void CServiceRegistry::delNode(uint32_t nNodeID)
 
 	this->m_mapNodeInfo.erase(iter);
 
-	PrintInfo("unregister node node_id: %d", nNodeID);
+	PrintInfo("unregister node node_id: {}", nNodeID);
 }

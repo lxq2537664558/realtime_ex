@@ -8,7 +8,7 @@
 #include "net_runnable.h"
 #include "core_connection.h"
 
-#include "libBaseCommon/base_time.h"
+#include "libBaseCommon/time_util.h"
 
 namespace core
 {
@@ -27,7 +27,7 @@ namespace core
 
 		if (this->m_mapConnectCalback.find(szKey) != this->m_mapConnectCalback.end())
 		{
-			PrintWarning("dup connect callback key: %s", szKey.c_str());
+			PrintWarning("dup connect callback key: {}", szKey);
 		}
 
 		this->m_mapConnectCalback[szKey] = callback;
@@ -44,7 +44,7 @@ namespace core
 
 		if (this->m_mapDisconnectCallback.find(szKey) != this->m_mapDisconnectCallback.end())
 		{
-			PrintWarning("dup disconnect callback key: %s", szKey.c_str());
+			PrintWarning("dup disconnect callback key: {}", szKey);
 		}
 
 		this->m_mapDisconnectCallback[szKey] = callback;
@@ -61,7 +61,7 @@ namespace core
 		
 		if (this->m_mapConnectFailCallback.find(szKey) != this->m_mapConnectFailCallback.end())
 		{
-			PrintWarning("dup connect fail callback key: %s", szKey.c_str());
+			PrintWarning("dup connect fail callback key: {}", szKey);
 		}
 
 		this->m_mapConnectFailCallback[szKey] = callback;
@@ -78,14 +78,14 @@ namespace core
 		CBaseConnectionFactory* pBaseConnectionFactory = this->getBaseConnectionFactory(pCoreConnection->getType());
 		if (nullptr == pBaseConnectionFactory)
 		{
-			PrintWarning("can't find base connection factory type: %s context: %s", pCoreConnection->getType().c_str(), pCoreConnection->getContext().c_str());
+			PrintWarning("can't find base connection factory type: {} context: {}", pCoreConnection->getType(), pCoreConnection->getContext());
 			return false;
 		}
 
 		CBaseConnection* pBaseConnection = pBaseConnectionFactory->createBaseConnection(pCoreConnection->getType());
 		if (nullptr == pBaseConnection)
 		{
-			PrintWarning("create base connection error type: %s context: %s", pCoreConnection->getType().c_str(), pCoreConnection->getContext().c_str());
+			PrintWarning("create base connection error type: {} context: {}", pCoreConnection->getType(), pCoreConnection->getContext());
 			return false;
 		}
 		
@@ -124,12 +124,11 @@ namespace core
 		if (iter == this->m_mapBaseConnectionByID.end())
 			return;
 
-		this->m_mapBaseConnectionByID.erase(iter);
-
 		CBaseConnection* pBaseConnection = iter->second;
+		this->m_mapBaseConnectionByID.erase(iter);
 		if (pBaseConnection == nullptr)
 		{
-			PrintWarning("CBaseConnectionMgr::onDisconnect error socket_id: "UINT64FMT, nSocketID);
+			PrintWarning("CBaseConnectionMgr::onDisconnect error socket_id: {}", nSocketID);
 			return;
 		}
 

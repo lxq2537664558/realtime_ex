@@ -1,0 +1,24 @@
+syntax = "proto2";
+
+import "db_option.proto";
+
+package proto.db;
+
+message player_base {
+	option (primary_key) = "player_id";
+	
+	required uint64 player_id = 1;				// 玩家id
+	optional string	account_name = 2;			// 账号名
+	optional uint32 server_id = 3;				// 服务器id
+	optional uint64 last_login_time = 4;		// 最后登录时间
+	optional uint64 last_logout_time = 5;		// 最后登出时间
+	optional string name = 6;					// 玩家名字
+	optional uint32 lv = 7;						// 等级
+	optional uint64 gold = 8;					// 金币
+	optional uint64 money = 9;					// 砖石
+	optional uint64 vitality = 10;				// 体力
+}
+
+message player_base_set {
+	repeated player_base data_set = 1;
+}

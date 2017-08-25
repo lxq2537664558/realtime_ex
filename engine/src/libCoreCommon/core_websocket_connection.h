@@ -38,6 +38,7 @@ namespace core
 		eWO_OPCODE_PING = 0x9,
 		eWO_OPCODE_PONG = 0xa
 	};
+	// 对于分包消息，第一个包的opcode是text或者binary，并且fin标记为0，接下来的包opcode为continue，fin为0，最后一个包的opcode为continue，fin为1
 
 	/*
 	0                   1                   2                   3
@@ -83,6 +84,15 @@ namespace core
 		uint8_t		zMaskingKey[4];
 	};
 
+	enum EWebSocketState
+	{
+		eWSS_None,
+		eWSS_Connectting,
+		eWSS_Connected,
+		eWSS_Disconnectting,
+		eWSS_Disconnected,
+	};
+
 	class CCoreWebsocketConnection :
 		public CCoreConnection
 	{
@@ -96,11 +106,12 @@ namespace core
 
 	private:
 		bool				handshark(const CHttpRequest& sHttpRequest);
-		int32_t				decodeFrame(const uint8_t* pData, uint32_t nDataSize, EWebsocketFrameType& eType, std::vector<char>& vecBuf);
-		int32_t				encodeFrame(const SWebsocketHeader& sWebsocketHeader, const char* pData, uint32_t nDataSize, std::vector<char>& vecBuf);
+		int32_t				unserializeFrame(const uint8_t* pData, uint32_t nDataSize, EWebsocketFrameType& eType, std::vector<char>& vecBuf);
+		int32_t				serializeFrame(const SWebsocketHeader& sWebsocketHeader, const char* pData, std::vector<char>& vecBuf);
+		void				sendFrame(EWebsocketOpcode eType, const void* pData, uint16_t nSize);
 
 	private:
 		CHttpRequestParser*	m_pHttpRequestParser;
-		bool				m_bHandsharked;
+		EWebSocketState		m_eWebSocketState;
 	};
 }

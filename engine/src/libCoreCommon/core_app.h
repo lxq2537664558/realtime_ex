@@ -20,7 +20,7 @@ namespace core
 		CCoreApp();
 		~CCoreApp();
 
-		bool						run(const std::string& szInstanceName, const std::string& szConfig);
+		bool						runAndServe(const std::string& szInstanceName, const std::string& szConfig);
 		
 		uint32_t					getNodeID() const;
 		const SNodeBaseInfo&		getNodeBaseInfo() const;

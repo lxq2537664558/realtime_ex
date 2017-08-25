@@ -57,9 +57,6 @@ namespace core
 
 		void				onConnectAck();
 
-		void				setSessionID(uint64_t nSessionID);
-		uint64_t			getSessionID() const;
-
 		base::ENetConnecterMode
 							getMode() const;
 
@@ -83,7 +80,6 @@ namespace core
 		std::string				m_szType;
 		uint32_t				m_nState;
 		std::string				m_szContext;
-		uint64_t				m_nSessionID;
 		MessageParser			m_messageParser;
 		CCoreConnectionMonitor	m_monitor;
 	};

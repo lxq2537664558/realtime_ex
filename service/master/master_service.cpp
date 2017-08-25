@@ -32,7 +32,7 @@ bool CMasterService::onInit()
 	tinyxml2::XMLDocument* pConfigXML = new tinyxml2::XMLDocument();
 	if (pConfigXML->LoadFile(this->getConfigFileName().c_str()) != tinyxml2::XML_SUCCESS)
 	{
-		PrintWarning("load etc config error");
+		PrintWarning("load {} config error", this->getConfigFileName());
 		return false;
 	}
 	tinyxml2::XMLElement* pRootXML = pConfigXML->RootElement();
@@ -56,7 +56,7 @@ bool CMasterService::onInit()
 	uint16_t nPort = (uint16_t)pMasterXML->UnsignedAttribute("port");
 
 	char szBuf[256] = { 0 };
-	base::crt::snprintf(szBuf, _countof(szBuf), "%d", this->getServiceID());
+	base::function_util::snprintf(szBuf, _countof(szBuf), "%d", this->getServiceID());
 
 	CBaseApp::Inst()->getBaseConnectionMgr()->listen(szHost, nPort, false, "CConnectionFromNode", szBuf, 10 * 1024, 10 * 1024, nullptr);
 

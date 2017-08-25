@@ -8,9 +8,7 @@
 #include "core_app.h"
 
 #include "libBaseCommon/debug_helper.h"
-#include "libBaseCommon/base_time.h"
-
-
+#include "libBaseCommon/time_util.h"
 
 #define _HEART_BEAT_TIME 5000
 
@@ -115,11 +113,6 @@ namespace core
 	const std::string& CBaseConnection::getContext() const
 	{
 		return this->m_pCoreConnection->getContext();
-	}
-
-	void CBaseConnection::setSessionID(uint64_t nSessionID)
-	{
-		this->m_pCoreConnection->setSessionID(nSessionID);
 	}
 
 	base::ENetConnecterMode CBaseConnection::getMode() const

@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "login_service.h"
 #include "login_connection_from_client.h"
 
@@ -6,7 +5,10 @@
 #include "libCoreCommon/base_connection_mgr.h"
 
 #include "tinyxml2/tinyxml2.h"
-#include "proto_src/player_login_request.pb.h"
+
+#include "msg_proto_src/player_login_request.pb.h"
+
+//#define _WEB_SOCKET_
 
 using namespace core;
 
@@ -42,7 +44,7 @@ bool CLoginService::onInit()
 	tinyxml2::XMLDocument* pConfigXML = new tinyxml2::XMLDocument();
 	if (pConfigXML->LoadFile(this->getConfigFileName().c_str()) != tinyxml2::XML_SUCCESS)
 	{
-		PrintWarning("load etc config error");
+		PrintWarning("load {} config error", this->getConfigFileName());
 		return false;
 	}
 	tinyxml2::XMLElement* pRootXML = pConfigXML->RootElement();
@@ -61,21 +63,18 @@ bool CLoginService::onInit()
 	uint32_t nRecvBufSize = pListenClientAddrXML->IntAttribute("recv_buf_size");
 
 	char szBuf[256] = { 0 };
-	base::crt::snprintf(szBuf, _countof(szBuf), "%d", this->getServiceID());
+	base::function_util::snprintf(szBuf, _countof(szBuf), "%d", this->getServiceID());
 
 	// 启动客户端连接
+#ifdef _WEB_SOCKET_
 	CBaseApp::Inst()->getBaseConnectionMgr()->listen(szHost, nPort, true, "CLoginConnectionFromClient", szBuf, nSendBufSize, nRecvBufSize, default_client_message_parser, eCCT_Websocket);
+#else
+	CBaseApp::Inst()->getBaseConnectionMgr()->listen(szHost, nPort, true, "CLoginConnectionFromClient", szBuf, nSendBufSize, nRecvBufSize, default_client_message_parser, eCCT_Normal);
+#endif
 
 	SAFE_DELETE(pConfigXML);
 
 	PrintInfo("CGateService::onInit");
-
-	player_login_request request_msg;
-	request_msg.set_account_id(1);
-	request_msg.set_server_id(1);
-	char szBuf1[256] = { 0 };
-	int32_t nRet = this->m_pJsonProtobufFactory->serialize_protobuf_message_to_buf(&request_msg, szBuf1, _countof(szBuf1));
-	auto pMsg = this->m_pJsonProtobufFactory->unserialize_protobuf_message_from_buf("player_login_request", szBuf1, nRet);
 
 	return true;
 }
@@ -107,7 +106,11 @@ CProtobufFactory* CLoginService::getServiceProtobufFactory() const
 
 core::CProtobufFactory* CLoginService::getForwardProtobufFactory() const
 {
+#ifdef _WEB_SOCKET_
 	return this->m_pJsonProtobufFactory;
+#else
+	return this->m_pNormalProtobufFactory;
+#endif
 }
 
 extern "C" 

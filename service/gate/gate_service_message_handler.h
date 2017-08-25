@@ -2,7 +2,8 @@
 #include "libCoreCommon/service_message_registry.h"
 #include "libCoreCommon/service_base.h"
 
-#include "proto_src/player_token_notify.pb.h"
+#include "msg_proto_src/d2g_player_token_notify.pb.h"
+#include "msg_proto_src/s2g_kick_player_notify.pb.h"
 
 class CGateServiceMessageHandler :
 	public core::CServiceMessageRegistry<CGateServiceMessageHandler>
@@ -14,5 +15,6 @@ public:
 	~CGateServiceMessageHandler();
 
 private:
-	void		player_token_handler(core::CServiceBase* pServiceBase, core::SSessionInfo sSessionInfo, const player_token_notify* pRequest);
+	void		d2g_player_token_notify_handler(core::CServiceBase* pServiceBase, core::SSessionInfo sSessionInfo, const d2g_player_token_notify* pRequest);
+	void		s2g_kick_player_notify_handler(core::CServiceBase* pServiceBase, core::SSessionInfo sSessionInfo, const s2g_kick_player_notify* pRequest);
 };

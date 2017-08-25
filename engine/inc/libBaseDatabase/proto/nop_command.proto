@@ -1,0 +1,7 @@
+syntax = "proto2";
+
+package proto.db;
+
+message nop_command {
+	required uint32 channel_id = 1;
+}

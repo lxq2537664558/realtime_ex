@@ -1,7 +1,8 @@
 #include "http_request_parser.h"
 
-#include "libBaseCommon/base_function.h"
+#include "libBaseCommon/function_util.h"
 #include "libBaseCommon/logger.h"
+#include "libBaseCommon/string_util.h"
 
 #include <algorithm>
 
@@ -50,12 +51,12 @@ namespace core
 		const char* szQueryBegin = std::find(szURIBegin, szURIEnd, '?');
 		if (szQueryBegin != szURIEnd)
 		{
-			this->m_request.setRequestURI(szURIBegin, szQueryBegin - szURIBegin);
-			this->m_request.setQuery(szQueryBegin + 1, szURIEnd - szQueryBegin + 1);
+			this->m_request.setRequestURI(szURIBegin, (uint32_t)(szQueryBegin - szURIBegin));
+			this->m_request.setQuery(szQueryBegin + 1, (uint32_t)(szURIEnd - szQueryBegin + 1));
 		}
 		else
 		{
-			this->m_request.setRequestURI(szURIBegin, szURIEnd - szURIBegin);
+			this->m_request.setRequestURI(szURIBegin, (uint32_t)(szURIEnd - szURIBegin));
 		}
 
 		const char* szVersion = szURIEnd + 1;
@@ -105,7 +106,7 @@ namespace core
 				if (szLineEnd == szEnd)
 					break;
 
-				if (!this->parseRequestLine(szLineBegin, szLineEnd - szLineBegin))
+				if (!this->parseRequestLine(szLineBegin, (uint32_t)(szLineEnd - szLineBegin)))
 					return false;
 
 				this->m_nParseDataCount = (uint32_t)(szLineEnd - szLineBegin + 2);
@@ -152,7 +153,7 @@ namespace core
 				}
 
 				uint32_t nContentLength = 0;
-				if (!base::crt::atoui(szContentLength, nContentLength))
+				if (!base::string_util::convert_to_value(szContentLength, nContentLength))
 					return false;
 
 				if (nContentLength + this->m_nParseDataCount > nDataSize)
@@ -160,7 +161,7 @@ namespace core
 
 				const char* szBegin = szData + this->m_nParseDataCount;
 				const char* szEnd = szBegin + nContentLength;
-				this->m_request.setBody(szBegin, szEnd - szBegin);
+				this->m_request.setBody(szBegin, (uint32_t)(szEnd - szBegin));
 				this->m_nParseDataCount += nContentLength;
 
 				this->m_eParseState = eHPS_Finish;

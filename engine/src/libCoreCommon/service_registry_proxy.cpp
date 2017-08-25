@@ -3,6 +3,8 @@
 #include "base_connection_mgr.h"
 #include "core_app.h"
 
+#include "libBaseCommon/string_util.h"
+
 #define _CHECK_CONNECT_TIME 5000
 
 namespace core
@@ -61,29 +63,6 @@ namespace core
 			this->m_mapServiceIDByServiceType[sServiceBaseInfo.szType].push_back(sServiceBaseInfo.nID);
 		}
 
-		return this->checkLocalGateServiceProxyInfo();
-	}
-
-	bool CServiceRegistryProxy::checkLocalGateServiceProxyInfo()
-	{
-		// 一个节点只能有一个gate服务，本节点跟其他服务跟gate之间通过socket连接
-		uint32_t nGateServiceID = 0;
-		const std::vector<SServiceBaseInfo>& vecServiceBaseInfo = CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->getServiceBaseInfo();
-		for (size_t i = 0; i < vecServiceBaseInfo.size(); ++i)
-		{
-			const SServiceBaseInfo& sServiceBaseInfo = vecServiceBaseInfo[i];
-			if (sServiceBaseInfo.szType == "gate")
-			{
-				if (nGateServiceID != 0)
-				{
-					PrintInfo("dup gate service_name: %s service_id: %d", sServiceBaseInfo.szName.c_str(), sServiceBaseInfo.nID);
-					return false;
-				}
-
-				nGateServiceID = sServiceBaseInfo.nID;
-			}
-		}
-
 		return true;
 	}
 
@@ -104,7 +83,7 @@ namespace core
 		sNodeProxyInfo.sNodeBaseInfo = sNodeBaseInfo;
 		sNodeProxyInfo.vecServiceBaseInfo = vecServiceBaseInfo;
 		
-		sNodeProxyInfo.pTicker = std::unique_ptr<CTicker>();
+		sNodeProxyInfo.pTicker = std::unique_ptr<CTicker>(new core::CTicker());
 		// 不用担心sNodeProxyInfo的生命周期问题
 		sNodeProxyInfo.pTicker->setCallback([&sNodeProxyInfo](uint64_t nContext)
 		{
@@ -148,7 +127,7 @@ namespace core
 		if (bConnect)
 			CCoreApp::Inst()->registerTicker(CTicker::eTT_Service, 0, 0, sNodeProxyInfo.pTicker.get(), _CHECK_CONNECT_TIME, _CHECK_CONNECT_TIME, 0);
 
-		PrintInfo("add proxy node node_id: %d node_name: %s", sNodeBaseInfo.nID, sNodeBaseInfo.szName.c_str());
+		PrintInfo("add proxy node node_id: {} node_name: {}", sNodeBaseInfo.nID, sNodeBaseInfo.szName);
 	}
 	
 	void CServiceRegistryProxy::delNodeProxyInfo(uint32_t nID)
@@ -184,7 +163,7 @@ namespace core
 		}
 
 		this->m_mapNodeProxyInfo.erase(iter);
-		PrintInfo("del proxy node node_id: %d node_name: %s", nID, szName.c_str());
+		PrintInfo("del proxy node node_id: {} node_name: {}", nID, szName);
 	}
 
 	uint32_t CServiceRegistryProxy::getServiceID(const std::string& szName) const
@@ -282,7 +261,7 @@ namespace core
 
 		sNodeProxyInfo.pBaseConnectionOtherNode = nullptr;
 
-		PrintInfo("other node disconnect node_id: %d node_name: %s", nNodeID, sNodeProxyInfo.sNodeBaseInfo.szName.c_str());
+		PrintInfo("other node disconnect node_id: {} node_name: {}", nNodeID, sNodeProxyInfo.sNodeBaseInfo.szName);
 	}
 
 	bool CServiceRegistryProxy::addBaseConnectionOtherNodeByNodeID(uint32_t nNodeID, CBaseConnectionOtherNode* pBaseConnectionOtherNode)
@@ -292,14 +271,14 @@ namespace core
 		auto iter = this->m_mapNodeProxyInfo.find(nNodeID);
 		if (iter == this->m_mapNodeProxyInfo.end())
 		{
-			PrintWarning("CServiceRegistryProxy::addBaseConnectionOtherNodeByNodeID unknwon node node_id: %d remote_addr: %s %d", nNodeID, pBaseConnectionOtherNode->getRemoteAddr().szHost, pBaseConnectionOtherNode->getRemoteAddr().nPort);
+			PrintWarning("CServiceRegistryProxy::addBaseConnectionOtherNodeByNodeID unknwon node node_id: {} remote_addr: {} {}", nNodeID, pBaseConnectionOtherNode->getRemoteAddr().szHost, pBaseConnectionOtherNode->getRemoteAddr().nPort);
 			return false;
 		}
 
 		SNodeProxyInfo& sNodeProxyInfo = iter->second;
 		if (sNodeProxyInfo.pBaseConnectionOtherNode != nullptr)
 		{
-			PrintWarning("CServiceRegistryProxy::addBaseConnectionOtherNodeByNodeID dup node connection node_id: %d remote_addr: %s %d", nNodeID, pBaseConnectionOtherNode->getRemoteAddr().szHost, pBaseConnectionOtherNode->getRemoteAddr().nPort);
+			PrintWarning("CServiceRegistryProxy::addBaseConnectionOtherNodeByNodeID dup node connection node_id: {} remote_addr: {} {}", nNodeID, pBaseConnectionOtherNode->getRemoteAddr().szHost, pBaseConnectionOtherNode->getRemoteAddr().nPort);
 			return false;
 		}
 
@@ -315,7 +294,7 @@ namespace core
 
 		sNodeProxyInfo.pBaseConnectionOtherNode = pBaseConnectionOtherNode;
 
-		PrintInfo("other node connect node_id: %d node_name: %s", nNodeID, sNodeProxyInfo.sNodeBaseInfo.szName.c_str());
+		PrintInfo("other node connect node_id: {} node_name: {}", nNodeID, sNodeProxyInfo.sNodeBaseInfo.szName);
 		return true;
 	}
 
@@ -346,7 +325,7 @@ namespace core
 
 		iter->second.pBaseConnectionToMaster = pBaseConnectionToMaster;
 		
-		PrintInfo("add master master_id: %d", pBaseConnectionToMaster->getMasterID());
+		PrintInfo("add master master_id: {}", pBaseConnectionToMaster->getMasterID());
 
 		return true;
 	}
@@ -359,7 +338,7 @@ namespace core
 		iter->second.pBaseConnectionToMaster = nullptr;
 		iter->second.bActive = false;
 
-		PrintInfo("del master master_id: %d", nMasterID);
+		PrintInfo("del master master_id: {}", nMasterID);
 	}
 
 	void CServiceRegistryProxy::onCheckConnectMaster(uint64_t nContext)
@@ -372,7 +351,7 @@ namespace core
 
 			sMasterInfo.bActive = true;
 			char szBuf[256] = { 0 };
-			base::crt::snprintf(szBuf, _countof(szBuf), "master%d", sMasterInfo.nID);
+			base::function_util::snprintf(szBuf, _countof(szBuf), "master%d", sMasterInfo.nID);
 			CBaseApp::Inst()->getBaseConnectionMgr()->connect(sMasterInfo.szHost, sMasterInfo.nPort, "CBaseConnectionToMaster", szBuf, 10 * 1024, 10 * 1024, nullptr);;
 		}
 	}
@@ -383,7 +362,7 @@ namespace core
 			return;
 
 		uint32_t nID = 0;
-		base::crt::atoui(szContext.c_str() + std::string("master").size(), nID);
+		base::string_util::convert_to_value(szContext.c_str() + std::string("master").size(), nID);
 
 		auto iter = this->m_mapMasterInfo.find(nID);
 		DebugAst(iter != this->m_mapMasterInfo.end());

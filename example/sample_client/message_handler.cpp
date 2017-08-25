@@ -1,15 +1,14 @@
-#include "stdafx.h"
 #include "message_handler.h"
 #include "connection_to_gate.h"
 
 #include "libBaseCommon/debug_helper.h"
-#include "libBaseCommon/base_function.h"
+#include "libBaseCommon/function_util.h"
 
-#include "proto_src/gate_handshake_response.pb.h"
-#include "proto_src/update_name_request.pb.h"
-#include "proto_src/update_name_response.pb.h"
-#include "proto_src/player_login_response.pb.h"
-#include "proto_src/gate_handshake_request.pb.h"
+#include "msg_proto_src/gate_handshake_response.pb.h"
+#include "msg_proto_src/gate_handshake_request.pb.h"
+#include "msg_proto_src/c2s_update_name_request.pb.h"
+#include "msg_proto_src/c2s_update_name_response.pb.h"
+#include "msg_proto_src/player_login_response.pb.h"
 
 #include "libBaseCommon/token_parser.h"
 
@@ -78,7 +77,7 @@ void CMessageHandler::init(INetEventLoop* pNetEventLoop)
 	this->registerMessageHandler("player_login_response", std::bind(&CMessageHandler::login_response_handler, this, std::placeholders::_1, std::placeholders::_2));
 
 	this->registerMessageHandler("gate_handshake_response", std::bind(&CMessageHandler::handshake_response_handler, this, std::placeholders::_1, std::placeholders::_2));
-	this->registerMessageHandler("update_name_response", std::bind(&CMessageHandler::update_name_response_handler, this, std::placeholders::_1, std::placeholders::_2));
+	this->registerMessageHandler("c2s_update_name_response", std::bind(&CMessageHandler::update_name_response_handler, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 void CMessageHandler::dispatch(INetConnecterHandler* pConnection, const message_header* pData)
@@ -93,7 +92,7 @@ void CMessageHandler::dispatch(INetConnecterHandler* pConnection, const message_
 	google::protobuf::Message* pMessage = unserialize_protobuf_message_from_buf(szMessageName, pMessageData, pData->nMessageSize - sizeof(message_header));
 	if (nullptr == pMessage)
 	{
-		PrintWarning("unserialize_protobuf_message_from_buf error message_name: %s", szMessageName.c_str());
+		PrintWarning("unserialize_protobuf_message_from_buf error message_name: {}", szMessageName);
 		return;
 	}
 
@@ -114,7 +113,7 @@ void CMessageHandler::sendMessage(INetConnecterHandler* pConnection, const googl
 		return;
 
 	pHeader->nMessageSize = uint16_t(sizeof(message_header) + nDataSize);
-	pHeader->nMessageID = base::hash(pMessage->GetTypeName().c_str());
+	pHeader->nMessageID = base::function_util::hash(pMessage->GetTypeName().c_str());
 
 	pConnection->send(&this->m_szBuf[0], pHeader->nMessageSize, false);
 }
@@ -123,11 +122,11 @@ void CMessageHandler::registerMessageHandler(const std::string& szMessageName, c
 {
 	DebugAst(callback != nullptr);
 
-	uint32_t nMessageID = base::hash(szMessageName.c_str());
+	uint32_t nMessageID = base::function_util::hash(szMessageName.c_str());
 	auto iter = this->m_mapMessageHandler.find(nMessageID);
 	if (iter != this->m_mapMessageHandler.end())
 	{
-		PrintWarning("dup message name message_name: %s", szMessageName.c_str());
+		PrintWarning("dup message name message_name: {}", szMessageName);
 		return;
 	}
 
@@ -149,13 +148,15 @@ void CMessageHandler::login_response_handler(INetConnecterHandler* pConnectToLog
 	}
 
 	base::CTokenParser token;
-	token.parse(pResponse->gate_addr().c_str(), ':');
+	token.parse(pResponse->gate_addr().c_str(), ":");
 	uint32_t nPort = 0;
 	SNetAddr netAddr;
 	token.getStringElement(0, netAddr.szHost, _countof(netAddr.szHost));
 	token.getUint32Element(1, nPort);
 	netAddr.nPort = (uint16_t)nPort;
 	
+	PrintInfo("CMessageHandler::login_response_handler {}", pResponse->key());
+
 	this->m_pNetEventLoop->connect(netAddr, 1024, 1024, new CConnectToGate(pResponse->key()));
 }
 
@@ -164,18 +165,18 @@ void CMessageHandler::handshake_response_handler(INetConnecterHandler* pConnectT
 	const gate_handshake_response* pResponse = dynamic_cast<const gate_handshake_response*>(pMessage);
 	DebugAst(pResponse != nullptr);
 
-	update_name_request request_msg;
+	c2s_update_name_request request_msg;
 	request_msg.set_name("aaa");
 
-	PrintInfo("CMessageHandler::handshake_response_handler ok");
+	PrintInfo("CMessageHandler::handshake_response_handler {}", pResponse->player_id());
 
 	this->sendMessage(pConnectToGate, &request_msg);
 }
 
 void CMessageHandler::update_name_response_handler(INetConnecterHandler* pConnectToGate, const google::protobuf::Message* pMessage)
 {
-	const update_name_response* pResponse = dynamic_cast<const update_name_response*>(pMessage);
+	const c2s_update_name_response* pResponse = dynamic_cast<const c2s_update_name_response*>(pMessage);
 	DebugAst(pResponse != nullptr);
 
-	PrintInfo("update_name_response %s", pResponse->name().c_str());
+	PrintInfo("update_name_response {}", pResponse->name());
 }

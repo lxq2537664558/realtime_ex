@@ -50,12 +50,12 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>../../engine/inc;../../3rd/tinyxml2/include;../../3rd/protobuf/include;../;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../engine/inc;../../3rd/tinyxml2/include;../../3rd/protobuf/include;../../proto;</AdditionalIncludeDirectories>
       <StringPooling>true</StringPooling>
       <DisableSpecificWarnings>4251</DisableSpecificWarnings>
     </ClCompile>
@@ -91,7 +91,16 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\proto_src\gate_online_count_notify.pb.h" />
+    <ClInclude Include="..\..\proto\msg_proto_src\d2g_player_token_notify.pb.h" />
+    <ClInclude Include="..\..\proto\msg_proto_src\g2d_addr_notify.pb.h" />
+    <ClInclude Include="..\..\proto\msg_proto_src\g2d_online_count_notify.pb.h" />
+    <ClInclude Include="..\..\proto\msg_proto_src\g2s_player_enter_request.pb.h" />
+    <ClInclude Include="..\..\proto\msg_proto_src\g2s_player_enter_response.pb.h" />
+    <ClInclude Include="..\..\proto\msg_proto_src\g2s_player_heartbeat_notify.pb.h" />
+    <ClInclude Include="..\..\proto\msg_proto_src\g2s_player_leave_notify.pb.h" />
+    <ClInclude Include="..\..\proto\msg_proto_src\gate_handshake_request.pb.h" />
+    <ClInclude Include="..\..\proto\msg_proto_src\gate_handshake_response.pb.h" />
+    <ClInclude Include="..\..\proto\msg_proto_src\s2g_kick_player_notify.pb.h" />
     <ClInclude Include="gate_client_message_handler.h" />
     <ClInclude Include="gate_service_message_handler.h" />
     <ClInclude Include="gate_connection_from_client.h" />
@@ -100,21 +109,22 @@
     <ClInclude Include="gate_client_session.h" />
     <ClInclude Include="gate_client_session_mgr.h" />
     <ClInclude Include="gate_client_connection_factory.h" />
-    <ClInclude Include="..\proto_src\gate_addr_notify.pb.h" />
-    <ClInclude Include="..\proto_src\gate_handshake_request.pb.h" />
-    <ClInclude Include="..\proto_src\gate_handshake_response.pb.h" />
-    <ClInclude Include="..\proto_src\player_enter_gas_request.pb.h" />
-    <ClInclude Include="..\proto_src\player_enter_gas_response.pb.h" />
-    <ClInclude Include="..\proto_src\player_leave_gas_notify.pb.h" />
-    <ClInclude Include="..\proto_src\player_token_notify.pb.h" />
-    <ClInclude Include="stdafx.h" />
-    <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\proto_src\gate_online_count_notify.pb.cc">
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4800;4267;</DisableSpecificWarnings>
+    <ClCompile Include="..\..\proto\msg_proto_src\d2g_player_token_notify.pb.cc" />
+    <ClCompile Include="..\..\proto\msg_proto_src\g2d_addr_notify.pb.cc" />
+    <ClCompile Include="..\..\proto\msg_proto_src\g2d_online_count_notify.pb.cc" />
+    <ClCompile Include="..\..\proto\msg_proto_src\g2s_player_enter_request.pb.cc" />
+    <ClCompile Include="..\..\proto\msg_proto_src\g2s_player_enter_response.pb.cc" />
+    <ClCompile Include="..\..\proto\msg_proto_src\g2s_player_heartbeat_notify.pb.cc" />
+    <ClCompile Include="..\..\proto\msg_proto_src\g2s_player_leave_notify.pb.cc" />
+    <ClCompile Include="..\..\proto\msg_proto_src\gate_handshake_request.pb.cc">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="..\..\proto\msg_proto_src\gate_handshake_response.pb.cc">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\proto\msg_proto_src\s2g_kick_player_notify.pb.cc" />
     <ClCompile Include="gate_client_message_handler.cpp" />
     <ClCompile Include="gate_service_message_handler.cpp" />
     <ClCompile Include="gate_connection_from_client.cpp" />
@@ -123,40 +133,6 @@
     <ClCompile Include="gate_client_session.cpp" />
     <ClCompile Include="gate_client_session_mgr.cpp" />
     <ClCompile Include="gate_client_connection_factory.cpp" />
-    <ClCompile Include="..\proto_src\gate_addr_notify.pb.cc">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4800;4267;</DisableSpecificWarnings>
-    </ClCompile>
-    <ClCompile Include="..\proto_src\gate_handshake_request.pb.cc">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4800;4267;</DisableSpecificWarnings>
-    </ClCompile>
-    <ClCompile Include="..\proto_src\gate_handshake_response.pb.cc">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4800;4267;</DisableSpecificWarnings>
-    </ClCompile>
-    <ClCompile Include="..\proto_src\player_enter_gas_request.pb.cc">
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4800;4267;</DisableSpecificWarnings>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="..\proto_src\player_enter_gas_response.pb.cc">
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4800;4267;</DisableSpecificWarnings>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="..\proto_src\player_leave_gas_notify.pb.cc">
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4800;4267;</DisableSpecificWarnings>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="..\proto_src\player_token_notify.pb.cc">
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4800;4267;</DisableSpecificWarnings>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="stdafx.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\engine\src\libCoreCommon\libCoreCommon.vcxproj">

@@ -32,8 +32,8 @@ namespace base
 		const char*			getString(int32_t nRow, int32_t nCol, const char* szDefault) const;
 		int32_t				getInteger(int32_t nRow, const char* szCol, int32_t nDefault) const;
 		int32_t				getInteger(int32_t nRow, int32_t nCol, int32_t nDefault) const;
-		float				getFloat(int32_t nRow, const char* szCol, float fDefault) const;
-		float				getFloat(int32_t nRow, int32_t nColumn, float fDefault) const;
+		float				getFloat(int32_t nRow, const char* szCol, float nDefault) const;
+		float				getFloat(int32_t nRow, int32_t nColumn, float nDefault) const;
 		void				clear();
 		void				release();
 

@@ -1,5 +1,6 @@
 #pragma once
 #include "base_common.h"
+#include "string_util.h"
 
 namespace base
 {
@@ -13,29 +14,29 @@ namespace base
 	__BASE_COMMON_API__	bool	isDebugLog();
 }
 
-#ifdef _WIN32
+template<class ...Args>
+inline void	PrintDebug(const char* szFormat, const Args&... args)
+{
+	if (!base::isDebugLog())
+		return;
 
-#define PrintDebug(szFormat, ...)	\
-	do\
-	{\
-			if (base::isDebugLog())\
-			base::saveLog("DEBUG", true, szFormat, __VA_ARGS__);\
-	} while(0)
+	std::string szData = base::string_util::format(szFormat, args...);
 
+	base::saveLog("DEBUG", true, "%s", szData.c_str());
+}
 
-#define PrintInfo(szFormat, ...)		base::saveLog("INFO", true, szFormat, __VA_ARGS__)
-#define PrintWarning(szFormat, ...)		base::saveLog("WARN", true, szFormat, __VA_ARGS__)
+template<class ...Args>
+inline void	PrintInfo(const char* szFormat, const Args&... args)
+{
+	std::string szData = base::string_util::format(szFormat, args...);
 
-#else
+	base::saveLog("INFO", true, "%s", szData.c_str());
+}
 
-#define PrintDebug(szFormat, args...)	\
-	do\
-	{\
-			if (base::isDebugLog())\
-			base::saveLog("DEBUG", true, szFormat, ##args);\
-	} while(0)
+template<class ...Args>
+inline void	PrintWarning(const char* szFormat, const Args&... args)
+{
+	std::string szData = base::string_util::format(szFormat, args...);
 
-#define PrintInfo(szFormat, args...)	base::saveLog("INFO", true, szFormat, ##args)
-#define PrintWarning(szFormat, args...)	base::saveLog("WARN", true, szFormat, ##args)
-
-#endif
+	base::saveLog("WARN", true, "%s", szData.c_str());
+}

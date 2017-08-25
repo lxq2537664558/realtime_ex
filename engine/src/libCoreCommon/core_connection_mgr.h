@@ -26,7 +26,7 @@ namespace core
 		~CCoreConnectionMgr();
 
 		bool				init(uint32_t nMaxConnectionCount);
-		bool				connect(const std::string& szHost, uint16_t nPort, const std::string& szType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser, uint8_t nCoreConnectionType);
+		bool				connect(const std::string& szHost, uint16_t nPort, const std::string& szType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser);
 		bool				listen(const std::string& szHost, uint16_t nPort, bool bReusePort, const std::string& szType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser, uint8_t nCoreConnectionType);
 		void				update(uint32_t nTime);
 
@@ -59,7 +59,6 @@ namespace core
 		{
 			std::string			szContext;
 			std::string			szType;
-			uint8_t				nCoreConnectionType;
 			CCoreConnectionMgr*	pCoreConnectionMgr;
 			MessageParser		messageParser;
 

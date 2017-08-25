@@ -43,7 +43,7 @@ bool CTestActorService2::onInit()
 	this->m_pMyActorFactory = new CMyActorFactory();
 
 	char szBuf[256] = {};
-	base::crt::snprintf(szBuf, _countof(szBuf), "%d", this->getServiceID());
+	base::function_util::snprintf(szBuf, _countof(szBuf), "%d", this->getServiceID());
 
 	CActorBase* pActorBase = this->createActor("CTestActor2", 2, szBuf);
 	DebugAstEx(pActorBase != nullptr, false);

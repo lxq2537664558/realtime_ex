@@ -1,0 +1,5 @@
+syntax = "proto2";
+
+message g2d_addr_notify {
+	required string addr = 1;
+}

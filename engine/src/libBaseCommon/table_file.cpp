@@ -1,7 +1,8 @@
 #include "stdafx.h"
 #include "table_file.h"
 #include "debug_helper.h"
-#include "base_function.h"
+#include "function_util.h"
+#include "string_util.h"
 
 #include <cstdlib>
 #include <fstream>
@@ -202,7 +203,9 @@ namespace base
 		if (nullptr == szValue)
 			return nDefault;
 
-		return atoi(szValue);
+		int32_t nValue = nDefault;
+		base::string_util::convert_to_value(szValue, nValue);
+		return nValue;
 	}
 
 	int32_t CTableFile::getInteger(int32_t nRow, int32_t nCol, int32_t nDefault) const
@@ -211,27 +214,33 @@ namespace base
 		if (nullptr == szValue)
 			return nDefault;
 
-		return atoi(szValue);
+		int32_t nValue = nDefault;
+		base::string_util::convert_to_value(szValue, nValue);
+		return nValue;
 	}
 
-	float CTableFile::getFloat(int32_t nRow, const char* szCol, float fDefault) const
+	float CTableFile::getFloat(int32_t nRow, const char* szCol, float nDefault) const
 	{
 		int32_t nCol = this->findCol(szCol);
 
 		const char* szValue = this->getValue(nRow, nCol);
 		if (nullptr == szValue)
-			return fDefault;
+			return nDefault;
 
-		return (float)atof(szValue);
+		float nValue = nDefault;
+		base::string_util::convert_to_value(szValue, nValue);
+		return nValue;
 	}
 
-	float CTableFile::getFloat(int32_t nRow, int32_t nCol, float fDefault) const
+	float CTableFile::getFloat(int32_t nRow, int32_t nCol, float nDefault) const
 	{
 		const char* szValue = this->getValue(nRow, nCol);
 		if (nullptr == szValue)
-			return fDefault;
+			return nDefault;
 
-		return (float)atof(szValue);
+		float nValue = nDefault;
+		base::string_util::convert_to_value(szValue, nValue);
+		return nValue;
 	}
 
 	const char* CTableFile::getValue(int32_t nRow, int32_t nCol) const

@@ -1,16 +1,19 @@
 #pragma once
 #include "base_common.h"
 
+#include <string>
+
 namespace base
 {
 	enum EVariantValueType
 	{
 		eVVT_None,
 		eVVT_Int32,
+		eVVT_UInt32,
 		eVVT_Int64,
+		eVVT_UInt64,
 		eVVT_Double,
 		eVVT_String,
-		eVVT_Blob,
 	};
 
 	class __BASE_COMMON_API__ CVariant
@@ -27,7 +30,7 @@ namespace base
 		CVariant(uint64_t value);
 		CVariant(double value);
 		CVariant(const char* value);
-		CVariant(char* value, size_t len);
+		CVariant(const char* value, uint32_t nLen);
 
 		CVariant(const CVariant& rhs);
 
@@ -45,7 +48,7 @@ namespace base
 		operator uint64_t() const;
 		operator double() const;
 		operator const char*() const;
-
+		
 		CVariant& operator = (const CVariant& rhs);
 		CVariant& operator = (CVariant&& rhs);
 		CVariant& operator = (int8_t value);
@@ -57,28 +60,26 @@ namespace base
 		CVariant& operator = (int64_t value);
 		CVariant& operator = (uint64_t value);
 		CVariant& operator = (double value);
-		CVariant& operator = (const char* value);
-
+		
 		size_t				getSize() const;
-		const char*			getBlob() const;
 		EVariantValueType	getType(void) const;
-
+		bool				isVaild() const;
+		
 	private:
-		void				setString(const char* szStr);
+		void				setString(const char* szStr, uint32_t nLen);
 		void				clear();
 
 	private:
 		EVariantValueType m_eType;
 		union
 		{
-			int64_t	m_nValue;
-			double	m_fValue;
-			char*	m_szStr;
 			struct
 			{
-				char*	m_pBlob;
-				size_t	m_nLen;
-			};
+				char*		szStr;
+				uint32_t	nLen;
+			} m_sText;
+			int64_t	m_nValue;
+			double	m_fValue;
 		};
 	};
 }

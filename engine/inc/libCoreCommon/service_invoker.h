@@ -35,12 +35,19 @@ namespace core
 		@brief: 通过callback的方式进行远程调用，调用的时候请用返回消息类型来实例化模板函数
 		*/
 		template<class T>
-		inline void			async_call(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, const std::function<void(const T*, uint32_t)>& callback, CServiceInvokeHolder* pServiceInvokeHolder = nullptr);
+		inline void			async_invoke(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, const std::function<void(const T*, uint32_t)>& callback, CServiceInvokeHolder* pServiceInvokeHolder = nullptr);
 		/**
 		@brief: 通过future的方式进行远程调用
 		*/
 		template<class T>
-		inline void			async_call(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, CFuture<T>& sFuture, CServiceInvokeHolder* pServiceInvokeHolder = nullptr);
+		inline void			async_invoke(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, CFuture<T>& sFuture, CServiceInvokeHolder* pServiceInvokeHolder = nullptr);
+		/**
+		@brief: 同步的调用远程的接口
+			通过pResponseMessage来拿到响应结果，这里用shared_ptr的原因是为了自动释放pResponseMessage
+			另外 同步调用只支持调用其他服务，不支持调用其他actor
+		*/
+		template<class T>
+		inline uint32_t		sync_invoke(uint32_t nServiceID, const google::protobuf::Message* pMessage, std::shared_ptr<T>& pResponseMessage, CServiceInvokeHolder* pServiceInvokeHolder = nullptr);
 		//==================================指定服务之间调用=======================================//
 
 
@@ -49,17 +56,24 @@ namespace core
 		/**
 		@brief: 单向的给目标（服务，actor）发消息
 		*/
-		bool				send(const std::string& szServiceType, const std::string& szServiceSelectorType, uint64_t nServiceSelectorContext, google::protobuf::Message* pMessage);
+		bool				send(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, google::protobuf::Message* pMessage);
 		/**
 		@brief: 通过callback的方式进行远程调用，调用的时候请用返回消息类型来实例化模板函数
 		*/
 		template<class T>
-		inline void			async_call(const std::string& szServiceType, const std::string& szServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, const std::function<void(const T*, uint32_t)>& callback, CServiceInvokeHolder* pServiceInvokeHolder = nullptr);
+		inline void			async_invoke(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, const std::function<void(const T*, uint32_t)>& callback, CServiceInvokeHolder* pServiceInvokeHolder = nullptr);
 		/**
 		@brief: 通过future的方式进行远程调用
 		*/
 		template<class T>
-		inline void			async_call(const std::string& szServiceType, const std::string& szServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, CFuture<T>& sFuture, CServiceInvokeHolder* pServiceInvokeHolder = nullptr);
+		inline void			async_invoke(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, CFuture<T>& sFuture, CServiceInvokeHolder* pServiceInvokeHolder = nullptr);
+		/**
+		@brief: 同步的调用远程的接口
+		通过pResponseMessage来拿到响应结果，这里用shared_ptr的原因是为了自动释放pResponseMessage
+		另外 同步调用只支持调用其他服务，不支持调用其他actor
+		*/
+		template<class T>
+		inline uint32_t		sync_invoke(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, std::shared_ptr<T>& pResponseMessage, CServiceInvokeHolder* pServiceInvokeHolder = nullptr);
 		//==================================指定服务类型之间调用=======================================//
 
 		
@@ -70,11 +84,12 @@ namespace core
 		/**
 		@brief: 单向的给目标（服务，actor）发消息，消息是原始消息，框架不负责序列化
 		*/
-		bool				gate_forward(uint64_t nSessionID, uint64_t nSocketID, uint32_t nToServiceID, uint64_t nToActorID, const message_header* pData);
+		bool				gate_forward(uint64_t nSessionID, uint32_t nToServiceID, uint64_t nToActorID, const message_header* pData);
+		
 		/**
 		@brief: 响应rpc请求
 		*/
-		void				response(const SSessionInfo& sSessionInfo, const google::protobuf::Message* pMessage);
+		void				response(const SSessionInfo& sSessionInfo, const google::protobuf::Message* pMessage, uint32_t nErrorCode = eRRT_OK);
 
 
 		//==================================发消息给客户端=======================================//
@@ -90,8 +105,8 @@ namespace core
 
 
 	private:
-		bool				invoke(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, const std::function<void(std::shared_ptr<google::protobuf::Message>, uint32_t)>& callback, CServiceInvokeHolder* pServiceInvokeHolder);
-
+		bool				invoke(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, uint64_t nCoroutineID, const std::function<void(std::shared_ptr<google::protobuf::Message>, uint32_t)>& callback, CServiceInvokeHolder* pServiceInvokeHolder);
+	
 	private:
 		CServiceBase*	m_pServiceBase;
 	};

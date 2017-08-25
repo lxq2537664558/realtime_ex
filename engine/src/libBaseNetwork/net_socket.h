@@ -55,6 +55,9 @@ namespace base
 		uint32_t			getSendBufferSize() const;
 		uint32_t			getRecvBufferSize() const;
 
+		// windows下防止select空转做的处理,这个是指write函数返回的EAGAIN错误了，写不进去了
+		virtual bool		isDisableWrite() const { return false; }
+
 	protected:
 		void				close();
 

@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "gate_client_connection_factory.h"
 #include "gate_connection_from_client.h"
 

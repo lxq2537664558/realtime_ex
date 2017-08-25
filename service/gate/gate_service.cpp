@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "gate_service.h"
 #include "gate_connection_from_client.h"
 
@@ -8,8 +7,10 @@
 
 #include "tinyxml2/tinyxml2.h"
 
-#include "proto_src/gate_addr_notify.pb.h"
-#include "proto_src/gate_online_count_notify.pb.h"
+#include "msg_proto_src/g2d_addr_notify.pb.h"
+#include "msg_proto_src/g2d_online_count_notify.pb.h"
+
+//#define _WEB_SOCKET_
 
 using namespace core;
 
@@ -49,13 +50,13 @@ bool CGateService::onInit()
 	
 	this->setServiceConnectCallback(std::bind(&CGateService::onServiceConnect, this, std::placeholders::_1, std::placeholders::_2));
 
-	this->m_tickerNotifyGateOnlineCount.setCallback(std::bind(&CGateService::onNotifyGateOnlineCount, this, std::placeholders::_1));
-	this->registerTicker(&this->m_tickerNotifyGateOnlineCount, 5000, 5000, 0);
+	this->m_tickerNotifyOnlineCount.setCallback(std::bind(&CGateService::onNotifyOnlineCount, this, std::placeholders::_1));
+	this->registerTicker(&this->m_tickerNotifyOnlineCount, 5000, 5000, 0);
 
 	tinyxml2::XMLDocument* pConfigXML = new tinyxml2::XMLDocument();
 	if (pConfigXML->LoadFile(this->getConfigFileName().c_str()) != tinyxml2::XML_SUCCESS)
 	{
-		PrintWarning("load etc config error");
+		PrintWarning("load {} config error", this->getConfigFileName());
 		return false;
 	}
 	tinyxml2::XMLElement* pRootXML = pConfigXML->RootElement();
@@ -76,14 +77,18 @@ bool CGateService::onInit()
 	const std::string szReportHost = pListenClientAddrXML->Attribute("report_host");
 
 	char szAddr[256] = { 0 };
-	base::crt::snprintf(szAddr, _countof(szAddr), "%s:%d", szReportHost.c_str(), nPort);
+	base::function_util::snprintf(szAddr, _countof(szAddr), "%s:%d", szReportHost.c_str(), nPort);
 	this->m_szAddr = szAddr;
 
 	char szBuf[256] = { 0 };
-	base::crt::snprintf(szBuf, _countof(szBuf), "%d", this->getServiceID());
+	base::function_util::snprintf(szBuf, _countof(szBuf), "%d", this->getServiceID());
 
 	// 启动客户端连接
+#ifdef _WEB_SOCKET_
 	CBaseApp::Inst()->getBaseConnectionMgr()->listen(szHost, nPort, true, "CGateConnectionFromClient", szBuf, nSendBufSize, nRecvBufSize, default_client_message_parser, eCCT_Websocket);
+#else
+	CBaseApp::Inst()->getBaseConnectionMgr()->listen(szHost, nPort, true, "CGateConnectionFromClient", szBuf, nSendBufSize, nRecvBufSize, default_client_message_parser, eCCT_Normal);
+#endif
 
 	SAFE_DELETE(pConfigXML);
 
@@ -131,26 +136,30 @@ void CGateService::onServiceConnect(const std::string& szType, uint32_t nService
 {
 	if (szType == "dispatch")
 	{
-		gate_addr_notify msg1;
+		g2d_addr_notify msg1;
 		msg1.set_addr(this->m_szAddr);
 		this->getServiceInvoker()->send(eMTT_Service, nServiceID, &msg1);
 
-		gate_online_count_notify msg2;
+		g2d_online_count_notify msg2;
 		msg2.set_count(this->m_pGateClientSessionMgr->getSessionCount());
 		this->getServiceInvoker()->send(eMTT_Service, nServiceID, &msg2);
 	}
 }
 
-void CGateService::onNotifyGateOnlineCount(uint64_t nContext)
+void CGateService::onNotifyOnlineCount(uint64_t nContext)
 {
-	gate_online_count_notify msg;
+	g2d_online_count_notify msg;
 	msg.set_count(this->m_pGateClientSessionMgr->getSessionCount());
 	this->getServiceInvoker()->broadcast("dispatch", &msg);
 }
 
 core::CProtobufFactory* CGateService::getForwardProtobufFactory() const
 {
+#ifdef _WEB_SOCKET_
 	return this->m_pJsonProtobufFactory;
+#else
+	return this->m_pNormalProtobufFactory;
+#endif
 }
 
 extern "C" 

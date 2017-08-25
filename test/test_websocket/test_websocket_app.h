@@ -1,8 +1,8 @@
 #pragma once
 
-
 #include "client_connection_factory.h"
-#include "libCoreCommon\base_app.h"
+
+#include "libCoreCommon/base_app.h"
 
 class CTestWebsocketApp :
 	public core::CBaseApp
@@ -11,7 +11,7 @@ public:
 	CTestWebsocketApp();
 	virtual ~CTestWebsocketApp();
 
-	static CTestWebsocketApp&
+	static CTestWebsocketApp*
 					Inst();
 
 private:

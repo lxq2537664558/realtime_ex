@@ -10,8 +10,12 @@ include_directories(../../3rd/protobuf/include)
 # …Ë÷√ ‰≥ˆƒø¬º
 SET(LIBRARY_OUTPUT_PATH ${BIN_OUTPUT_PATH})
 
+set(LINK_LIBS ${PROJECT_SOURCE_DIR}/3rd/protobuf/lib/linux/libprotobuf.a ${BIN_OUTPUT_PATH}/libBaseCommon.so ${BIN_OUTPUT_PATH}/libBaseNetwork.so ${BIN_OUTPUT_PATH}/libCoreCommon.so)
+
 # master.so
 add_library(master SHARED ${DIR_SRCS})
+
+target_link_libraries(master ${LINK_LIBS})
 
 add_custom_command(
 	TARGET master

@@ -2,7 +2,7 @@
 #include "libCoreCommon/actor_message_registry.h"
 #include "libCoreCommon/service_base.h"
 
-#include "proto_src/update_name_request.pb.h"
+#include "msg_proto_src/c2s_update_name_request.pb.h"
 
 using namespace core;
 
@@ -16,5 +16,5 @@ public:
 	~CPlayerMessageHandler();
 
 private:
-	void update_name_handler(CActorBase* pActorBase, SClientSessionInfo sClientSessionInfo, const update_name_request* pRequest);
+	void c2s_update_name_request_handler(CActorBase* pActorBase, SClientSessionInfo sClientSessionInfo, const c2s_update_name_request* pRequest);
 };

@@ -6,25 +6,25 @@
 
 #include "libBaseCommon/sha1.h"
 #include "libBaseCommon/base64.h"
-#include "libBaseCommon/base_function.h"
+#include "libBaseCommon/function_util.h"
 
 #include <algorithm>
 
 namespace core
 {
-	const char* const kWebSocketMagicString = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
-	const char* const kSecWebSocketKeyHeader = "Sec-WebSocket-Key";
+	const char* const kWebSocketMagic = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 	const char* const kSecWebSocketVersionHeader = "Sec-WebSocket-Version";
+	const char* const kSecWebSocketKeyHeader = "Sec-WebSocket-Key";
+	const char* const kSecWebSocketAcceptHeader = "Sec-WebSocket-Accept";
 	const char* const kUpgradeHeader = "Upgrade";
 	const char* const kConnectionHeader = "Connection";
-	const char* const kSecWebSocketAcceptHeader = "Sec-WebSocket-Accept";
 
 	const uint32_t kPayloadSizeBasic = 125;
 	const uint32_t kPayloadSizeExtended = 0xFFFF;
 
 	CCoreWebsocketConnection::CCoreWebsocketConnection()
 		: m_pHttpRequestParser(new CHttpRequestParser())
-		, m_bHandsharked(false)
+		, m_eWebSocketState(eWSS_None)
 	{
 		this->enableHeartbeat(false);
 	}
@@ -36,8 +36,13 @@ namespace core
 
 	uint32_t CCoreWebsocketConnection::onRecv(const char* pData, uint32_t nDataSize)
 	{
-		if (!this->m_bHandsharked)
+		if (this->m_eWebSocketState == eWSS_Connectting)
 		{
+			if (this->getMode() != base::eNCM_Passive)
+			{
+				this->m_pNetConnecter->shutdown(true, "websocket not support active mode");
+				return nDataSize;
+			}
 			if (!this->m_pHttpRequestParser->parseRequest(pData, nDataSize))
 			{
 				static char szBuf[] = "HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n400 Bad Request\n";
@@ -60,9 +65,9 @@ namespace core
 					return nDataSize;
 				}
 
-				PrintInfo("websocket Handsharked remote_addr: %s:%d local_addr: %s:%d", this->getRemoteAddr().szHost, this->getRemoteAddr().nPort, this->getLocalAddr().szHost, this->getLocalAddr().nPort);
+				PrintInfo("websocket Handsharked remote_addr: {} {} local_addr: {} {}", this->getRemoteAddr().szHost, this->getRemoteAddr().nPort, this->getLocalAddr().szHost, this->getLocalAddr().nPort);
 				
-				this->m_bHandsharked = true;
+				this->m_eWebSocketState = eWSS_Connected;
 				this->m_nState = eCCS_Connectting;
 
 				SMCT_NOTIFY_SOCKET_CONNECT* pContext = new SMCT_NOTIFY_SOCKET_CONNECT();
@@ -83,11 +88,11 @@ namespace core
 		else
 		{
 			uint32_t nRecvSize = 0;
+			std::vector<char>& vecBuf = CCoreApp::Inst()->getWebsocketBuf();
 			while (nRecvSize < nDataSize)
 			{
-				std::vector<char>& vecBuf = CCoreApp::Inst()->getWebsocketBuf();
 				EWebsocketFrameType eType;
-				int32_t nRet = this->decodeFrame(reinterpret_cast<const uint8_t*>(pData + nRecvSize), nDataSize - nRecvSize, eType, vecBuf);
+				int32_t nRet = this->unserializeFrame(reinterpret_cast<const uint8_t*>(pData + nRecvSize), nDataSize - nRecvSize, eType, vecBuf);
 				if (nRet < 0)
 				{
 					this->m_pNetConnecter->shutdown(true, "frame error");
@@ -97,7 +102,18 @@ namespace core
 				nRecvSize += nRet;
 				if (eType == eWFT_CLOSE_FRAME)
 				{
-					this->m_pNetConnecter->shutdown(false, "close frame");
+					// 收到关闭包，回一个关闭包
+					this->sendFrame(eWO_OPCODE_CLOSE, nullptr, 0);
+
+					this->m_eWebSocketState = eWSS_Disconnectting;
+
+					return nRecvSize;
+				}
+				else if (eType == eWFT_PONG_FRAME)
+				{
+					if (this->m_eWebSocketState != eWSS_Connected)
+						this->sendFrame(eWO_OPCODE_PONG, nullptr, 0);
+
 					return nRecvSize;
 				}
 
@@ -134,7 +150,7 @@ namespace core
 			return false;
 		
 		std::string szServerKey = szSecWebSocketKey;
-		szServerKey += kWebSocketMagicString;
+		szServerKey += kWebSocketMagic;
 
 		base::CSHA1 sha1;
 		sha1.write(reinterpret_cast<const uint8_t*>(szServerKey.c_str()), (uint32_t)szServerKey.size());
@@ -144,11 +160,11 @@ namespace core
 
 		for (uint32_t i = 0; i < _countof(zMessageDigest); i++)
 		{
-			zMessageDigest[i] = base::hton32(zMessageDigest[i]);
+			zMessageDigest[i] = base::function_util::hton32(zMessageDigest[i]);
 		}
 
 		char szBuf[256] = { 0 };
-		if (base::base64_encode(reinterpret_cast<const char*>(zMessageDigest), 20, szBuf, _countof(szBuf)) < 0)
+		if (base::base64::encode(reinterpret_cast<const char*>(zMessageDigest), 20, szBuf, _countof(szBuf)) < 0)
 			return false;
 
 		szServerKey = szBuf;
@@ -174,34 +190,45 @@ namespace core
 
 	void CCoreWebsocketConnection::onConnect()
 	{
+		this->m_eWebSocketState = eWSS_Connectting;
+
 		if (this->getMode() != base::eNCM_Initiative)
 			return;
-
-		
 	}
 
 	void CCoreWebsocketConnection::send(uint8_t nMessageType, const void* pData, uint16_t nSize)
 	{
+		this->sendFrame(eWO_OPCODE_BINARY, pData, nSize);
+	}
+
+	void CCoreWebsocketConnection::sendFrame(EWebsocketOpcode eType, const void* pData, uint16_t nSize)
+	{
 		if (this->m_pNetConnecter == nullptr)
+			return;
+
+		if (this->m_eWebSocketState != eWSS_Connected)
 			return;
 
 		SWebsocketHeader sWebsocketHeader;
 		sWebsocketHeader.bFin = true;
 		sWebsocketHeader.bMasked = false;
-		sWebsocketHeader.nOpcode = eWO_OPCODE_TEXT;
+		sWebsocketHeader.nOpcode = (uint8_t)eType;
 		sWebsocketHeader.nPayloadLength = nSize;
 
-		int32_t nDataSize = this->encodeFrame(sWebsocketHeader, reinterpret_cast<const char*>(pData), nSize, CCoreApp::Inst()->getWebsocketBuf());
+		std::vector<char>& vecBuf = CCoreApp::Inst()->getWebsocketBuf();
+		vecBuf.resize(UINT16_MAX);
+		int32_t nDataSize = this->serializeFrame(sWebsocketHeader, reinterpret_cast<const char*>(pData), vecBuf);
 		if (nDataSize <= 0)
 		{
-			PrintWarning("CWebsocketCoreConnection::send error big data");
+			PrintWarning("CWebsocketCoreConnection::sendFrame error");
+			this->shutdown(true, "serializeFrame error");
 			return;
 		}
 
-		this->m_pNetConnecter->send(&CCoreApp::Inst()->getWebsocketBuf()[0], nDataSize, false);
+		this->m_pNetConnecter->send(&vecBuf[0], nDataSize, false);
 	}
 
-	int32_t CCoreWebsocketConnection::decodeFrame(const uint8_t* pData, uint32_t nDataSize, EWebsocketFrameType& eType, std::vector<char>& vecBuf)
+	int32_t CCoreWebsocketConnection::unserializeFrame(const uint8_t* pData, uint32_t nDataSize, EWebsocketFrameType& eType, std::vector<char>& vecBuf)
 	{
 		vecBuf.clear();
 
@@ -243,7 +270,10 @@ namespace core
 		}
 
 		if (sWebsocketHeader.nPayloadLength > vecBuf.capacity())
+		{
+			// 包太大了，这里不支持，直接错误了
 			return -1;
+		}
 
 		if (sWebsocketHeader.bMasked && sWebsocketHeader.nPayloadLength > 0)
 		{
@@ -309,7 +339,7 @@ namespace core
 		return -1;
 	}
 
-	int32_t CCoreWebsocketConnection::encodeFrame(const SWebsocketHeader& sWebsocketHeader, const char* pData, uint32_t nDataSize, std::vector<char>& vecBuf)
+	int32_t CCoreWebsocketConnection::serializeFrame(const SWebsocketHeader& sWebsocketHeader, const char* pData, std::vector<char>& vecBuf)
 	{
 		if (sWebsocketHeader.nPayloadLength + 10 >= vecBuf.capacity())
 			return -1;
@@ -329,41 +359,29 @@ namespace core
 		if (sWebsocketHeader.bMasked)
 			nValue |= 0x80;
 
-		if (nDataSize <= kPayloadSizeBasic)  // 125
+		if (sWebsocketHeader.nPayloadLength <= kPayloadSizeBasic)  // 125
 		{
-			nValue |= (uint8_t)nDataSize;
+			nValue |= (uint8_t)sWebsocketHeader.nPayloadLength;
 			vecBuf[nPos++] = nValue;
 		}
-		else if (nDataSize <= kPayloadSizeExtended)   // 65535
+		else if (sWebsocketHeader.nPayloadLength <= kPayloadSizeExtended)   // 65535
 		{
 			nValue |= 126;
 			vecBuf[nPos++] = nValue; //16 bit length
-			vecBuf[nPos++] = (nDataSize >> 8) & 0xFF; // rightmost first
-			vecBuf[nPos++] = nDataSize & 0xFF;
+			vecBuf[nPos++] = (sWebsocketHeader.nPayloadLength >> 8) & 0xFF; // rightmost first
+			vecBuf[nPos++] = sWebsocketHeader.nPayloadLength & 0xFF;
 		}
 		else  // >2^16-1
 		{
-			nValue |= 127;
-			vecBuf[nPos++] = nValue; //64 bit length
-
-			// write 8 bytes length (significant first)
-			// since msg_length is int it can be no longer than 4 bytes = 2^32-1
-			// padd zeroes for the first 4 bytes
-			for (uint32_t i = 3; i >= 0; i--)
-			{
-				vecBuf[nPos++] = 0;
-			}
-			// write the actual 32bit msg_length in the next 4 bytes
-			for (uint32_t i = 3; i >= 0; i--)
-			{
-				vecBuf[nPos++] = ((nDataSize >> 8 * i) & 0xFF);
-			}
+			// 包太大，不支持
+			return -1;
 		}
+
 		if (sWebsocketHeader.bMasked)
 		{
 			memcpy(&vecBuf[nPos], sWebsocketHeader.zMaskingKey, _countof(sWebsocketHeader.zMaskingKey));
 			nPos += _countof(sWebsocketHeader.zMaskingKey);
-			memcpy(&vecBuf[nPos], pData, nDataSize);
+			memcpy(&vecBuf[nPos], pData, sWebsocketHeader.nPayloadLength);
 			for (uint64_t i = 0; i < sWebsocketHeader.nPayloadLength; ++i)
 			{
 				vecBuf[i] = vecBuf[i] ^ sWebsocketHeader.zMaskingKey[i % 4];
@@ -371,9 +389,9 @@ namespace core
 		}
 		else
 		{
-			memcpy(&vecBuf[nPos], pData, nDataSize);
+			memcpy(&vecBuf[nPos], pData, sWebsocketHeader.nPayloadLength);
 		}
 
-		return (nDataSize + nPos);
+		return (int32_t)(sWebsocketHeader.nPayloadLength + nPos);
 	}
 }

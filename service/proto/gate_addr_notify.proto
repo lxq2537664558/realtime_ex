@@ -1,5 +1,0 @@
-syntax = "proto3";
-
-message gate_addr_notify {
-	string addr = 1;
-}

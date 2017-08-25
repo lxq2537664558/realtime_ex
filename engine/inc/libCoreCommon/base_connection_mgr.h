@@ -23,7 +23,7 @@ namespace core
 		/**
 		@brief: 主动发起一个连接（异步）
 		*/
-		void							connect(const std::string& szHost, uint16_t nPort, const std::string& szType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, const MessageParser& messageParser, ECoreConnectionType eCoreConnectionType = eCCT_Normal);
+		void							connect(const std::string& szHost, uint16_t nPort, const std::string& szType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, const MessageParser& messageParser);
 		/**
 		@brief: 直接连接目标节点
 		*/

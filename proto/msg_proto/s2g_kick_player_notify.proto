@@ -1,0 +1,5 @@
+syntax = "proto2";
+
+message s2g_kick_player_notify {
+	required uint64 player_id = 1;
+}

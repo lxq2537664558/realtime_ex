@@ -89,21 +89,21 @@ namespace core
 
 		if (this->m_pCoreService->getActorScheduler()->getCoreActor(nActorID) != nullptr)
 		{
-			PrintWarning("CServiceBase::createActor error actor id exist actor_id: "UINT64FMT" type: %s", nActorID, szType.c_str());
+			PrintWarning("CServiceBase::createActor error actor id exist actor_id: {} type: {}", nActorID, szType);
 			return nullptr;
 		}
 
 		CActorFactory* pActorFactory = this->getActorFactory(szType);
 		if (nullptr == pActorFactory)
 		{
-			PrintWarning("CServiceBase::createActor error not find actor factory actor_id: "UINT64FMT" type: %s", nActorID, szType.c_str());
+			PrintWarning("CServiceBase::createActor error not find actor factory actor_id: {} type: {}", nActorID, szType);
 			return nullptr;
 		}
 
 		CActorBase* pActorBase = pActorFactory->createActor(szType);
-		if (nullptr == pActorFactory)
+		if (nullptr == pActorBase)
 		{
-			PrintWarning("CServiceBase::createActor error factor create actor error actor_id: "UINT64FMT" type: %s", nActorID, szType.c_str());
+			PrintWarning("CServiceBase::createActor error factor create actor error actor_id: {} type: {}", nActorID, szType);
 			return nullptr;
 		}
 
@@ -114,10 +114,13 @@ namespace core
 			return nullptr;
 		}
 
-		uint64_t nCoroutineID = coroutine::create(0, [pActorBase, szContext](uint64_t){ pActorBase->onInit(szContext); });
-		coroutine::resume(nCoroutineID, 0);
-		
-		PrintInfo("create actor id: "UINT64FMT, pActorBase->getID());
+		this->m_pCoreService->getActorScheduler()->setCurWorkActorID(nActorID);
+
+		pActorBase->onInit(szContext);
+// 		uint64_t nCoroutineID = coroutine::create(0, [pActorBase, szContext](uint64_t){ pActorBase->onInit(szContext); });
+// 		coroutine::resume(nCoroutineID, 0);
+
+		this->m_pCoreService->getActorScheduler()->setCurWorkActorID(0);
 
 		return pActorBase;
 	}
@@ -126,11 +129,8 @@ namespace core
 	{
 		DebugAst(pActorBase != nullptr);
 
-		uint64_t nID = pActorBase->getID();
 		pActorBase->onDestroy();
 		this->m_pCoreService->getActorScheduler()->destroyCoreActor(pActorBase->m_pCoreActor);
-
-		PrintInfo("destroy actor id: "UINT64FMT, nID);
 
 		pActorBase->release();
 	}
@@ -154,13 +154,23 @@ namespace core
 		return this->m_pCoreService->getConfigFileName();
 	}
 
-	void CServiceBase::setServiceSelector(const std::string& szType, CServiceSelector* pServiceSelector)
+	void CServiceBase::setServiceSelector(uint32_t nType, CServiceSelector* pServiceSelector)
 	{
-		this->m_pCoreService->setServiceSelector(szType, pServiceSelector);
+		this->m_pCoreService->setServiceSelector(nType, pServiceSelector);
 	}
 
-	CServiceSelector* CServiceBase::getServiceSelector(const std::string& szType) const
+	CServiceSelector* CServiceBase::getServiceSelector(uint32_t nType) const
 	{
-		return this->m_pCoreService->getServiceSelector(szType);
+		return this->m_pCoreService->getServiceSelector(nType);
+	}
+
+	void CServiceBase::setToGateMessageCallback(const std::function<void(uint64_t, const void*, uint16_t)>& callback)
+	{
+		this->m_pCoreService->setToGateMessageCallback(callback);
+	}
+
+	void CServiceBase::setToGateBroadcastMessageCallback(const std::function<void(const uint64_t*, uint16_t, const void*, uint16_t)>& callback)
+	{
+		this->m_pCoreService->setToGateBroadcastMessageCallback(callback);
 	}
 }

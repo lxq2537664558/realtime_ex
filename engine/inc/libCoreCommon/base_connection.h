@@ -82,10 +82,6 @@ namespace core
 		@brief: 获取上下文
 		*/
 		const std::string&		getContext() const;
-		/**
-		@brief: 设置session_id
-		*/
-		void					setSessionID(uint64_t nSessionID);
 
 	private:
 		CCoreConnection*	m_pCoreConnection;

@@ -161,9 +161,11 @@ namespace base
 			if (nullptr == pNetSocket)
 				continue;
 
-			FD_SET(pNetSocket->getSocketID(), &writefds);
 			FD_SET(pNetSocket->getSocketID(), &readfds);
 			FD_SET(pNetSocket->getSocketID(), &exceptfds);
+
+			if (pNetSocket->isDisableWrite())
+				FD_SET(pNetSocket->getSocketID(), &writefds);
 		}
 
 		struct timeval timeout;
@@ -172,7 +174,7 @@ namespace base
 		int32_t nRet = ::select(0, &readfds, &writefds, &exceptfds, &timeout);
 		if (SOCKET_ERROR == nRet)
 		{
-			PrintWarning("select error %d ", getLastError());
+			PrintWarning("select error {} ", getLastError());
 			return;
 		}
 		if (0 == nRet)
@@ -228,7 +230,7 @@ namespace base
 				if (getLastError() == NW_EINTR)
 					continue;
 
-				PrintWarning("epoll_wait error %d", getLastError());
+				PrintWarning("epoll_wait error {}", getLastError());
 				break;
 			}
 		} while(true);
@@ -264,7 +266,7 @@ namespace base
 		pNetSocket->setSocketIndex(this->m_nSocketCount);
 		this->m_vecSocket[this->m_nSocketCount++] = pNetSocket;
 
-		PrintInfo("addSocket socket_id %d socket_index %d", pNetSocket->getSocketID(), pNetSocket->getSocketIndex());
+		PrintInfo("addSocket socket_id: {} socket_index: {}", pNetSocket->getSocketID(), pNetSocket->getSocketIndex());
 
 #ifndef _WIN32
 		this->m_vecEpollEvent.resize(this->m_nSocketCount + this->m_nExtraSocketCount);
@@ -276,7 +278,7 @@ namespace base
 		else
 			event.events = EPOLLIN|POLLPRI|EPOLLOUT;
 		if (::epoll_ctl(this->m_nEpoll, EPOLL_CTL_ADD, pNetSocket->getSocketID(), &event) < 0)
-			PrintWarning("epoll_ctl error EPOLL_CTL_ADD error %d", getLastError());
+			PrintWarning("epoll_ctl error EPOLL_CTL_ADD error {}", getLastError());
 #endif
 		return true;
 	}
@@ -291,7 +293,7 @@ namespace base
 		if (pNetSocket->getSocketIndex() >= this->m_nSocketCount)
 			return;
 
-		PrintInfo("delSocket socket_id %d socket_index %d", pNetSocket->getSocketID(), pNetSocket->getSocketIndex());
+		PrintInfo("delSocket socket_id: {} socket_index: {}", pNetSocket->getSocketID(), pNetSocket->getSocketIndex());
 
 		this->m_vecSocket[pNetSocket->getSocketIndex()] = this->m_vecSocket[this->m_nSocketCount - 1];
 		if (this->m_vecSocket[this->m_nSocketCount - 1] != nullptr)
@@ -306,7 +308,7 @@ namespace base
 		event.data.ptr = pNetSocket;
 		event.events = 0;
 		if (::epoll_ctl(this->m_nEpoll, EPOLL_CTL_DEL, pNetSocket->getSocketID(), &event) < 0)
-			PrintWarning("epoll_ctl error EPOLL_CTL_DEL error %d", getLastError());
+			PrintWarning("epoll_ctl error EPOLL_CTL_DEL error {}", getLastError());
 #endif
 	}
 
@@ -374,7 +376,7 @@ namespace base
 		int32_t nRet = WSAStartup(nVersion, &wsaData);
 		if (nRet != 0)
 		{
-			PrintWarning("WSAStartup error %d", getLastError());
+			PrintWarning("WSAStartup error {}", getLastError());
 			return false;
 		}
 #endif

@@ -24,14 +24,14 @@ namespace core
 		bool					invoke_a(CCoreService* pCoreService, uint64_t nSessionID, uint64_t nFromActorID, EMessageTargetType eToType, uint64_t nToID, const google::protobuf::Message* pMessage);
 		
 		bool					forward(CCoreService* pCoreService, EMessageTargetType eType, uint64_t nID, const SClientSessionInfo& sClientSessionInfo, const google::protobuf::Message* pMessage);
-		bool					gate_forward(uint64_t nSessionID, uint64_t nSocketID, uint32_t nFromServiceID, uint32_t nToServiceID, uint64_t nToActorID, const message_header* pData);
+		bool					gate_forward(uint64_t nSessionID, uint32_t nFromServiceID, uint32_t nToServiceID, uint64_t nToActorID, const message_header* pData);
 
-		bool					send(CCoreService* pCoreService, uint64_t nSessionID, uint64_t nSocketID, uint32_t nToServiceID, const google::protobuf::Message* pMessage);
+		bool					send(CCoreService* pCoreService, uint64_t nSessionID, uint32_t nToServiceID, const google::protobuf::Message* pMessage);
 
-		bool					broadcast(CCoreService* pCoreService, const std::vector<std::pair<uint64_t, uint64_t>>& vecSessionID, uint32_t nToServiceID, const google::protobuf::Message* pMessage);
+		bool					broadcast(CCoreService* pCoreService, const std::vector<uint64_t>& vecSessionID, uint32_t nToServiceID, const google::protobuf::Message* pMessage);
 
 		SPendingResponseInfo*	getPendingResponseInfo(uint64_t nSessionID);
-		SPendingResponseInfo*	addPendingResponseInfo(uint64_t nSessionID, uint64_t nToID, const std::string& szMessageName, const std::function<void(std::shared_ptr<google::protobuf::Message>, uint32_t)>& callback, uint64_t nHolderID);
+		SPendingResponseInfo*	addPendingResponseInfo(uint64_t nSessionID, uint64_t nCoroutineID, uint64_t nToID, const std::string& szMessageName, const std::function<void(std::shared_ptr<google::protobuf::Message>, uint32_t)>& callback, uint64_t nHolderID);
 		void					delPendingResponseInfo(uint64_t nHolderID);
 
 		uint64_t				genSessionID();

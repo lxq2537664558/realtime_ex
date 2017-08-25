@@ -26,8 +26,6 @@ namespace core
 
 		void*			getMainContext() const;
 
-		static uint32_t	getPageSize();
-
 #ifndef _WIN32
 		char*			getMainStack() const;
 

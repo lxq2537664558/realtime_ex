@@ -1,7 +1,5 @@
-#include "stdafx.h"
 #include "libBaseNetwork/network.h"
 #include "libBaseCommon/thread_base.h"
-#include "libBaseCommon/base_time.h"
 #include "libBaseCommon/logger.h"
 #include "libBaseCommon/debug_helper.h"
 
@@ -22,7 +20,7 @@ int main()
 
 	SNetAddr netAddr;
 	netAddr.nPort = 8000;
-	base::crt::strcpy(netAddr.szHost, _countof(netAddr.szHost), "192.168.222.137");
+	base::function_util::strcpy(netAddr.szHost, _countof(netAddr.szHost), "127.0.0.1");
 	pNetEventLoop->connect(netAddr, 1024, 1024, new CConnectToLogin());
 
 	while (true)

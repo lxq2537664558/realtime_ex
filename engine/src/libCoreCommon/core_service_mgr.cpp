@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "core_service_mgr.h"
 
+#include "libBaseCommon/process_util.h"
+
 #ifndef _WIN32
 #include<dlfcn.h>
 #endif
@@ -31,29 +33,29 @@ namespace core
 			HMODULE hModule = LoadLibraryA(szLibName.c_str());
 			if (hModule == nullptr)
 			{
-				PrintWarning("hModule == nullptr lib_name: %s", szLibName.c_str());
+				PrintWarning("hModule == nullptr lib_name: %s error_code: {}", szLibName, base::getLastError());
 				return false;
 			}
 
 			funcCreateServiceBase pCreateServiceBase = reinterpret_cast<funcCreateServiceBase>(GetProcAddress(hModule, "createServiceBase"));
 			if (nullptr == pCreateServiceBase)
 			{
-				PrintWarning("nullptr == pCreateServiceBase lib_name: %s", szLibName.c_str());
+				PrintWarning("nullptr == pCreateServiceBase lib_name: {}", szLibName);
 				return false;
 			}
 #else
 			szLibName += ".so";
-			void* hModule = dlopen(szLibName.c_str(), RTLD_LAZY);
+			void* hModule = dlopen(szLibName.c_str(), RTLD_NOW);
 			if (hModule == nullptr)
 			{
-				PrintWarning("hModule == nullptr lib_name: %s", szLibName.c_str());
-				return false;
-			}
-
-			const char* szErr = dlerror();
-			if (szErr != nullptr)
-			{
-				PrintWarning("hModule == nullptr lib_name: %s error: %s", szLibName.c_str(), szErr);
+				const char* szErr = dlerror();
+				if (szErr != nullptr)
+				{
+					PrintWarning("hModule == nullptr lib_name: %s error: {}", szLibName, szErr);
+					return false;
+				}
+				
+				PrintWarning("hModule == nullptr lib_name: {}", szLibName);
 				return false;
 			}
 
@@ -61,14 +63,14 @@ namespace core
 			funcCreateServiceBase pCreateServiceBase = reinterpret_cast<funcCreateServiceBase>(dlsym(hModule, "createServiceBase"));
 			if (nullptr == pCreateServiceBase)
 			{
-				PrintWarning("nullptr == pCreateServiceBase lib_name: %s", szLibName.c_str());
-				return false;
-			}
-			
-			szErr = dlerror();
-			if (szErr != nullptr)
-			{
-				PrintWarning("nullptr == pCreateServiceBase lib_name: %s error: %s", szLibName.c_str(), szErr);
+				const char* szErr = dlerror();
+				if (szErr != nullptr)
+				{
+					PrintWarning("nullptr == pCreateServiceBase lib_name: {} error: {}", szLibName, szErr);
+					return false;
+				}
+				
+				PrintWarning("nullptr == pCreateServiceBase lib_name: {}", szLibName);
 				return false;
 			}
 #endif
@@ -76,7 +78,7 @@ namespace core
 			CServiceBase* pServiceBase = pCreateServiceBase();
 			if (nullptr == pServiceBase)
 			{
-				PrintWarning("create service_base error: lib_name: %s", szLibName.c_str());
+				PrintWarning("create service_base error: lib_name: {}", szLibName);
 				return false;
 			}
 
@@ -87,7 +89,7 @@ namespace core
 			std::string szConfigFileName;
 			if (pServiceInfoXML->Attribute("config_file_name") != nullptr)
 			{
-				szConfigFileName = base::getCurrentWorkPath();
+				szConfigFileName = base::process_util::getCurrentWorkPath();
 				szConfigFileName += "/etc/";
 				szConfigFileName += pServiceInfoXML->Attribute("config_file_name");
 			}
@@ -95,11 +97,11 @@ namespace core
 			CCoreService* pCoreService = new CCoreService();
 			if (!pCoreService->init(pServiceBase, sServiceBaseInfo, szConfigFileName))
 			{
-				PrintWarning("create service_base %s error", sServiceBaseInfo.szName.c_str());
+				PrintWarning("create service_base {} error", sServiceBaseInfo.szName);
 				return false;
 			}
 
-			PrintInfo("create service %s ok", sServiceBaseInfo.szName.c_str());
+			PrintInfo("create service service_name: {} service_id: {} ok", sServiceBaseInfo.szName, sServiceBaseInfo.nID);
 
 			this->m_vecServiceBaseInfo.push_back(sServiceBaseInfo);
 			this->m_vecCoreService.push_back(pCoreService);
@@ -116,7 +118,7 @@ namespace core
 			CCoreService* pCoreService = this->m_vecCoreService[i];
 			if (!pCoreService->onInit())
 			{
-				PrintWarning("CCoreServiceMgr::onInit error service_name: %s", pCoreService->getServiceBaseInfo().szName.c_str());
+				PrintWarning("CCoreServiceMgr::onInit error service_name: {}", pCoreService->getServiceBaseInfo().szName);
 				return false;
 			}
 		}

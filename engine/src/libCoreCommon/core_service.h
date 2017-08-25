@@ -44,8 +44,16 @@ namespace core
 		CActorScheduler*		getActorScheduler() const;
 		CMessageDispatcher*		getMessageDispatcher() const;
 
-		void					setServiceSelector(const std::string& szType, CServiceSelector* pServiceSelector);
-		CServiceSelector*		getServiceSelector(const std::string& szType) const;
+		void					setServiceSelector(uint32_t nType, CServiceSelector* pServiceSelector);
+		CServiceSelector*		getServiceSelector(uint32_t nType) const;
+
+		void					setToGateMessageCallback(const std::function<void(uint64_t, const void*, uint16_t)>& callback);
+		std::function<void(uint64_t, const void*, uint16_t)>&
+								getToGateMessageCallback();
+
+		void					setToGateBroadcastMessageCallback(const std::function<void(const uint64_t*, uint16_t, const void*, uint16_t)>& callback);
+		std::function<void(const uint64_t*, uint16_t, const void*, uint16_t)>&
+								getToGateBroadcastMessageCallback();
 
 		void					registerServiceMessageHandler(const std::string& szMessageName, const std::function<void(CServiceBase*, SSessionInfo, const google::protobuf::Message*)>& callback);
 		void					registerServiceForwardHandler(const std::string& szMessageName, const std::function<void(CServiceBase*, SClientSessionInfo, const google::protobuf::Message*)>& callback);
@@ -103,7 +111,12 @@ namespace core
 		std::function<void(const std::string&, uint32_t)>
 								m_fnServiceDisconnectCallback;
 
-		std::map<std::string, CServiceSelector*>
+		std::function<void(uint64_t, const void*, uint16_t)>
+								m_fnToGateMessageCallback;
+		std::function<void(const uint64_t*, uint16_t, const void*, uint16_t)>
+								m_fnToGateBroadcastMessageCallback;
+
+		std::map<uint32_t, CServiceSelector*>
 								m_mapServiceSelector;
 	};
 }

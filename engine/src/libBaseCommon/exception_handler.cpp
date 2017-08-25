@@ -1,7 +1,8 @@
 #include "stdafx.h"
 #include "exception_handler.h"
-#include "base_function.h"
-#include "base_time.h"
+#include "function_util.h"
+#include "time_util.h"
+#include "process_util.h"
 
 #ifdef _WIN32
 #include <direct.h>
@@ -24,6 +25,7 @@
 #include <iostream>
 #include <memory>
 #include <mutex>
+#include "file_util.h"
 
 #ifdef _WIN32
 #pragma comment( lib, "dbghelp.lib" )
@@ -41,15 +43,15 @@ static char* g_pExceptionBuf = nullptr;	// 主要是用于崩溃是可能会用到内存时用
 static void createErrorLog(const char* szFileName, struct _EXCEPTION_POINTERS *pExceptionInfo)
 {
 	// Errorlog 生成时间
-	base::STime curTime = base::getLocalTimeTM();
+	base::time_util::STime curTime = base::time_util::getLocalTimeTM();
 	int32_t nLen = _snprintf(g_pExceptionBuf, _MAX_EXCEPTION_BUF_SIZE, "Exception Time: %d-%d-%d (%d:%d:%d)\n\n", curTime.nYear, curTime.nMon, curTime.nDay, curTime.nHour, curTime.nMin, curTime.nSec);
 	// 错误码及系统环境(内存 虚拟内存 读写IO CPU)
 	int32_t nCpu = 0;
 	uint64_t nSMem = 0, nVMen = 0, nReadBytes = 0, nWriteBytes = 0;
 
-	base::getMemoryUsage(nSMem, nVMen);
-	base::getIOBytes(nReadBytes, nWriteBytes);
-	nCpu = base::getCPUUsage();
+	base::process_util::getMemoryUsage(nSMem, nVMen);
+	base::process_util::getIOBytes(nReadBytes, nWriteBytes);
+	nCpu = base::process_util::getCPUUsage();
 
 	nLen += _snprintf(g_pExceptionBuf + nLen, _MAX_EXCEPTION_BUF_SIZE - nLen, "Error Code: %d\r\n", (uint32_t)GetLastError());
 	nLen += _snprintf(g_pExceptionBuf + nLen, _MAX_EXCEPTION_BUF_SIZE - nLen, "smem:%I64d vmem:%I64d read:%I64d write:%I64d cpu:%d\r\n", nSMem / 1024, nVMen / 1024, nReadBytes / 1024, nWriteBytes / 1024, nCpu);
@@ -297,17 +299,17 @@ static LONG WINAPI exceptionHandler(struct _EXCEPTION_POINTERS* pExceptionInfo)
 	delete[] g_pExtraMemory;
 
 	char szPath[MAX_PATH] = { 0 };
-	_snprintf(szPath, MAX_PATH, "%s/dump", base::getCurrentWorkPath());
+	base::function_util::snprintf(szPath, MAX_PATH, "%s/dump", base::process_util::getCurrentWorkPath());
 
 	// 不关心返回值
-	::CreateDirectoryA(szPath, nullptr);
-
-	base::STime curTime = base::getLocalTimeTM();
+	base::file_util::createRecursionDir(szPath);
+	
+	base::time_util::STime curTime = base::time_util::getLocalTimeTM();
 	char szFile[MAX_PATH] = { 0 };
-	_snprintf(szFile, MAX_PATH, "%s/core_%s%04d_%02d_%02d_%02d_%02d_%02d.dmp", szPath, base::getInstanceName(), curTime.nYear, curTime.nMon, curTime.nDay, curTime.nHour, curTime.nMin, curTime.nSec);
+	base::function_util::snprintf(szFile, MAX_PATH, "%s/core_%s%04d_%02d_%02d_%02d_%02d_%02d.dmp", szPath, base::process_util::getInstanceName(), curTime.nYear, curTime.nMon, curTime.nDay, curTime.nHour, curTime.nMin, curTime.nSec);
 	genDump(szFile, pExceptionInfo);
 
-	_snprintf(szFile, MAX_PATH, "%s/%s_%04d_%02d_%02d_%02d_%02d_%02d.log", szPath, base::getInstanceName(), curTime.nYear, curTime.nMon, curTime.nDay, curTime.nHour, curTime.nMin, curTime.nSec);
+	base::function_util::snprintf(szFile, MAX_PATH, "%s/%s_%04d_%02d_%02d_%02d_%02d_%02d.log", szPath, base::process_util::getInstanceName(), curTime.nYear, curTime.nMon, curTime.nDay, curTime.nHour, curTime.nMin, curTime.nSec);
 	createErrorLog(szFile, pExceptionInfo);
 	return EXCEPTION_EXECUTE_HANDLER;
 }
@@ -536,7 +538,7 @@ namespace base
 		char** pSymbol = nullptr;
 		pSymbol = (char**)backtrace_symbols((void*const*)&pAddr, 1);
 		if (pSymbol != nullptr && pSymbol[0] != nullptr)
-			base::crt::strncpy(szInfo, nMaxSize, pSymbol[0], _TRUNCATE);
+			base::function_util::strncpy(szInfo, nMaxSize, pSymbol[0], _TRUNCATE);
 		if (pSymbol != nullptr)
 			free(pSymbol);
 

@@ -15,9 +15,6 @@
     <ClInclude Include="..\..\inc\libBaseCommon\vector_map.h">
       <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\inc\libBaseCommon\base_function.h">
-      <Filter>inc</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\inc\libBaseCommon\buf_file.h">
       <Filter>inc</Filter>
     </ClInclude>
@@ -51,9 +48,6 @@
     <ClInclude Include="..\..\inc\libBaseCommon\vector2.h">
       <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\inc\libBaseCommon\base_time.h">
-      <Filter>inc</Filter>
-    </ClInclude>
     <ClInclude Include="stdafx.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -81,9 +75,6 @@
     <ClInclude Include="..\..\inc\libBaseCommon\link.h">
       <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\inc\libBaseCommon\utf8_string.h">
-      <Filter>inc</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\inc\libBaseCommon\circle_queue.h">
       <Filter>inc</Filter>
     </ClInclude>
@@ -99,14 +90,29 @@
     <ClInclude Include="..\..\inc\libBaseCommon\sha1.h">
       <Filter>inc</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\inc\libBaseCommon\process_util.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libBaseCommon\file_util.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libBaseCommon\utf8.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libBaseCommon\string_util.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libBaseCommon\time_util.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libBaseCommon\function_util.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libBaseCommon\crc32.h">
+      <Filter>inc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="base_function.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="base_time.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="encryptor.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -140,9 +146,6 @@
     <ClCompile Include="buf_file.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="utf8_string.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="memory_hook.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -158,12 +161,33 @@
     <ClCompile Include="sha1.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="process_util.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="file_util.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="utf8.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="time_util.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="function_util.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="crc32.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\inc\libBaseCommon\link.inl">
       <Filter>inc</Filter>
     </None>
     <None Include="..\..\inc\libBaseCommon\circle_queue.inl">
+      <Filter>inc</Filter>
+    </None>
+    <None Include="..\..\inc\libBaseCommon\string_util.inl">
       <Filter>inc</Filter>
     </None>
   </ItemGroup>

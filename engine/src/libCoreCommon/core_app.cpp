@@ -13,11 +13,12 @@
 #include <memory>
 #include <algorithm>
 
-#include "libBaseCommon/base_function.h"
+#include "libBaseCommon/function_util.h"
 #include "libBaseCommon/exception_handler.h"
-#include "libBaseCommon/base_time.h"
+#include "libBaseCommon/time_util.h"
 #include "libBaseCommon/profiling.h"
 #include "libBaseCommon/thread_base.h"
+#include "libBaseCommon/process_util.h"
 #include "libBaseCommon/logger.h"
 
 #include "core_app.h"
@@ -113,11 +114,11 @@ namespace core
 
 	}
 
-	bool CCoreApp::run(const std::string& szInstanceName, const std::string& szConfig)
+	bool CCoreApp::runAndServe(const std::string& szInstanceName, const std::string& szConfig)
 	{
 		this->m_szConfig = szConfig;
 
-		base::setInstanceName(szInstanceName.c_str());
+		base::process_util::setInstanceName(szInstanceName.c_str());
 
 		base::initProcessExceptionHander();
 		base::initThreadExceptionHander();
@@ -171,7 +172,7 @@ namespace core
 #endif
 		char szCurPath[MAX_PATH] = { 0 };
 		_getcwd(szCurPath, MAX_PATH);
-		base::setCurrentWorkPath(szCurPath);
+		base::process_util::setCurrentWorkPath(szCurPath);
 
 		std::string szConfig = szCurPath;
 		szConfig += "/etc/";
@@ -225,7 +226,7 @@ namespace core
 			int32_t nMinute = pServerTimeXML->IntAttribute("minute");
 			int32_t nSecond = pServerTimeXML->IntAttribute("second");
 
-			base::STime time;
+			base::time_util::STime time;
 			time.nYear = nYear;
 			time.nMon = nMonth;
 			time.nDay = nDay;
@@ -233,9 +234,9 @@ namespace core
 			time.nMin = nMinute;
 			time.nSec = nSecond;
 
-			int64_t nTime = base::getLocalTimeByTM(time);
-			nTime = base::local2GmtTime(nTime);
-			base::setGmtTime(nTime);
+			int64_t nTime = base::time_util::getLocalTimeByTM(time);
+			nTime = base::time_util::local2GmtTime(nTime);
+			base::time_util::setGmtTime(nTime);
 		}
 
 #ifndef _WIN32
@@ -263,14 +264,14 @@ namespace core
 
 		// 写PID文件
 		char szPID[MAX_PATH] = { 0 };
-		base::crt::snprintf(szPID, _countof(szPID), "%s/%s.pid", szBinPath, base::getInstanceName());
+		base::function_util::snprintf(szPID, _countof(szPID), "%s/%s.pid", szBinPath, base::process_util::getInstanceName());
 		FILE* pFile = fopen(szPID, "w");
 		if (nullptr != pFile)
 		{
 			char szPID[10] = { 0 };
-			base::crt::snprintf(szPID, _countof(szPID), "%d", base::getCurrentProcessID());
+			base::function_util::snprintf(szPID, _countof(szPID), "%d", base::process_util::getCurrentProcessID());
 
-			fwrite(szPID, 1, base::crt::strnlen(szPID, _countof(szPID)), pFile);
+			fwrite(szPID, 1, base::function_util::strnlen(szPID, _countof(szPID)), pFile);
 
 			fclose(pFile);
 		}
@@ -329,7 +330,7 @@ namespace core
 		uint32_t nID = pNodeInfoXML->UnsignedAttribute("node_id");
 		if (nID > UINT16_MAX)
 		{
-			PrintWarning("too big node id: %d", nID);
+			PrintWarning("too big node id: {}", nID);
 			return false;
 		}
 		// 加载节点基本信息

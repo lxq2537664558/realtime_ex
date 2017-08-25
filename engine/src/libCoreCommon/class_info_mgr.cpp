@@ -47,7 +47,7 @@ namespace core
 
 	uint32_t CClassInfoMgr::getClassID(const std::string& szClassName)
 	{
-		return base::hash(szClassName.c_str());
+		return base::function_util::hash(szClassName.c_str());
 	}
 
 	void CClassInfoMgr::destroyObject(CBaseObject* pBaseObject)

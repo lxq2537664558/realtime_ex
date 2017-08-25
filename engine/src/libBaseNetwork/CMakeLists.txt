@@ -7,5 +7,10 @@ include_directories(../../../engine/inc)
 
 # 设置输出目录
 SET(LIBRARY_OUTPUT_PATH ${BIN_OUTPUT_PATH})
+
+set(LINK_LIBS ${BIN_OUTPUT_PATH}/libBaseCommon.so)
+
 # 生成libCoreCommon.so
 add_library(BaseNetwork SHARED ${DIR_SRCS})
+
+target_link_libraries(BaseNetwork ${LINK_LIBS})

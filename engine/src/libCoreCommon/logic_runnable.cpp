@@ -11,7 +11,7 @@
 #include "core_service.h"
 
 #include "libBaseCommon/debug_helper.h"
-#include "libBaseCommon/base_time.h"
+#include "libBaseCommon/time_util.h"
 #include "libBaseCommon/profiling.h"
 
 #include <algorithm>
@@ -27,7 +27,7 @@ namespace core
 	CLogicRunnable::CLogicRunnable()
 		: m_pThreadBase(nullptr)
 		, m_pMessageQueue(nullptr)
-		, m_insideQueue(_DEFAULT_MESSAGE_QUEUE)
+		, m_insideMessageQueue(_DEFAULT_MESSAGE_QUEUE)
 		, m_pBaseConnectionMgr(nullptr)
 		, m_pBaseConnectionMgrImpl(nullptr)
 		, m_pCoreServiceMgr(nullptr)
@@ -123,7 +123,7 @@ namespace core
 	{
 		PROFILING_GUARD(CLogicRunnable::sendInsideMessage);
 
-		this->m_insideQueue.send(sMessagePacket);
+		this->m_insideMessageQueue.send(sMessagePacket);
 	}
 
 	void CLogicRunnable::recvInsideMessage(std::vector<SMessagePacket>& vecMessagePacket)
@@ -132,7 +132,7 @@ namespace core
 		vecMessagePacket.clear();
 
 		SMessagePacket sMessagePacket;
-		while (this->m_insideQueue.recv(sMessagePacket))
+		while (this->m_insideMessageQueue.recv(sMessagePacket))
 		{
 			vecMessagePacket.push_back(sMessagePacket);
 		}
@@ -141,6 +141,7 @@ namespace core
 	bool CLogicRunnable::onInit()
 	{
 		coroutine::init(_MAIN_STACK_SIZE);
+
 		if (!this->m_pCoreServiceMgr->onInit())
 			return false;
 
@@ -154,7 +155,7 @@ namespace core
 
 	bool CLogicRunnable::onProcess()
 	{
-		int64_t nBeginSamplingTime = base::getProcessPassTime();
+		int64_t nBeginSamplingTime = base::time_util::getProcessPassTime();
 
 		static std::vector<SMessagePacket> vecMessagePacket;
 
@@ -177,7 +178,14 @@ namespace core
 				return false;
 		}
 
-		int64_t nEndSamplingTime = base::getProcessPassTime();
+		// ÷¥––actorœ˚œ¢
+		const std::vector<CCoreService*>& vecCoreService = CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->getCoreService();
+		for (size_t i = 0; i < vecCoreService.size(); ++i)
+		{
+			vecCoreService[i]->getActorScheduler()->dispatch();
+		}
+
+		int64_t nEndSamplingTime = base::time_util::getProcessPassTime();
 		this->m_nTotalSamplingTime = this->m_nTotalSamplingTime + (uint32_t)(nEndSamplingTime - nBeginSamplingTime);
 
 		if (this->m_nTotalSamplingTime / 1000 >= CCoreApp::Inst()->getSamplingTime())
@@ -300,7 +308,7 @@ namespace core
 				CBaseConnection* pBaseConnection = this->m_pBaseConnectionMgrImpl->getBaseConnectionBySocketID(pContext->nSocketID);
 				if (pBaseConnection == nullptr)
 				{
-					PrintWarning("pBaseConnection == nullptr type: eMCT_RECV_SOCKET_DATA socket_id: %d", pContext->nSocketID);
+					PrintWarning("pBaseConnection == nullptr type: eMCT_RECV_SOCKET_DATA socket_id: {}", pContext->nSocketID);
 					return true;
 				}
 
@@ -311,6 +319,8 @@ namespace core
 		case eMCT_REQUEST:
 		case eMCT_RESPONSE:
 		case eMCT_GATE_FORWARD:
+		case eMCT_TO_GATE:
+		case eMCT_TO_GATE_BROADCAST:
 			{
 				defer([&]()
 				{
@@ -328,6 +338,16 @@ namespace core
 				{
 					nToServiceID = reinterpret_cast<SMCT_RESPONSE*>(sMessagePacket.pData)->nToServiceID;
 					nMessageType = eMT_RESPONSE;
+				}
+				else if (sMessagePacket.nType == eMCT_TO_GATE)
+				{
+					nToServiceID = reinterpret_cast<SMCT_TO_GATE*>(sMessagePacket.pData)->nToServiceID;
+					nMessageType = eMT_TO_GATE;
+				}
+				else if (sMessagePacket.nType == eMCT_TO_GATE_BROADCAST)
+				{
+					nToServiceID = reinterpret_cast<SMCT_TO_GATE_BROADCAST*>(sMessagePacket.pData)->nToServiceID;
+					nMessageType = eMT_TO_GATE_BROADCAST;
 				}
 				else if (sMessagePacket.nType == eMCT_GATE_FORWARD)
 				{
@@ -400,7 +420,7 @@ namespace core
 
 		default:
 			{
-				PrintWarning("invalid type: %d", sMessagePacket.nType);
+				PrintWarning("invalid type: {}", sMessagePacket.nType);
 			}
 		}
 

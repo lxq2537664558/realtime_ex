@@ -10,7 +10,7 @@
 #include "logic_runnable.h"
 #include "core_app.h"
 
-#include "libBaseCommon/base_time.h"
+#include "libBaseCommon/time_util.h"
 #include "libBaseCommon/logger.h"
 #include "libBaseCommon/profiling.h"
 
@@ -87,7 +87,7 @@ namespace core
 	{
 		DebugAst(pNetActiveWaitConnecterHandler != nullptr && pNetActiveWaitConnecterHandler->getNetConnecter() != nullptr);
 
-		CCoreConnection* pCoreConnection = this->createCoreConnection(pNetActiveWaitConnecterHandler->szType, pNetActiveWaitConnecterHandler->szContext, pNetActiveWaitConnecterHandler->messageParser, pNetActiveWaitConnecterHandler->nCoreConnectionType);
+		CCoreConnection* pCoreConnection = this->createCoreConnection(pNetActiveWaitConnecterHandler->szType, pNetActiveWaitConnecterHandler->szContext, pNetActiveWaitConnecterHandler->messageParser, eCCT_Normal);
 		if (nullptr == pCoreConnection)
 			return;
 
@@ -105,18 +105,17 @@ namespace core
 		SAFE_DELETE(pWaitActiveConnecterHandler);
 	}
 
-	bool CCoreConnectionMgr::connect(const std::string& szHost, uint16_t nPort, const std::string& szType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser, uint8_t nCoreConnectionType)
+	bool CCoreConnectionMgr::connect(const std::string& szHost, uint16_t nPort, const std::string& szType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser)
 	{
-		PrintInfo("start connect host: %s  port: %u type: %s context: %s", szHost.c_str(), nPort, szType.c_str(), szContext.c_str());
+		PrintInfo("start connect host: {}  port: {} type: {} context: {}", szHost, nPort, szType, szContext);
 		SNetActiveWaitConnecterHandler* pWaitActiveConnecterHandler = new SNetActiveWaitConnecterHandler();
 		pWaitActiveConnecterHandler->szContext = szContext;
 		pWaitActiveConnecterHandler->szType = szType;
-		pWaitActiveConnecterHandler->nCoreConnectionType = nCoreConnectionType;
 		pWaitActiveConnecterHandler->pCoreConnectionMgr = this;
 		pWaitActiveConnecterHandler->messageParser = messageParser;
 
 		SNetAddr sNetAddr;
-		base::crt::strcpy(sNetAddr.szHost, _countof(sNetAddr.szHost), szHost.c_str());
+		base::function_util::strcpy(sNetAddr.szHost, _countof(sNetAddr.szHost), szHost.c_str());
 		sNetAddr.nPort = nPort;
 		if (!this->m_pNetEventLoop->connect(sNetAddr, nSendBufferSize, nRecvBufferSize, pWaitActiveConnecterHandler))
 		{
@@ -138,7 +137,7 @@ namespace core
 		pNetAccepterHandler->messageParser = messageParser;
 
 		SNetAddr sNetAddr;
-		base::crt::strcpy(sNetAddr.szHost, _countof(sNetAddr.szHost), szHost.c_str());
+		base::function_util::strcpy(sNetAddr.szHost, _countof(sNetAddr.szHost), szHost.c_str());
 		sNetAddr.nPort = nPort;
 		if (!this->m_pNetEventLoop->listen(sNetAddr, bReusePort, nSendBufferSize, nRecvBufferSize, pNetAccepterHandler))
 		{
@@ -224,7 +223,7 @@ namespace core
 		if (!pCoreConnection->init(szType, this->m_nNextCoreConnectionID++, szContext, messageParser))
 		{
 			SAFE_DELETE(pCoreConnection);
-			PrintWarning("init core connection error type: %s context: %s", szType.c_str(), szContext.c_str());
+			PrintWarning("init core connection error type: {} context: {}", szType, szContext);
 			return nullptr;
 		}
 
@@ -243,7 +242,7 @@ namespace core
 		CCoreConnection* pCoreConnection = iter->second;
 		if (nullptr == pCoreConnection)
 		{
-			PrintWarning("destroy core connection error socket_id: "UINT64FMT, nSocketID);
+			PrintWarning("destroy core connection error socket_id: {}", nSocketID);
 			this->m_mapCoreConnectionByID.erase(iter);
 			return;
 		}

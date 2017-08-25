@@ -3,7 +3,7 @@
 #include "net_event_loop.h"
 
 #include "libBaseCommon/logger.h"
-#include "libBaseCommon/base_function.h"
+#include "libBaseCommon/function_util.h"
 #include "libBaseCommon/debug_helper.h"
 
 namespace base
@@ -16,10 +16,10 @@ namespace base
 		char szBuf[1024] = { 0 };
 		va_list arg;
 		va_start(arg, szFormat);
-		base::crt::vsnprintf(szBuf, _countof(szBuf), szFormat, arg);
+		base::function_util::vsnprintf(szBuf, _countof(szBuf), szFormat, arg);
 		va_end(arg);
 
-		PrintInfo("%s connect state: %d flag£º%d local addr: %s %d remote addr: %s %d socket_id: %d error code[%d] send_index: %d send_count: %d", szBuf, this->m_eConnecterState, this->m_nFlag, this->getLocalAddr().szHost, this->getLocalAddr().nPort, this->getRemoteAddr().szHost, this->getRemoteAddr().nPort, this->getSocketID(), getLastError(), this->m_nSendConnecterIndex, this->m_pNetEventLoop->getSendConnecterCount());
+		PrintInfo("{} connect state: {} flag£º{} local addr: {} {} remote addr: {} {} socket_id: {} error code: {} send_index: {} send_count: {}", szBuf, this->m_eConnecterState, this->m_nFlag, this->getLocalAddr().szHost, this->getLocalAddr().nPort, this->getRemoteAddr().szHost, this->getRemoteAddr().nPort, this->getSocketID(), getLastError(), this->m_nSendConnecterIndex, this->m_pNetEventLoop->getSendConnecterCount());
 	}
 
 	void CNetConnecter::onEvent(uint32_t nEvent)
@@ -74,12 +74,12 @@ namespace base
 		{
 			if ((this->m_nFlag&eNCF_ConnectFail) == 0) 
 			{
-				PrintInfo("disconnect local addr: %s %d remote addr: %s %d socket_id: %d send_index: %d send_count: %d", this->getLocalAddr().szHost, this->getLocalAddr().nPort, this->getRemoteAddr().szHost, this->getRemoteAddr().nPort, this->getSocketID(), this->m_nSendConnecterIndex, this->m_pNetEventLoop->getSendConnecterCount());
+				PrintInfo("disconnect local addr: {} {} remote addr: {} {} socket_id: {} send_index: {} send_count: {}", this->getLocalAddr().szHost, this->getLocalAddr().nPort, this->getRemoteAddr().szHost, this->getRemoteAddr().nPort, this->getSocketID(), this->m_nSendConnecterIndex, this->m_pNetEventLoop->getSendConnecterCount());
 				this->m_pHandler->onDisconnect();
 			}
 			else
 			{
-				PrintInfo("connect fail local addr: %s %d remote addr: %s %d socket_id: %d send_index: %d send_count: %d", this->getLocalAddr().szHost, this->getLocalAddr().nPort, this->getRemoteAddr().szHost, this->getRemoteAddr().nPort, this->getSocketID(), this->m_nSendConnecterIndex, this->m_pNetEventLoop->getSendConnecterCount());
+				PrintInfo("connect fail local addr: {} {} remote addr: {} {} socket_id: {} send_index: {} send_count: {}", this->getLocalAddr().szHost, this->getLocalAddr().nPort, this->getRemoteAddr().szHost, this->getRemoteAddr().nPort, this->getSocketID(), this->m_nSendConnecterIndex, this->m_pNetEventLoop->getSendConnecterCount());
 				this->m_pHandler->onConnectFail();
 			}
 			this->m_pHandler = nullptr;
@@ -147,7 +147,7 @@ namespace base
 			return;
 		}
 		this->m_eConnecterState = eNCS_Connected;
-		PrintInfo("connect local addr: %s %d remote addr: %s %d socket_id: %d", this->getLocalAddr().szHost, this->getLocalAddr().nPort, this->getRemoteAddr().szHost, this->getRemoteAddr().nPort, this->getSocketID());
+		PrintInfo("connect local addr: {} {} remote addr: {} {} socket_id: {}", this->getLocalAddr().szHost, this->getLocalAddr().nPort, this->getRemoteAddr().szHost, this->getRemoteAddr().nPort, this->getSocketID());
 
 		if (nullptr != this->m_pHandler)
 			this->m_pHandler->onConnect();
@@ -162,7 +162,7 @@ namespace base
 			{
 				this->m_pRecvBuffer->resize(this->m_pRecvBuffer->getBufferSize() * 2);
 				nBufSize = this->m_pRecvBuffer->getWritableSize();
-				PrintInfo("not have enought recv buffer append size to: %d", this->m_pRecvBuffer->getBufferSize());
+				PrintInfo("not have enought recv buffer append size to: {}", this->m_pRecvBuffer->getBufferSize());
 			}
 			char* pBuf = this->m_pRecvBuffer->getWritableBuffer();
 #ifdef _WIN32
@@ -299,7 +299,7 @@ namespace base
 
 		struct sockaddr_in romateAddr;
 		romateAddr.sin_family = AF_INET;
-		romateAddr.sin_port = base::hton16(this->m_sRemoteAddr.nPort);
+		romateAddr.sin_port = base::function_util::hton16(this->m_sRemoteAddr.nPort);
 		romateAddr.sin_addr.s_addr = inet_addr(this->m_sRemoteAddr.szHost);
 		memset(romateAddr.sin_zero, 0, sizeof(romateAddr.sin_zero));
 
@@ -325,7 +325,7 @@ namespace base
 				break;
 
 			default:
-				PrintInfo("connect error socket_id: %d remote addr: %s %d err: %d", this->getSocketID(), this->m_sRemoteAddr.szHost, this->m_sRemoteAddr.nPort, getLastError());
+				PrintInfo("connect error socket_id: {} remote addr: {} {} err: {}", this->getSocketID(), this->m_sRemoteAddr.szHost, this->m_sRemoteAddr.nPort, getLastError());
 				::closesocket(this->getSocketID());
 				return false;
 			}
@@ -424,7 +424,7 @@ namespace base
 		char szBuf[1024] = { 0 };
 		va_list arg;
 		va_start(arg, szFormat);
-		base::crt::vsnprintf(szBuf, _countof(szBuf), szFormat, arg);
+		base::function_util::vsnprintf(szBuf, _countof(szBuf), szFormat, arg);
 		va_end(arg);
 
 		this->printInfo("request shutdown connection msg: %s", szBuf);

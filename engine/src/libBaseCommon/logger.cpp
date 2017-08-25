@@ -1,14 +1,18 @@
 #include "stdafx.h"
 #include "logger.h"
 #include "thread_base.h"
-#include "base_time.h"
-#include "base_function.h"
+#include "time_util.h"
+#include "function_util.h"
 #include "spin_lock.h"
+#include "file_util.h"
+#include "process_util.h"
+#include "exception_handler.h"
 
 #include <string>
 #include <map>
 #include <list>
 #include <iostream>
+#include <thread>
 
 #ifndef _WIN32
 #include <stdarg.h>
@@ -26,20 +30,20 @@ static uint32_t formatLog(char* szBuf, uint32_t nBufSize, const char* szPrefix, 
 		return 0;
 
 	int64_t nCurTime = 0;
-	base::STime sTime;
+	base::time_util::STime sTime;
 	if (bGmtTime)
 	{
-		nCurTime = base::getGmtTime();
-		sTime = base::getGmtTimeTM(nCurTime);
+		nCurTime = base::time_util::getGmtTime();
+		sTime = base::time_util::getGmtTimeTM(nCurTime);
 	}
 	else
 	{
-		nCurTime = base::getLocalTime();
-		sTime = base::getLocalTimeTM(nCurTime);
+		nCurTime = base::time_util::getLocalTime();
+		sTime = base::time_util::getLocalTimeTM(nCurTime);
 	}
 
 	char szTime[30] = { 0 };
-	base::crt::snprintf(szTime, _countof(szTime), "%04d-%02d-%02d %02d:%02d:%02d.%03d",
+	base::function_util::snprintf(szTime, _countof(szTime), "%04d-%02d-%02d %02d:%02d:%02d.%03d",
 		sTime.nYear, sTime.nMon, sTime.nDay, sTime.nHour, sTime.nMin, sTime.nSec, nCurTime % 1000);
 
 	if (nDay != nullptr)
@@ -47,21 +51,21 @@ static uint32_t formatLog(char* szBuf, uint32_t nBufSize, const char* szPrefix, 
 
 	size_t nLen = 0;
 	if (szPrefix[0] != 0)
-		nLen = base::crt::snprintf(szBuf, nBufSize, "[%s\t] %s ", szPrefix, szTime);
+		nLen = base::function_util::snprintf(szBuf, nBufSize, "[%s\t] %s ", szPrefix, szTime);
 	else
-		nLen = base::crt::snprintf(szBuf, nBufSize, "%s ", szTime);
+		nLen = base::function_util::snprintf(szBuf, nBufSize, "%s ", szTime);
 	
-	nLen += base::crt::vsnprintf(szBuf + nLen, nBufSize - nLen, szFormat, arg);
+	nLen += base::function_util::vsnprintf(szBuf + nLen, nBufSize - nLen, szFormat, arg);
 
 	if (nLen >= _LOG_BUF_SIZE - 1)
 	{
 		// ½Ø¶Ï
-		base::crt::strcpy(szBuf + nBufSize - 3, 3, "\r\n");
+		base::function_util::strcpy(szBuf + nBufSize - 3, 3, "\r\n");
 		nLen = _LOG_BUF_SIZE - 1;
 	}
 	else
 	{
-		base::crt::strcpy(szBuf + nLen, nBufSize - nLen, "\r\n");
+		base::function_util::strcpy(szBuf + nLen, nBufSize - nLen, "\r\n");
 		nLen = nLen + 2;
 	}
 
@@ -70,12 +74,12 @@ static uint32_t formatLog(char* szBuf, uint32_t nBufSize, const char* szPrefix, 
 
 static std::string formatLogName(const char* szPath, const char* szSuffix)
 {
-	base::STime sTime = base::getLocalTimeTM();
+	base::time_util::STime sTime = base::time_util::getLocalTimeTM();
 	char szBuf[MAX_PATH] = { 0 };
 	if (szSuffix[0] == 0)
-		base::crt::snprintf(szBuf, _countof(szBuf), "%s/%s.%4d_%02d_%02d_%02d_%02d_%02d.%d", szPath, base::getInstanceName(), sTime.nYear, sTime.nMon, sTime.nDay, sTime.nHour, sTime.nMin, sTime.nSec, base::getCurrentProcessID());
+		base::function_util::snprintf(szBuf, _countof(szBuf), "%s/%s.%4d_%02d_%02d_%02d_%02d_%02d.%d", szPath, base::process_util::getInstanceName(), sTime.nYear, sTime.nMon, sTime.nDay, sTime.nHour, sTime.nMin, sTime.nSec, base::process_util::getCurrentProcessID());
 	else
-		base::crt::snprintf(szBuf, _countof(szBuf), "%s/%s.%4d_%02d_%02d_%02d_%02d_%02d.%d_%s", szPath, base::getInstanceName(), sTime.nYear, sTime.nMon, sTime.nDay, sTime.nHour, sTime.nMin, sTime.nSec, base::getCurrentProcessID(), szSuffix);
+		base::function_util::snprintf(szBuf, _countof(szBuf), "%s/%s.%4d_%02d_%02d_%02d_%02d_%02d.%d_%s", szPath, base::process_util::getInstanceName(), sTime.nYear, sTime.nMon, sTime.nDay, sTime.nHour, sTime.nMin, sTime.nSec, base::process_util::getCurrentProcessID(), szSuffix);
 	
 	return szBuf;
 }
@@ -146,7 +150,7 @@ CLogger::CLogger()
 	, m_bDebug(true)
 {
 	memset(this->m_szPath, 0, _countof(this->m_szPath));
-	this->m_nLastFlushTime = base::getGmtTime() / 1000;
+	this->m_nLastFlushTime = base::time_util::getGmtTime() / 1000;
 }
 
 CLogger::~CLogger()
@@ -172,42 +176,30 @@ bool CLogger::init(bool bAsync, bool bGmtTime, const char* szPath)
 	if (szPath == nullptr)
 		return false;
 
-	std::string szTempPath = szPath;
-	if (szTempPath.empty())
+	std::string szTmpPath = szPath;
+	if (szTmpPath.empty())
 		return false;
 
-	std::string::size_type pos = szTempPath.find(".");
+	std::string::size_type pos = szTmpPath.find(".");
 	if (std::string::npos != pos && pos == 0)
 	{
-		szTempPath.replace(pos, 1, "");
-		szTempPath.insert(0, base::getCurrentWorkPath());
+		szTmpPath.replace(pos, 1, "");
+		szTmpPath.insert(0, base::process_util::getCurrentWorkPath());
 	}
 	
-	while (std::string::npos != (pos = szTempPath.find("\\")))
+	while (std::string::npos != (pos = szTmpPath.find("\\")))
 	{
-		szTempPath.replace(pos, 1, "/");
+		szTmpPath.replace(pos, 1, "/");
 		pos += 1;
 	}
 
-	pos = szTempPath.find_last_of("/");
-	if (pos != szTempPath.size() - 1)
-		szTempPath.insert(szTempPath.size(), "/");
+	pos = szTmpPath.find_last_of("/");
+	if (pos != szTmpPath.size() - 1)
+		szTmpPath.insert(szTmpPath.size(), "/");
 
-	pos = 0;
-	while (std::string::npos != (pos = szTempPath.find("/", pos)))
-	{
-		std::string szSubPath = szTempPath.substr(0, pos);
-		pos += 1;
-		if (szSubPath.empty())
-			continue;
+	base::function_util::snprintf(this->m_szPath, _countof(this->m_szPath), "%s%s", szTmpPath.c_str(), base::process_util::getInstanceName());
 
-		if (!base::createDir(szSubPath.c_str()))
-			return false;
-	}
-
-	base::crt::snprintf(this->m_szPath, _countof(this->m_szPath), "%s%s", szTempPath.c_str(), base::getInstanceName());
-
-	if (!base::createDir(this->m_szPath))
+	if (!base::file_util::createRecursionDir(this->m_szPath))
 		return false;
 
 	this->m_pThreadBase = base::CThreadBase::createNew(this);
@@ -287,7 +279,7 @@ bool CLogger::onProcess()
 		if (pLogInfo->nBufSize == 0)
 		{
 			this->flushLog();
-			this->m_nLastFlushTime = base::getGmtTime();
+			this->m_nLastFlushTime = base::time_util::getGmtTime();
 		}
 		else
 		{
@@ -298,14 +290,15 @@ bool CLogger::onProcess()
 		delete [](szBuf);
 	}
 
-	int64_t nCurTime = base::getGmtTime();
+	int64_t nCurTime = base::time_util::getGmtTime();
 	if (nCurTime - this->m_nLastFlushTime >= _FLUSH_LOG_TIME)
 	{
 		this->flushLog();
 		this->m_nLastFlushTime = nCurTime;
 	}
 
-	base::sleep(100);
+	std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
 	return true;
 }
 
@@ -344,7 +337,7 @@ void CLogger::saveLog(SLogInfo* pLogInfo)
 	{
 		std::string szFileName = formatLogName(this->m_szPath, pLogInfo->szSuffix);
 		char szFullFileName[MAX_PATH] = { 0 };
-		base::crt::snprintf(szFullFileName, _countof(szFullFileName), "%s_%d.log", szFileName.c_str(), pLogFileInfo->nNextFileIndex);
+		base::function_util::snprintf(szFullFileName, _countof(szFullFileName), "%s_%d.log", szFileName.c_str(), pLogFileInfo->nNextFileIndex);
 #ifdef _WIN32
 		FILE* pFile = _fsopen(szFullFileName, "w", _SH_DENYNO);
 #else
@@ -428,7 +421,7 @@ namespace base
 		pLogInfo->szSuffix[0] = 0;
 		pLogInfo->bConsole = bConsole;
 		pLogInfo->nDay = nDay;
-		base::crt::strcpy(pLogInfo->szBuf, nSize + 1, szBuf);
+		base::function_util::strcpy(pLogInfo->szBuf, nSize + 1, szBuf);
 
 		g_pLogger->pushLog(pLogInfo);
 	}
@@ -449,10 +442,10 @@ namespace base
 
 		SLogInfo* pLogInfo = reinterpret_cast<SLogInfo*>(new char[sizeof(SLogInfo) + nSize + 1]);
 		pLogInfo->nBufSize = nSize;
-		base::crt::strcpy(pLogInfo->szSuffix, _LOG_FILE_NAME_SIZE, szFileName);
+		base::function_util::strcpy(pLogInfo->szSuffix, _LOG_FILE_NAME_SIZE, szFileName);
 		pLogInfo->bConsole = bConsole;
 		pLogInfo->nDay = nDay;
-		base::crt::strcpy(pLogInfo->szBuf, nSize + 1, szBuf);
+		base::function_util::strcpy(pLogInfo->szBuf, nSize + 1, szBuf);
 
 		g_pLogger->pushLog(pLogInfo);
 	}

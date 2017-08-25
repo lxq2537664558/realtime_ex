@@ -46,6 +46,7 @@ namespace base
 		void						setConnecterMode(ENetConnecterMode eConnecterMode);
 		void						setConnecterState(ENetConnecterState eConnecterState);
 		void						flushSend();
+		virtual bool				isDisableWrite() const { return (this->m_nFlag&eNCF_DisableWrite) != 0; }
 
 	private:
 		void						onConnect();

@@ -55,13 +55,13 @@ namespace core
 			}
 			else
 			{
-				// 这里没有暂存的需求，所以直接用unique_ptr
-				auto pMessage = std::unique_ptr<google::protobuf::Message>(pRequestContext->pMessage);
+				// 这里协程回调使用的pMessage的生命周期跟协程一致，采用值捕获lambda的方式来达到这一目的
+				auto pMessage = std::shared_ptr<google::protobuf::Message>(pRequestContext->pMessage);
 
 				auto& callback = this->m_pCoreService->getServiceMessageHandler(pMessage->GetTypeName());
 				if (callback == nullptr)
 				{
-					PrintWarning("CMessageDispatcher::dispatch error unknown request message service_id: %d, message_name: %s", this->m_pCoreService->getServiceID(), pMessage->GetTypeName().c_str());
+					PrintWarning("CMessageDispatcher::dispatch error unknown request message service_id: {}, message_name: {}", this->m_pCoreService->getServiceID(), pMessage->GetTypeName());
 					return;
 				}
 
@@ -70,7 +70,9 @@ namespace core
 				sSessionInfo.nFromServiceID = pRequestContext->nFromServiceID;
 				sSessionInfo.nFromActorID = pRequestContext->nFromActorID;
 				sSessionInfo.nSessionID = pRequestContext->nSessionID;
-				callback(this->m_pCoreService->getServiceBase(), sSessionInfo, pMessage.get());
+
+				uint64_t nCoroutineID = coroutine::create(0, [&callback, this, pMessage, sSessionInfo](uint64_t) { callback(this->m_pCoreService->getServiceBase(), sSessionInfo, pMessage.get()); });
+				coroutine::resume(nCoroutineID, 0);
 			}
 		}
 		else if (nMessageType == eMT_RESPONSE)
@@ -111,19 +113,66 @@ namespace core
 				// 这里有暂存消息的需求，所以需要用shared_ptr
 				auto pMessage = std::shared_ptr<google::protobuf::Message>(pResponseContext->pMessage);
 				
-				auto pPendingResponseInfo = std::unique_ptr<SPendingResponseInfo>(CCoreApp::Inst()->getLogicRunnable()->getTransporter()->getPendingResponseInfo(pResponseContext->nSessionID));
+				SPendingResponseInfo* pPendingResponseInfo = CCoreApp::Inst()->getLogicRunnable()->getTransporter()->getPendingResponseInfo(pResponseContext->nSessionID);
 				if (nullptr == pPendingResponseInfo)
 					return;
 
-				if (pResponseContext->nResult == eRRT_OK)
+				defer([&]()
 				{
-					pPendingResponseInfo->callback(pMessage, eRRT_OK);
+					SAFE_DELETE(pPendingResponseInfo);
+				});
+
+				if (pPendingResponseInfo->nCoroutineID != 0)
+				{
+					// 这里不能直接传pMessage的地址
+					SSyncCallResultInfo* pSyncCallResultInfo = new SSyncCallResultInfo();
+					pSyncCallResultInfo->nResult = pResponseContext->nResult;
+					pSyncCallResultInfo->pMessage = pMessage;
+					coroutine::setLocalData(pPendingResponseInfo->nCoroutineID, "response", reinterpret_cast<uint64_t>(pSyncCallResultInfo));
+
+					coroutine::resume(pPendingResponseInfo->nCoroutineID, 0);
+				}
+				else if (pPendingResponseInfo->callback != nullptr)
+				{
+					uint8_t nResult = pResponseContext->nResult;
+					if (nResult == eRRT_OK)
+					{
+						uint64_t nCoroutineID = coroutine::create(0, [&pPendingResponseInfo, pMessage](uint64_t) { pPendingResponseInfo->callback(pMessage, eRRT_OK); });
+						coroutine::resume(nCoroutineID, 0);
+					}
+					else
+					{
+						uint64_t nCoroutineID = coroutine::create(0, [&pPendingResponseInfo, nResult](uint64_t) { pPendingResponseInfo->callback(nullptr, nResult); });
+						coroutine::resume(nCoroutineID, 0);
+					}
 				}
 				else
 				{
-					pPendingResponseInfo->callback(nullptr, (EResponseResultType)pResponseContext->nResult);
+					PrintWarning("invalid response session_id: {} service_id: {} message_name: {}", pPendingResponseInfo->nSessionID, this->m_pCoreService->getServiceID(), pPendingResponseInfo->szMessageName);
 				}
 			}
+		}
+		else if (nMessageType == eMT_TO_GATE)
+		{
+			auto& callback = this->m_pCoreService->getToGateMessageCallback();
+			if (callback == nullptr)
+				return;
+
+			const SMCT_TO_GATE* pToGateContext = reinterpret_cast<const SMCT_TO_GATE*>(pContext);
+
+			callback(pToGateContext->nSessionID, pToGateContext->pData, pToGateContext->nDataSize);
+		}
+		else if (nMessageType == eMT_TO_GATE_BROADCAST)
+		{
+			auto& callback = this->m_pCoreService->getToGateBroadcastMessageCallback();
+			if (callback == nullptr)
+				return;
+
+			const SMCT_TO_GATE_BROADCAST* pToGateBroadcastContext = reinterpret_cast<const SMCT_TO_GATE_BROADCAST*>(pContext);
+			const uint64_t* pSessionID = reinterpret_cast<const uint64_t*>(pToGateBroadcastContext->pData);
+			const void* pData = pToGateBroadcastContext->pData + sizeof(uint64_t) * pToGateBroadcastContext->nSessionCount;
+
+			callback(pSessionID, pToGateBroadcastContext->nSessionCount, pData, (uint16_t)(pToGateBroadcastContext->nDataSize - sizeof(uint64_t) * pToGateBroadcastContext->nSessionCount));
 		}
 		else if (nMessageType == eMT_GATE_FORWARD)
 		{
@@ -140,7 +189,7 @@ namespace core
 				}
 
 				SActorMessagePacket sActorMessagePacket;
-				sActorMessagePacket.nData = pGateForwardContext->nSocketID;
+				sActorMessagePacket.nData = 0;
 				sActorMessagePacket.nFromServiceID = pGateForwardContext->nFromServiceID;
 				sActorMessagePacket.nSessionID = pGateForwardContext->nSessionID;
 				sActorMessagePacket.nType = eMT_GATE_FORWARD;
@@ -151,22 +200,21 @@ namespace core
 			}
 			else
 			{
-				// 这里没有暂存的需求，所以直接用unique_ptr
-				auto pMessage = std::unique_ptr<google::protobuf::Message>(pGateForwardContext->pMessage);
+				auto pMessage = std::shared_ptr<google::protobuf::Message>(pGateForwardContext->pMessage);
 
 				auto& callback = this->m_pCoreService->getServiceForwardHandler(pMessage->GetTypeName());
 				if (callback == nullptr)
 				{
-					PrintWarning("CMessageDispatcher::dispatch error unknown gate forward message service_id: %d, message_name: %s", this->m_pCoreService->getServiceID(), pMessage->GetTypeName().c_str());
+					PrintWarning("CMessageDispatcher::dispatch error unknown gate forward message service_id: {}, message_name: {}", this->m_pCoreService->getServiceID(), pMessage->GetTypeName());
 					return;
 				}
 
 				SClientSessionInfo sClientSessionInfo;
 				sClientSessionInfo.nSessionID = pGateForwardContext->nSessionID;
-				sClientSessionInfo.nSocketID = pGateForwardContext->nSocketID;
 				sClientSessionInfo.nGateServiceID = pGateForwardContext->nFromServiceID;
 
-				callback(this->m_pCoreService->getServiceBase(), sClientSessionInfo, pMessage.get());
+				uint64_t nCoroutineID = coroutine::create(0, [&callback, this, pMessage, sClientSessionInfo](uint64_t) { callback(this->m_pCoreService->getServiceBase(), sClientSessionInfo, pMessage.get()); });
+				coroutine::resume(nCoroutineID, 0);
 			}
 		}
 	}

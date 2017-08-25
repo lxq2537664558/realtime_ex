@@ -13,7 +13,10 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="proto">
+    <Filter Include="common">
+      <UniqueIdentifier>{160c7023-61d6-4ed9-9161-76d216fd0d33}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="msg_proto">
       <UniqueIdentifier>{5d6bf1a6-8976-4ef5-bed0-7da6f103e145}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -27,20 +30,35 @@
     <ClCompile Include="online_count_mgr.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\proto_src\gas_online_count_notify.pb.cc">
-      <Filter>proto</Filter>
+    <ClCompile Include="..\..\proto\db_proto_src\result_set.pb.cc">
+      <Filter>msg_proto</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\service\proto_src\player_token_notify.pb.cc">
-      <Filter>proto</Filter>
+    <ClCompile Include="..\..\proto\msg_proto_src\s2d_online_count_notify.pb.cc">
+      <Filter>msg_proto</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\service\proto_src\validate_login_request.pb.cc">
-      <Filter>proto</Filter>
+    <ClCompile Include="..\..\proto\msg_proto_src\g2d_addr_notify.pb.cc">
+      <Filter>msg_proto</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\service\proto_src\validate_login_response.pb.cc">
-      <Filter>proto</Filter>
+    <ClCompile Include="..\..\proto\msg_proto_src\g2d_online_count_notify.pb.cc">
+      <Filter>msg_proto</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\service\proto_src\gate_online_count_notify.pb.cc">
-      <Filter>proto</Filter>
+    <ClCompile Include="..\..\proto\msg_proto_src\d2g_player_token_notify.pb.cc">
+      <Filter>msg_proto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\proto\msg_proto_src\l2d_validate_login_request.pb.cc">
+      <Filter>msg_proto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\proto\msg_proto_src\l2d_validate_login_response.pb.cc">
+      <Filter>msg_proto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\proto\msg_proto_src\u2d_active_count_notify.pb.cc">
+      <Filter>msg_proto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\proto\msg_proto_src\d2u_player_login_request.pb.cc">
+      <Filter>msg_proto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\proto\msg_proto_src\d2u_player_login_response.pb.cc">
+      <Filter>msg_proto</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -53,20 +71,38 @@
     <ClInclude Include="online_count_mgr.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\proto_src\gas_online_count_notify.pb.h">
-      <Filter>proto</Filter>
+    <ClInclude Include="..\..\proto\db_proto_src\result_set.pb.h">
+      <Filter>msg_proto</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\service\proto_src\player_token_notify.pb.h">
-      <Filter>proto</Filter>
+    <ClInclude Include="..\common\common.h">
+      <Filter>common</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\service\proto_src\validate_login_request.pb.h">
-      <Filter>proto</Filter>
+    <ClInclude Include="..\..\proto\msg_proto_src\s2d_online_count_notify.pb.h">
+      <Filter>msg_proto</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\service\proto_src\validate_login_response.pb.h">
-      <Filter>proto</Filter>
+    <ClInclude Include="..\..\proto\msg_proto_src\g2d_addr_notify.pb.h">
+      <Filter>msg_proto</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\service\proto_src\gate_online_count_notify.pb.h">
-      <Filter>proto</Filter>
+    <ClInclude Include="..\..\proto\msg_proto_src\g2d_online_count_notify.pb.h">
+      <Filter>msg_proto</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\proto\msg_proto_src\d2g_player_token_notify.pb.h">
+      <Filter>msg_proto</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\proto\msg_proto_src\l2d_validate_login_request.pb.h">
+      <Filter>msg_proto</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\proto\msg_proto_src\l2d_validate_login_response.pb.h">
+      <Filter>msg_proto</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\proto\msg_proto_src\u2d_active_count_notify.pb.h">
+      <Filter>msg_proto</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\proto\msg_proto_src\d2u_player_login_request.pb.h">
+      <Filter>msg_proto</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\proto\msg_proto_src\d2u_player_login_response.pb.h">
+      <Filter>msg_proto</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

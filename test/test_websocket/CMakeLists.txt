@@ -8,13 +8,13 @@ include_directories(../../3rd/tinyxml2/include)
 include_directories(../../3rd/protobuf/include)
 
 # 设置输出目录
-SET(LIBRARY_OUTPUT_PATH ${BIN_OUTPUT_PATH})
+set(EXECUTABLE_OUTPUT_PATH ${BIN_OUTPUT_PATH})
+# 设置链接的库
+set(LINK_LIBS ${BIN_OUTPUT_PATH}/libBaseCommon.so ${BIN_OUTPUT_PATH}/libBaseNetwork.so ${BIN_OUTPUT_PATH}/libCoreCommon.so ${BIN_OUTPUT_PATH}/libtinyxml2.so rt dl)
+# 设置链接选项
+set(CMAKE_EXE_LINKER_FLAGS "-Wl,-rpath=./ ")
+# 生成web_socket
+add_executable(test_web_socket ${DIR_SRCS})
 
-# master.so
-add_library(master SHARED ${DIR_SRCS})
-
-add_custom_command(
-	TARGET master
-    POST_BUILD
-    COMMAND mv ${LIBRARY_OUTPUT_PATH}/libmaster.so ${LIBRARY_OUTPUT_PATH}/master.so 
-)
+# 链接库
+target_link_libraries(test_web_socket ${LINK_LIBS})

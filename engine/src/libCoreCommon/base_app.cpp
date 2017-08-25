@@ -12,9 +12,9 @@
 #include <string>
 #include <memory>
 
-#include "libBaseCommon/base_function.h"
+#include "libBaseCommon/function_util.h"
 #include "libBaseCommon/exception_handler.h"
-#include "libBaseCommon/base_time.h"
+#include "libBaseCommon/time_util.h"
 #include "libBaseCommon/profiling.h"
 #include "libBaseCommon/thread_base.h"
 #include "libBaseCommon/logger.h"
@@ -42,9 +42,9 @@ namespace core
 		return g_pBaseApp;
 	}
 
-	bool CBaseApp::run(const std::string& szInstanceName, const std::string& szConfig)
+	bool CBaseApp::runAndServe(const std::string& szInstanceName, const std::string& szConfig)
 	{
-		return CCoreApp::Inst()->run(szInstanceName, szConfig);
+		return CCoreApp::Inst()->runAndServe(szInstanceName, szConfig);
 	}
 
 	void CBaseApp::registerTicker(uint8_t nType, uint32_t nFromServiceID, uint64_t nFromActorID, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
@@ -122,4 +122,15 @@ namespace core
 	{
 		return CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->getServiceIDByTypeName(szName);
 	}
+}
+
+extern "C"
+#ifdef _WIN32
+__declspec(dllexport)
+#endif
+void runAndServe(const std::string& szInstanceName, const std::string& szConfig)
+{
+	core::CBaseApp* pBaseApp = new core::CBaseApp();
+	pBaseApp->runAndServe(szInstanceName, szConfig);
+	SAFE_DELETE(pBaseApp);
 }

@@ -35,10 +35,15 @@ void CTestWebsocketApp::onDestroy()
 
 }
 
+CTestWebsocketApp* CTestWebsocketApp::Inst()
+{
+	return reinterpret_cast<CTestWebsocketApp*>(CBaseApp::Inst());
+}
+
 int32_t main(int32_t argc, char* argv[])
 {
 	CTestWebsocketApp* pTestWebsocketApp = new CTestWebsocketApp();
-	pTestWebsocketApp->run(argv[0], "test_websocket_config.xml");
+	pTestWebsocketApp->runAndServe(argv[0], "test_websocket_config.xml");
 	SAFE_DELETE(pTestWebsocketApp);
 
 	return 0;

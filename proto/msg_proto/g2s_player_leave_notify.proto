@@ -1,0 +1,5 @@
+syntax = "proto2";
+
+message g2s_player_leave_notify {
+	required uint64 player_id = 1;
+}

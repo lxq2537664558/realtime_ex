@@ -2,9 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <math.h>
 
 #include "md5.h"
-#include "base_function.h"
+#include "function_util.h"
 
 typedef unsigned ulong32;
 

@@ -29,6 +29,9 @@ public:
 private:
 	void	forward(CGateClientSession* pGateClientSession, const core::message_header* pHeader);
 
+	void	onToGateMessage(uint64_t nSessionID, const void* pData, uint16_t nDataSize);
+	void	onToGateBroadcastMessage(const uint64_t* pSessionID, uint16_t nSessionCount, const void* pData, uint16_t nDataSize);
+
 private:
 	struct SClientMessageHandler
 	{

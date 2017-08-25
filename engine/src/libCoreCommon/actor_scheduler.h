@@ -24,12 +24,17 @@ namespace core
 		void			addWorkCoreActor(CCoreActor* pCoreActor);
 		void			addPendingCoreActor(CCoreActor* pCoreActor);
 
-		void			run();
+		void			dispatch();
+
+		uint64_t		getCurWorkActorID() const;
+		void			setCurWorkActorID(uint64_t nID);
 
 	private:
 		CCoreService*					m_pCoreService;
 		std::map<uint64_t, CCoreActor*>	m_mapCoreActor;
 		std::map<uint64_t, CCoreActor*>	m_mapWorkCoreActor;
 		std::map<uint64_t, CCoreActor*>	m_mapPendingCoreActor;
+
+		uint64_t						m_nCurWorkActorID;
 	};
 }

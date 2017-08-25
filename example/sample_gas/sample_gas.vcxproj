@@ -110,7 +110,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../../engine/inc;../../3rd/tinyxml2/include;../../3rd/protobuf/include;../;../../service;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../engine/inc;../../3rd/tinyxml2/include;../../3rd/protobuf/include;../../proto;../../proto/db_proto_src</AdditionalIncludeDirectories>
       <ExceptionHandling>Sync</ExceptionHandling>
       <StringPooling>true</StringPooling>
       <DisableSpecificWarnings>4251</DisableSpecificWarnings>
@@ -124,6 +124,10 @@
       <ProgramDatabaseFile>$(OutDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;libBaseCommon.lib;libBaseNetwork.lib;libCoreCommon.lib;tinyxml2d.lib;libprotobufd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -172,29 +176,29 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\service\proto_src\player_enter_gas_request.pb.cc">
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4251;4800;4267;</DisableSpecificWarnings>
-    </ClCompile>
-    <ClCompile Include="..\..\service\proto_src\player_enter_gas_response.pb.cc">
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4251;4800;4267;</DisableSpecificWarnings>
-    </ClCompile>
-    <ClCompile Include="..\..\service\proto_src\player_leave_gas_notify.pb.cc">
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4251;4800;4267;</DisableSpecificWarnings>
-    </ClCompile>
-    <ClCompile Include="..\proto_src\gas_online_count_notify.pb.cc">
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4251;4800;4267;</DisableSpecificWarnings>
-    </ClCompile>
-    <ClCompile Include="..\proto_src\update_name_request.pb.cc">
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4251;4800;4267;</DisableSpecificWarnings>
-    </ClCompile>
-    <ClCompile Include="..\proto_src\update_name_response.pb.cc">
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4251;4800;4267;</DisableSpecificWarnings>
-    </ClCompile>
+    <ClCompile Include="..\..\proto\db_proto_src\db_option.pb.cc" />
+    <ClCompile Include="..\..\proto\db_proto_src\player_base.pb.cc" />
+    <ClCompile Include="..\..\proto\msg_proto_src\c2s_update_name_request.pb.cc" />
+    <ClCompile Include="..\..\proto\msg_proto_src\c2s_update_name_response.pb.cc" />
+    <ClCompile Include="..\..\proto\msg_proto_src\g2s_player_enter_request.pb.cc" />
+    <ClCompile Include="..\..\proto\msg_proto_src\g2s_player_enter_response.pb.cc" />
+    <ClCompile Include="..\..\proto\msg_proto_src\g2s_player_heartbeat_notify.pb.cc" />
+    <ClCompile Include="..\..\proto\msg_proto_src\g2s_player_leave_notify.pb.cc" />
+    <ClCompile Include="..\..\proto\msg_proto_src\s2c_player_attribute_notify.pb.cc" />
+    <ClCompile Include="..\..\proto\msg_proto_src\s2c_player_login_complete_notify.pb.cc" />
+    <ClCompile Include="..\..\proto\msg_proto_src\s2d_online_count_notify.pb.cc" />
+    <ClCompile Include="..\..\proto\msg_proto_src\s2g_kick_player_notify.pb.cc" />
+    <ClCompile Include="..\..\proto\msg_proto_src\s2u_player_heartbeat_notify.pb.cc" />
+    <ClCompile Include="..\..\proto\msg_proto_src\s2u_player_leave_notify.pb.cc" />
+    <ClCompile Include="..\..\proto\msg_proto_src\u2s_kick_player_notify.pb.cc" />
     <ClCompile Include="player.cpp" />
+    <ClCompile Include="player_attribute_module.cpp" />
     <ClCompile Include="player_factory.cpp" />
     <ClCompile Include="player_message_handler.cpp" />
-    <ClCompile Include="watchdog_service.cpp" />
-    <ClCompile Include="watchdog_service_message_handler.cpp" />
+    <ClCompile Include="player_mgr.cpp" />
+    <ClCompile Include="player_module.cpp" />
+    <ClCompile Include="gas_service.cpp" />
+    <ClCompile Include="gas_service_message_handler.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\engine\src\libBaseCommon\libBaseCommon.vcxproj">
@@ -208,17 +212,31 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\service\proto_src\player_enter_gas_request.pb.h" />
-    <ClInclude Include="..\..\service\proto_src\player_enter_gas_response.pb.h" />
-    <ClInclude Include="..\..\service\proto_src\player_leave_gas_notify.pb.h" />
-    <ClInclude Include="..\proto_src\gas_online_count_notify.pb.h" />
-    <ClInclude Include="..\proto_src\update_name_request.pb.h" />
-    <ClInclude Include="..\proto_src\update_name_response.pb.h" />
+    <ClInclude Include="..\..\proto\db_proto_src\db_option.pb.h" />
+    <ClInclude Include="..\..\proto\db_proto_src\player_base.pb.h" />
+    <ClInclude Include="..\..\proto\msg_proto_src\c2s_update_name_request.pb.h" />
+    <ClInclude Include="..\..\proto\msg_proto_src\c2s_update_name_response.pb.h" />
+    <ClInclude Include="..\..\proto\msg_proto_src\g2s_player_enter_request.pb.h" />
+    <ClInclude Include="..\..\proto\msg_proto_src\g2s_player_enter_response.pb.h" />
+    <ClInclude Include="..\..\proto\msg_proto_src\g2s_player_heartbeat_notify.pb.h" />
+    <ClInclude Include="..\..\proto\msg_proto_src\g2s_player_leave_notify.pb.h" />
+    <ClInclude Include="..\..\proto\msg_proto_src\s2c_player_attribute_notify.pb.h" />
+    <ClInclude Include="..\..\proto\msg_proto_src\s2c_player_login_complete_notify.pb.h" />
+    <ClInclude Include="..\..\proto\msg_proto_src\s2d_online_count_notify.pb.h" />
+    <ClInclude Include="..\..\proto\msg_proto_src\s2g_kick_player_notify.pb.h" />
+    <ClInclude Include="..\..\proto\msg_proto_src\s2u_player_heartbeat_notify.pb.h" />
+    <ClInclude Include="..\..\proto\msg_proto_src\s2u_player_leave_notify.pb.h" />
+    <ClInclude Include="..\..\proto\msg_proto_src\u2s_kick_player_notify.pb.h" />
+    <ClInclude Include="player_attribute_module.h" />
+    <ClInclude Include="player_attribute_module_interface.h" />
     <ClInclude Include="player.h" />
     <ClInclude Include="player_factory.h" />
     <ClInclude Include="player_message_handler.h" />
-    <ClInclude Include="watchdog_service_message_handler.h" />
-    <ClInclude Include="watchdog_service.h" />
+    <ClInclude Include="player_mgr.h" />
+    <ClInclude Include="player_module.h" />
+    <ClInclude Include="player_module_event.h" />
+    <ClInclude Include="gas_service_message_handler.h" />
+    <ClInclude Include="gas_service.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

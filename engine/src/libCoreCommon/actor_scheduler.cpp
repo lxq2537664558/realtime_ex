@@ -9,12 +9,13 @@
 #include "core_service.h"
 
 #include "libCoreCommon/base_app.h"
-#include "libBaseCommon/base_time.h"
+#include "libBaseCommon/time_util.h"
 
 namespace core
 {
 	CActorScheduler::CActorScheduler(CCoreService* pCoreService)
 		: m_pCoreService(pCoreService)
+		, m_nCurWorkActorID(0)
 	{
 	}
 
@@ -37,15 +38,15 @@ namespace core
 		return iter->second;
 	}
 
-	void CActorScheduler::run()
+	void CActorScheduler::dispatch()
 	{
-		int64_t nCurTime = base::getGmtTime();
+		int64_t nCurTime = base::time_util::getGmtTime();
 		for (auto iter = this->m_mapPendingCoreActor.begin(); iter != this->m_mapPendingCoreActor.end();)
 		{
 			CCoreActor* pCoreActor = iter->second;
 			if (pCoreActor == nullptr)
 			{
-				++iter;
+				this->m_mapPendingCoreActor.erase(iter++);
 				continue;
 			}
 
@@ -61,8 +62,15 @@ namespace core
 		std::map<uint64_t, CCoreActor*> mapWorkCoreActor = std::move(this->m_mapWorkCoreActor);
 		for (auto iter = mapWorkCoreActor.begin(); iter != mapWorkCoreActor.end(); ++iter)
 		{
-			iter->second->process();
+			CCoreActor* pCoreActor = iter->second;
+			if (pCoreActor == nullptr)
+				continue;
+			
+			this->m_nCurWorkActorID = pCoreActor->getID();
+
+			pCoreActor->process();
 		}
+		this->m_nCurWorkActorID = 0;
 	}
 
 	CCoreActor* CActorScheduler::createCoreActor(uint64_t nActorID, CActorBase* pActorBase)
@@ -106,5 +114,15 @@ namespace core
 		this->m_mapPendingCoreActor[pCoreActor->getID()] = pCoreActor;
 
 		pCoreActor->setState(CCoreActor::eABS_Pending);
+	}
+
+	uint64_t CActorScheduler::getCurWorkActorID() const
+	{
+		return this->m_nCurWorkActorID;
+	}
+
+	void CActorScheduler::setCurWorkActorID(uint64_t nID)
+	{
+		this->m_nCurWorkActorID = nID;
 	}
 }

@@ -4,10 +4,9 @@
 #include <windows.h>
 #endif
 
-#include "base_function.h"
+#include "function_util.h"
 #include "exception_handler.h"
 #include "logger.h"
-
 
 #define SAFE_DELETE(ptr) { if(ptr != nullptr) { delete ptr; ptr = nullptr; } }
 #define SAFE_DELETE_ARRAY(ptr) { if(ptr != nullptr) { delete[] ptr; ptr = nullptr; } }

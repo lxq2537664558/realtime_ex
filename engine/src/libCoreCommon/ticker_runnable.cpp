@@ -9,7 +9,7 @@
 #include "logic_runnable.h"
 
 #include "libBaseCommon/debug_helper.h"
-#include "libBaseCommon/base_time.h"
+#include "libBaseCommon/time_util.h"
 #include "libBaseCommon/profiling.h"
 
 #include <algorithm>
@@ -26,7 +26,7 @@ namespace core
 	CTickerRunnable::CTickerRunnable()
 		: m_pThreadBase(nullptr)
 	{
-		this->m_nLogicTime = base::getGmtTime();
+		this->m_nLogicTime = base::time_util::getGmtTime();
 	}
 
 	CTickerRunnable::~CTickerRunnable()
@@ -53,7 +53,7 @@ namespace core
 
 	bool CTickerRunnable::onProcess()
 	{
-		int64_t nCurTime = base::getGmtTime();
+		int64_t nCurTime = base::time_util::getGmtTime();
 		this->update(nCurTime);
 
 		SMessagePacket sMessagePacket;
@@ -63,7 +63,7 @@ namespace core
 
 		CCoreApp::Inst()->getLogicRunnable()->getMessageQueue()->send(sMessagePacket);
 
-		int64_t nEndTime = base::getGmtTime();
+		int64_t nEndTime = base::time_util::getGmtTime();
 		int64_t nDeltaTime = nEndTime - nCurTime;
 		if (_CYCLE_TIME - nDeltaTime > 0)
 			std::this_thread::sleep_for(std::chrono::milliseconds(_CYCLE_TIME - nDeltaTime));

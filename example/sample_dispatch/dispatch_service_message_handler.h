@@ -1,26 +1,31 @@
 #pragma once
 #include "libCoreCommon/service_message_registry.h"
+#include "libCoreCommon/db_service_invoke_holder.h"
 #include "libCoreCommon/service_base.h"
 
-#include "proto_src/gas_online_count_notify.pb.h"
-#include "proto_src/gate_online_count_notify.pb.h"
-#include "proto_src/validate_login_request.pb.h"
-#include "proto_src/gate_addr_notify.pb.h"
+#include "msg_proto_src/s2d_online_count_notify.pb.h"
+#include "msg_proto_src/g2d_online_count_notify.pb.h"
+#include "msg_proto_src/l2d_validate_login_request.pb.h"
+#include "msg_proto_src/g2d_addr_notify.pb.h"
+#include "msg_proto_src/u2d_active_count_notify.pb.h"
 
 using namespace core;
 
+class CDispatchService;
 class CDispatchServiceMessageHandler :
-	public CServiceMessageRegistry<CDispatchServiceMessageHandler>
+	public CServiceMessageRegistry<CDispatchServiceMessageHandler>,
+	public CDbServiceInvokeHolder
 {
 	DEFEND_SERVICE_MESSAGE_FUNCTION(CDispatchServiceMessageHandler)
 
 public:
-	CDispatchServiceMessageHandler(CServiceBase* pServiceBase);
+	CDispatchServiceMessageHandler(CDispatchService* pDispatchService);
 	~CDispatchServiceMessageHandler();
 
 private:
-	void		gas_online_count_handler(CServiceBase* pServiceBase, core::SSessionInfo sSessionInfo, const gas_online_count_notify* pRequest);
-	void		gate_online_count_handler(CServiceBase* pServiceBase, core::SSessionInfo sSessionInfo, const gate_online_count_notify* pRequest);
-	void		validate_login_handler(CServiceBase* pServiceBase, core::SSessionInfo sSessionInfo, const validate_login_request* pRequest);
-	void		gate_addr_handler(CServiceBase* pServiceBase, core::SSessionInfo sSessionInfo, const gate_addr_notify* pRequest);
+	void		s2d_online_count_notify_handler(CServiceBase* pServiceBase, core::SSessionInfo sSessionInfo, const s2d_online_count_notify* pRequest);
+	void		g2d_online_count_notify_handler(CServiceBase* pServiceBase, core::SSessionInfo sSessionInfo, const g2d_online_count_notify* pRequest);
+	void		l2d_validate_login_request_handler(CServiceBase* pServiceBase, core::SSessionInfo sSessionInfo, const l2d_validate_login_request* pRequest);
+	void		g2d_addr_notify_handler(CServiceBase* pServiceBase, core::SSessionInfo sSessionInfo, const g2d_addr_notify* pRequest);
+	void		u2d_active_count_notify_handler(CServiceBase* pServiceBase, core::SSessionInfo sSessionInfo, const u2d_active_count_notify* pRequest);
 };

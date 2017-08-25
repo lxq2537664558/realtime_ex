@@ -1,0 +1,5 @@
+syntax = "proto2";
+
+message g2s_player_heartbeat_notify {
+	required uint64 player_id = 1;
+}

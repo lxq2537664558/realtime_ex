@@ -23,7 +23,7 @@ namespace core
 		}
 		else
 		{
-			PrintWarning("CNodeConnectionFactory::createBaseConnection error type: %s", szType.c_str());
+			PrintWarning("CNodeConnectionFactory::createBaseConnection error type: {}", szType);
 		}
 
 		return nullptr;

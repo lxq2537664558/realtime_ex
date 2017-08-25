@@ -5,6 +5,7 @@
 #include "libCoreCommon/base_connection_mgr.h"
 #include "libCoreCommon/proto_system.h"
 #include "libCoreCommon/base_app.h"
+#include "libBaseCommon/string_util.h"
 
 using namespace core;
 
@@ -32,11 +33,11 @@ uint32_t CConnectionFromNode::getNodeID() const
 void CConnectionFromNode::onConnect()
 {
 	uint32_t nServiceID = 0;
-	base::crt::atoui(this->getContext().c_str(), nServiceID);
+	base::string_util::convert_to_value(this->getContext(), nServiceID);
 	this->m_pMasterService = dynamic_cast<CMasterService*>(CBaseApp::Inst()->getServiceBase(nServiceID));
 	if (nullptr == this->m_pMasterService)
 	{
-		PrintWarning("master service id error service_id: %d", nServiceID);
+		PrintWarning("master service id error service_id: {}", nServiceID);
 		this->shutdown(true, "nullptr == this->m_pMasterService");
 		return;
 	}

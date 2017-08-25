@@ -11,7 +11,7 @@ namespace base
 		CTokenParser();
 		~CTokenParser();
 
-		bool	parse(const char* szBuf, char nDelim);
+		bool	parse(const char* szBuf, const char* szDelim);
 		void	reset();
 		size_t	getElementCount() const;
 		bool	getInt32Element(size_t nIndex, int32_t& nValue);

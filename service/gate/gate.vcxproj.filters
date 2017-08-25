@@ -21,44 +21,14 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="stdafx.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="targetver.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="gate_service.h">
       <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\proto_src\gate_handshake_request.pb.h">
-      <Filter>proto_src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\proto_src\gate_handshake_response.pb.h">
-      <Filter>proto_src</Filter>
     </ClInclude>
     <ClInclude Include="gate_connection_from_client.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\proto_src\player_enter_gas_request.pb.h">
-      <Filter>proto_src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\proto_src\player_enter_gas_response.pb.h">
-      <Filter>proto_src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\proto_src\player_leave_gas_notify.pb.h">
-      <Filter>proto_src</Filter>
-    </ClInclude>
     <ClInclude Include="gate_service_message_handler.h">
       <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\proto_src\player_token_notify.pb.h">
-      <Filter>proto_src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\proto_src\gate_addr_notify.pb.h">
-      <Filter>proto_src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\proto_src\gate_online_count_notify.pb.h">
-      <Filter>proto_src</Filter>
     </ClInclude>
     <ClInclude Include="gate_client_message_handler.h">
       <Filter>头文件</Filter>
@@ -75,43 +45,46 @@
     <ClInclude Include="gate_client_session_mgr.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\proto\msg_proto_src\gate_handshake_request.pb.h">
+      <Filter>proto_src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\proto\msg_proto_src\gate_handshake_response.pb.h">
+      <Filter>proto_src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\proto\msg_proto_src\g2d_addr_notify.pb.h">
+      <Filter>proto_src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\proto\msg_proto_src\g2d_online_count_notify.pb.h">
+      <Filter>proto_src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\proto\msg_proto_src\g2s_player_enter_request.pb.h">
+      <Filter>proto_src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\proto\msg_proto_src\g2s_player_enter_response.pb.h">
+      <Filter>proto_src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\proto\msg_proto_src\g2s_player_leave_notify.pb.h">
+      <Filter>proto_src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\proto\msg_proto_src\d2g_player_token_notify.pb.h">
+      <Filter>proto_src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\proto\msg_proto_src\g2s_player_heartbeat_notify.pb.h">
+      <Filter>proto_src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\proto\msg_proto_src\s2g_kick_player_notify.pb.h">
+      <Filter>proto_src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="stdafx.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="gate_service.cpp">
       <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\proto_src\gate_handshake_request.pb.cc">
-      <Filter>proto_src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\proto_src\gate_handshake_response.pb.cc">
-      <Filter>proto_src</Filter>
     </ClCompile>
     <ClCompile Include="gate_connection_from_client.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\proto_src\player_enter_gas_request.pb.cc">
-      <Filter>proto_src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\proto_src\player_enter_gas_response.pb.cc">
-      <Filter>proto_src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\proto_src\player_leave_gas_notify.pb.cc">
-      <Filter>proto_src</Filter>
-    </ClCompile>
     <ClCompile Include="gate_service_message_handler.cpp">
       <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\proto_src\player_token_notify.pb.cc">
-      <Filter>proto_src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\proto_src\gate_addr_notify.pb.cc">
-      <Filter>proto_src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\proto_src\gate_online_count_notify.pb.cc">
-      <Filter>proto_src</Filter>
     </ClCompile>
     <ClCompile Include="gate_client_message_handler.cpp">
       <Filter>源文件</Filter>
@@ -127,6 +100,36 @@
     </ClCompile>
     <ClCompile Include="gate_client_session_mgr.cpp">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\proto\msg_proto_src\gate_handshake_request.pb.cc">
+      <Filter>proto_src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\proto\msg_proto_src\gate_handshake_response.pb.cc">
+      <Filter>proto_src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\proto\msg_proto_src\g2d_addr_notify.pb.cc">
+      <Filter>proto_src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\proto\msg_proto_src\g2d_online_count_notify.pb.cc">
+      <Filter>proto_src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\proto\msg_proto_src\g2s_player_enter_request.pb.cc">
+      <Filter>proto_src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\proto\msg_proto_src\g2s_player_enter_response.pb.cc">
+      <Filter>proto_src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\proto\msg_proto_src\g2s_player_leave_notify.pb.cc">
+      <Filter>proto_src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\proto\msg_proto_src\d2g_player_token_notify.pb.cc">
+      <Filter>proto_src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\proto\msg_proto_src\g2s_player_heartbeat_notify.pb.cc">
+      <Filter>proto_src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\proto\msg_proto_src\s2g_kick_player_notify.pb.cc">
+      <Filter>proto_src</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

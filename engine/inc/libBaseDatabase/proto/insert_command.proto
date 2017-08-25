@@ -1,0 +1,8 @@
+syntax = "proto2";
+
+package proto.db;
+
+message insert_command {
+	required string message_name = 1;
+	required bytes message_content = 2;
+}

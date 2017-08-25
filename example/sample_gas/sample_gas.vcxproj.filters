@@ -13,18 +13,21 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="proto">
+    <Filter Include="功能模块">
+      <UniqueIdentifier>{bbfc54c3-8cd0-4857-b247-ddafb29fd749}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="功能模块\角色数据模块">
+      <UniqueIdentifier>{3eaebdd9-f009-4b54-af1d-a16b1a2a1ab4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="msg_proto">
       <UniqueIdentifier>{5d6bf1a6-8976-4ef5-bed0-7da6f103e145}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="db_proto">
+      <UniqueIdentifier>{99860bba-2005-406c-915b-7788da8712cf}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="watchdog_service.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="player.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="watchdog_service_message_handler.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="player_message_handler.cpp">
@@ -33,32 +36,68 @@
     <ClCompile Include="player_factory.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\proto_src\update_name_request.pb.cc">
-      <Filter>proto</Filter>
+    <ClCompile Include="..\..\proto\msg_proto_src\s2d_online_count_notify.pb.cc">
+      <Filter>msg_proto</Filter>
     </ClCompile>
-    <ClCompile Include="..\proto_src\update_name_response.pb.cc">
-      <Filter>proto</Filter>
+    <ClCompile Include="..\..\proto\msg_proto_src\g2s_player_enter_request.pb.cc">
+      <Filter>msg_proto</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\service\proto_src\player_leave_gas_notify.pb.cc">
-      <Filter>proto</Filter>
+    <ClCompile Include="..\..\proto\msg_proto_src\g2s_player_enter_response.pb.cc">
+      <Filter>msg_proto</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\service\proto_src\player_enter_gas_request.pb.cc">
-      <Filter>proto</Filter>
+    <ClCompile Include="..\..\proto\msg_proto_src\g2s_player_leave_notify.pb.cc">
+      <Filter>msg_proto</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\service\proto_src\player_enter_gas_response.pb.cc">
-      <Filter>proto</Filter>
+    <ClCompile Include="..\..\proto\msg_proto_src\c2s_update_name_request.pb.cc">
+      <Filter>msg_proto</Filter>
     </ClCompile>
-    <ClCompile Include="..\proto_src\gas_online_count_notify.pb.cc">
-      <Filter>proto</Filter>
+    <ClCompile Include="..\..\proto\msg_proto_src\c2s_update_name_response.pb.cc">
+      <Filter>msg_proto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\proto\msg_proto_src\s2u_player_heartbeat_notify.pb.cc">
+      <Filter>msg_proto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\proto\msg_proto_src\u2s_kick_player_notify.pb.cc">
+      <Filter>msg_proto</Filter>
+    </ClCompile>
+    <ClCompile Include="player_attribute_module.cpp">
+      <Filter>功能模块\角色数据模块</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\proto\db_proto_src\player_base.pb.cc">
+      <Filter>db_proto</Filter>
+    </ClCompile>
+    <ClCompile Include="player_module.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="player_mgr.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="gas_service.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="gas_service_message_handler.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\proto\msg_proto_src\g2s_player_heartbeat_notify.pb.cc">
+      <Filter>msg_proto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\proto\msg_proto_src\s2g_kick_player_notify.pb.cc">
+      <Filter>msg_proto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\proto\msg_proto_src\s2u_player_leave_notify.pb.cc">
+      <Filter>msg_proto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\proto\msg_proto_src\s2c_player_attribute_notify.pb.cc">
+      <Filter>msg_proto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\proto\msg_proto_src\s2c_player_login_complete_notify.pb.cc">
+      <Filter>msg_proto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\proto\db_proto_src\db_option.pb.cc">
+      <Filter>db_proto</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="watchdog_service.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="watchdog_service_message_handler.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="player.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -68,23 +107,71 @@
     <ClInclude Include="player_factory.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\proto_src\update_name_request.pb.h">
-      <Filter>proto</Filter>
+    <ClInclude Include="..\..\proto\msg_proto_src\s2d_online_count_notify.pb.h">
+      <Filter>msg_proto</Filter>
     </ClInclude>
-    <ClInclude Include="..\proto_src\update_name_response.pb.h">
-      <Filter>proto</Filter>
+    <ClInclude Include="..\..\proto\msg_proto_src\g2s_player_enter_request.pb.h">
+      <Filter>msg_proto</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\service\proto_src\player_leave_gas_notify.pb.h">
-      <Filter>proto</Filter>
+    <ClInclude Include="..\..\proto\msg_proto_src\g2s_player_enter_response.pb.h">
+      <Filter>msg_proto</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\service\proto_src\player_enter_gas_request.pb.h">
-      <Filter>proto</Filter>
+    <ClInclude Include="..\..\proto\msg_proto_src\g2s_player_leave_notify.pb.h">
+      <Filter>msg_proto</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\service\proto_src\player_enter_gas_response.pb.h">
-      <Filter>proto</Filter>
+    <ClInclude Include="..\..\proto\msg_proto_src\c2s_update_name_request.pb.h">
+      <Filter>msg_proto</Filter>
     </ClInclude>
-    <ClInclude Include="..\proto_src\gas_online_count_notify.pb.h">
-      <Filter>proto</Filter>
+    <ClInclude Include="..\..\proto\msg_proto_src\c2s_update_name_response.pb.h">
+      <Filter>msg_proto</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\proto\msg_proto_src\s2u_player_heartbeat_notify.pb.h">
+      <Filter>msg_proto</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\proto\msg_proto_src\u2s_kick_player_notify.pb.h">
+      <Filter>msg_proto</Filter>
+    </ClInclude>
+    <ClInclude Include="player_module.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="player_attribute_module_interface.h">
+      <Filter>功能模块\角色数据模块</Filter>
+    </ClInclude>
+    <ClInclude Include="player_module_event.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="player_attribute_module.h">
+      <Filter>功能模块\角色数据模块</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\proto\db_proto_src\player_base.pb.h">
+      <Filter>db_proto</Filter>
+    </ClInclude>
+    <ClInclude Include="player_mgr.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="gas_service.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="gas_service_message_handler.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\proto\msg_proto_src\g2s_player_heartbeat_notify.pb.h">
+      <Filter>msg_proto</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\proto\msg_proto_src\s2g_kick_player_notify.pb.h">
+      <Filter>msg_proto</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\proto\msg_proto_src\s2u_player_leave_notify.pb.h">
+      <Filter>msg_proto</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\proto\msg_proto_src\s2c_player_attribute_notify.pb.h">
+      <Filter>msg_proto</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\proto\msg_proto_src\s2c_player_login_complete_notify.pb.h">
+      <Filter>msg_proto</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\proto\db_proto_src\db_option.pb.h">
+      <Filter>db_proto</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -3,10 +3,11 @@
 
 #include "libBaseCommon/thread_base.h"
 #include "libBaseCommon/logger.h"
-#include "libBaseCommon/base_function.h"
+#include "libBaseCommon/function_util.h"
 #include "libBaseCommon/debug_helper.h"
 
 #include <atomic>
+#include <thread>
 
 class CMonitor :
 	public base::IRunnable
@@ -96,13 +97,13 @@ bool CMonitor::onProcess()
 	{
 		if (this->m_nID != 0)
 		{
-			PrintWarning("dispatch message dead loop message id: %d", this->m_nID);
+			PrintWarning("dispatch message dead loop message id: {}", this->m_nID);
 		}
 		else if (this->m_pAddr != nullptr)
 		{
 			char szAddr[256] = { 0 };
 			base::getFunctionInfo(this->m_pAddr, szAddr, _countof(szAddr));
-			PrintWarning("update ticker dead loop callback addr: %s", szAddr);
+			PrintWarning("update ticker dead loop callback addr: {}", szAddr);
 		}
 	}
 	else
@@ -110,7 +111,7 @@ bool CMonitor::onProcess()
 		this->m_nCheckVersion = this->m_nVersion;
 	}
 
-	base::sleep(1000);
+	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
 	return true;
 }

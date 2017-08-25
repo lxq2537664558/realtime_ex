@@ -1,12 +1,12 @@
-#include "stdafx.h"
 #include "connection_to_login.h"
 #include "libBaseCommon/logger.h"
 #include "libBaseCommon/debug_helper.h"
-#include "libBaseCommon/base_function.h"
+#include "libBaseCommon/function_util.h"
 #include "message_handler.h"
 
-#include "proto_src/gate_handshake_request.pb.h"
-#include "proto_src/player_login_request.pb.h"
+#include "msg_proto_src/gate_handshake_request.pb.h"
+#include "msg_proto_src/player_login_request.pb.h"
+#include <iostream>
 
 CConnectToLogin::CConnectToLogin()
 	: m_nAccountID(0)
@@ -22,8 +22,10 @@ void CConnectToLogin::onConnect()
 {
 	PrintInfo("CConnectToLogin::onConnect");
 
+	std::string szName;
+	std::cin >> szName;
 	player_login_request request_msg;
-	request_msg.set_account_id(100);
+	request_msg.set_account_name(szName);
 	request_msg.set_server_id(1);
 
 	CMessageHandler::Inst()->sendMessage(this, &request_msg);

@@ -28,6 +28,15 @@
     <Filter Include="src\http">
       <UniqueIdentifier>{069924d5-c13a-40a1-ab36-ec137c7bf805}</UniqueIdentifier>
     </Filter>
+    <Filter Include="inc\db">
+      <UniqueIdentifier>{de4e2532-0feb-4274-80bf-05afd4a23f10}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\db">
+      <UniqueIdentifier>{53fc2fe6-ffc5-4313-ac87-8f3a59e7a99a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\db\proto_src">
+      <UniqueIdentifier>{0ce441fe-aeaa-4735-9bc2-e49b74de8935}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\inc\libCoreCommon\ticker.h">
@@ -189,9 +198,6 @@
     <ClInclude Include="..\..\inc\libCoreCommon\service_invoke_holder.h">
       <Filter>inc\service_base</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreCommon\actor_invoke_holder.h">
-      <Filter>inc\actor</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\inc\libCoreCommon\json_protobuf_factory.h">
       <Filter>inc\service_base</Filter>
     </ClInclude>
@@ -212,6 +218,33 @@
     </ClInclude>
     <ClInclude Include="http_base.h">
       <Filter>src\http</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\inc\libCoreCommon\db_service_invoke_holder.h">
+      <Filter>inc\db</Filter>
+    </ClInclude>
+    <ClInclude Include="proto_src\call_command.pb.h">
+      <Filter>src\db\proto_src</Filter>
+    </ClInclude>
+    <ClInclude Include="proto_src\delete_command.pb.h">
+      <Filter>src\db\proto_src</Filter>
+    </ClInclude>
+    <ClInclude Include="proto_src\flush_command.pb.h">
+      <Filter>src\db\proto_src</Filter>
+    </ClInclude>
+    <ClInclude Include="proto_src\nop_command.pb.h">
+      <Filter>src\db\proto_src</Filter>
+    </ClInclude>
+    <ClInclude Include="proto_src\query_command.pb.h">
+      <Filter>src\db\proto_src</Filter>
+    </ClInclude>
+    <ClInclude Include="proto_src\select_command.pb.h">
+      <Filter>src\db\proto_src</Filter>
+    </ClInclude>
+    <ClInclude Include="proto_src\insert_command.pb.h">
+      <Filter>src\db\proto_src</Filter>
+    </ClInclude>
+    <ClInclude Include="proto_src\update_command.pb.h">
+      <Filter>src\db\proto_src</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -332,9 +365,6 @@
     <ClCompile Include="service_invoke_holder.cpp">
       <Filter>src\service_base</Filter>
     </ClCompile>
-    <ClCompile Include="actor_invoke_holder.cpp">
-      <Filter>src\actor</Filter>
-    </ClCompile>
     <ClCompile Include="http_response.cpp">
       <Filter>src\http</Filter>
     </ClCompile>
@@ -347,11 +377,35 @@
     <ClCompile Include="http_request_parser.cpp">
       <Filter>src\http</Filter>
     </ClCompile>
+    <ClCompile Include="db_service_invoke_holder.cpp">
+      <Filter>src\db</Filter>
+    </ClCompile>
+    <ClCompile Include="proto_src\call_command.pb.cc">
+      <Filter>src\db\proto_src</Filter>
+    </ClCompile>
+    <ClCompile Include="proto_src\delete_command.pb.cc">
+      <Filter>src\db\proto_src</Filter>
+    </ClCompile>
+    <ClCompile Include="proto_src\flush_command.pb.cc">
+      <Filter>src\db\proto_src</Filter>
+    </ClCompile>
+    <ClCompile Include="proto_src\nop_command.pb.cc">
+      <Filter>src\db\proto_src</Filter>
+    </ClCompile>
+    <ClCompile Include="proto_src\query_command.pb.cc">
+      <Filter>src\db\proto_src</Filter>
+    </ClCompile>
+    <ClCompile Include="proto_src\select_command.pb.cc">
+      <Filter>src\db\proto_src</Filter>
+    </ClCompile>
+    <ClCompile Include="proto_src\insert_command.pb.cc">
+      <Filter>src\db\proto_src</Filter>
+    </ClCompile>
+    <ClCompile Include="proto_src\update_command.pb.cc">
+      <Filter>src\db\proto_src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\inc\libCoreCommon\actor_base.inl">
-      <Filter>inc\actor</Filter>
-    </None>
     <None Include="..\..\inc\libCoreCommon\actor_message_registry.inl">
       <Filter>inc\actor</Filter>
     </None>
@@ -372,9 +426,6 @@
     </None>
     <None Include="..\..\inc\libCoreCommon\service_invoke_holder.inl">
       <Filter>inc\service_base</Filter>
-    </None>
-    <None Include="..\..\inc\libCoreCommon\actor_invoke_holder.inl">
-      <Filter>inc\actor</Filter>
     </None>
     <None Include="..\..\inc\libCoreCommon\json_protobuf_factory.inl">
       <Filter>inc\service_base</Filter>

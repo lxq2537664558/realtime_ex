@@ -1,0 +1,5 @@
+syntax = "proto2";
+
+message s2d_online_count_notify {
+	required uint32 count = 1;
+}

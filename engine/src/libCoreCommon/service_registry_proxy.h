@@ -47,8 +47,7 @@ namespace core
 	private:
 		void							onCheckConnectMaster(uint64_t nContext);
 		void							onConnectRefuse(const std::string& szContext);
-		bool							checkLocalGateServiceProxyInfo();
-
+		
 	private:
 		struct SNodeProxyInfo
 		{

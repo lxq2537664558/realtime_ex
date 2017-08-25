@@ -1,0 +1,5 @@
+syntax = "proto2";
+
+message u2s_kick_player_notify {
+	required uint64 player_id = 1;
+}

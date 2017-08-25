@@ -63,7 +63,7 @@ void CTestService1::onTicker1(uint64_t nContext)
 	msg1.set_name("aaa");
 
 	CFuture<response_msg1> sFuture;
-	this->getServiceInvoker()->async_call(eMTT_Service, 2, &msg1, sFuture);
+	this->getServiceInvoker()->async_invoke(eMTT_Service, 2, &msg1, sFuture);
 	sFuture.then_r([this](const response_msg1* pMsg, uint32_t nErrorCode)
 	{
 		CFuture<response_msg2> sFuture;
@@ -79,7 +79,7 @@ void CTestService1::onTicker1(uint64_t nContext)
 		msg2.set_id(pMsg->id());
 		msg2.set_name(pMsg->name());
 
-		this->getServiceInvoker()->async_call(eMTT_Service, 3, &msg2, sFuture);
+		this->getServiceInvoker()->async_invoke(eMTT_Service, 3, &msg2, sFuture);
 
 		return sFuture;
 
@@ -104,14 +104,14 @@ void CTestService1::onTicker2(uint64_t nContext)
 	msg1.set_name("aaa");
 
 	CFuture<response_msg1> sFuture1;
-	this->getServiceInvoker()->async_call(eMTT_Service, 2, &msg1, sFuture1);
+	this->getServiceInvoker()->async_invoke(eMTT_Service, 2, &msg1, sFuture1);
 
 	request_msg2 msg2;
 	msg2.set_id(200);
 	msg2.set_name("bbb");
 
 	CFuture<response_msg2> sFuture2;
-	this->getServiceInvoker()->async_call(eMTT_Service, 3, &msg2, sFuture2);
+	this->getServiceInvoker()->async_invoke(eMTT_Service, 3, &msg2, sFuture2);
 
 	auto sFuture = whenAll(sFuture1, sFuture2);
 
@@ -141,7 +141,7 @@ void CTestService1::onTicker3(uint64_t nContext)
 	msg1.set_id(100);
 	msg1.set_name("aaa");
 
-	this->getServiceInvoker()->async_call<response_msg1>(eMTT_Service, 2, &msg1, [this](const response_msg1* pMsg, uint32_t nErrorCode)
+	this->getServiceInvoker()->async_invoke<response_msg1>(eMTT_Service, 2, &msg1, [this](const response_msg1* pMsg, uint32_t nErrorCode)
 	{
 		if (nErrorCode != eRRT_OK)
 		{
@@ -155,7 +155,7 @@ void CTestService1::onTicker3(uint64_t nContext)
 		msg2.set_id(pMsg->id());
 		msg2.set_name(pMsg->name());
 
-		this->getServiceInvoker()->async_call<response_msg2>(eMTT_Service, 3, &msg2, [this](const response_msg2* pMsg, uint32_t nErrorCode)
+		this->getServiceInvoker()->async_invoke<response_msg2>(eMTT_Service, 3, &msg2, [this](const response_msg2* pMsg, uint32_t nErrorCode)
 		{
 			if (nErrorCode != eRRT_OK)
 			{

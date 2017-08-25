@@ -101,12 +101,12 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>../../engine/inc;../../3rd/tinyxml2/include;../../3rd/protobuf/include;../../service;../;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../engine/inc;../../3rd/tinyxml2/include;../../3rd/protobuf/include;../../proto;</AdditionalIncludeDirectories>
       <StringPooling>true</StringPooling>
     </ClCompile>
     <Link>
@@ -158,52 +158,34 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\service\proto_src\gate_handshake_request.pb.h" />
-    <ClInclude Include="..\..\service\proto_src\gate_handshake_response.pb.h" />
-    <ClInclude Include="..\..\service\proto_src\player_login_request.pb.h" />
-    <ClInclude Include="..\..\service\proto_src\player_login_response.pb.h" />
-    <ClInclude Include="..\proto_src\update_name_request.pb.h" />
-    <ClInclude Include="..\proto_src\update_name_response.pb.h" />
+    <ClInclude Include="..\..\proto\msg_proto_src\c2s_update_name_request.pb.h" />
+    <ClInclude Include="..\..\proto\msg_proto_src\c2s_update_name_response.pb.h" />
+    <ClInclude Include="..\..\proto\msg_proto_src\gate_handshake_request.pb.h" />
+    <ClInclude Include="..\..\proto\msg_proto_src\gate_handshake_response.pb.h" />
+    <ClInclude Include="..\..\proto\msg_proto_src\player_login_request.pb.h" />
+    <ClInclude Include="..\..\proto\msg_proto_src\player_login_response.pb.h" />
     <ClInclude Include="connection_to_login.h" />
     <ClInclude Include="message_handler.h" />
     <ClInclude Include="connection_to_gate.h" />
-    <ClInclude Include="stdafx.h" />
-    <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\service\proto_src\gate_handshake_request.pb.cc">
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4800;4267;</DisableSpecificWarnings>
+    <ClCompile Include="..\..\proto\msg_proto_src\c2s_update_name_request.pb.cc" />
+    <ClCompile Include="..\..\proto\msg_proto_src\c2s_update_name_response.pb.cc" />
+    <ClCompile Include="..\..\proto\msg_proto_src\gate_handshake_request.pb.cc">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\..\service\proto_src\gate_handshake_response.pb.cc">
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4800;4267;</DisableSpecificWarnings>
+    <ClCompile Include="..\..\proto\msg_proto_src\gate_handshake_response.pb.cc">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\..\service\proto_src\player_login_request.pb.cc">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4800;4267;</DisableSpecificWarnings>
-    </ClCompile>
-    <ClCompile Include="..\..\service\proto_src\player_login_response.pb.cc">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4800;4267;</DisableSpecificWarnings>
-    </ClCompile>
-    <ClCompile Include="..\proto_src\update_name_request.pb.cc">
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4800;4267;</DisableSpecificWarnings>
+    <ClCompile Include="..\..\proto\msg_proto_src\player_login_request.pb.cc">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\proto_src\update_name_response.pb.cc">
-      <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4800;4267;</DisableSpecificWarnings>
+    <ClCompile Include="..\..\proto\msg_proto_src\player_login_response.pb.cc">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="connection_to_login.cpp" />
     <ClCompile Include="message_handler.cpp" />
     <ClCompile Include="connection_to_gate.cpp" />
-    <ClCompile Include="stdafx.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
-    </ClCompile>
     <ClCompile Include="sample_client.cpp" />
   </ItemGroup>
   <ItemGroup>

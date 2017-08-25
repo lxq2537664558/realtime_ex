@@ -15,28 +15,42 @@ namespace core
 	/*
 	这是一个帮助类，为了服务调用捕获了this或者一些对象级别生命周期的对象，在对象销毁后还有未返回的rpc响应的情况
 	*/
-	class CServiceInvokeHolder
+	class __CORE_COMMON_API__ CServiceInvokeHolder
 	{
 	public:
 		CServiceInvokeHolder(CServiceBase* pServiceBase);
 		virtual ~CServiceInvokeHolder();
 
+		bool			send(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage);
+
+		void			broadcast(const std::string& szServiceType, const google::protobuf::Message* pMessage);
+
 		template<class T>
-		inline void		async_call(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, const std::function<void(const T*, uint32_t)>& callback);
+		inline void		async_invoke(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, const std::function<void(const T*, uint32_t)>& callback);
 		
 		template<class T>
-		inline void		async_call(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, CFuture<T>& sFuture);
+		inline void		async_invoke(EMessageTargetType eType, uint64_t nID, const google::protobuf::Message* pMessage, CFuture<T>& sFuture);
+		
+		template<class T>
+		inline uint32_t	sync_invoke(uint32_t nServiceID, const google::protobuf::Message* pMessage, std::shared_ptr<T>& pResponseMessage);
 		//==================================指定服务之间调用=======================================//
 
 
 
 		//==================================指定服务类型之间调用=======================================//
+		bool			send(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, google::protobuf::Message* pMessage);
+
 		template<class T>
-		inline void		async_call(const std::string& szServiceType, const std::string& szServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, const std::function<void(const T*, uint32_t)>& callback);
+		inline void		async_invoke(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, const std::function<void(const T*, uint32_t)>& callback);
 		
 		template<class T>
-		inline void		async_call(const std::string& szServiceType, const std::string& szServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, CFuture<T>& sFuture);
+		inline void		async_invoke(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, CFuture<T>& sFuture);
+		
+		template<class T>
+		inline uint32_t	sync_invoke(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, std::shared_ptr<T>& pResponseMessage);
 		//==================================指定服务类型之间调用=======================================//
+
+		void			response(const SSessionInfo& sSessionInfo, const google::protobuf::Message* pMessage, uint32_t nErrorCode = eRRT_OK);
 
 		uint64_t		getHolderID() const;
 		CServiceBase*	getServiceBase() const;

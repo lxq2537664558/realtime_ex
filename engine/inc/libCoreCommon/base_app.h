@@ -30,7 +30,7 @@ namespace core
 		/**
 		@brief: 启动框架
 		*/
-		bool						run(const std::string& szInstanceName, const std::string& szConfig);
+		bool						runAndServe(const std::string& szInstanceName, const std::string& szConfig);
 		/**
 		@brief: 注册定时器
 		nStartTime 第一次触发定时器的时间

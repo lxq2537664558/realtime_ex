@@ -1,5 +1,0 @@
-syntax = "proto3";
-
-message player_enter_gas_request {
-	uint64 player_id = 1;
-}

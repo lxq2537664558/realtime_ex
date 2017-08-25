@@ -1,5 +1,6 @@
 #include "online_count_mgr.h"
 #include "libBaseCommon/logger.h"
+#include "../common/common.h"
 
 COnlineCountMgr::COnlineCountMgr()
 {
@@ -43,6 +44,22 @@ uint32_t COnlineCountMgr::getSuitableGateID() const
 	return nSuitableGateID;
 }
 
+uint32_t COnlineCountMgr::getSuitableUCID() const
+{
+	uint32_t nMinCount = UINT32_MAX;
+	uint32_t nSuitableUCID = 0;
+	for (auto iter = this->m_mapUCActive.begin(); iter != this->m_mapUCActive.end(); ++iter)
+	{
+		if (iter->second < nMinCount)
+		{
+			nMinCount = iter->second;
+			nSuitableUCID = iter->first;
+		}
+	}
+
+	return nSuitableUCID;
+}
+
 void COnlineCountMgr::setGasOnlineCount(uint32_t nGasID, uint32_t nCount)
 {
 	this->m_mapGasOnline[nGasID] = nCount;
@@ -68,4 +85,9 @@ const std::string& COnlineCountMgr::getGateAddr(uint32_t nGateID) const
 	}
 
 	return iter->second;
+}
+
+void COnlineCountMgr::setUCActiveCount(uint32_t nUCID, uint32_t nCount)
+{
+	this->m_mapUCActive[nUCID] = nCount;
 }

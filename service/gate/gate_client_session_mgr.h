@@ -15,7 +15,7 @@ public:
 	CGateClientSession*	createSession(uint64_t nPlayerID, const std::string& szToken);
 	CGateClientSession*	getSessionByPlayerID(uint64_t nPlayerID) const;
 	CGateClientSession*	getSessionBySocketID(uint64_t nSocketID) const;
-	void				delSessionByPlayerID(uint64_t nPlayerID);
+	void				destroySession(uint64_t nPlayerID, const std::string& szMsg);
 
 	void				bindSocketID(uint64_t nPlayerID, uint64_t nSocketID);
 	void				unbindSocketID(uint64_t nPlayerID);

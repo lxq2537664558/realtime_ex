@@ -6,7 +6,7 @@
 
 namespace core
 {
-	uint32_t CHashServiceSelector::select(const std::string& szServiceType, const std::string& szServiceSelectorType, uint64_t nContext)
+	uint32_t CHashServiceSelector::select(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nContext)
 	{
 		if (nContext == 0)
 			return 0;
