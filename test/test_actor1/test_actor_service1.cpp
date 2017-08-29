@@ -11,7 +11,6 @@ CTestActorService1::CTestActorService1()
 	: m_pTestActor1(nullptr)
 	, m_pTestActor0(nullptr)
 	, m_pTestActor0MessageHandler(nullptr)
-	, m_pMyActorIDConverter(nullptr)
 	, m_pMyActorFactory(nullptr)
 	, m_pNormalProtobufFactory(nullptr)
 {
@@ -28,7 +27,6 @@ bool CTestActorService1::onInit()
 
 	this->m_pTestActor0MessageHandler = new CTestActor0MessageHandler(this);
 	this->m_pNormalProtobufFactory = new CNormalProtobufFactory();
-	this->m_pMyActorIDConverter = new CMyActorIDConverter();
 	this->m_pMyActorFactory = new CMyActorFactory();
 
 	this->setServiceConnectCallback(std::bind(&CTestActorService1::onServiceConnect, this, std::placeholders::_1, std::placeholders::_2));
@@ -73,11 +71,6 @@ void CTestActorService1::onServiceDisconnect(const std::string&, uint32_t nServi
 CProtobufFactory* CTestActorService1::getServiceProtobufFactory() const
 {
 	return this->m_pNormalProtobufFactory;
-}
-
-core::CActorIDConverter* CTestActorService1::getActorIDConverter() const
-{
-	return this->m_pMyActorIDConverter;
 }
 
 core::CActorFactory* CTestActorService1::getActorFactory(const std::string& szType) const

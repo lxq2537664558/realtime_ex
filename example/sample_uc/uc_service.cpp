@@ -68,7 +68,7 @@ void CUCService::onServiceConnect(const std::string& szType, uint32_t nServiceID
 	{
 		u2d_active_count_notify msg;
 		msg.set_count(this->m_pUserInfoMgr->getUserCount());
-		this->getServiceInvoker()->send(eMTT_Service, nServiceID, &msg);
+		this->getServiceInvoker()->send(nServiceID, &msg);
 	}
 }
 

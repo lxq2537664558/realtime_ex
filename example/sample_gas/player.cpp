@@ -71,7 +71,7 @@ void CPlayer::onHeartbeat(uint64_t nContext)
 
 	uint32_t nDBID = _GET_PLAYER_DB_ID(this->getID());
 	uint32_t nUCServiceID = nDBID + _UC_SERVICE_DELTA;
-	this->getServiceBase()->getServiceInvoker()->send(eMTT_Service, nUCServiceID, &notify_msg);
+	this->getServiceBase()->getServiceInvoker()->send(nUCServiceID, &notify_msg);
 }
 
 void CPlayer::onLoadData()

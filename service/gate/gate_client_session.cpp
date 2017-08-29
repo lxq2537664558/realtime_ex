@@ -158,7 +158,7 @@ void CGateClientSession::onHeartbeat(uint64_t nContext)
 	g2s_player_heartbeat_notify notify_msg;
 	notify_msg.set_player_id(this->m_nPlayerID);
 	
-	this->getServiceBase()->getServiceInvoker()->send(eMTT_Service, this->m_nGasID, &notify_msg);
+	this->getServiceBase()->getServiceInvoker()->send(this->m_nGasID, &notify_msg);
 }
 
 void CGateClientSession::setKick(bool bKick)

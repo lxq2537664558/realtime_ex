@@ -196,7 +196,6 @@
     <ClCompile Include="..\proto_src\response_msg3.pb.cc">
       <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4244;4267;4018;4996</DisableSpecificWarnings>
     </ClCompile>
-    <ClCompile Include="my_actor_id_converter.cpp" />
     <ClCompile Include="my_actor_factory.cpp" />
     <ClCompile Include="test_actor0.cpp" />
     <ClCompile Include="test_actor0_message_handler.cpp" />
@@ -223,7 +222,6 @@
     <ClInclude Include="..\proto_src\response_msg1.pb.h" />
     <ClInclude Include="..\proto_src\response_msg2.pb.h" />
     <ClInclude Include="..\proto_src\response_msg3.pb.h" />
-    <ClInclude Include="my_actor_id_converter.h" />
     <ClInclude Include="my_actor_factory.h" />
     <ClInclude Include="test_actor0.h" />
     <ClInclude Include="test_actor0_message_handler.h" />

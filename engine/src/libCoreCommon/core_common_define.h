@@ -22,7 +22,6 @@ namespace core
 		std::list<uint64_t>::iterator
 					iterHolder;
 
-		uint64_t	nToID;		// 目标ID
 		int64_t		nBeginTime;	// 发送时间
 		std::string	szMessageName;	// 消息ID
 		

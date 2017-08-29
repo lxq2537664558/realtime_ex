@@ -151,7 +151,11 @@ namespace base
 					break;
 				}
 			}
-			this->onPostCache(sDbCommand.nType, pRequestMessage, pResponseMessage);
+			if (nErrorCode == db::eDBRC_OK)
+				this->onPostCache(sDbCommand.nType, pRequestMessage, pResponseMessage);
+
+			if (nErrorCode == db::eDBRC_EmptyRecordset)
+				nErrorCode = db::eDBRC_OK;
 
 			if (sDbCommand.callback == nullptr)
 				continue;

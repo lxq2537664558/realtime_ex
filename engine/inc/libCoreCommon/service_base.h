@@ -2,7 +2,6 @@
 
 #include "core_common.h"
 #include "ticker.h"
-#include "actor_id_converter.h"
 #include "service_id_converter.h"
 #include "protobuf_factory.h"
 #include "service_selector.h"
@@ -148,11 +147,6 @@ namespace core
 		virtual CProtobufFactory*
 							getForwardProtobufFactory() const { return nullptr; }
 
-		/**
-		@brief: 获取actor_id转换器
-		*/
-		virtual CActorIDConverter*
-							getActorIDConverter() { return nullptr; }
 		/**
 		@brief: 设置service_id转换器
 		*/

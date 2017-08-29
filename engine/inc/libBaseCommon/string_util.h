@@ -51,6 +51,12 @@ namespace base
 		// 去掉字符串中的所有特定单一字符
 		inline std::string&	erase(std::string& str, char c = ' ');
 
+		// 判断字符串是否相等
+		inline bool			equal(const std::string& lhs, const std::string& rhs, bool letter);
+
+		// 判断字符串是否相等
+		inline bool			equal(const char* lhs, const char* rhs, bool letter);
+
 		// 字符串替换 去掉字符串中的某特定字符串delim并以新字符串s代替
 		inline std::string&	replace_all(std::string& str, const char* delim, const char* s = "");
 
@@ -61,9 +67,15 @@ namespace base
 		template<class ...Args>
 		inline std::string	format(const char* fmt, const Args&... args);
 
+		template<class ...Args>
+		inline std::string	format(char *buff, uint16_t buffSize, char* fmt, const Args&... args);
+
 		// 格式化输出 format(xxx{}xxx{}xx,变量1，变量2)
 		template<class ...Args>
 		inline std::string	format(const std::string& fmt, const Args&... args);
+
+		template<class ...Args>
+		inline std::string	format(char *buff, uint16_t buffSize, const std::string& fmt, const Args&... args);
 
 		// 字符串忽略大小写比较, 可用作容器（比如map、set）的比较子
 		struct string_cmp_nocase : 

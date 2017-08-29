@@ -91,7 +91,7 @@ void CGasService::onServiceConnect(const std::string& szType, uint32_t nServiceI
 	{
 		s2d_online_count_notify msg;
 		msg.set_count(this->m_pPlayerMgr->getPlayerCount());
-		this->getServiceInvoker()->send(eMTT_Service, nServiceID, &msg);
+		this->getServiceInvoker()->send(nServiceID, &msg);
 	}
 }
 

@@ -17,6 +17,7 @@
 
 CDispatchServiceMessageHandler::CDispatchServiceMessageHandler(CDispatchService* pDispatchService)
 	: CDbServiceInvokeHolder(pDispatchService, pDispatchService->getGlobalDbServiceID())
+	, CServiceInvokeHolder(pDispatchService)
 {
 	REGISTER_SERVICE_MESSAGE_HANDLER(pDispatchService, CDispatchServiceMessageHandler, "s2d_online_count_notify", &CDispatchServiceMessageHandler::s2d_online_count_notify_handler);
 	REGISTER_SERVICE_MESSAGE_HANDLER(pDispatchService, CDispatchServiceMessageHandler, "g2d_online_count_notify", &CDispatchServiceMessageHandler::g2d_online_count_notify_handler);
@@ -193,7 +194,7 @@ void CDispatchServiceMessageHandler::l2d_validate_login_request_handler(CService
 	gate_notify_msg.set_gas_id(nGasID);
 	gate_notify_msg.set_token(szToken);
 
-	pDispatchService->getServiceInvoker()->send(eMTT_Service, nGateID, &gate_notify_msg);
+	pDispatchService->getServiceInvoker()->send(nGateID, &gate_notify_msg);
 
 	std::string szKey = base::string_util::format("{}|{}", nPlayerID, szToken);
 	l2d_validate_login_response login_response_msg;

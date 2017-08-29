@@ -18,13 +18,13 @@ namespace core
 	这个文件的存在导致libCoreCommon必须依赖libprotobuf.a，在linux下libCoreCommon.so必须以动态加载的形式来链接，不然会出现protobuf全局符号覆盖问题
 	*/
 	CDbServiceInvokeHolder::CDbServiceInvokeHolder(CServiceBase* pServiceBase)
-		: CServiceInvokeHolder(pServiceBase)
+		: m_sServiceInvokeHolder(pServiceBase)
 		, m_nDbServiceID(0)
 	{
 	}
 
 	CDbServiceInvokeHolder::CDbServiceInvokeHolder(CServiceBase* pServiceBase, uint32_t nDbServiceID)
-		: CServiceInvokeHolder(pServiceBase)
+		: m_sServiceInvokeHolder(pServiceBase)
 		, m_nDbServiceID(nDbServiceID)
 	{
 	}
@@ -43,7 +43,7 @@ namespace core
 		command.set_message_name(pMessage->GetTypeName());
 		command.set_message_content(szData);
 
- 		return this->send(eMTT_Service, nDbServiceID, &command);
+ 		return this->m_sServiceInvokeHolder.send(nDbServiceID, &command);
 	}
 
 	bool CDbServiceInvokeHolder::remove(uint32_t nDbServiceID, uint64_t nID, const std::string& szTableName)
@@ -52,7 +52,7 @@ namespace core
 		command.set_id(nID);
 		command.set_table_name(szTableName);
 
-		return this->send(eMTT_Service, nDbServiceID, &command);
+		return this->m_sServiceInvokeHolder.send(nDbServiceID, &command);
 	}
 
 	bool CDbServiceInvokeHolder::insert(uint32_t nDbServiceID, const google::protobuf::Message* pMessage)
@@ -64,7 +64,7 @@ namespace core
 		command.set_message_name(pMessage->GetTypeName());
 		command.set_message_content(szData);
 
-		return this->send(eMTT_Service, nDbServiceID, &command);
+		return this->m_sServiceInvokeHolder.send(nDbServiceID, &command);
 	}
 
 	bool CDbServiceInvokeHolder::call(uint32_t nDbServiceID, uint32_t nChannelID, const std::string& szSQL, const std::vector<std::string>* vecArg)
@@ -80,7 +80,7 @@ namespace core
 			}
 		}
 
-		return this->send(eMTT_Service, nDbServiceID, &command);
+		return this->m_sServiceInvokeHolder.send(nDbServiceID, &command);
 	}
 
 	bool CDbServiceInvokeHolder::flush(uint32_t nDbServiceID, uint64_t nID, base::db::EFlushCacheType eType)
@@ -89,7 +89,7 @@ namespace core
 		command.set_id(nID);
 		command.set_type(eType);
 
-		return this->send(eMTT_Service, nDbServiceID, &command);
+		return this->m_sServiceInvokeHolder.send(nDbServiceID, &command);
 	}
 
 	void CDbServiceInvokeHolder::async_select(uint32_t nDbServiceID, uint64_t nID, const std::string& szTableName, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback)
@@ -98,7 +98,7 @@ namespace core
 		command.set_id(nID);
 		command.set_table_name(szTableName);
 
-		this->async_invoke(eMTT_Service, nDbServiceID, &command, callback);
+		this->m_sServiceInvokeHolder.async_invoke(nDbServiceID, &command, callback);
 	}
 
 	void CDbServiceInvokeHolder::async_update(uint32_t nDbServiceID, const google::protobuf::Message* pMessage, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback)
@@ -110,7 +110,7 @@ namespace core
 		command.set_message_name(pMessage->GetTypeName());
 		command.set_message_content(szData);
 
-		this->async_invoke(eMTT_Service, nDbServiceID, &command, callback);
+		this->m_sServiceInvokeHolder.async_invoke(nDbServiceID, &command, callback);
 	}
 
 	void CDbServiceInvokeHolder::async_remove(uint32_t nDbServiceID, uint64_t nID, const std::string& szTableName, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback)
@@ -119,7 +119,7 @@ namespace core
 		command.set_id(nID);
 		command.set_table_name(szTableName);
 
-		this->async_invoke(eMTT_Service, nDbServiceID, &command, callback);
+		this->m_sServiceInvokeHolder.async_invoke(nDbServiceID, &command, callback);
 	}
 
 	void CDbServiceInvokeHolder::async_insert(uint32_t nDbServiceID, const google::protobuf::Message* pMessage, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback)
@@ -131,7 +131,7 @@ namespace core
 		command.set_message_name(pMessage->GetTypeName());
 		command.set_message_content(szData);
 
-		this->async_invoke(eMTT_Service, nDbServiceID, &command, callback);
+		this->m_sServiceInvokeHolder.async_invoke(nDbServiceID, &command, callback);
 	}
 
 	void CDbServiceInvokeHolder::async_query(uint32_t nDbServiceID, uint32_t nChannelID, const std::string& szTableName, const std::string& szWhereClause, const std::vector<std::string>* vecArg, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback)
@@ -148,7 +148,7 @@ namespace core
 			}
 		}
 
-		this->async_invoke(eMTT_Service, nDbServiceID, &command, callback);
+		this->m_sServiceInvokeHolder.async_invoke(nDbServiceID, &command, callback);
 	}
 
 	void CDbServiceInvokeHolder::async_call(uint32_t nDbServiceID, uint32_t nChannelID, const std::string& szSQL, const std::vector<std::string>* vecArg, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback)
@@ -164,7 +164,7 @@ namespace core
 			}
 		}
 
-		this->async_invoke(eMTT_Service, nDbServiceID, &command, callback);
+		this->m_sServiceInvokeHolder.async_invoke(nDbServiceID, &command, callback);
 	}
 
 	void CDbServiceInvokeHolder::async_nop(uint32_t nDbServiceID, uint32_t nChannelID, const std::function<void(uint32_t)>& callback)
@@ -177,7 +177,7 @@ namespace core
 			callback(nErrorCode);
 		};
 
-		this->async_invoke<google::protobuf::Message>(eMTT_Service, nDbServiceID, &command, callback_);
+		this->m_sServiceInvokeHolder.async_invoke<google::protobuf::Message>(nDbServiceID, &command, callback_);
 	}
 
 	uint32_t CDbServiceInvokeHolder::sync_select(uint32_t nDbServiceID, uint64_t nID, const std::string& szTableName, std::shared_ptr<const google::protobuf::Message>& pResponseMessage)
@@ -186,7 +186,7 @@ namespace core
 		command.set_id(nID);
 		command.set_table_name(szTableName);
 
-		return this->sync_invoke(nDbServiceID, &command, pResponseMessage);
+		return this->m_sServiceInvokeHolder.sync_invoke(nDbServiceID, &command, pResponseMessage);
 	}
 
 	uint32_t CDbServiceInvokeHolder::sync_update(uint32_t nDbServiceID, const google::protobuf::Message* pMessage, std::shared_ptr<const google::protobuf::Message>& pResponseMessage)
@@ -198,7 +198,7 @@ namespace core
 		command.set_message_name(pMessage->GetTypeName());
 		command.set_message_content(szData);
 
-		return this->sync_invoke(nDbServiceID, &command, pResponseMessage);
+		return this->m_sServiceInvokeHolder.sync_invoke(nDbServiceID, &command, pResponseMessage);
 	}
 
 	uint32_t CDbServiceInvokeHolder::sync_remove(uint32_t nDbServiceID, uint64_t nID, const std::string& szTableName, std::shared_ptr<const google::protobuf::Message>& pResponseMessage)
@@ -207,7 +207,7 @@ namespace core
 		command.set_id(nID);
 		command.set_table_name(szTableName);
 
-		return this->sync_invoke(nDbServiceID, &command, pResponseMessage);
+		return this->m_sServiceInvokeHolder.sync_invoke(nDbServiceID, &command, pResponseMessage);
 	}
 
 	uint32_t CDbServiceInvokeHolder::sync_insert(uint32_t nDbServiceID, const google::protobuf::Message* pMessage, std::shared_ptr<const google::protobuf::Message>& pResponseMessage)
@@ -219,7 +219,7 @@ namespace core
 		command.set_message_name(pMessage->GetTypeName());
 		command.set_message_content(szData);
 
-		return this->sync_invoke(nDbServiceID, &command, pResponseMessage);
+		return this->m_sServiceInvokeHolder.sync_invoke(nDbServiceID, &command, pResponseMessage);
 	}
 
 	uint32_t CDbServiceInvokeHolder::sync_query(uint32_t nDbServiceID, uint32_t nChannelID, const std::string& szTableName, const std::string& szWhereClause, const std::vector<std::string>* vecArg, std::shared_ptr<const google::protobuf::Message>& pResponseMessage)
@@ -236,7 +236,7 @@ namespace core
 			}
 		}
 
-		return this->sync_invoke(nDbServiceID, &command, pResponseMessage);
+		return this->m_sServiceInvokeHolder.sync_invoke(nDbServiceID, &command, pResponseMessage);
 	}
 
 	uint32_t CDbServiceInvokeHolder::sync_call(uint32_t nDbServiceID, uint32_t nChannelID, const std::string& szSQL, const std::vector<std::string>* vecArg, std::shared_ptr<const google::protobuf::Message>& pResponseMessage)
@@ -252,7 +252,7 @@ namespace core
 			}
 		}
 
-		return this->sync_invoke(nDbServiceID, &command, pResponseMessage);
+		return this->m_sServiceInvokeHolder.sync_invoke(nDbServiceID, &command, pResponseMessage);
 	}
 
 	uint32_t CDbServiceInvokeHolder::sync_nop(uint32_t nDbServiceID, uint32_t nChannelID)
@@ -261,7 +261,7 @@ namespace core
 		command.set_channel_id(nChannelID);
 
 		std::shared_ptr<const google::protobuf::Message> pResponseMessage;
-		return this->sync_invoke(nDbServiceID, &command, pResponseMessage);
+		return this->m_sServiceInvokeHolder.sync_invoke(nDbServiceID, &command, pResponseMessage);
 	}
 
 	bool CDbServiceInvokeHolder::update(const google::protobuf::Message* pMessage)

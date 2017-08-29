@@ -54,9 +54,6 @@
     <ClCompile Include="..\proto_src\response_msg3.pb.cc">
       <Filter>proto</Filter>
     </ClCompile>
-    <ClCompile Include="my_actor_id_converter.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="my_actor_factory.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -97,9 +94,6 @@
     </ClInclude>
     <ClInclude Include="..\proto_src\response_msg3.pb.h">
       <Filter>proto</Filter>
-    </ClInclude>
-    <ClInclude Include="my_actor_id_converter.h">
-      <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="my_actor_factory.h">
       <Filter>头文件</Filter>

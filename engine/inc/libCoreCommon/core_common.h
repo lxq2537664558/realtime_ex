@@ -108,12 +108,6 @@ enum EServiceSelectorType
 namespace core
 {
 	typedef std::function<int32_t(const char*, uint32_t, uint8_t&)>	MessageParser;	// 原生消息
-	
-	enum EMessageTargetType
-	{
-		eMTT_Actor		= 0,
-		eMTT_Service	= 1,
-	};
 
 	struct	SMessagePacket
 	{
@@ -159,7 +153,6 @@ namespace core
 	{
 		uint32_t			nFromServiceID;
 		uint64_t			nFromActorID;
-		EMessageTargetType	eFromType;
 		uint64_t			nSessionID;
 	};
 

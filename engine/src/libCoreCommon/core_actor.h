@@ -40,7 +40,7 @@ namespace core
 		
 		CChannel*				getChannel();
 
-		SPendingResponseInfo*	addPendingResponseInfo(uint64_t nSessionID, uint64_t nCoroutineID, uint64_t nToID, const std::string& szMessageName, const std::function<void(std::shared_ptr<google::protobuf::Message>, uint32_t)>& callback, uint64_t nHolderID);
+		SPendingResponseInfo*	addPendingResponseInfo(uint64_t nSessionID, uint64_t nCoroutineID, const std::string& szMessageName, const std::function<void(std::shared_ptr<google::protobuf::Message>, uint32_t)>& callback, uint64_t nHolderID);
 		SPendingResponseInfo*	getPendingResponseInfo(uint64_t nSessionID);
 		void					delPendingResponseInfo(uint64_t nHolderID);
 

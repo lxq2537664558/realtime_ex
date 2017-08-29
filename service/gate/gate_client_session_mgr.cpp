@@ -88,7 +88,7 @@ void CGateClientSessionMgr::destroySession(uint64_t nPlayerID, const std::string
 	{
 		g2s_player_leave_notify msg;
 		msg.set_player_id(nPlayerID);
-		this->m_pGateService->getServiceInvoker()->send(eMTT_Service, nGasID, &msg);
+		this->m_pGateService->getServiceInvoker()->send(nGasID, &msg);
 	}
 }
 

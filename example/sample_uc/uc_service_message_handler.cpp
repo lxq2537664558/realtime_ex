@@ -64,7 +64,7 @@ void CUCServiceMessageHandler::s2u_player_heartbeat_notify_handler(CServiceBase*
 		u2s_kick_player_notify notify_msg;
 		notify_msg.set_player_id(pRequest->player_id());
 
-		pServiceBase->getServiceInvoker()->send(eMTT_Service, sSessionInfo.nFromServiceID, &notify_msg);
+		pServiceBase->getServiceInvoker()->send(sSessionInfo.nFromServiceID, &notify_msg);
 		return;
 	}
 
@@ -75,7 +75,7 @@ void CUCServiceMessageHandler::s2u_player_heartbeat_notify_handler(CServiceBase*
 		u2s_kick_player_notify notify_msg;
 		notify_msg.set_player_id(pRequest->player_id());
 
-		pServiceBase->getServiceInvoker()->send(eMTT_Service, sSessionInfo.nFromServiceID, &notify_msg);
+		pServiceBase->getServiceInvoker()->send(sSessionInfo.nFromServiceID, &notify_msg);
 		return;
 	}
 

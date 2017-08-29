@@ -412,7 +412,10 @@ namespace base
 				{
 					google::protobuf::Message* pSubMessage = pReflection->MutableMessage(pMessage, pFieldDescriptor);
 					DebugAstEx(pSubMessage != nullptr, false);
-					DebugAstEx(pSubMessage->ParseFromArray(szValue.c_str(), (int32_t)szValue.size()), false);
+					if (!szValue.empty())
+					{
+						DebugAstEx(pSubMessage->ParseFromArray(szValue.c_str(), (int32_t)szValue.size()), false);
+					}
 				}
 				break;
 
@@ -420,7 +423,10 @@ namespace base
 				{
 					google::protobuf::Message* pSubMessage = pReflection->MutableMessage(pMessage, pFieldDescriptor);
 					DebugAstEx(pSubMessage != nullptr, false);
-					DebugAstEx(google::protobuf::util::JsonStringToMessage(szValue, pSubMessage).ok(), false);
+					if (!szValue.empty())
+					{
+						DebugAstEx(google::protobuf::util::JsonStringToMessage(szValue, pSubMessage).ok(), false);
+					}
 				}
 				break;
 

@@ -54,6 +54,9 @@ namespace base
 
 		DebugAstEx(pDbRecordset != nullptr, db::eDBRC_MysqlError);
 
+		if (pDbRecordset->getRowCount() == 0)
+			return db::eDBRC_EmptyRecordset;
+
 		DebugAstEx(fillNormalMessage(pDbRecordset, pMessage.get()), db::eDBRC_ProtobufError);
 
 		*pResponseMessage = pMessage;

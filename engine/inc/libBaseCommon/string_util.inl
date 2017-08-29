@@ -127,6 +127,41 @@ namespace base
 			return str;
 		}
 
+		bool equal(const std::string& lhs, const std::string& rhs, bool letter)
+		{
+			if (lhs.size() != rhs.size())
+				return false;
+
+			if (letter)
+			{
+				return lhs == rhs;
+			}
+			else
+			{
+				return _strnicmp(lhs.c_str(), rhs.c_str(), lhs.size()) == 0;
+			}
+		}
+
+		bool equal(const char* lhs, const char* rhs, bool letter)
+		{
+			if (lhs == nullptr || rhs == nullptr)
+				return false;
+
+			size_t lhs_size = base::function_util::strnlen(lhs, _TRUNCATE);
+			size_t rhs_size = base::function_util::strnlen(rhs, _TRUNCATE);
+			if (lhs_size != rhs_size)
+				return false;
+
+			if (letter)
+			{
+				return _strnicmp(lhs, rhs, lhs_size) == 0;
+			}
+			else
+			{
+				return strncmp(lhs, rhs, lhs_size) == 0;
+			}
+		}
+
 		std::string& replace_all(std::string& str, const char* delim, const char* s)
 		{
 			size_t len = strlen(delim);

@@ -138,11 +138,11 @@ void CGateService::onServiceConnect(const std::string& szType, uint32_t nService
 	{
 		g2d_addr_notify msg1;
 		msg1.set_addr(this->m_szAddr);
-		this->getServiceInvoker()->send(eMTT_Service, nServiceID, &msg1);
+		this->getServiceInvoker()->send(nServiceID, &msg1);
 
 		g2d_online_count_notify msg2;
 		msg2.set_count(this->m_pGateClientSessionMgr->getSessionCount());
-		this->getServiceInvoker()->send(eMTT_Service, nServiceID, &msg2);
+		this->getServiceInvoker()->send(nServiceID, &msg2);
 	}
 }
 

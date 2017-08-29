@@ -5,7 +5,6 @@
 
 #include "test_actor1.h"
 #include "test_actor0.h"
-#include "my_actor_id_converter.h"
 #include "my_actor_factory.h"
 
 #include <map>
@@ -31,7 +30,6 @@ private:
 	void						onServiceDisconnect(const std::string&, uint32_t nServiceID);
 
 	virtual CProtobufFactory*	getServiceProtobufFactory() const;
-	virtual CActorIDConverter*	getActorIDConverter() const;
 	virtual CActorFactory*		getActorFactory(const std::string& szType) const;
 
 	virtual void				release();
@@ -41,7 +39,6 @@ private:
 	CTestActor1*				m_pTestActor1;
 
 	CTestActor0MessageHandler*	m_pTestActor0MessageHandler;
-	CMyActorIDConverter*		m_pMyActorIDConverter;
 	CMyActorFactory*			m_pMyActorFactory;
 	CNormalProtobufFactory*		m_pNormalProtobufFactory;
 };

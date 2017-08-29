@@ -46,6 +46,7 @@ namespace base
 		enum EDbResultCode
 		{
 			eDBRC_OK = 1,
+			eDBRC_EmptyRecordset,
 			eDBRC_ProtobufError,
 			eDBRC_MysqlError,
 			eDBRC_SQLArgError,

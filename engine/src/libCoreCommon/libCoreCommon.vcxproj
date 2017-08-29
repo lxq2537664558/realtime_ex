@@ -13,7 +13,6 @@
   <ItemGroup>
     <ClInclude Include="..\..\inc\libCoreCommon\actor_base.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\actor_factory.h" />
-    <ClInclude Include="..\..\inc\libCoreCommon\actor_id_converter.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\actor_message_registry.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\base_connection.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\base_connection_factory.h" />

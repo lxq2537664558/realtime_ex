@@ -2,7 +2,6 @@
 
 #include "core_common.h"
 #include "service_base.h"
-#include "actor_id_converter.h"
 #include "ticker.h"
 
 #include "libBaseCommon/buf_file.h"

@@ -83,7 +83,7 @@ void CGasServiceMessageHandler::g2s_player_leave_notify_handler(CServiceBase* pS
 	uint32_t nUCServiceID = nDBID + _UC_SERVICE_DELTA;
 	s2u_player_leave_notify notify_msg;
 	notify_msg.set_player_id(pMessage->player_id());
-	pServiceBase->getServiceInvoker()->send(eMTT_Service, nUCServiceID, &notify_msg);
+	pServiceBase->getServiceInvoker()->send(nUCServiceID, &notify_msg);
 }
 
 void CGasServiceMessageHandler::u2s_kick_player_notify_handler(CServiceBase* pServiceBase, SSessionInfo sSessionInfo, const u2s_kick_player_notify* pMessage)
@@ -101,7 +101,7 @@ void CGasServiceMessageHandler::u2s_kick_player_notify_handler(CServiceBase* pSe
 
 	s2g_kick_player_notify notify_msg;
 	notify_msg.set_player_id(pMessage->player_id());
-	pGasService->getServiceInvoker()->send(eMTT_Service, nGateID, &notify_msg);
+	pGasService->getServiceInvoker()->send(nGateID, &notify_msg);
 }
 
 void CGasServiceMessageHandler::g2s_player_heartbeat_notify_handler(CServiceBase* pServiceBase, SSessionInfo sSessionInfo, const g2s_player_heartbeat_notify* pMessage)
@@ -115,7 +115,7 @@ void CGasServiceMessageHandler::g2s_player_heartbeat_notify_handler(CServiceBase
 		s2g_kick_player_notify notify_msg;
 		notify_msg.set_player_id(pMessage->player_id());
 
-		pServiceBase->getServiceInvoker()->send(eMTT_Service, sSessionInfo.nFromServiceID, &notify_msg);
+		pServiceBase->getServiceInvoker()->send(sSessionInfo.nFromServiceID, &notify_msg);
 		return;
 	}
 
@@ -124,7 +124,7 @@ void CGasServiceMessageHandler::g2s_player_heartbeat_notify_handler(CServiceBase
 		s2g_kick_player_notify notify_msg;
 		notify_msg.set_player_id(pMessage->player_id());
 
-		pServiceBase->getServiceInvoker()->send(eMTT_Service, sSessionInfo.nFromServiceID, &notify_msg);
+		pServiceBase->getServiceInvoker()->send(sSessionInfo.nFromServiceID, &notify_msg);
 		return;
 	}
 }

@@ -105,7 +105,6 @@ namespace core
 			}
 
 			SSessionInfo sSessionInfo;
-			sSessionInfo.eFromType = sActorMessagePacket.nData != 0 ? eMTT_Actor : eMTT_Service;
 			sSessionInfo.nFromServiceID = sActorMessagePacket.nFromServiceID;
 			sSessionInfo.nFromActorID = sActorMessagePacket.nData;
 			sSessionInfo.nSessionID = sActorMessagePacket.nSessionID;
@@ -245,7 +244,7 @@ namespace core
 		this->m_channel.send(sActorMessagePacket);
 	}
 
-	SPendingResponseInfo* CCoreActor::addPendingResponseInfo(uint64_t nSessionID, uint64_t nCoroutineID, uint64_t nToID, const std::string& szMessageName, const std::function<void(std::shared_ptr<google::protobuf::Message>, uint32_t)>& callback, uint64_t nHolderID)
+	SPendingResponseInfo* CCoreActor::addPendingResponseInfo(uint64_t nSessionID, uint64_t nCoroutineID, const std::string& szMessageName, const std::function<void(std::shared_ptr<google::protobuf::Message>, uint32_t)>& callback, uint64_t nHolderID)
 	{
 		if (nCoroutineID == 0)
 		{
@@ -256,7 +255,6 @@ namespace core
 			pPendingResponseInfo->callback = callback;
 			pPendingResponseInfo->nSessionID = nSessionID;
 			pPendingResponseInfo->nCoroutineID = nCoroutineID;
-			pPendingResponseInfo->nToID = nToID;
 			pPendingResponseInfo->szMessageName = szMessageName;
 			pPendingResponseInfo->nBeginTime = base::time_util::getGmtTime();
 			pPendingResponseInfo->tickTimeout.setCallback(std::bind(&CCoreActor::onRequestMessageTimeout, this, std::placeholders::_1));
@@ -285,7 +283,6 @@ namespace core
 			this->m_pSyncPendingResponseInfo->callback = nullptr;
 			this->m_pSyncPendingResponseInfo->nSessionID = nSessionID;
 			this->m_pSyncPendingResponseInfo->nCoroutineID = nCoroutineID;
-			this->m_pSyncPendingResponseInfo->nToID = nToID;
 			this->m_pSyncPendingResponseInfo->szMessageName = szMessageName;
 			this->m_pSyncPendingResponseInfo->nBeginTime = base::time_util::getGmtTime();
 

@@ -66,7 +66,6 @@ namespace core
 				}
 
 				SSessionInfo sSessionInfo;
-				sSessionInfo.eFromType = pRequestContext->nFromActorID != 0 ? eMTT_Actor : eMTT_Service;
 				sSessionInfo.nFromServiceID = pRequestContext->nFromServiceID;
 				sSessionInfo.nFromActorID = pRequestContext->nFromActorID;
 				sSessionInfo.nSessionID = pRequestContext->nSessionID;

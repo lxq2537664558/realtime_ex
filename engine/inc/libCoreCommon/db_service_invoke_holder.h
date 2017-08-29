@@ -11,8 +11,7 @@
 
 namespace core
 {
-	class __CORE_COMMON_API__ CDbServiceInvokeHolder :
-		public CServiceInvokeHolder
+	class __CORE_COMMON_API__ CDbServiceInvokeHolder
 	{
 	public:
 		CDbServiceInvokeHolder(CServiceBase* pServiceBase);
@@ -64,6 +63,7 @@ namespace core
 		uint32_t	sync_nop(uint32_t nDbServiceID, uint32_t nChannelID);
 
 	private:
-		uint32_t	m_nDbServiceID;
+		uint32_t				m_nDbServiceID;
+		CServiceInvokeHolder	m_sServiceInvokeHolder;
 	};
 }

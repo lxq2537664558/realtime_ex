@@ -99,8 +99,8 @@
   <ItemGroup>
     <ClInclude Include="..\..\inc\libBaseCommon\base64.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\crc32.h" />
+    <ClInclude Include="..\..\inc\libBaseCommon\csv_parser.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\function_util.h" />
-    <ClInclude Include="..\..\inc\libBaseCommon\buf_file.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\time_util.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\base_common.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\circle_queue.h" />
@@ -141,6 +141,7 @@
   <ItemGroup>
     <ClCompile Include="base64.cpp" />
     <ClCompile Include="crc32.cpp" />
+    <ClCompile Include="csv_parser.cpp" />
     <ClCompile Include="function_util.cpp" />
     <ClCompile Include="time_util.cpp" />
     <ClCompile Include="buf_file.cpp" />
@@ -156,7 +157,6 @@
     <ClCompile Include="rand_gen.cpp" />
     <ClCompile Include="sha1.cpp" />
     <ClCompile Include="stdafx.cpp" />
-    <ClCompile Include="table_file.cpp" />
     <ClCompile Include="thread_base.cpp" />
     <ClCompile Include="token_parser.cpp" />
     <ClCompile Include="utf8.cpp" />

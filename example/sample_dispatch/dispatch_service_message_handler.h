@@ -14,7 +14,8 @@ using namespace core;
 class CDispatchService;
 class CDispatchServiceMessageHandler :
 	public CServiceMessageRegistry<CDispatchServiceMessageHandler>,
-	public CDbServiceInvokeHolder
+	public CDbServiceInvokeHolder,
+	public CServiceInvokeHolder
 {
 	DEFEND_SERVICE_MESSAGE_FUNCTION(CDispatchServiceMessageHandler)
 

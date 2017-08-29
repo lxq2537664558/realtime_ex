@@ -15,9 +15,6 @@
     <ClInclude Include="..\..\inc\libBaseCommon\vector_map.h">
       <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\inc\libBaseCommon\buf_file.h">
-      <Filter>inc</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\inc\libBaseCommon\debug_helper.h">
       <Filter>inc</Filter>
     </ClInclude>
@@ -111,6 +108,9 @@
     <ClInclude Include="..\..\inc\libBaseCommon\crc32.h">
       <Filter>inc</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\inc\libBaseCommon\csv_parser.h">
+      <Filter>inc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="encryptor.cpp">
@@ -129,9 +129,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="rand_gen.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="table_file.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="thread_base.cpp">
@@ -177,6 +174,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="crc32.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="csv_parser.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

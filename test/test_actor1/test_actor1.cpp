@@ -54,7 +54,7 @@ void CTestActor1::onTicker1(uint64_t nContext)
 	msg1.set_name("aaa");
 
 	CFuture<response_msg0> sFuture;
-	this->getServiceBase()->getServiceInvoker()->async_invoke(eMTT_Actor, 3, &msg1, sFuture);
+	this->getServiceBase()->getServiceInvoker()->async_invoke_a(4, 3, &msg1, sFuture);
 	sFuture.then_r([this](const response_msg0* pMsg, uint32_t nErrorCode)
 	{
 		CFuture<response_msg3> sFuture;
@@ -70,7 +70,7 @@ void CTestActor1::onTicker1(uint64_t nContext)
 		msg2.set_id(pMsg->id());
 		msg2.set_name(pMsg->name());
 
-		this->getServiceBase()->getServiceInvoker()->async_invoke(eMTT_Actor, 2, &msg2, sFuture);
+		this->getServiceBase()->getServiceInvoker()->async_invoke_a(5, 2, &msg2, sFuture);
 
 		return sFuture;
 
@@ -95,14 +95,14 @@ void CTestActor1::onTicker2(uint64_t nContext)
 	msg1.set_name("aaa");
 
 	CFuture<response_msg0> sFuture1;
-	this->getServiceBase()->getServiceInvoker()->async_invoke(eMTT_Actor, 3, &msg1, sFuture1);
+	this->getServiceBase()->getServiceInvoker()->async_invoke_a(4, 3, &msg1, sFuture1);
 
 	request_msg3 msg2;
 	msg2.set_id(200);
 	msg2.set_name("bbb");
 
 	CFuture<response_msg3> sFuture2;
-	this->getServiceBase()->getServiceInvoker()->async_invoke(eMTT_Actor, 2, &msg2, sFuture2);
+	this->getServiceBase()->getServiceInvoker()->async_invoke_a(5, 2, &msg2, sFuture2);
 
 	auto sFuture = whenAll(sFuture1, sFuture2);
 
@@ -132,7 +132,7 @@ void CTestActor1::onTicker3(uint64_t nContext)
 	msg1.set_id(100);
 	msg1.set_name("aaa");
 
-	this->getServiceBase()->getServiceInvoker()->async_invoke<response_msg0>(eMTT_Actor, 3, &msg1, [&](const response_msg0* pMsg, uint32_t nErrorCode)
+	this->getServiceBase()->getServiceInvoker()->async_invoke_a<response_msg0>(4, 3, &msg1, [&](const response_msg0* pMsg, uint32_t nErrorCode)
 	{
 		if (nErrorCode != eRRT_OK)
 		{
