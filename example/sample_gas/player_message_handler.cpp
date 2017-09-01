@@ -8,7 +8,7 @@
 
 CPlayerMessageHandler::CPlayerMessageHandler(CServiceBase* pServiceBase)
 {
-	REGISTER_ACTOR_FORWARD_HANDLER(pServiceBase, CPlayerMessageHandler, "c2s_update_name_request", &CPlayerMessageHandler::c2s_update_name_request_handler);
+	register_actor_forward_handler(pServiceBase, this, &CPlayerMessageHandler::c2s_update_name_request_handler);
 }
 
 CPlayerMessageHandler::~CPlayerMessageHandler()

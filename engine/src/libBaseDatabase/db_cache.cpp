@@ -8,9 +8,10 @@
 #include "libBaseCommon/debug_helper.h"
 #include "libBaseCommon/time_util.h"
 
+#define _CACHE_EXPIRED_TIME 1
+
 namespace base
 {
-#define _CACHE_EXPIRED_TIME 1
 
 	CDbCache::CDbCache(CDbCacheMgr* pDbCacheMgr)
 		: m_pDbCacheMgr(pDbCacheMgr)
@@ -77,7 +78,7 @@ namespace base
 
 		defer([&]()
 		{
-			delete pDstData; 
+			delete pDstData;
 		});
 
 		if (!pDstData->ParseFromString(iter->second.szData))
@@ -143,15 +144,15 @@ namespace base
 				break;
 
 			case google::protobuf::FieldDescriptor::TYPE_MESSAGE:
-				{
+			{
 #ifdef GetMessage
 #undef GetMessage
 #endif
-					google::protobuf::Message* pDstSubMessage = pDstReflection->MutableMessage(pDstData, pDstFieldDescriptor);
-					const google::protobuf::Message& srcSubMessage = pSrcReflection->GetMessage(*pData, pSrcFieldDescriptor);
-					pDstSubMessage->CopyFrom(srcSubMessage);
-				}
-				break;
+				google::protobuf::Message* pDstSubMessage = pDstReflection->MutableMessage(pDstData, pDstFieldDescriptor);
+				const google::protobuf::Message& srcSubMessage = pSrcReflection->GetMessage(*pData, pSrcFieldDescriptor);
+				pDstSubMessage->CopyFrom(srcSubMessage);
+			}
+			break;
 
 			default:
 				DebugAstEx(false, false);
@@ -212,7 +213,7 @@ namespace base
 					PrintWarning("");
 					continue;
 				}
-				defer([&]() 
+				defer([&]()
 				{
 					SAFE_DELETE(pMessage);
 				});

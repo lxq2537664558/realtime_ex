@@ -15,11 +15,13 @@
 #include <algorithm>
 #include <thread>
 
-// 放这里为了调试或者看dump的时候方便
-core::CTickerRunnable*	g_pTickerRunnable;
-
 #define _CYCLE_TIME 10
 
+namespace
+{
+	// 放这里为了调试或者看dump的时候方便
+	core::CTickerRunnable*	g_pTickerRunnable;
+}
 
 namespace core
 {

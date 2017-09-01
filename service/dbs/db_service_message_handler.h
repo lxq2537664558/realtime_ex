@@ -1,5 +1,4 @@
 #pragma once
-#include "libCoreCommon/service_message_registry.h"
 #include "libCoreCommon/service_base.h"
 
 #include "proto_src/call_command.pb.h"
@@ -13,11 +12,8 @@
 
 using namespace core;
 
-class CDbServiceMessageHandler :
-	public CServiceMessageRegistry<CDbServiceMessageHandler>
+class CDbServiceMessageHandler
 {
-	DEFEND_SERVICE_MESSAGE_FUNCTION(CDbServiceMessageHandler)
-
 public:
 	CDbServiceMessageHandler(CServiceBase* pServiceBase);
 	~CDbServiceMessageHandler();

@@ -12,19 +12,22 @@
 #endif
 
 // 为了保证初始化顺序，下面的时间只能通过结构体静态变量的方式获取
-static int64_t& getGmtProcessStartTimePoint()
+namespace
 {
-	struct SGmtProcessStartTimePoint
+	int64_t& getGmtProcessStartTimePoint()
 	{
-		int64_t nGmtStartProcessTime;
-		SGmtProcessStartTimePoint()
+		struct SGmtProcessStartTimePoint
 		{
-			this->nGmtStartProcessTime = ((int64_t)time(nullptr)) * 1000 - base::time_util::getProcessPassTime() / 1000;
-		}
-	};
+			int64_t nGmtStartProcessTime;
+			SGmtProcessStartTimePoint()
+			{
+				this->nGmtStartProcessTime = ((int64_t)time(nullptr)) * 1000 - base::time_util::getProcessPassTime() / 1000;
+			}
+		};
 
-	static SGmtProcessStartTimePoint s_sGmtProcessStartTime;
-	return s_sGmtProcessStartTime.nGmtStartProcessTime;
+		static SGmtProcessStartTimePoint s_sGmtProcessStartTime;
+		return s_sGmtProcessStartTime.nGmtStartProcessTime;
+	}
 }
 
 namespace base

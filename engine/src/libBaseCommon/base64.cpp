@@ -3,14 +3,17 @@
 #include <iostream>
 #include <string>
 
-static const std::string base64_chars = 
-             "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-             "abcdefghijklmnopqrstuvwxyz"
-             "0123456789+/";
-
-static inline bool is_base64(uint8_t c)
+namespace
 {
-	return (isalnum(c) || (c == '+') || (c == '/'));
+	const std::string base64_chars =
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+		"abcdefghijklmnopqrstuvwxyz"
+		"0123456789+/";
+
+	inline bool is_base64(uint8_t c)
+	{
+		return (isalnum(c) || (c == '+') || (c == '/'));
+	}
 }
 
 namespace base

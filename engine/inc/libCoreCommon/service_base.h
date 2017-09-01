@@ -169,3 +169,17 @@ namespace core
 		CCoreService*	m_pCoreService;
 	};
 }
+
+template<class T, class M>
+inline void register_service_message_handler(core::CServiceBase* pServiceBase, T* pObject, void(T::*handler)(core::CServiceBase*, core::SSessionInfo, const M*));
+
+template<class T, class M>
+inline void register_forward_message_handler(core::CServiceBase* pServiceBase, T* pObject, void(T::*handler)(core::CServiceBase*, core::SClientSessionInfo, const M*));
+
+template<class T, class M>
+inline void register_actor_message_handler(core::CServiceBase* pServiceBase, T* pObject, void(T::*handler)(core::CActorBase*, core::SSessionInfo, const M*));
+
+template<class T, class M>
+inline void register_actor_forward_handler(core::CServiceBase* pServiceBase, T* pObject, void(T::*handler)(core::CActorBase*, core::SClientSessionInfo, const M*));
+
+#include "service_base.inl"

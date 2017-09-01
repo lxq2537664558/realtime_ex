@@ -54,14 +54,8 @@
     <ClInclude Include="..\..\inc\libCoreCommon\actor_base.h">
       <Filter>inc\actor</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreCommon\actor_message_registry.h">
-      <Filter>inc\actor</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\inc\libCoreCommon\coroutine.h">
       <Filter>inc</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreCommon\service_message_registry.h">
-      <Filter>inc\service_base</Filter>
     </ClInclude>
     <ClInclude Include="..\..\inc\libCoreCommon\service_invoker.h">
       <Filter>inc\service_base</Filter>
@@ -403,12 +397,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\inc\libCoreCommon\actor_message_registry.inl">
-      <Filter>inc\actor</Filter>
-    </None>
-    <None Include="..\..\inc\libCoreCommon\service_message_registry.inl">
-      <Filter>inc\service_base</Filter>
-    </None>
     <None Include="..\..\inc\libCoreCommon\service_invoker.inl">
       <Filter>inc\service_base</Filter>
     </None>
@@ -428,6 +416,9 @@
       <Filter>inc\service_base</Filter>
     </None>
     <None Include="..\..\inc\libCoreCommon\normal_protobuf_factory.inl">
+      <Filter>inc\service_base</Filter>
+    </None>
+    <None Include="..\..\inc\libCoreCommon\service_base.inl">
       <Filter>inc\service_base</Filter>
     </None>
   </ItemGroup>

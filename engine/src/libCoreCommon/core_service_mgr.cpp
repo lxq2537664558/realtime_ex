@@ -7,10 +7,13 @@
 #include<dlfcn.h>
 #endif
 
+namespace
+{
+	typedef core::CServiceBase*(*funcCreateServiceBase)();
+}
+
 namespace core
 {
-	typedef CServiceBase*(*funcCreateServiceBase)();
-
 	CCoreServiceMgr::CCoreServiceMgr()
 	{
 

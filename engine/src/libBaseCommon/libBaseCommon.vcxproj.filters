@@ -33,9 +33,6 @@
     <ClInclude Include="..\..\inc\libBaseCommon\safe_queue.h">
       <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\inc\libBaseCommon\table_file.h">
-      <Filter>inc</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\inc\libBaseCommon\thread_base.h">
       <Filter>inc</Filter>
     </ClInclude>

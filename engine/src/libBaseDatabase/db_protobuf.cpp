@@ -19,141 +19,119 @@
 
 #define _DB_NAMESPACE "proto.db."
 
-enum ESerializeType
+namespace
 {
-	eST_Unknown			= 0,
-	eST_Json			= 1,
-	eST_Protobuf_Bin	= 2,
-};
-
-class CLoadProtobufErrorCollector : 
-	public google::protobuf::compiler::MultiFileErrorCollector
-{
-public:
-	CLoadProtobufErrorCollector() {}
-	~CLoadProtobufErrorCollector() {}
-
-	void AddError(const std::string& filename, int line, int column, const std::string& message)
+	enum ESerializeType
 	{
-		PrintWarning("protobuf error: {},{},{},{}", filename, line, column, message);
-	}
-};
+		eST_Unknown = 0,
+		eST_Json = 1,
+		eST_Protobuf_Bin = 2,
+	};
 
-class CProtobufTextParserErrorCollector : 
-	public google::protobuf::io::ErrorCollector
-{
-public:
-	void AddError(int line, int column, const std::string& message)
+	class CLoadProtobufErrorCollector :
+		public google::protobuf::compiler::MultiFileErrorCollector
 	{
-		PrintWarning("ERROR: Parse text. line = {}, column = {}, error = {}", line, column, message);
-	}
+	public:
+		CLoadProtobufErrorCollector() {}
+		~CLoadProtobufErrorCollector() {}
 
-	void AddWarning(int line, int column, const std::string& message)
+		void AddError(const std::string& filename, int line, int column, const std::string& message)
+		{
+			PrintWarning("protobuf error: {},{},{},{}", filename, line, column, message);
+		}
+	};
+
+	class CProtobufTextParserErrorCollector :
+		public google::protobuf::io::ErrorCollector
 	{
-		PrintWarning("WARNING: Parse text. line = {}, column = {}, error = {}", line, column, message);
-	}
-};
+	public:
+		void AddError(int line, int column, const std::string& message)
+		{
+			PrintWarning("ERROR: Parse text. line = {}, column = {}, error = {}", line, column, message);
+		}
 
-class CMessageFactory
-{
-public:
-	CMessageFactory();
-	~CMessageFactory();
+		void AddWarning(int line, int column, const std::string& message)
+		{
+			PrintWarning("WARNING: Parse text. line = {}, column = {}, error = {}", line, column, message);
+		}
+	};
 
-	static CMessageFactory* Inst();
+	class CMessageFactory
+	{
+	public:
+		CMessageFactory();
+		~CMessageFactory();
 
-	bool	init(const std::string& szDir, const std::vector<std::string>& vecFile);
+		static CMessageFactory* Inst();
 
-	google::protobuf::Message* 
+		bool	init(const std::string& szDir, const std::vector<std::string>& vecFile);
+
+		google::protobuf::Message*
 			createMessage(const std::string& szName);
 
-private:
-	google::protobuf::compiler::Importer*		m_pImporter;
-	google::protobuf::DynamicMessageFactory*	m_pFactory;
-};
+	private:
+		google::protobuf::compiler::Importer*		m_pImporter;
+		google::protobuf::DynamicMessageFactory*	m_pFactory;
+	};
 
-CMessageFactory::CMessageFactory()
-	: m_pImporter(nullptr)
-	, m_pFactory(nullptr)
-{
-}
-
-CMessageFactory::~CMessageFactory()
-{
-	delete this->m_pFactory;
-	delete this->m_pImporter;
-}
-
-CMessageFactory* CMessageFactory::Inst()
-{
-	static CMessageFactory s_Inst;
-
-	return &s_Inst;
-}
-
-bool CMessageFactory::init(const std::string& szDir, const std::vector<std::string>& vecFile)
-{
-	this->m_pFactory = new google::protobuf::DynamicMessageFactory();
-
-	google::protobuf::compiler::DiskSourceTree sourceTree;
-	CLoadProtobufErrorCollector errorColloctor;
-	this->m_pImporter = new google::protobuf::compiler::Importer(&sourceTree, &errorColloctor);
-
-	sourceTree.MapPath("", szDir);
-
-	for (auto iter = vecFile.begin(); iter != vecFile.end(); ++iter)
+	CMessageFactory::CMessageFactory()
+		: m_pImporter(nullptr)
+		, m_pFactory(nullptr)
 	{
-		DebugAstEx(this->m_pImporter->Import(*iter), false);
 	}
 
-	return true;
-}
-
-google::protobuf::Message* CMessageFactory::createMessage(const std::string& szName)
-{
-	google::protobuf::Message* pMessage = nullptr;
-	const google::protobuf::Descriptor* pDescriptor = google::protobuf::DescriptorPool::generated_pool()->FindMessageTypeByName(szName);
-	if (pDescriptor != nullptr)
+	CMessageFactory::~CMessageFactory()
 	{
-		const google::protobuf::Message* pProto = google::protobuf::MessageFactory::generated_factory()->GetPrototype(pDescriptor);
-		if (pProto != nullptr)
-			pMessage = pProto->New();
-	}
-	else
-	{
-		pDescriptor = this->m_pImporter->pool()->FindMessageTypeByName(szName);
-		if (pDescriptor != nullptr)
-			pMessage = this->m_pFactory->GetPrototype(pDescriptor)->New();
+		delete this->m_pFactory;
+		delete this->m_pImporter;
 	}
 
-	return pMessage;
-}
-
-namespace base
-{
-	bool importProtobuf(const std::string& szDir, const std::vector<std::string>& vecFile)
+	CMessageFactory* CMessageFactory::Inst()
 	{
-		return CMessageFactory::Inst()->init(szDir, vecFile);
+		static CMessageFactory s_Inst;
+
+		return &s_Inst;
 	}
 
-	std::string getMessageNameByTableName(const std::string& szTableName)
+	bool CMessageFactory::init(const std::string& szDir, const std::vector<std::string>& vecFile)
 	{
-		return std::string(_DB_NAMESPACE) + szTableName;
-	}
+		this->m_pFactory = new google::protobuf::DynamicMessageFactory();
 
-	bool getTableNameByMessageName(const std::string& szMessageName, std::string& szTableName)
-	{
-		static size_t nPrefixLen = strlen(_DB_NAMESPACE);
+		google::protobuf::compiler::DiskSourceTree sourceTree;
+		CLoadProtobufErrorCollector errorColloctor;
+		this->m_pImporter = new google::protobuf::compiler::Importer(&sourceTree, &errorColloctor);
 
-		size_t pos = szMessageName.find(_DB_NAMESPACE);
-		if (pos == std::string::npos)
-			return false;
+		sourceTree.MapPath("", szDir);
 
-		szTableName = szMessageName.substr(pos + nPrefixLen);
+		for (auto iter = vecFile.begin(); iter != vecFile.end(); ++iter)
+		{
+			DebugAstEx(this->m_pImporter->Import(*iter), false);
+		}
+
 		return true;
 	}
 
-	static bool getBasicTypeFieldValue(const google::protobuf::Message* pMessage, const google::protobuf::FieldDescriptor* pFieldDescriptor, const google::protobuf::Reflection* pReflection, std::string& szValue)
+	google::protobuf::Message* CMessageFactory::createMessage(const std::string& szName)
+	{
+		google::protobuf::Message* pMessage = nullptr;
+		const google::protobuf::Descriptor* pDescriptor = google::protobuf::DescriptorPool::generated_pool()->FindMessageTypeByName(szName);
+		if (pDescriptor != nullptr)
+		{
+			const google::protobuf::Message* pProto = google::protobuf::MessageFactory::generated_factory()->GetPrototype(pDescriptor);
+			if (pProto != nullptr)
+				pMessage = pProto->New();
+		}
+		else
+		{
+			pDescriptor = this->m_pImporter->pool()->FindMessageTypeByName(szName);
+			if (pDescriptor != nullptr)
+				pMessage = this->m_pFactory->GetPrototype(pDescriptor)->New();
+		}
+
+		return pMessage;
+	}
+
+	bool getBasicTypeFieldValue(const google::protobuf::Message* pMessage, const google::protobuf::FieldDescriptor* pFieldDescriptor, const google::protobuf::Reflection* pReflection, std::string& szValue)
 	{
 		DebugAstEx(pMessage != nullptr, false);
 		DebugAstEx(pFieldDescriptor != nullptr, false);
@@ -164,50 +142,50 @@ namespace base
 		case google::protobuf::FieldDescriptor::TYPE_INT32:
 		case google::protobuf::FieldDescriptor::TYPE_SINT32:
 		case google::protobuf::FieldDescriptor::TYPE_SFIXED32:
-			{
-				int32_t nValue = pReflection->GetInt32(*pMessage, pFieldDescriptor);
-				szValue = base::string_util::convert_to_str(nValue);
-			}
-			break;
+		{
+			int32_t nValue = pReflection->GetInt32(*pMessage, pFieldDescriptor);
+			szValue = base::string_util::convert_to_str(nValue);
+		}
+		break;
 
 		case google::protobuf::FieldDescriptor::TYPE_UINT32:
 		case google::protobuf::FieldDescriptor::TYPE_FIXED32:
-			{
-				uint32_t nValue = pReflection->GetUInt32(*pMessage, pFieldDescriptor);
-				szValue = base::string_util::convert_to_str(nValue);
-			}
-			break;
+		{
+			uint32_t nValue = pReflection->GetUInt32(*pMessage, pFieldDescriptor);
+			szValue = base::string_util::convert_to_str(nValue);
+		}
+		break;
 
 		case google::protobuf::FieldDescriptor::TYPE_INT64:
 		case google::protobuf::FieldDescriptor::TYPE_SINT64:
 		case google::protobuf::FieldDescriptor::TYPE_SFIXED64:
-			{
-				int64_t nValue = pReflection->GetInt64(*pMessage, pFieldDescriptor);
-				szValue = base::string_util::convert_to_str(nValue);
-			}
-			break;
+		{
+			int64_t nValue = pReflection->GetInt64(*pMessage, pFieldDescriptor);
+			szValue = base::string_util::convert_to_str(nValue);
+		}
+		break;
 
 		case google::protobuf::FieldDescriptor::TYPE_UINT64:
 		case google::protobuf::FieldDescriptor::TYPE_FIXED64:
-			{
-				uint64_t nValue = pReflection->GetUInt64(*pMessage, pFieldDescriptor);
-				szValue = base::string_util::convert_to_str(nValue);
-			}
-			break;
+		{
+			uint64_t nValue = pReflection->GetUInt64(*pMessage, pFieldDescriptor);
+			szValue = base::string_util::convert_to_str(nValue);
+		}
+		break;
 
 		case google::protobuf::FieldDescriptor::TYPE_DOUBLE:
-			{
-				double nValue = pReflection->GetDouble(*pMessage, pFieldDescriptor);
-				szValue = base::string_util::convert_to_str(nValue);
-			}
-			break;
+		{
+			double nValue = pReflection->GetDouble(*pMessage, pFieldDescriptor);
+			szValue = base::string_util::convert_to_str(nValue);
+		}
+		break;
 
 		case google::protobuf::FieldDescriptor::TYPE_FLOAT:
-			{
-				float nValue = pReflection->GetFloat(*pMessage, pFieldDescriptor);
-				szValue = base::string_util::convert_to_str(nValue);
-			}
-			break;
+		{
+			float nValue = pReflection->GetFloat(*pMessage, pFieldDescriptor);
+			szValue = base::string_util::convert_to_str(nValue);
+		}
+		break;
 
 		case google::protobuf::FieldDescriptor::TYPE_STRING:
 		case google::protobuf::FieldDescriptor::TYPE_BYTES:
@@ -232,80 +210,151 @@ namespace base
 		case google::protobuf::FieldDescriptor::TYPE_INT32:
 		case google::protobuf::FieldDescriptor::TYPE_SINT32:
 		case google::protobuf::FieldDescriptor::TYPE_SFIXED32:
-			{
-				int32_t nValue = 0;
-				if (!base::string_util::convert_to_value(szValue, nValue))
-					return false;
+		{
+			int32_t nValue = 0;
+			if (!base::string_util::convert_to_value(szValue, nValue))
+				return false;
 
-				pReflection->SetInt32(pMessage, pFieldDescriptor, nValue);
-			}
-			break;
+			pReflection->SetInt32(pMessage, pFieldDescriptor, nValue);
+		}
+		break;
 
 		case google::protobuf::FieldDescriptor::TYPE_UINT32:
 		case google::protobuf::FieldDescriptor::TYPE_FIXED32:
-			{
-				uint32_t nValue = 0;
-				if (!base::string_util::convert_to_value(szValue, nValue))
-					return false;
+		{
+			uint32_t nValue = 0;
+			if (!base::string_util::convert_to_value(szValue, nValue))
+				return false;
 
-				pReflection->SetUInt32(pMessage, pFieldDescriptor, nValue);
-			}
-			break;
+			pReflection->SetUInt32(pMessage, pFieldDescriptor, nValue);
+		}
+		break;
 
 		case google::protobuf::FieldDescriptor::TYPE_INT64:
 		case google::protobuf::FieldDescriptor::TYPE_SINT64:
 		case google::protobuf::FieldDescriptor::TYPE_SFIXED64:
-			{
-				int64_t nValue = 0;
-				if (!base::string_util::convert_to_value(szValue, nValue))
-					return false;
+		{
+			int64_t nValue = 0;
+			if (!base::string_util::convert_to_value(szValue, nValue))
+				return false;
 
-				pReflection->SetInt64(pMessage, pFieldDescriptor, nValue);
-			}
-			break;
+			pReflection->SetInt64(pMessage, pFieldDescriptor, nValue);
+		}
+		break;
 
 		case google::protobuf::FieldDescriptor::TYPE_UINT64:
 		case google::protobuf::FieldDescriptor::TYPE_FIXED64:
-			{
-				uint64_t nValue = 0;
-				if (!base::string_util::convert_to_value(szValue, nValue))
-					return false;
+		{
+			uint64_t nValue = 0;
+			if (!base::string_util::convert_to_value(szValue, nValue))
+				return false;
 
-				pReflection->SetUInt64(pMessage, pFieldDescriptor, nValue);
-			}
-			break;
+			pReflection->SetUInt64(pMessage, pFieldDescriptor, nValue);
+		}
+		break;
 
 		case google::protobuf::FieldDescriptor::TYPE_DOUBLE:
-			{
-				double nValue = 0.0;
-				if (!base::string_util::convert_to_value(szValue, nValue))
-					return false;
+		{
+			double nValue = 0.0;
+			if (!base::string_util::convert_to_value(szValue, nValue))
+				return false;
 
-				pReflection->SetDouble(pMessage, pFieldDescriptor, nValue);
-			}
-			break;
+			pReflection->SetDouble(pMessage, pFieldDescriptor, nValue);
+		}
+		break;
 
 		case google::protobuf::FieldDescriptor::TYPE_FLOAT:
-			{
-				float nValue = 0.0f;
-				if (!base::string_util::convert_to_value(szValue, nValue))
-					return false;
+		{
+			float nValue = 0.0f;
+			if (!base::string_util::convert_to_value(szValue, nValue))
+				return false;
 
-				pReflection->SetDouble(pMessage, pFieldDescriptor, nValue);
-			}
-			break;
+			pReflection->SetDouble(pMessage, pFieldDescriptor, nValue);
+		}
+		break;
 
 		case google::protobuf::FieldDescriptor::TYPE_STRING:
 		case google::protobuf::FieldDescriptor::TYPE_BYTES:
-			{
-				pReflection->SetString(pMessage, pFieldDescriptor, szValue);
-			}
-			break;
+		{
+			pReflection->SetString(pMessage, pFieldDescriptor, szValue);
+		}
+		break;
 
 		default:
 			DebugAstEx(false, false);
 		}
 
+		return true;
+	}
+
+	bool setFieldValue(google::protobuf::Message* pMessage, const google::protobuf::Reflection* pReflection, const google::protobuf::FieldDescriptor* pFieldDescriptor, const std::string& szValue)
+	{
+		DebugAstEx(pMessage != nullptr, false);
+		DebugAstEx(pReflection != nullptr, false);
+		DebugAstEx(pFieldDescriptor != nullptr, false);
+
+		if (pFieldDescriptor->type() == google::protobuf::FieldDescriptor::TYPE_MESSAGE)
+		{
+			ESerializeType eSerializeType = (ESerializeType)pFieldDescriptor->options().GetExtension(serialize_type);
+
+			switch (eSerializeType)
+			{
+			case eST_Protobuf_Bin:
+			{
+				google::protobuf::Message* pSubMessage = pReflection->MutableMessage(pMessage, pFieldDescriptor);
+				DebugAstEx(pSubMessage != nullptr, false);
+				if (!szValue.empty())
+				{
+					DebugAstEx(pSubMessage->ParseFromArray(szValue.c_str(), (int32_t)szValue.size()), false);
+				}
+			}
+			break;
+
+			case eST_Json:
+			{
+				google::protobuf::Message* pSubMessage = pReflection->MutableMessage(pMessage, pFieldDescriptor);
+				DebugAstEx(pSubMessage != nullptr, false);
+				if (!szValue.empty())
+				{
+					DebugAstEx(google::protobuf::util::JsonStringToMessage(szValue, pSubMessage).ok(), false);
+				}
+			}
+			break;
+
+			default:
+				DebugAstEx(false, false);
+			}
+		}
+		else
+		{
+			DebugAstEx(setBasicTypeFieldValue(pMessage, pReflection, pFieldDescriptor, szValue), false);
+		}
+
+		return true;
+	}
+}
+
+namespace base
+{
+	bool importProtobuf(const std::string& szDir, const std::vector<std::string>& vecFile)
+	{
+		return CMessageFactory::Inst()->init(szDir, vecFile);
+	}
+
+	std::string getMessageNameByTableName(const std::string& szTableName)
+	{
+		return std::string(_DB_NAMESPACE) + szTableName;
+	}
+
+	bool getTableNameByMessageName(const std::string& szMessageName, std::string& szTableName)
+	{
+		static size_t nPrefixLen = strlen(_DB_NAMESPACE);
+
+		size_t pos = szMessageName.find(_DB_NAMESPACE);
+		if (pos == std::string::npos)
+			return false;
+
+		szTableName = szMessageName.substr(pos + nPrefixLen);
 		return true;
 	}
 
@@ -338,34 +387,34 @@ namespace base
 				switch (eSerializeType)
 				{
 				case eST_Protobuf_Bin:
+				{
+					const google::protobuf::Message& subMessage = pReflection->GetMessage(*pMessage, pFieldDescriptor);
+					szBuf.resize(subMessage.ByteSize());
+					if (subMessage.ByteSize() > 0 && !subMessage.SerializeToArray(&szBuf[0], (int32_t)szBuf.size()))
 					{
-						const google::protobuf::Message& subMessage = pReflection->GetMessage(*pMessage, pFieldDescriptor);
-						szBuf.resize(subMessage.ByteSize());
-						if (subMessage.ByteSize() > 0 && !subMessage.SerializeToArray(&szBuf[0], (int32_t)szBuf.size()))
-						{
-							PrintWarning("SerializeToArray fail.[{}:{}]", pMessage->GetTypeName(), pFieldDescriptor->type_name());
-							return false;
-						}
-					}
-					break;
-
-				case eST_Json:
-					{
-						const google::protobuf::Message& subMessage = pReflection->GetMessage(*pMessage, pFieldDescriptor);
-
-						if (!google::protobuf::util::MessageToJsonString(subMessage, &szBuf).ok())
-						{
-							PrintWarning("MessageToJsonString fail.[{}:{}]", pMessage->GetTypeName(), pFieldDescriptor->type_name());
-							return false;
-						}
-					}
-					break;
-
-				default:
-					{
-						PrintWarning("Message[{}] field{}] hasn't serialize type.", pMessage->GetTypeName(), pFieldDescriptor->name());
+						PrintWarning("SerializeToArray fail.[{}:{}]", pMessage->GetTypeName(), pFieldDescriptor->type_name());
 						return false;
 					}
+				}
+				break;
+
+				case eST_Json:
+				{
+					const google::protobuf::Message& subMessage = pReflection->GetMessage(*pMessage, pFieldDescriptor);
+
+					if (!google::protobuf::util::MessageToJsonString(subMessage, &szBuf).ok())
+					{
+						PrintWarning("MessageToJsonString fail.[{}:{}]", pMessage->GetTypeName(), pFieldDescriptor->type_name());
+						return false;
+					}
+				}
+				break;
+
+				default:
+				{
+					PrintWarning("Message[{}] field{}] hasn't serialize type.", pMessage->GetTypeName(), pFieldDescriptor->name());
+					return false;
+				}
 				}
 
 				SFieldInfo sFieldInfo;
@@ -391,52 +440,6 @@ namespace base
 
 				vecFieldInfo.push_back(sFieldInfo);
 			}
-		}
-
-		return true;
-	}
-
-	static bool setFieldValue(google::protobuf::Message* pMessage, const google::protobuf::Reflection* pReflection, const google::protobuf::FieldDescriptor* pFieldDescriptor, const std::string& szValue)
-	{
-		DebugAstEx(pMessage != nullptr, false);
-		DebugAstEx(pReflection != nullptr, false);
-		DebugAstEx(pFieldDescriptor != nullptr, false);
-
-		if (pFieldDescriptor->type() == google::protobuf::FieldDescriptor::TYPE_MESSAGE)
-		{
-			ESerializeType eSerializeType = (ESerializeType)pFieldDescriptor->options().GetExtension(serialize_type);
-
-			switch (eSerializeType)
-			{
-			case eST_Protobuf_Bin:
-				{
-					google::protobuf::Message* pSubMessage = pReflection->MutableMessage(pMessage, pFieldDescriptor);
-					DebugAstEx(pSubMessage != nullptr, false);
-					if (!szValue.empty())
-					{
-						DebugAstEx(pSubMessage->ParseFromArray(szValue.c_str(), (int32_t)szValue.size()), false);
-					}
-				}
-				break;
-
-			case eST_Json:
-				{
-					google::protobuf::Message* pSubMessage = pReflection->MutableMessage(pMessage, pFieldDescriptor);
-					DebugAstEx(pSubMessage != nullptr, false);
-					if (!szValue.empty())
-					{
-						DebugAstEx(google::protobuf::util::JsonStringToMessage(szValue, pSubMessage).ok(), false);
-					}
-				}
-				break;
-
-			default:
-				DebugAstEx(false, false);
-			}
-		}
-		else
-		{
-			DebugAstEx(setBasicTypeFieldValue(pMessage, pReflection, pFieldDescriptor, szValue), false);
 		}
 
 		return true;
@@ -515,7 +518,7 @@ namespace base
 		google::protobuf::Message* pMessage = CMessageFactory::Inst()->createMessage(szMessageName);
 		DebugAstEx(pMessage != nullptr, nullptr);
 		bool bDelete = true;
-		defer([&]() 
+		defer([&]()
 		{
 			if (bDelete)
 			{

@@ -130,12 +130,7 @@ namespace base
 		template<> inline void push2Special(std::string& strfmt, const int64_t& val)
 		{
 			char sta_buffer[32];
-#ifdef WIN32
-			base::function_util::snprintf(sta_buffer, _countof(sta_buffer), "%I64d", val);
-#else
-			base::function_util::snprintf(sta_buffer, _countof(sta_buffer), "%lld", val);
-
-#endif
+			base::function_util::snprintf(sta_buffer, _countof(sta_buffer), INT64FMT, val);
 
 			// 替换参数
 			std::string::size_type pos = 0;
@@ -148,12 +143,7 @@ namespace base
 		template<> inline void push2Special(std::string& strfmt, const uint64_t& val)
 		{
 			char sta_buffer[32];
-#ifdef WIN32
-			base::function_util::snprintf(sta_buffer, _countof(sta_buffer), "%I64u", val);
-#else
-			base::function_util::snprintf(sta_buffer, _countof(sta_buffer), "%llu", val);
-
-#endif
+			base::function_util::snprintf(sta_buffer, _countof(sta_buffer), UINT64FMT, val);
 
 			// 替换参数
 			std::string::size_type pos = 0;
@@ -188,22 +178,28 @@ namespace base
 
 		template<> inline void push2Special(std::string& strfmt, const char* const& val)
 		{
+			char sta_buffer[1024];
+			if (val == nullptr)
+			{
+				base::function_util::snprintf(sta_buffer, _countof(sta_buffer), "%s", "NULL");
+			}
+			else
+			{
+				base::function_util::snprintf(sta_buffer, _countof(sta_buffer), "%s", val);
+			}
+
 			// 替换参数
 			std::string::size_type pos = 0;
 			if (std::string::npos != (pos = strfmt.find("{}")))
 			{
-
-				if (val != nullptr)
-				{
-					char sta_buffer[1024];
-					base::function_util::snprintf(sta_buffer, _countof(sta_buffer), "%s", val);
-					strfmt.replace(pos, 2, sta_buffer);
-				} 
-				else
+				if (val == nullptr)
 				{
 					strfmt.replace(pos, 2, "NULL");
 				}
-
+				else
+				{
+					strfmt.replace(pos, 2, val);
+				}
 			}
 		}
 
@@ -249,19 +245,6 @@ namespace base
 		{
 
 			return format(strfmt.c_str(), args...);
-		}
-
-
-		template<class ...Args>
-		inline std::string	format(char *buff, uint16_t buffSize, char* fmt, const Args&... args)
-		{
-			return "";
-		}
-
-		template<class ...Args>
-		inline std::string	format(char *buff, uint16_t buffSize, const std::string& fmt, const Args&... args)
-		{
-			return "";
 		}
 	}
 }

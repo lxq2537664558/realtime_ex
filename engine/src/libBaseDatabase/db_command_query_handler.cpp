@@ -9,7 +9,10 @@
 
 #include <sstream>
 
-const std::string szPlaceholder = "{?}";
+namespace
+{
+	const std::string szPlaceholder = "{?}";
+}
 
 namespace base
 {

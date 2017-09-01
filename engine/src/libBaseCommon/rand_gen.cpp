@@ -7,7 +7,10 @@
 
 namespace base
 {
-	CRandGen g_RandGen((uint32_t)time(nullptr));
+	namespace
+	{
+		CRandGen g_RandGen((uint32_t)time(nullptr));
+	}
 
 	CRandGen::CRandGen(uint32_t nSeed)
 	{

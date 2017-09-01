@@ -14,9 +14,8 @@
 
 #define _MEMORY_DETAIL_STACK_COUNT 10
 
-namespace base
+namespace
 {
-
 #pragma pack(push,1)
 	struct SMemoryHookInfo
 	{
@@ -27,7 +26,7 @@ namespace base
 		bool		bDetail;	// 是否是详细信息
 	};
 
-	typedef TLinkNode<SMemoryHookInfo> SMemoryHookInfoNode;
+	typedef base::TLinkNode<SMemoryHookInfo> SMemoryHookInfoNode;
 #pragma pack(pop)
 
 	class CMemoryHookMgr
@@ -45,11 +44,11 @@ namespace base
 		int64_t	getMemorySize() const;
 
 	private:
-		TLink<SMemoryHookInfoNode>	m_listMemoryHookInfo;
-		bool						m_bCheck;
-		bool						m_bDetail;
-		spin_lock					m_lock;
-		int64_t						m_nMemorySize;
+		base::TLink<SMemoryHookInfoNode>	m_listMemoryHookInfo;
+		bool								m_bCheck;
+		bool								m_bDetail;
+		base::spin_lock						m_lock;
+		int64_t								m_nMemorySize;
 	};
 
 	CMemoryHookMgr::CMemoryHookMgr()
@@ -117,7 +116,7 @@ namespace base
 		if (nullptr == pData)
 			return;
 
-		SMemoryHookInfoNode* pMemoryHookInfoNode = reinterpret_cast<SMemoryHookInfoNode*>(pData)-1;
+		SMemoryHookInfoNode* pMemoryHookInfoNode = reinterpret_cast<SMemoryHookInfoNode*>(pData) - 1;
 		if (pMemoryHookInfoNode->Value.bDetail)
 			free(pMemoryHookInfoNode->Value.pContext);
 
@@ -165,7 +164,7 @@ namespace base
 				{
 					void* pAddr = pStack[i];
 					char szBuf[1024] = { 0 };
-					if (getFunctionInfo(pAddr, szBuf, _countof(szBuf)) <= 0)
+					if (base::getFunctionInfo(pAddr, szBuf, _countof(szBuf)) <= 0)
 						continue;
 
 					char szInfo[1024] = { 0 };
@@ -181,7 +180,7 @@ namespace base
 			else
 			{
 				char szBuf[1024] = { 0 };
-				if (getFunctionInfo(pNode->Value.pContext, szBuf, _countof(szBuf)) <= 0)
+				if (base::getFunctionInfo(pNode->Value.pContext, szBuf, _countof(szBuf)) <= 0)
 					continue;
 
 				char szTime[64] = { 0 };
@@ -201,7 +200,10 @@ namespace base
 		this->m_bCheck = false;
 		this->m_bDetail = false;
 	}
+}
 
+namespace base
+{
 	void beginMemoryLeakChecker(bool bDetail)
 	{
 #ifdef __MEMORY_HOOK__

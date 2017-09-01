@@ -14,10 +14,10 @@
 
 CGasServiceMessageHandler::CGasServiceMessageHandler(CServiceBase* pServiceBase)
 {
-	REGISTER_SERVICE_MESSAGE_HANDLER(pServiceBase, CGasServiceMessageHandler, "g2s_player_enter_request", &CGasServiceMessageHandler::g2s_player_enter_request_handler);
-	REGISTER_SERVICE_MESSAGE_HANDLER(pServiceBase, CGasServiceMessageHandler, "g2s_player_leave_notify", &CGasServiceMessageHandler::g2s_player_leave_notify_handler);
-	REGISTER_SERVICE_MESSAGE_HANDLER(pServiceBase, CGasServiceMessageHandler, "u2s_kick_player_notify", &CGasServiceMessageHandler::u2s_kick_player_notify_handler);
-	REGISTER_SERVICE_MESSAGE_HANDLER(pServiceBase, CGasServiceMessageHandler, "g2s_player_heartbeat_notify", &CGasServiceMessageHandler::g2s_player_heartbeat_notify_handler);
+	register_service_message_handler(pServiceBase, this, &CGasServiceMessageHandler::g2s_player_enter_request_handler);
+	register_service_message_handler(pServiceBase, this, &CGasServiceMessageHandler::g2s_player_leave_notify_handler);
+	register_service_message_handler(pServiceBase, this, &CGasServiceMessageHandler::u2s_kick_player_notify_handler);
+	register_service_message_handler(pServiceBase, this, &CGasServiceMessageHandler::g2s_player_heartbeat_notify_handler);
 }
 
 CGasServiceMessageHandler::~CGasServiceMessageHandler()

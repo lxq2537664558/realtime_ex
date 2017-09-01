@@ -40,55 +40,60 @@
 #ifndef _WIN32
 // 环境变量
 extern char **environ;
-// 修改进程信息，方便运维管理
-static bool initProcessInfo(size_t argc, char** argv, const char* title)
+
+namespace
 {
-	// 把整个环境变量拷贝出去
-	size_t environ_size = 0;
-	for (size_t i = 0; environ[i] != nullptr; ++i)
+	// 修改进程信息，方便运维管理
+	bool initProcessInfo(size_t argc, char** argv, const char* title)
 	{
-		environ_size += strlen(environ[i]) + 1;
-	}
-	char* new_environ = new char[environ_size];
-	for (size_t i = 0; environ[i] != nullptr; ++i)
-	{
-		memcpy(new_environ, environ[i], strlen(environ[i]) + 1);
-		environ[i] = new_environ;
-		new_environ += strlen(environ[i]) + 1;
-	}
-
-	size_t argv_size = 0;
-	for (size_t i = 0; argv[i] != nullptr; ++i)
-	{
-		argv_size += strlen(argv[i]) + 1;
-	}
-
-	char** new_argv = new char*[argc];
-	char* new_argv_buff = new char[argv_size + strlen(title) + 1];
-	for (size_t i = 0; i < argc; ++i)
-	{
-		uint32_t size = 0;
-		if (i == 0)
+		// 把整个环境变量拷贝出去
+		size_t environ_size = 0;
+		for (size_t i = 0; environ[i] != nullptr; ++i)
 		{
-			size = strlen(title) + 1;
-			memcpy(new_argv_buff, title, size);
+			environ_size += strlen(environ[i]) + 1;
 		}
-		else
+		char* new_environ = new char[environ_size];
+		for (size_t i = 0; environ[i] != nullptr; ++i)
 		{
-			size = strlen(argv[i]) + 1;
-			memcpy(new_argv_buff, argv[i], size);
+			memcpy(new_environ, environ[i], strlen(environ[i]) + 1);
+			environ[i] = new_environ;
+			new_environ += strlen(environ[i]) + 1;
 		}
-		new_argv[i] = new_argv_buff;
-		new_argv_buff += size;
-	}
-	// 这里越界也没关系
-	memcpy(argv[0], new_argv[0], argv_size + strlen(title) + 1);
-	for (size_t i = 0; i < argc; ++i)
-		argv[i] = new_argv[i];
 
-	return true;
+		size_t argv_size = 0;
+		for (size_t i = 0; argv[i] != nullptr; ++i)
+		{
+			argv_size += strlen(argv[i]) + 1;
+		}
+
+		char** new_argv = new char*[argc];
+		char* new_argv_buff = new char[argv_size + strlen(title) + 1];
+		for (size_t i = 0; i < argc; ++i)
+		{
+			uint32_t size = 0;
+			if (i == 0)
+			{
+				size = strlen(title) + 1;
+				memcpy(new_argv_buff, title, size);
+			}
+			else
+			{
+				size = strlen(argv[i]) + 1;
+				memcpy(new_argv_buff, argv[i], size);
+			}
+			new_argv[i] = new_argv_buff;
+			new_argv_buff += size;
+		}
+		// 这里越界也没关系
+		memcpy(argv[0], new_argv[0], argv_size + strlen(title) + 1);
+		for (size_t i = 0; i < argc; ++i)
+			argv[i] = new_argv[i];
+
+		return true;
+	}
 }
 #endif
+
 
 namespace core
 {

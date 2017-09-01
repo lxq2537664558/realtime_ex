@@ -12,10 +12,13 @@
 #include "libBaseCommon/profiling.h"
 #include "libBaseCommon/singleton.h"
 
+namespace
+{
+	SNetAddr s_DefaultAddr;
+}
+
 namespace core
 {
-	static SNetAddr s_DefaultAddr;
-	
 #pragma pack(push,1)
 
 	struct connection_heart_beat
@@ -33,7 +36,7 @@ namespace core
 	{
 		this->m_heartbeat.setCallback(std::bind(&CCoreConnection::onHeartbeat, this, std::placeholders::_1));
 	}
-	
+
 	CCoreConnection::~CCoreConnection()
 	{
 		DebugAst(this->m_pNetConnecter == nullptr);
@@ -129,7 +132,7 @@ namespace core
 
 		SMCT_NOTIFY_SOCKET_CONNECT* pContext = new SMCT_NOTIFY_SOCKET_CONNECT();
 		pContext->pCoreConnection = this;
-		
+
 		SMessagePacket sMessagePacket;
 		sMessagePacket.nType = eMCT_NOTIFY_SOCKET_CONNECT;
 		sMessagePacket.pData = pContext;
@@ -256,8 +259,8 @@ namespace core
 		{
 			const response_cookice* pCookice = reinterpret_cast<const response_cookice*>(pData);
 
-			DebugAst(nSize > sizeof(response_cookice));
-			DebugAst(nSize > sizeof(response_cookice) + pCookice->nMessageNameLen);
+			DebugAst(nSize >= sizeof(response_cookice));
+			DebugAst(nSize >= sizeof(response_cookice) + pCookice->nMessageNameLen);
 			DebugAst(pCookice->szMessageName[pCookice->nMessageNameLen] == 0);
 
 			CCoreService* pCoreService = CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->getCoreServiceByID(pCookice->nToServiceID);
@@ -333,8 +336,8 @@ namespace core
 			}
 
 			const char* pMessageData = reinterpret_cast<const char*>(pHeader + 1);
-			
-			google::protobuf::Message* pMessage = pProtobufFactory->unserialize_protobuf_message_from_buf(szMessageName, pMessageData, nSize - sizeof(gate_forward_cookice)- sizeof(message_header));
+
+			google::protobuf::Message* pMessage = pProtobufFactory->unserialize_protobuf_message_from_buf(szMessageName, pMessageData, nSize - sizeof(gate_forward_cookice) - sizeof(message_header));
 			if (nullptr == pMessage)
 			{
 				PrintWarning("CCoreConnection::onDispatch eMT_GATE_FORWARD error pMessage == nullptr service_id: {} message_name: {}", pCookice->nToServiceID, szMessageName);
@@ -359,7 +362,7 @@ namespace core
 		else if (nMessageType == eMT_TO_GATE)
 		{
 			const gate_send_cookice* pCookice = reinterpret_cast<const gate_send_cookice*>(pData);
-			
+
 			DebugAst(nSize > sizeof(gate_send_cookice));
 
 			char* szBuf = new char[sizeof(SMCT_TO_GATE) + nSize - sizeof(gate_send_cookice)];
@@ -380,7 +383,7 @@ namespace core
 		else if (nMessageType == eMT_TO_GATE_BROADCAST)
 		{
 			const gate_broadcast_cookice* pCookice = reinterpret_cast<const gate_broadcast_cookice*>(pData);
-			
+
 			char* szBuf = new char[sizeof(SMCT_TO_GATE_BROADCAST) + nSize - sizeof(gate_broadcast_cookice)];
 			SMCT_TO_GATE_BROADCAST* pContext = reinterpret_cast<SMCT_TO_GATE_BROADCAST*>(szBuf);
 			pContext->nSessionCount = pCookice->nSessionCount;
@@ -388,7 +391,7 @@ namespace core
 			pContext->nDataSize = (uint16_t)(nSize - sizeof(gate_broadcast_cookice));
 			pContext->pData = szBuf + sizeof(SMCT_TO_GATE_BROADCAST);
 			memcpy(pContext->pData, pCookice + 1, pContext->nDataSize);
-			
+
 			SMessagePacket sMessagePacket;
 			sMessagePacket.nType = eMCT_TO_GATE_BROADCAST;
 			sMessagePacket.nDataSize = sizeof(SMCT_TO_GATE_BROADCAST);
@@ -417,18 +420,18 @@ namespace core
 
 	void CCoreConnection::onHeartbeat(uint64_t nContext)
 	{
-// 		if (this->m_bHeartbeat.load(std::memory_order_acquire) == 0)
-// 			return;
-// 		
-// 		if (this->m_nSendHeartbeatCount > CCoreApp::Inst()->getHeartbeatLimit())
-// 		{
-// 			this->shutdown(true, "heart beat time out");
-// 			return;
-// 		}
-// 		
-// 		++this->m_nSendHeartbeatCount;
-// 		connection_heart_beat netMsg;
-// 		this->send(eMT_HEARTBEAT, &netMsg, sizeof(netMsg));
+		// 		if (this->m_bHeartbeat.load(std::memory_order_acquire) == 0)
+		// 			return;
+		// 		
+		// 		if (this->m_nSendHeartbeatCount > CCoreApp::Inst()->getHeartbeatLimit())
+		// 		{
+		// 			this->shutdown(true, "heart beat time out");
+		// 			return;
+		// 		}
+		// 		
+		// 		++this->m_nSendHeartbeatCount;
+		// 		connection_heart_beat netMsg;
+		// 		this->send(eMT_HEARTBEAT, &netMsg, sizeof(netMsg));
 	}
 
 	void CCoreConnection::send(uint8_t nMessageType, const void* pData, uint16_t nSize)
@@ -436,7 +439,7 @@ namespace core
 		PROFILING_GUARD(CCoreConnection::send)
 
 		DebugAst(pData != nullptr && nSize > 0);
-		
+
 		if (this->m_pNetConnecter == nullptr)
 			return;
 
@@ -455,14 +458,14 @@ namespace core
 		case eMT_GATE_FORWARD:
 		case eMT_TO_GATE:
 		case eMT_TO_GATE_BROADCAST:
-			{
-				message_header header;
-				header.nMessageSize = sizeof(header) + nSize;
-				header.nMessageID = nMessageType;
-				this->m_pNetConnecter->send(&header, sizeof(header), true);
-				this->m_pNetConnecter->send(pData, nSize, true);
-			}
-			break;
+		{
+			message_header header;
+			header.nMessageSize = sizeof(header) + nSize;
+			header.nMessageID = nMessageType;
+			this->m_pNetConnecter->send(&header, sizeof(header), true);
+			this->m_pNetConnecter->send(pData, nSize, true);
+		}
+		break;
 		}
 	}
 
@@ -471,7 +474,7 @@ namespace core
 		PROFILING_GUARD(CCoreConnection::send)
 
 		DebugAst(pData != nullptr && pExtraBuf != nullptr && nSize + nExtraSize < UINT16_MAX);
-		
+
 		if (this->m_pNetConnecter == nullptr)
 			return;
 
@@ -481,11 +484,11 @@ namespace core
 		{
 		case eMT_CLIENT:
 		case eMT_HEARTBEAT:
-			{
-				this->m_pNetConnecter->send(pData, nSize, true);
-				this->m_pNetConnecter->send(pExtraBuf, nExtraSize, true);
-			}
-			break;
+		{
+			this->m_pNetConnecter->send(pData, nSize, true);
+			this->m_pNetConnecter->send(pExtraBuf, nExtraSize, true);
+		}
+		break;
 
 		case eMT_REQUEST:
 		case eMT_RESPONSE:
@@ -493,15 +496,15 @@ namespace core
 		case eMT_GATE_FORWARD:
 		case eMT_TO_GATE:
 		case eMT_TO_GATE_BROADCAST:
-			{
-				message_header header;
-				header.nMessageSize = sizeof(header) + nSize + nExtraSize;
-				header.nMessageID = nMessageType;
-				this->m_pNetConnecter->send(&header, sizeof(header), true);
-				this->m_pNetConnecter->send(pData, nSize, true);
-				this->m_pNetConnecter->send(pExtraBuf, nExtraSize, true);
-			}
-			break;
+		{
+			message_header header;
+			header.nMessageSize = sizeof(header) + nSize + nExtraSize;
+			header.nMessageID = nMessageType;
+			this->m_pNetConnecter->send(&header, sizeof(header), true);
+			this->m_pNetConnecter->send(pData, nSize, true);
+			this->m_pNetConnecter->send(pExtraBuf, nExtraSize, true);
+		}
+		break;
 		}
 	}
 
@@ -531,7 +534,7 @@ namespace core
 	{
 		if (this->m_pNetConnecter == nullptr)
 			return s_DefaultAddr;
-		
+
 		return this->m_pNetConnecter->getLocalAddr();
 	}
 
@@ -565,5 +568,4 @@ namespace core
 
 		return this->m_pNetConnecter->getConnecterMode();
 	}
-
 }

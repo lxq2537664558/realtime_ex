@@ -1,5 +1,4 @@
 #pragma once
-#include "libCoreCommon/service_message_registry.h"
 #include "libCoreCommon/service_base.h"
 
 #include "msg_proto_src/d2u_player_login_request.pb.h"
@@ -8,11 +7,8 @@
 
 using namespace core;
 
-class CUCServiceMessageHandler :
-	public CServiceMessageRegistry<CUCServiceMessageHandler>
+class CUCServiceMessageHandler
 {
-	DEFEND_SERVICE_MESSAGE_FUNCTION(CUCServiceMessageHandler)
-
 public:
 	CUCServiceMessageHandler(CServiceBase* pServiceBase);
 	~CUCServiceMessageHandler();

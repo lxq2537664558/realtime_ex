@@ -6,14 +6,14 @@
 
 CDbServiceMessageHandler::CDbServiceMessageHandler(CServiceBase* pServiceBase)
 {
-	REGISTER_SERVICE_MESSAGE_HANDLER(pServiceBase, CDbServiceMessageHandler, "proto.db.call_command", &CDbServiceMessageHandler::call_command_handler);
-	REGISTER_SERVICE_MESSAGE_HANDLER(pServiceBase, CDbServiceMessageHandler, "proto.db.delete_command", &CDbServiceMessageHandler::delete_command_handler);
-	REGISTER_SERVICE_MESSAGE_HANDLER(pServiceBase, CDbServiceMessageHandler, "proto.db.flush_command", &CDbServiceMessageHandler::flush_command_handler);
-	REGISTER_SERVICE_MESSAGE_HANDLER(pServiceBase, CDbServiceMessageHandler, "proto.db.insert_command", &CDbServiceMessageHandler::insert_command_handler);
-	REGISTER_SERVICE_MESSAGE_HANDLER(pServiceBase, CDbServiceMessageHandler, "proto.db.nop_command", &CDbServiceMessageHandler::nop_command_handler);
-	REGISTER_SERVICE_MESSAGE_HANDLER(pServiceBase, CDbServiceMessageHandler, "proto.db.query_command", &CDbServiceMessageHandler::query_command_handler);
-	REGISTER_SERVICE_MESSAGE_HANDLER(pServiceBase, CDbServiceMessageHandler, "proto.db.select_command", &CDbServiceMessageHandler::select_command_handler);
-	REGISTER_SERVICE_MESSAGE_HANDLER(pServiceBase, CDbServiceMessageHandler, "proto.db.update_command", &CDbServiceMessageHandler::update_command_handler);
+	register_service_message_handler(pServiceBase, this, &CDbServiceMessageHandler::call_command_handler);
+	register_service_message_handler(pServiceBase, this, &CDbServiceMessageHandler::delete_command_handler);
+	register_service_message_handler(pServiceBase, this, &CDbServiceMessageHandler::flush_command_handler);
+	register_service_message_handler(pServiceBase, this, &CDbServiceMessageHandler::insert_command_handler);
+	register_service_message_handler(pServiceBase, this, &CDbServiceMessageHandler::nop_command_handler);
+	register_service_message_handler(pServiceBase, this, &CDbServiceMessageHandler::query_command_handler);
+	register_service_message_handler(pServiceBase, this, &CDbServiceMessageHandler::select_command_handler);
+	register_service_message_handler(pServiceBase, this, &CDbServiceMessageHandler::update_command_handler);
 }
 
 CDbServiceMessageHandler::~CDbServiceMessageHandler()

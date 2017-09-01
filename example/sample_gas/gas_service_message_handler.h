@@ -1,5 +1,4 @@
 #pragma once
-#include "libCoreCommon/service_message_registry.h"
 #include "libCoreCommon/service_base.h"
 
 #include "msg_proto_src/g2s_player_enter_request.pb.h"
@@ -9,11 +8,8 @@
 
 using namespace core;
 
-class CGasServiceMessageHandler :
-	public CServiceMessageRegistry<CGasServiceMessageHandler>
+class CGasServiceMessageHandler
 {
-	DEFEND_SERVICE_MESSAGE_FUNCTION(CGasServiceMessageHandler)
-
 public:
 	CGasServiceMessageHandler(CServiceBase* pServiceBase);
 	~CGasServiceMessageHandler();

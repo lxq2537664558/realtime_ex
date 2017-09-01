@@ -14,22 +14,25 @@
 #include <dirent.h>
 #endif
 
-static void modifyDirectoryPath(std::string& szPath) // 修改目录路径为X/Y/Z/
+namespace
 {
-	if (szPath.empty())
-		return;
-	
-	for (std::string::iterator iter = szPath.begin(); iter != szPath.end(); ++iter)
+	void modifyDirectoryPath(std::string& szPath) // 修改目录路径为X/Y/Z/
 	{
-		if (*iter == '\\')
-		{
-			*iter = '/';
-		}
-	}
+		if (szPath.empty())
+			return;
 
-	if (szPath.at(szPath.length() - 1) != '/')
-	{
-		szPath += "/";
+		for (std::string::iterator iter = szPath.begin(); iter != szPath.end(); ++iter)
+		{
+			if (*iter == '\\')
+			{
+				*iter = '/';
+			}
+		}
+
+		if (szPath.at(szPath.length() - 1) != '/')
+		{
+			szPath += "/";
+		}
 	}
 }
 

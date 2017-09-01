@@ -76,24 +76,24 @@ namespace base
 		case MYSQL_TYPE_TINY:
 		case MYSQL_TYPE_SHORT:
 		case MYSQL_TYPE_LONG:
-			{
-				int32_t nVal = 0;
-				if (!base::string_util::convert_to_value(this->m_curRow[nCol], nVal))
-					return CVariant();
+		{
+			int32_t nVal = 0;
+			if (!base::string_util::convert_to_value(this->m_curRow[nCol], nVal))
+				return CVariant();
 
-				return CVariant(nVal);
-			}
-			break;
+			return CVariant(nVal);
+		}
+		break;
 
 		case MYSQL_TYPE_LONGLONG:
-			{
-				int64_t nVal = 0;
-				if (!base::string_util::convert_to_value(this->m_curRow[nCol], nVal))
-					return CVariant();
+		{
+			int64_t nVal = 0;
+			if (!base::string_util::convert_to_value(this->m_curRow[nCol], nVal))
+				return CVariant();
 
-				return CVariant(nVal);
-			}
-			break;
+			return CVariant(nVal);
+		}
+		break;
 
 		case MYSQL_TYPE_STRING:
 		case MYSQL_TYPE_VAR_STRING:
@@ -101,15 +101,15 @@ namespace base
 		case MYSQL_TYPE_BLOB:
 		case MYSQL_TYPE_LONG_BLOB:
 		case MYSQL_TYPE_TINY_BLOB:
-			{
-				return CVariant(this->m_curRow[nCol], this->m_pField[nCol].max_length);
-			}
-			break;
+		{
+			return CVariant(this->m_curRow[nCol], this->m_pField[nCol].max_length);
+		}
+		break;
 
 		default:
-			{
-				PrintWarning("CDbRecordset::getData invaild type {}", (int32_t)this->m_pField[nCol].type);
-			}
+		{
+			PrintWarning("CDbRecordset::getData invaild type {}", (int32_t)this->m_pField[nCol].type);
+		}
 		}
 
 		return CVariant();

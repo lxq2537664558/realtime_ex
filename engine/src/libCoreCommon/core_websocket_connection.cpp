@@ -10,7 +10,7 @@
 
 #include <algorithm>
 
-namespace core
+namespace
 {
 	const char* const kWebSocketMagic = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 	const char* const kSecWebSocketVersionHeader = "Sec-WebSocket-Version";
@@ -21,6 +21,10 @@ namespace core
 
 	const uint32_t kPayloadSizeBasic = 125;
 	const uint32_t kPayloadSizeExtended = 0xFFFF;
+}
+
+namespace core
+{
 
 	CCoreWebsocketConnection::CCoreWebsocketConnection()
 		: m_pHttpRequestParser(new CHttpRequestParser())

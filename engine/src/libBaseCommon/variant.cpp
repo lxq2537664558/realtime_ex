@@ -145,27 +145,27 @@ namespace base
 		case eVVT_UInt32:
 		case eVVT_Int64:
 		case eVVT_UInt64:
-			{
-				this->m_nValue = rhs.m_nValue;
-				rhs.m_nValue = 0;
-			}
-			break;
+		{
+			this->m_nValue = rhs.m_nValue;
+			rhs.m_nValue = 0;
+		}
+		break;
 
 		case eVVT_Double:
-			{
-				this->m_fValue = rhs.m_fValue;
-				rhs.m_fValue = 0.0;
-			}
-			break;
+		{
+			this->m_fValue = rhs.m_fValue;
+			rhs.m_fValue = 0.0;
+		}
+		break;
 
 		case eVVT_String:
-			{
-				this->m_sText.szStr = rhs.m_sText.szStr;
-				this->m_sText.nLen = rhs.m_sText.nLen;
-				rhs.m_sText.szStr = nullptr;
-				rhs.m_sText.nLen = 0;
-			}
-			break;
+		{
+			this->m_sText.szStr = rhs.m_sText.szStr;
+			this->m_sText.nLen = rhs.m_sText.nLen;
+			rhs.m_sText.szStr = nullptr;
+			rhs.m_sText.nLen = 0;
+		}
+		break;
 
 		default:
 			PrintWarning("CVariant::operator = && invalid type {}", (int32_t)rhs.m_eType);

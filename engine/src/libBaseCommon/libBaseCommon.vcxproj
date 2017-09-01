@@ -122,7 +122,6 @@
     <ClInclude Include="..\..\inc\libBaseCommon\singleton.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\spin_lock.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\string_util.h" />
-    <ClInclude Include="..\..\inc\libBaseCommon\table_file.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\thread_base.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\link.h" />
     <ClInclude Include="..\..\inc\libBaseCommon\token_parser.h" />

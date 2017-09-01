@@ -13,7 +13,6 @@
   <ItemGroup>
     <ClInclude Include="..\..\inc\libCoreCommon\actor_base.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\actor_factory.h" />
-    <ClInclude Include="..\..\inc\libCoreCommon\actor_message_registry.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\base_connection.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\base_connection_factory.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\base_connection_mgr.h" />
@@ -32,7 +31,6 @@
     <ClInclude Include="..\..\inc\libCoreCommon\service_id_converter.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\service_invoker.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\service_invoke_holder.h" />
-    <ClInclude Include="..\..\inc\libCoreCommon\service_message_registry.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\service_selector.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\ticker.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\when_all.h" />
@@ -140,14 +138,13 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\inc\libCoreCommon\actor_message_registry.inl" />
     <None Include="..\..\inc\libCoreCommon\normal_protobuf_factory.inl" />
     <None Include="..\..\inc\libCoreCommon\future.inl" />
     <None Include="..\..\inc\libCoreCommon\json_protobuf_factory.inl" />
     <None Include="..\..\inc\libCoreCommon\promise.inl" />
+    <None Include="..\..\inc\libCoreCommon\service_base.inl" />
     <None Include="..\..\inc\libCoreCommon\service_invoker.inl" />
     <None Include="..\..\inc\libCoreCommon\service_invoke_holder.inl" />
-    <None Include="..\..\inc\libCoreCommon\service_message_registry.inl" />
     <None Include="..\..\inc\libCoreCommon\when_all.inl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

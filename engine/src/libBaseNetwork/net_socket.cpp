@@ -181,7 +181,7 @@ namespace base
 		socklen_t nPeerAddrLen = sizeof(remoteAddr);
 		::getpeername(this->m_nSocketID, &remoteAddr, &nPeerAddrLen);
 		this->m_sRemoteAddr.nPort = base::function_util:: ntoh16((reinterpret_cast<sockaddr_in*>(&remoteAddr))->sin_port);
-		strncpy(this->m_sRemoteAddr.szHost, inet_ntoa((reinterpret_cast<sockaddr_in*>(&remoteAddr))->sin_addr), _countof(this->m_sRemoteAddr.szHost));
+		base::function_util::strcpy(this->m_sRemoteAddr.szHost, _countof(this->m_sRemoteAddr.szHost), inet_ntoa((reinterpret_cast<sockaddr_in*>(&remoteAddr))->sin_addr));
 	}
 
 	void CNetSocket::setLocalAddr()
@@ -190,7 +190,7 @@ namespace base
 		socklen_t nLocalAddrLen = sizeof(localAddr);
 		::getsockname(this->m_nSocketID, &localAddr, &nLocalAddrLen);
 		this->m_sLocalAddr.nPort = base::function_util::ntoh16((reinterpret_cast<sockaddr_in*>(&localAddr))->sin_port);
-		strncpy(this->m_sLocalAddr.szHost, inet_ntoa((reinterpret_cast<sockaddr_in*>(&localAddr))->sin_addr), _countof(this->m_sRemoteAddr.szHost));
+		base::function_util::strcpy(this->m_sLocalAddr.szHost, _countof(this->m_sRemoteAddr.szHost), inet_ntoa((reinterpret_cast<sockaddr_in*>(&localAddr))->sin_addr));
 	}
 
 	void CNetSocket::setSocketID(int32_t nSocketID)

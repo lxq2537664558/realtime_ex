@@ -6,7 +6,10 @@
 
 #include <algorithm>
 
-const char* szCRLF = "\r\n";
+namespace
+{
+	const char* szCRLF = "\r\n";
+}
 
 namespace core
 {

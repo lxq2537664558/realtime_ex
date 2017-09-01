@@ -2,11 +2,14 @@
 #include "service_invoke_holder.h"
 #include "core_app.h"
 
-static uint64_t genHolderID()
+namespace
 {
-	static uint64_t s_nNextHolderID = 1;
+	uint64_t genHolderID()
+	{
+		static uint64_t s_nNextHolderID = 1;
 
-	return s_nNextHolderID++;
+		return s_nNextHolderID++;
+	}
 }
 
 namespace core

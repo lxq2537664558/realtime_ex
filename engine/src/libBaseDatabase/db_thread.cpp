@@ -138,7 +138,7 @@ namespace base
 				this->flushCache(pFlushCommand->id(), pFlushCommand->type() == db::eFCT_Del);
 				continue;
 			}
-			
+
 			std::shared_ptr<google::protobuf::Message> pResponseMessage;
 			uint32_t nErrorCode = db::eDBRC_OK;
 			if (!this->onPreCache(sDbCommand.nType, pRequestMessage, pResponseMessage))
@@ -161,7 +161,7 @@ namespace base
 				continue;
 
 			SDbResultInfo sDbResultInfo;
-			
+
 			sDbResultInfo.pMessage = pResponseMessage;
 			sDbResultInfo.nErrorCode = nErrorCode;
 			sDbResultInfo.callback = sDbCommand.callback;
@@ -178,49 +178,49 @@ namespace base
 		switch (nType)
 		{
 		case db::eDBCT_Select:
-			{
-				const proto::db::select_command* pCommand = dynamic_cast<const proto::db::select_command*>(pRequestMessage);
-				DebugAstEx(pCommand != nullptr, false);
+		{
+			const proto::db::select_command* pCommand = dynamic_cast<const proto::db::select_command*>(pRequestMessage);
+			DebugAstEx(pCommand != nullptr, false);
 
-				std::string szDataName = getMessageNameByTableName(pCommand->table_name());
-				google::protobuf::Message* pMessage = this->m_dbCacheMgr.getData(pCommand->id(), szDataName);
-				if (pMessage != nullptr)
-				{
-					pResponseMessage = std::shared_ptr<google::protobuf::Message>(pMessage);
-					return true;
-				}
+			std::string szDataName = getMessageNameByTableName(pCommand->table_name());
+			google::protobuf::Message* pMessage = this->m_dbCacheMgr.getData(pCommand->id(), szDataName);
+			if (pMessage != nullptr)
+			{
+				pResponseMessage = std::shared_ptr<google::protobuf::Message>(pMessage);
+				return true;
 			}
-			break;
+		}
+		break;
 
 		case db::eDBCT_Update:
-			{
-				uint64_t nID = 0;
-				if (!getPrimaryValue(pRequestMessage, nID))
-					return false;
+		{
+			uint64_t nID = 0;
+			if (!getPrimaryValue(pRequestMessage, nID))
+				return false;
 
-				if (this->m_dbCacheMgr.setData(nID, pRequestMessage))
-					return true;
-			}
-			break;
+			if (this->m_dbCacheMgr.setData(nID, pRequestMessage))
+				return true;
+		}
+		break;
 
 		case db::eDBCT_Insert:
-			{
-				uint64_t nID = 0;
-				if (!getPrimaryValue(pRequestMessage, nID))
-					return false;
+		{
+			uint64_t nID = 0;
+			if (!getPrimaryValue(pRequestMessage, nID))
+				return false;
 
-				this->m_dbCacheMgr.addData(nID, pRequestMessage);
-			}
-			break;
+			this->m_dbCacheMgr.addData(nID, pRequestMessage);
+		}
+		break;
 
 		case db::eDBCT_Delete:
-			{
-				const proto::db::delete_command* pCommand = dynamic_cast<const proto::db::delete_command*>(pRequestMessage);
-				DebugAstEx(pCommand != nullptr, false);
+		{
+			const proto::db::delete_command* pCommand = dynamic_cast<const proto::db::delete_command*>(pRequestMessage);
+			DebugAstEx(pCommand != nullptr, false);
 
-				this->m_dbCacheMgr.delData(pCommand->id(), getMessageNameByTableName(pCommand->table_name()));
-			}
-			break;
+			this->m_dbCacheMgr.delData(pCommand->id(), getMessageNameByTableName(pCommand->table_name()));
+		}
+		break;
 		}
 
 		return false;

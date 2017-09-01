@@ -5,7 +5,7 @@ namespace base
 	namespace crc32
 	{
 		//定义CRC32校验码系数表
-		static uint32_t s_zCrctable[256] =
+		uint32_t s_zCrctable[256] =
 		{
 			0x00000000L, 0x04c11db7L, 0x09823b6eL, 0x0d4326d9L,
 			0x130476dcL, 0x17c56b6bL, 0x1a864db2L, 0x1e475005L,

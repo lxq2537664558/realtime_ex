@@ -34,20 +34,23 @@
 #include "libBaseCommon/string_util.h"
 #include "libBaseCommon/base_common.h"
 
-static std::map<uint32_t, base::CDbThreadMgr*>	s_mapDbThreadMgr;
-static std::mutex s_lock;
-
-const std::string szDbOption = "db_option.proto";
-
-static base::CDbThreadMgr* getDbThreadMgr(uint32_t nID)
+namespace
 {
-	std::unique_lock<std::mutex> lock(s_lock);
+	std::map<uint32_t, base::CDbThreadMgr*>	s_mapDbThreadMgr;
+	std::mutex s_lock;
 
-	auto iter = s_mapDbThreadMgr.find(nID);
-	if (iter == s_mapDbThreadMgr.end())
-		return nullptr;
+	const std::string szDbOption = "db_option.proto";
 
-	return iter->second;
+	base::CDbThreadMgr* getDbThreadMgr(uint32_t nID)
+	{
+		std::unique_lock<std::mutex> lock(s_lock);
+
+		auto iter = s_mapDbThreadMgr.find(nID);
+		if (iter == s_mapDbThreadMgr.end())
+			return nullptr;
+
+		return iter->second;
+	}
 }
 
 namespace base

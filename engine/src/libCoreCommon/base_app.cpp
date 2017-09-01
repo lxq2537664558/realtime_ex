@@ -23,7 +23,11 @@
 #include "core_app.h"
 
 // 放这里为了调试或者看dump的时候方便
-core::CBaseApp* g_pBaseApp = nullptr;
+
+namespace 
+{
+	core::CBaseApp* g_pBaseApp = nullptr;
+}
 
 namespace core
 {

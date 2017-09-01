@@ -11,9 +11,12 @@
 #include "proto_src/call_command.pb.h"
 
 
-const uint32_t nTryDeadloopCount = 5;
+namespace
+{
+	const uint32_t nTryDeadloopCount = 5;
 
-const std::string szPlaceholder = "{?}";
+	const std::string szPlaceholder = "{?}";
+}
 
 namespace base
 {

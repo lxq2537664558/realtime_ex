@@ -1,5 +1,4 @@
 #pragma once
-#include "libCoreCommon/service_message_registry.h"
 #include "libCoreCommon/db_service_invoke_holder.h"
 #include "libCoreCommon/service_base.h"
 
@@ -13,12 +12,9 @@ using namespace core;
 
 class CDispatchService;
 class CDispatchServiceMessageHandler :
-	public CServiceMessageRegistry<CDispatchServiceMessageHandler>,
 	public CDbServiceInvokeHolder,
 	public CServiceInvokeHolder
 {
-	DEFEND_SERVICE_MESSAGE_FUNCTION(CDispatchServiceMessageHandler)
-
 public:
 	CDispatchServiceMessageHandler(CDispatchService* pDispatchService);
 	~CDispatchServiceMessageHandler();

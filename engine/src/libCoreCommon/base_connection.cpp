@@ -12,10 +12,13 @@
 
 #define _HEART_BEAT_TIME 5000
 
+namespace
+{
+	SNetAddr s_DefaultNetAddr;
+}
+
 namespace core
 {
-	static SNetAddr s_DefaultNetAddr;
-
 	CBaseConnection::CBaseConnection()
 		: m_pCoreConnection(nullptr)
 	{

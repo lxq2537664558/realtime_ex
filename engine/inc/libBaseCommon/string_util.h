@@ -67,15 +67,9 @@ namespace base
 		template<class ...Args>
 		inline std::string	format(const char* fmt, const Args&... args);
 
-		template<class ...Args>
-		inline std::string	format(char *buff, uint16_t buffSize, char* fmt, const Args&... args);
-
 		// 格式化输出 format(xxx{}xxx{}xx,变量1，变量2)
 		template<class ...Args>
 		inline std::string	format(const std::string& fmt, const Args&... args);
-
-		template<class ...Args>
-		inline std::string	format(char *buff, uint16_t buffSize, const std::string& fmt, const Args&... args);
 
 		// 字符串忽略大小写比较, 可用作容器（比如map、set）的比较子
 		struct string_cmp_nocase : 

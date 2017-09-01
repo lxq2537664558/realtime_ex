@@ -10,9 +10,9 @@
 
 CUCServiceMessageHandler::CUCServiceMessageHandler(CServiceBase* pServiceBase)
 {
-	REGISTER_SERVICE_MESSAGE_HANDLER(pServiceBase, CUCServiceMessageHandler, "d2u_player_login_request", &CUCServiceMessageHandler::d2u_player_login_request_handler);
-	REGISTER_SERVICE_MESSAGE_HANDLER(pServiceBase, CUCServiceMessageHandler, "s2u_player_heartbeat_notify", &CUCServiceMessageHandler::s2u_player_heartbeat_notify_handler);
-	REGISTER_SERVICE_MESSAGE_HANDLER(pServiceBase, CUCServiceMessageHandler, "s2u_player_leave_notify", &CUCServiceMessageHandler::s2u_player_leave_notify_handler);
+	register_service_message_handler(pServiceBase, this, &CUCServiceMessageHandler::d2u_player_login_request_handler);
+	register_service_message_handler(pServiceBase, this, &CUCServiceMessageHandler::s2u_player_heartbeat_notify_handler);
+	register_service_message_handler(pServiceBase, this, &CUCServiceMessageHandler::s2u_player_leave_notify_handler);
 }
 
 CUCServiceMessageHandler::~CUCServiceMessageHandler()

@@ -6,10 +6,13 @@
 
 namespace base
 {
-	struct SCSVRow
+	namespace
 	{
-		std::vector<std::string> vecValue;
-	};
+		struct SCSVRow
+		{
+			std::vector<std::string> vecValue;
+		};
+	}
 
 	struct SCSVParserInfo
 	{
@@ -19,56 +22,59 @@ namespace base
 		std::vector<SCSVRow>		vecRow;
 	};
 
-	static void	parseCSVHeader(SCSVParserInfo* pParserInfo, const std::string& szHeader)
+	namespace
 	{
-		std::stringstream ss(szHeader);
-		std::string szItem;
-
-		while (std::getline(ss, szItem, pParserInfo->cDelim))
+		void parseCSVHeader(SCSVParserInfo* pParserInfo, const std::string& szHeader)
 		{
-			pParserInfo->vecHeader.push_back(szItem);
-		}
-	}
+			std::stringstream ss(szHeader);
+			std::string szItem;
 
-	static bool parseCSVRow(SCSVParserInfo* pParserInfo, const std::vector<std::string>& vecContent)
-	{
-		for (size_t i = 1; i < vecContent.size(); ++i)
-		{
-			const std::string& szLine = vecContent[i];
-			bool bQuoted = false;	// 这个为了解决内容里面有","的情况
-			size_t nTokenStart = 0;
-
-			pParserInfo->vecRow.push_back(SCSVRow());
-
-			SCSVRow& sRow = pParserInfo->vecRow.back();
-			sRow.vecValue.reserve(pParserInfo->vecHeader.size());
-
-			for (size_t j = 0; j < szLine.size(); ++j)
+			while (std::getline(ss, szItem, pParserInfo->cDelim))
 			{
-				if (szLine.at(j) == '"')
+				pParserInfo->vecHeader.push_back(szItem);
+			}
+		}
+
+		bool parseCSVRow(SCSVParserInfo* pParserInfo, const std::vector<std::string>& vecContent)
+		{
+			for (size_t i = 1; i < vecContent.size(); ++i)
+			{
+				const std::string& szLine = vecContent[i];
+				bool bQuoted = false;	// 这个为了解决内容里面有","的情况
+				size_t nTokenStart = 0;
+
+				pParserInfo->vecRow.push_back(SCSVRow());
+
+				SCSVRow& sRow = pParserInfo->vecRow.back();
+				sRow.vecValue.reserve(pParserInfo->vecHeader.size());
+
+				for (size_t j = 0; j < szLine.size(); ++j)
 				{
-					bQuoted = ((bQuoted) ? (false) : (true));
+					if (szLine.at(j) == '"')
+					{
+						bQuoted = ((bQuoted) ? (false) : (true));
+					}
+					else if (szLine.at(j) == pParserInfo->cDelim && !bQuoted)
+					{
+						std::string szValue = szLine.substr(nTokenStart, j - nTokenStart);
+						szValue = base::string_util::trim(szValue, "\"");
+						sRow.vecValue.push_back(szValue);
+						nTokenStart = j + 1;
+					}
 				}
-				else if (szLine.at(j) == pParserInfo->cDelim && !bQuoted)
-				{
-					std::string szValue = szLine.substr(nTokenStart, j - nTokenStart);
-					szValue = base::string_util::trim(szValue, "\"");
-					sRow.vecValue.push_back(szValue);
-					nTokenStart = j + 1;
-				}
+
+				//end
+				std::string szValue = szLine.substr(nTokenStart, szLine.length() - nTokenStart);
+				szValue = base::string_util::trim(szValue, "\"");
+				sRow.vecValue.push_back(szValue);
+
+				// 数据缺失
+				if (sRow.vecValue.size() != pParserInfo->vecHeader.size())
+					return false;
 			}
 
-			//end
-			std::string szValue = szLine.substr(nTokenStart, szLine.length() - nTokenStart);
-			szValue = base::string_util::trim(szValue, "\"");
-			sRow.vecValue.push_back(szValue);
-
-			// 数据缺失
-			if (sRow.vecValue.size() != pParserInfo->vecHeader.size())
-				return false;
+			return true;
 		}
-
-		return true;
 	}
 
 	CCSVParser::CCSVParser()

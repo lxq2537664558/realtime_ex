@@ -1,15 +1,11 @@
 #pragma once
-#include "libCoreCommon/service_message_registry.h"
 #include "libCoreCommon/service_base.h"
 
 #include "msg_proto_src/d2g_player_token_notify.pb.h"
 #include "msg_proto_src/s2g_kick_player_notify.pb.h"
 
-class CGateServiceMessageHandler :
-	public core::CServiceMessageRegistry<CGateServiceMessageHandler>
+class CGateServiceMessageHandler
 {
-	DEFEND_SERVICE_MESSAGE_FUNCTION(CGateServiceMessageHandler)
-
 public:
 	CGateServiceMessageHandler(core::CServiceBase* pServiceBase);
 	~CGateServiceMessageHandler();

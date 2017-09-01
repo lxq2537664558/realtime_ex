@@ -13,11 +13,13 @@
 
 #include <algorithm>
 
-// 放这里为了调试或者看dump的时候方便
-core::CNetRunnable*	g_pNetRunnable;
-
 #define _CYCLE_TIME 10
 
+namespace
+{
+	// 放这里为了调试或者看dump的时候方便
+	core::CNetRunnable*	g_pNetRunnable;
+}
 
 namespace core
 {
@@ -75,7 +77,7 @@ namespace core
 		int64_t nBeginSamplingTime = base::time_util::getProcessPassTime();
 
 		this->m_pCoreConnectionMgr->update(_CYCLE_TIME);
-		
+
 		static std::vector<SMessagePacket> vecMessagePacket;
 		this->m_pMessageQueue->recv(vecMessagePacket);
 
@@ -86,133 +88,133 @@ namespace core
 			switch (sMessagePacket.nType)
 			{
 			case eMCT_REQUEST_SOCKET_LISTEN:
-				{
-					PROFILING_GUARD(eMCT_REQUEST_SOCKET_LISTEN)
-					SMCT_REQUEST_SOCKET_LISTEN* pContext = reinterpret_cast<SMCT_REQUEST_SOCKET_LISTEN*>(sMessagePacket.pData);
+			{
+				PROFILING_GUARD(eMCT_REQUEST_SOCKET_LISTEN)
+				SMCT_REQUEST_SOCKET_LISTEN* pContext = reinterpret_cast<SMCT_REQUEST_SOCKET_LISTEN*>(sMessagePacket.pData);
 
-					this->m_pCoreConnectionMgr->listen(pContext->szHost, pContext->nPort, pContext->nReusePort != 0, pContext->szType, pContext->szContext, pContext->nSendBufferSize, pContext->nSendBufferSize, pContext->messageParser, pContext->nCoreConnectionType);
-					
-					SAFE_DELETE(pContext);
-				}
-				break;
+				this->m_pCoreConnectionMgr->listen(pContext->szHost, pContext->nPort, pContext->nReusePort != 0, pContext->szType, pContext->szContext, pContext->nSendBufferSize, pContext->nSendBufferSize, pContext->messageParser, pContext->nCoreConnectionType);
+
+				SAFE_DELETE(pContext);
+			}
+			break;
 
 			case eMCT_REQUEST_SOCKET_CONNECT:
-				{
-					PROFILING_GUARD(eMCT_REQUEST_SOCKET_CONNECT)
-					SMCT_REQUEST_SOCKET_CONNECT* pContext = reinterpret_cast<SMCT_REQUEST_SOCKET_CONNECT*>(sMessagePacket.pData);
-					
-					this->m_pCoreConnectionMgr->connect(pContext->szHost, pContext->nPort, pContext->szType, pContext->szContext, pContext->nSendBufferSize, pContext->nSendBufferSize, pContext->messageParser);
-					
-					SAFE_DELETE(pContext);
-				}
-				break;
+			{
+				PROFILING_GUARD(eMCT_REQUEST_SOCKET_CONNECT)
+				SMCT_REQUEST_SOCKET_CONNECT* pContext = reinterpret_cast<SMCT_REQUEST_SOCKET_CONNECT*>(sMessagePacket.pData);
+
+				this->m_pCoreConnectionMgr->connect(pContext->szHost, pContext->nPort, pContext->szType, pContext->szContext, pContext->nSendBufferSize, pContext->nSendBufferSize, pContext->messageParser);
+
+				SAFE_DELETE(pContext);
+			}
+			break;
 
 			case eMCT_REQUEST_SOCKET_SHUTDOWN:
-				{
-					PROFILING_GUARD(eMCT_REQUEST_SOCKET_SHUTDOWN)
-					SMCT_REQUEST_SOCKET_SHUTDOWN* pContext = reinterpret_cast<SMCT_REQUEST_SOCKET_SHUTDOWN*>(sMessagePacket.pData);
-					
-					CCoreConnection* pCoreConnection = this->m_pCoreConnectionMgr->getCoreConnectionBySocketID(pContext->nSocketID);
-					if (nullptr != pCoreConnection)
-						pCoreConnection->shutdown(pContext->nForce != 0, pContext->szMsg);
+			{
+				PROFILING_GUARD(eMCT_REQUEST_SOCKET_SHUTDOWN)
+				SMCT_REQUEST_SOCKET_SHUTDOWN* pContext = reinterpret_cast<SMCT_REQUEST_SOCKET_SHUTDOWN*>(sMessagePacket.pData);
 
-					SAFE_DELETE(pContext);
-				}
-				break;
+				CCoreConnection* pCoreConnection = this->m_pCoreConnectionMgr->getCoreConnectionBySocketID(pContext->nSocketID);
+				if (nullptr != pCoreConnection)
+					pCoreConnection->shutdown(pContext->nForce != 0, pContext->szMsg);
+
+				SAFE_DELETE(pContext);
+			}
+			break;
 
 			case eMCT_NOTIFY_SOCKET_CONNECT_ACK:
-				{
-					PROFILING_GUARD(eMCT_NOTIFY_SOCKET_CONNECT_ACK)
-					SMCT_NOTIFY_SOCKET_CONNECT_ACK* pContext = reinterpret_cast<SMCT_NOTIFY_SOCKET_CONNECT_ACK*>(sMessagePacket.pData);
-					
-					if (pContext->bSuccess)
-						pContext->pCoreConnection->onConnectAck();
-					else
-						pContext->pCoreConnection->shutdown(true, "create base connection error");
+			{
+				PROFILING_GUARD(eMCT_NOTIFY_SOCKET_CONNECT_ACK)
+				SMCT_NOTIFY_SOCKET_CONNECT_ACK* pContext = reinterpret_cast<SMCT_NOTIFY_SOCKET_CONNECT_ACK*>(sMessagePacket.pData);
 
-					SAFE_DELETE(pContext);
-				}
-				break;
+				if (pContext->bSuccess)
+					pContext->pCoreConnection->onConnectAck();
+				else
+					pContext->pCoreConnection->shutdown(true, "create base connection error");
+
+				SAFE_DELETE(pContext);
+			}
+			break;
 
 			case eMCT_NOTIFY_SOCKET_DISCONNECT_ACK:
-				{
-					SMCT_NOTIFY_SOCKET_DISCONNECT_ACK* pContext = reinterpret_cast<SMCT_NOTIFY_SOCKET_DISCONNECT_ACK*>(sMessagePacket.pData);
+			{
+				SMCT_NOTIFY_SOCKET_DISCONNECT_ACK* pContext = reinterpret_cast<SMCT_NOTIFY_SOCKET_DISCONNECT_ACK*>(sMessagePacket.pData);
 
-					CCoreApp::Inst()->getNetRunnable()->getCoreConnectionMgr()->destroyCoreConnection(pContext->nSocketID);
+				CCoreApp::Inst()->getNetRunnable()->getCoreConnectionMgr()->destroyCoreConnection(pContext->nSocketID);
 
-					SAFE_DELETE(pContext);
-				}
-				break;
+				SAFE_DELETE(pContext);
+			}
+			break;
 
 			case eMCT_SEND_SOCKET_DATA:
-				{
-					PROFILING_GUARD(eMCT_SEND_SOCKET_DATA)
-					SMCT_SEND_SOCKET_DATA* pContext = reinterpret_cast<SMCT_SEND_SOCKET_DATA*>(sMessagePacket.pData);
+			{
+				PROFILING_GUARD(eMCT_SEND_SOCKET_DATA)
+				SMCT_SEND_SOCKET_DATA* pContext = reinterpret_cast<SMCT_SEND_SOCKET_DATA*>(sMessagePacket.pData);
 
-					pContext->pCoreConnection->send(pContext->nMessageType, pContext + 1, (uint16_t)(sMessagePacket.nDataSize - sizeof(SMCT_SEND_SOCKET_DATA)));
+				pContext->pCoreConnection->send(pContext->nMessageType, pContext + 1, (uint16_t)(sMessagePacket.nDataSize - sizeof(SMCT_SEND_SOCKET_DATA)));
 
-					char* szBuf = reinterpret_cast<char*>(sMessagePacket.pData);
-					SAFE_DELETE_ARRAY(szBuf);
-				}
-				break;
+				char* szBuf = reinterpret_cast<char*>(sMessagePacket.pData);
+				SAFE_DELETE_ARRAY(szBuf);
+			}
+			break;
 
 			case eMCT_BROADCAST_SOCKET_DATA1:
+			{
+				PROFILING_GUARD(eMCT_BROADCAST_SOCKET_DATA1)
+				char* szBuf = reinterpret_cast<char*>(sMessagePacket.pData);
+				SMCT_BROADCAST_SOCKET_DATA1* pContext = reinterpret_cast<SMCT_BROADCAST_SOCKET_DATA1*>(sMessagePacket.pData);
+
+				void* pData = szBuf + sizeof(SMCT_BROADCAST_SOCKET_DATA1) + sizeof(uint64_t)*pContext->nSocketIDCount;
+				uint64_t* pSocketID = reinterpret_cast<uint64_t*>(szBuf + sizeof(SMCT_BROADCAST_SOCKET_DATA1));
+				for (size_t i = 0; i < pContext->nSocketIDCount; ++i)
 				{
-					PROFILING_GUARD(eMCT_BROADCAST_SOCKET_DATA1)
-					char* szBuf = reinterpret_cast<char*>(sMessagePacket.pData);
-					SMCT_BROADCAST_SOCKET_DATA1* pContext = reinterpret_cast<SMCT_BROADCAST_SOCKET_DATA1*>(sMessagePacket.pData);
-					
-					void* pData = szBuf + sizeof(SMCT_BROADCAST_SOCKET_DATA1) + sizeof(uint64_t)*pContext->nSocketIDCount;
-					uint64_t* pSocketID = reinterpret_cast<uint64_t*>(szBuf + sizeof(SMCT_BROADCAST_SOCKET_DATA1));
-					for (size_t i = 0; i < pContext->nSocketIDCount; ++i)
+					CCoreConnection* pCoreConnection = this->m_pCoreConnectionMgr->getCoreConnectionBySocketID(pSocketID[i]);
+					if (nullptr != pCoreConnection)
 					{
-						CCoreConnection* pCoreConnection = this->m_pCoreConnectionMgr->getCoreConnectionBySocketID(pSocketID[i]);
-						if (nullptr != pCoreConnection)
-						{
-							pCoreConnection->send(pContext->nMessageType, pData, (uint16_t)(sMessagePacket.nDataSize - sizeof(SMCT_BROADCAST_SOCKET_DATA1) - sizeof(uint64_t)*pContext->nSocketIDCount));
-						}
+						pCoreConnection->send(pContext->nMessageType, pData, (uint16_t)(sMessagePacket.nDataSize - sizeof(SMCT_BROADCAST_SOCKET_DATA1) - sizeof(uint64_t)*pContext->nSocketIDCount));
 					}
-					
-					SAFE_DELETE_ARRAY(szBuf);
 				}
-				break;
+
+				SAFE_DELETE_ARRAY(szBuf);
+			}
+			break;
 
 			case eMCT_BROADCAST_SOCKET_DATA2:
-				{
-					PROFILING_GUARD(eMCT_BROADCAST_SOCKET_DATA2)
-					char* szBuf = reinterpret_cast<char*>(sMessagePacket.pData);
-					SMCT_BROADCAST_SOCKET_DATA2* pContext = reinterpret_cast<SMCT_BROADCAST_SOCKET_DATA2*>(sMessagePacket.pData);
-					
-					void* pData = szBuf + sizeof(SMCT_BROADCAST_SOCKET_DATA2) + sizeof(uint64_t)*pContext->nExcludeIDCount + pContext->nTypeLen;
-					uint64_t* pExcludeID = reinterpret_cast<uint64_t*>(szBuf + sizeof(SMCT_BROADCAST_SOCKET_DATA2) + pContext->nTypeLen);
-					
-					this->m_pCoreConnectionMgr->broadcast(pContext->szType, pContext->nMessageType, pData, (uint16_t)(sMessagePacket.nDataSize - sizeof(SMCT_BROADCAST_SOCKET_DATA2) - pContext->nTypeLen - sizeof(uint64_t)*pContext->nExcludeIDCount), pExcludeID, pContext->nExcludeIDCount);
-					
-					SAFE_DELETE_ARRAY(szBuf);
-				}
-				break;
+			{
+				PROFILING_GUARD(eMCT_BROADCAST_SOCKET_DATA2)
+				char* szBuf = reinterpret_cast<char*>(sMessagePacket.pData);
+				SMCT_BROADCAST_SOCKET_DATA2* pContext = reinterpret_cast<SMCT_BROADCAST_SOCKET_DATA2*>(sMessagePacket.pData);
+
+				void* pData = szBuf + sizeof(SMCT_BROADCAST_SOCKET_DATA2) + sizeof(uint64_t)*pContext->nExcludeIDCount + pContext->nTypeLen;
+				uint64_t* pExcludeID = reinterpret_cast<uint64_t*>(szBuf + sizeof(SMCT_BROADCAST_SOCKET_DATA2) + pContext->nTypeLen);
+
+				this->m_pCoreConnectionMgr->broadcast(pContext->szType, pContext->nMessageType, pData, (uint16_t)(sMessagePacket.nDataSize - sizeof(SMCT_BROADCAST_SOCKET_DATA2) - pContext->nTypeLen - sizeof(uint64_t)*pContext->nExcludeIDCount), pExcludeID, pContext->nExcludeIDCount);
+
+				SAFE_DELETE_ARRAY(szBuf);
+			}
+			break;
 
 			case eMCT_TICKER:
+			{
+				PROFILING_GUARD(eMCT_TICKER)
+				CCoreTickerNode* pCoreTickerNode = reinterpret_cast<CCoreTickerNode*>(sMessagePacket.pData);
+				if (pCoreTickerNode == nullptr)
 				{
-					PROFILING_GUARD(eMCT_TICKER)
-					CCoreTickerNode* pCoreTickerNode = reinterpret_cast<CCoreTickerNode*>(sMessagePacket.pData);
-					if (pCoreTickerNode == nullptr)
-					{
-						PrintWarning("pCoreTickerNode == nullptr type: eMCT_TICKER");
-						continue;
-					}
-
-					if (pCoreTickerNode->Value.m_pTicker == nullptr)
-					{
-						pCoreTickerNode->Value.release();
-						continue;
-					}
-
-					CTicker* pTicker = pCoreTickerNode->Value.m_pTicker;
-					pTicker->getCallback()(pTicker->getContext());
-					pCoreTickerNode->Value.release();
+					PrintWarning("pCoreTickerNode == nullptr type: eMCT_TICKER");
+					continue;
 				}
-				break;
+
+				if (pCoreTickerNode->Value.m_pTicker == nullptr)
+				{
+					pCoreTickerNode->Value.release();
+					continue;
+				}
+
+				CTicker* pTicker = pCoreTickerNode->Value.m_pTicker;
+				pTicker->getCallback()(pTicker->getContext());
+				pCoreTickerNode->Value.release();
+			}
+			break;
 
 			default:
 				PrintWarning("invalid cmd type: {}", sMessagePacket.nType);

@@ -15,38 +15,38 @@ namespace base
 			switch (v.getType())
 			{
 			case eVVT_String:
-				{
-					if ((const char*)v == nullptr)
-						return "";
-					return std::string((const char*)v, v.getSize());
-				}
-				break;
+			{
+				if ((const char*)v == nullptr)
+					return "";
+				return std::string((const char*)v, v.getSize());
+			}
+			break;
 
 			case eVVT_Int32:
 			case eVVT_Int64:
-				{
-					std::ostringstream oss;
-					oss << (int64_t)v;
-					return oss.str();
-				}
-				break;
+			{
+				std::ostringstream oss;
+				oss << (int64_t)v;
+				return oss.str();
+			}
+			break;
 
 			case eVVT_UInt32:
 			case eVVT_UInt64:
-				{
-					std::ostringstream oss;
-					oss << (uint64_t)v;
-					return oss.str();
-				}
-				break;
+			{
+				std::ostringstream oss;
+				oss << (uint64_t)v;
+				return oss.str();
+			}
+			break;
 
 			case eVVT_Double:
-				{
-					std::ostringstream oss;
-					oss << (double)v;
-					return oss.str();
-				}
-				break;
+			{
+				std::ostringstream oss;
+				oss << (double)v;
+				return oss.str();
+			}
+			break;
 
 			default:
 				break;

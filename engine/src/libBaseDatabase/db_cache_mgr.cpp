@@ -3,13 +3,15 @@
 #include "libBaseCommon/time_util.h"
 #include "libBaseCommon/rand_gen.h"
 
-namespace base
-{
 #define _CLEAN_CACHE_TIME 1
 #define _CHECK_WRITE_BACK_TIME 1
 
-	static std::string s_szErrorName;
-
+namespace base
+{
+	namespace 
+	{
+		std::string s_szErrorName;
+	}
 	CDbCacheMgr::CDbCacheMgr()
 		: m_pDbThread(nullptr)
 		, m_nCurIndex(1)

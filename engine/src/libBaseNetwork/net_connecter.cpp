@@ -27,7 +27,7 @@ namespace base
 		switch (this->m_eConnecterState)
 		{
 		case eNCS_Connecting:
-			if (nEvent&(eNET_Send|eNET_Error))
+			if (nEvent&(eNET_Send | eNET_Error))
 			{
 				this->onConnect();
 			}
@@ -72,7 +72,7 @@ namespace base
 		this->m_eConnecterState = eNCS_Disconnected;
 		if (this->m_pHandler != nullptr)
 		{
-			if ((this->m_nFlag&eNCF_ConnectFail) == 0) 
+			if ((this->m_nFlag&eNCF_ConnectFail) == 0)
 			{
 				PrintInfo("disconnect local addr: {} {} remote addr: {} {} socket_id: {} send_index: {} send_count: {}", this->getLocalAddr().szHost, this->getLocalAddr().nPort, this->getRemoteAddr().szHost, this->getRemoteAddr().nPort, this->getSocketID(), this->m_nSendConnecterIndex, this->m_pNetEventLoop->getSendConnecterCount());
 				this->m_pHandler->onDisconnect();
@@ -113,7 +113,7 @@ namespace base
 			this->printInfo("connection state error");
 			return;
 		}
-		
+
 		this->m_nFlag &= ~eNCF_DisableWrite;
 		/*
 		如果只可写，说明连接成功，可以进行下面的操作。
@@ -240,7 +240,7 @@ namespace base
 
 		if (nTotalDataSize != 0 && this->m_pSendBuffer->getTailDataSize() == 0 && this->m_pHandler != nullptr)
 			this->m_pHandler->onSendComplete(nTotalDataSize);
-		
+
 		if (this->m_eConnecterState == eNCS_Disconnecting && this->m_pSendBuffer->getTailDataSize() == 0)
 			this->close();
 	}
@@ -377,7 +377,7 @@ namespace base
 				DebugAstEx(nRet <= (int32_t)nDataSize, false);
 
 				if (nRet != (int32_t)nDataSize)
-					this->m_pSendBuffer->push(reinterpret_cast<const char*>(pData)+nRet, nDataSize - nRet);
+					this->m_pSendBuffer->push(reinterpret_cast<const char*>(pData) + nRet, nDataSize - nRet);
 				else if (this->m_pHandler != nullptr)
 					this->m_pHandler->onSendComplete(nDataSize);
 			}
@@ -394,7 +394,7 @@ namespace base
 			// 大包并且缓存中没有数据试着直接发送
 			if (this->m_pSendBuffer->getTailDataSize() == 0 && nDataSize >= this->getSendBufferSize())
 				return this->send(pData, nDataSize, false);
-			
+
 			this->m_pSendBuffer->push(reinterpret_cast<const char*>(pData), nDataSize);
 			uint32_t nSendDataSize = this->m_pSendBuffer->getTotalReadableSize();
 
@@ -431,7 +431,7 @@ namespace base
 
 		this->m_eConnecterState = eNCS_Disconnecting;
 		this->m_nFlag |= eNCF_CloseSend;
-		
+
 		if (bForce || this->m_pSendBuffer->getTailDataSize() == 0)
 			this->close();
 	}

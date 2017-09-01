@@ -9,21 +9,24 @@
 
 #include <iostream>
 
-static bool check_utf8(const std::string& utf8)
+namespace
 {
-	for (size_t i = 0; i < utf8.size(); ++i)
+	bool check_utf8(const std::string& utf8)
 	{
-		uint8_t c = (uint8_t)utf8.at(i);
-		if (c >= 0 && c <= 127) i += 0;
-		else if ((c & 0xE0) == 0xC0) i += 1;
-		else if ((c & 0xF0) == 0xE0) i += 2;
-		else if ((c & 0xF8) == 0xF0) i += 3;
-		else if ((c & 0xFC) == 0xF8) i += 4;
-		else if ((c & 0xFE) == 0xFC) i += 5;
-		else return false;//invalid utf8
-	}
+		for (size_t i = 0; i < utf8.size(); ++i)
+		{
+			uint8_t c = (uint8_t)utf8.at(i);
+			if (c >= 0 && c <= 127) i += 0;
+			else if ((c & 0xE0) == 0xC0) i += 1;
+			else if ((c & 0xF0) == 0xE0) i += 2;
+			else if ((c & 0xF8) == 0xF0) i += 3;
+			else if ((c & 0xFC) == 0xF8) i += 4;
+			else if ((c & 0xFE) == 0xFC) i += 5;
+			else return false;//invalid utf8
+		}
 
-	return true;
+		return true;
+	}
 }
 
 namespace base
