@@ -6,41 +6,35 @@
 
 #include "tinyxml2/tinyxml2.h"
 
-#include "msg_proto_src/player_login_request.pb.h"
-
-//#define _WEB_SOCKET_
+#define _WEB_SOCKET_
 
 using namespace core;
 
-CLoginService::CLoginService()
-	: m_pLoginClientConnectionFactory(nullptr)
-	, m_pLoginClientMessageDispatcher(nullptr)
-	, m_pLoginClientMessageHandler(nullptr)
-	, m_pNormalProtobufFactory(nullptr)
-	, m_pJsonProtobufFactory(nullptr)
+CLoginService::CLoginService(const SServiceBaseInfo& sServiceBaseInfo, const std::string& szConfigFileName)
+	: CServiceBase(sServiceBaseInfo, szConfigFileName)
 {
 }
 
 CLoginService::~CLoginService()
 {
-	SAFE_DELETE(this->m_pLoginClientConnectionFactory);
-	SAFE_DELETE(this->m_pLoginClientMessageDispatcher);
-	SAFE_DELETE(this->m_pLoginClientMessageHandler);
-	SAFE_DELETE(this->m_pNormalProtobufFactory);
-	SAFE_DELETE(this->m_pJsonProtobufFactory);
 }
 
 bool CLoginService::onInit()
 {
-	this->m_pLoginClientMessageDispatcher = new CLoginClientMessageDispatcher(this);
-	this->m_pLoginClientMessageHandler = new CLoginClientMessageHandler(this);
+	this->m_pLoginClientMessageDispatcher = std::make_unique<CLoginClientMessageDispatcher>(this);
+	this->m_pLoginClientMessageHandler = std::make_unique<CLoginClientMessageHandler>(this);
 
-	this->m_pLoginClientConnectionFactory = new CLoginClientConnectionFactory();
-	CBaseApp::Inst()->getBaseConnectionMgr()->setBaseConnectionFactory("CLoginConnectionFromClient", this->m_pLoginClientConnectionFactory);
+	this->m_pLoginClientConnectionFactory = std::make_unique<CLoginClientConnectionFactory>();
+	CBaseApp::Inst()->getBaseConnectionMgr()->setBaseConnectionFactory("CLoginConnectionFromClient", this->m_pLoginClientConnectionFactory.get());
 	
-	this->m_pNormalProtobufFactory = new CNormalProtobufFactory();
-	this->m_pJsonProtobufFactory = new CJsonProtobufFactory();
+	this->m_pNormalProtobufSerializer = std::make_unique<CNormalProtobufSerializer>();
+	this->m_pJsonProtobufSerializer = std::make_unique<CJsonProtobufSerializer>();
 	
+	this->setForwardMessageSerializer(this->m_pJsonProtobufSerializer.get());
+	this->addServiceMessageSerializer(this->m_pNormalProtobufSerializer.get());
+
+	this->setServiceMessageSerializer(0, eMST_Protobuf);
+
 	tinyxml2::XMLDocument* pConfigXML = new tinyxml2::XMLDocument();
 	if (pConfigXML->LoadFile(this->getConfigFileName().c_str()) != tinyxml2::XML_SUCCESS)
 	{
@@ -67,11 +61,14 @@ bool CLoginService::onInit()
 
 	// 启动客户端连接
 #ifdef _WEB_SOCKET_
-	CBaseApp::Inst()->getBaseConnectionMgr()->listen(szHost, nPort, true, "CLoginConnectionFromClient", szBuf, nSendBufSize, nRecvBufSize, default_client_message_parser, eCCT_Websocket);
+	if (!CBaseApp::Inst()->getBaseConnectionMgr()->listen(szHost, nPort, true, "CLoginConnectionFromClient", szBuf, nSendBufSize, nRecvBufSize, default_client_message_parser, eCCT_Websocket))
 #else
-	CBaseApp::Inst()->getBaseConnectionMgr()->listen(szHost, nPort, true, "CLoginConnectionFromClient", szBuf, nSendBufSize, nRecvBufSize, default_client_message_parser, eCCT_Normal);
+	if (!CBaseApp::Inst()->getBaseConnectionMgr()->listen(szHost, nPort, true, "CLoginConnectionFromClient", szBuf, nSendBufSize, nRecvBufSize, default_client_message_parser, eCCT_Normal))
 #endif
-
+	{
+		PrintWarning("gate listen error");
+		return false;
+	}
 	SAFE_DELETE(pConfigXML);
 
 	PrintInfo("CGateService::onInit");
@@ -86,38 +83,27 @@ void CLoginService::onFrame()
 
 void CLoginService::onQuit()
 {
-
+	PrintInfo("CLoginService::onQuit");
+	this->doQuit();
 }
 
 CLoginClientMessageDispatcher* CLoginService::getLoginClientMessageDispatcher() const
 {
-	return this->m_pLoginClientMessageDispatcher;
+	return this->m_pLoginClientMessageDispatcher.get();
 }
 
 void CLoginService::release()
 {
 	delete this;
-}
 
-CProtobufFactory* CLoginService::getServiceProtobufFactory() const
-{
-	return this->m_pNormalProtobufFactory;
-}
-
-core::CProtobufFactory* CLoginService::getForwardProtobufFactory() const
-{
-#ifdef _WEB_SOCKET_
-	return this->m_pJsonProtobufFactory;
-#else
-	return this->m_pNormalProtobufFactory;
-#endif
+	google::protobuf::ShutdownProtobufLibrary();
 }
 
 extern "C" 
 #ifdef _WIN32
 __declspec(dllexport)
 #endif
-CServiceBase* createServiceBase()
+CServiceBase* createServiceBase(const SServiceBaseInfo& sServiceBaseInfo, const std::string& szConfigFileName)
 {
-	return new CLoginService();
+	return new CLoginService(sServiceBaseInfo, szConfigFileName);
 }

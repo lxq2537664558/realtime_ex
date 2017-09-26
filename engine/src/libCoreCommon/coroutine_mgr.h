@@ -34,7 +34,7 @@ namespace core
 #endif
 
 	private:
-		void			recycle();
+		void			recycle(uint32_t nRemainCount);
 		
 	private:
 		int64_t									m_nTotalStackSize;

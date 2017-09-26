@@ -3,31 +3,14 @@
 #include "debug_helper.h"
 #include "exception_handler.h"
 
-#ifdef _WIN32
-#include <process.h>
-#else
-#include <pthread.h>
-#include <sys/syscall.h>
-#include <unistd.h>
-#endif
-
 namespace base
 {
-
 	void IRunnable::quit()
 	{
 		if (this->m_pThreadBase == nullptr)
 			return;
 
 		this->m_pThreadBase->quit();
-	}
-
-	uint32_t IRunnable::isQuit() const
-	{
-		if (this->m_pThreadBase == nullptr)
-			return 1;
-
-		return this->m_pThreadBase->isQuit();
 	}
 
 	void IRunnable::join()
@@ -38,61 +21,53 @@ namespace base
 		this->m_pThreadBase->join();
 	}
 
-	uint32_t IRunnable::getID() const
+	void IRunnable::pause()
 	{
 		if (this->m_pThreadBase == nullptr)
-			return 0;
+			return;
+
+		this->m_pThreadBase->pause();
+	}
+
+	void IRunnable::resume()
+	{
+		if (this->m_pThreadBase == nullptr)
+			return;
+
+		this->m_pThreadBase->resume();
+	}
+
+	std::thread::id	 IRunnable::getID() const
+	{
+		if (this->m_pThreadBase == nullptr)
+			return std::thread::id();
 
 		return this->m_pThreadBase->getID();
 	}
 
-#ifdef _WIN32
-	uint32_t CThreadBase::threadProc(void* pContext)
-#else
-	void* CThreadBase::threadProc(void* pContext)
-#endif
+	struct SThreadBaseInfo
 	{
-		CThreadBase* pThreadBase = static_cast<CThreadBase*>(pContext);
-		if (nullptr == pThreadBase)
-			return 0;
-		if (nullptr == pThreadBase->m_pRunnable)
-			return 0;
-
-		pThreadBase->m_nThreadID = CThreadBase::getCurrentID();
-
-		initThreadExceptionHander();
-
-		if (!pThreadBase->m_pRunnable->onInit())
-		{
-			pThreadBase->m_pRunnable->onDestroy();
-			return 0;
-		}
-		while (!pThreadBase->m_bQuit)
-		{
-			if (!pThreadBase->m_pRunnable->onProcess())
-				break;
-		}
-		pThreadBase->m_pRunnable->onDestroy();
-
-		return 0;
-	}
+		std::atomic<uint32_t>	m_nState;
+		std::mutex				m_lock;
+		std::condition_variable	m_cond;
+		std::thread				m_thread;
+	};
 
 	CThreadBase::CThreadBase()
-		: m_bQuit(false)
-		, m_nThreadID(__INVALID_ID)
-		, m_pRunnable(nullptr)
-#ifdef _WIN32
-		, m_hThread(nullptr)
-#else
-		, m_hThread(0)
-#endif
+		: m_pRunnable(nullptr)
 	{
+		this->m_pThreadBaseInfo = new SThreadBaseInfo();
 	}
 
 	CThreadBase::~CThreadBase()
 	{
-		this->quit();
-		this->join();
+		if (this->m_pThreadBaseInfo->m_nState.load(std::memory_order_acquire) != eTS_None)
+		{
+			this->quit();
+			this->join();
+		}
+		
+		SAFE_DELETE(this->m_pThreadBaseInfo);
 	}
 
 	bool CThreadBase::init(IRunnable* pRunnable)
@@ -102,60 +77,94 @@ namespace base
 		if (this->m_pRunnable != nullptr)
 			return false;
 
-		this->m_bQuit = false;
 		this->m_pRunnable = pRunnable;
-		this->m_nThreadID = __INVALID_ID;
 		this->m_pRunnable->m_pThreadBase = this;
+		
+		this->m_pThreadBaseInfo->m_thread = std::thread([this]()
+		{
+			initThreadExceptionHander();
+			
+			this->m_pThreadBaseInfo->m_nState.store(eTS_Normal, std::memory_order_release);
 
-#ifdef _WIN32
-		this->m_hThread = nullptr;
-#else
-		this->m_hThread = 0;
-#endif
+			if (!this->m_pRunnable->onInit())
+			{
+				this->m_pRunnable->onDestroy();
+				this->m_pThreadBaseInfo->m_nState.store(eTS_None, std::memory_order_release);
+				return;
+			}
 
-#ifdef _WIN32
-		this->m_hThread = (HANDLE)_beginthreadex(nullptr, 0, &threadProc, this, 0, &this->m_nThreadID);
-		if (this->m_hThread == nullptr || this->m_hThread == INVALID_HANDLE_VALUE)
-			return false;
-#else
-		// 这个m_hThread其实是个地址，里面包含了真正的线程id，可以用syscall(__NR_gettid)获取
-		if (pthread_create(&this->m_hThread, nullptr, &threadProc, this) != 0)
-			return false;
-#endif
+			while (true)
+			{
+				if (this->m_pThreadBaseInfo->m_nState.load(std::memory_order_acquire) == eTS_Quit)
+				{
+					this->m_pThreadBaseInfo->m_cond.notify_one();
+					break;
+				}
+
+				if (this->m_pThreadBaseInfo->m_nState.load(std::memory_order_acquire) == eTS_Pause1)
+				{
+					this->m_pThreadBaseInfo->m_lock.lock();
+
+					if (this->m_pThreadBaseInfo->m_nState.load(std::memory_order_acquire) == eTS_Pause1)
+						this->m_pThreadBaseInfo->m_nState.store(eTS_Pause2, std::memory_order_release);
+
+					this->m_pThreadBaseInfo->m_cond.notify_one();
+					this->m_pThreadBaseInfo->m_lock.unlock();
+
+					std::this_thread::sleep_for(std::chrono::milliseconds(1));
+					continue;
+				}
+				else if (this->m_pThreadBaseInfo->m_nState.load(std::memory_order_acquire) == eTS_Pause2)
+				{
+					std::this_thread::sleep_for(std::chrono::milliseconds(1));
+					continue;
+				}
+
+				if (!this->m_pRunnable->onProcess())
+					break;
+			}
+			this->m_pRunnable->onDestroy();
+			this->m_pThreadBaseInfo->m_nState.store(eTS_None, std::memory_order_release);
+		});
 
 		return true;
 	}
 
 	void CThreadBase::quit()
 	{
-		this->m_bQuit = true;
-	}
+		if (this->m_pThreadBaseInfo->m_nState.load(std::memory_order_acquire) == eTS_None)
+			return;
 
-	uint32_t CThreadBase::isQuit() const
-	{
-		return this->m_bQuit;
+		this->m_pThreadBaseInfo->m_nState.store(eTS_Quit, std::memory_order_release);
 	}
 
 	void CThreadBase::join()
 	{
-#ifdef _WIN32
-		if (this->m_hThread == nullptr)
-			return;
-#else
-		if (this->m_hThread == 0)
-			return;
-#endif
-
-#ifdef _WIN32
-		::WaitForSingleObject(this->m_hThread, INFINITE);
-#else
-		pthread_join(this->m_hThread, nullptr);
-#endif
+		this->m_pThreadBaseInfo->m_thread.join();
 	}
 
-	uint32_t CThreadBase::getID() const
+	void CThreadBase::pause()
 	{
-		return this->m_nThreadID;
+		std::unique_lock<std::mutex> guard(this->m_pThreadBaseInfo->m_lock);
+		if (this->m_pThreadBaseInfo->m_nState.load(std::memory_order_acquire) != eTS_Normal)
+			return;
+
+		this->m_pThreadBaseInfo->m_nState.store(eTS_Pause1, std::memory_order_release);
+
+		this->m_pThreadBaseInfo->m_cond.wait(guard);
+	}
+
+	void CThreadBase::resume()
+	{
+		if (this->m_pThreadBaseInfo->m_nState.load(std::memory_order_acquire) != eTS_Pause2)
+			return;
+
+		this->m_pThreadBaseInfo->m_nState.store(eTS_Normal, std::memory_order_release);
+	}
+
+	std::thread::id CThreadBase::getID() const
+	{
+		return this->m_pThreadBaseInfo->m_thread.get_id();
 	}
 
 	IRunnable* CThreadBase::getRunnable() const
@@ -163,13 +172,9 @@ namespace base
 		return this->m_pRunnable;
 	}
 
-	uint32_t CThreadBase::getCurrentID()
+	std::thread::id CThreadBase::getCurrentID()
 	{
-#ifdef _WIN32
-		return ::GetCurrentThreadId();
-#else
-		return (uint32_t)syscall(__NR_gettid);
-#endif
+		return std::this_thread::get_id();
 	}
 
 	void CThreadBase::release()

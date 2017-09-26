@@ -23,15 +23,26 @@ namespace core
 		virtual ~CActorBase();
 
 	public:
-		uint64_t			getID() const;
+		uint64_t		getActorID() const;
 
-		CServiceBase*		getServiceBase() const;
+		CServiceBase*	getServiceBase() const;
+
+		/**
+		@brief: 注册定时器
+		nStartTime 第一次触发定时器的时间
+		nIntervalTime 第一次触发定时器后接下来定时器触发的间隔时间，如果该值是0就表示这个定时器只触发一次
+		*/
+		void			registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
+		/**
+		@brief: 反注册定时器
+		*/
+		void			unregisterTicker(CTicker* pTicker);
 		
 	private:
-		virtual void		onInit(const std::string& szContext) { }
-		virtual void		onDestroy() { }
+		virtual void	onInit(const void* pContext) { }
+		virtual void	onDestroy() { }
 
-		virtual void		release() = 0;
+		virtual void	release() = 0;
 
 	private:
 		CCoreActor*	m_pCoreActor;

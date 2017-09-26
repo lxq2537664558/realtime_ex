@@ -1,10 +1,12 @@
 #include "coroutine_mgr.h"
+#include "core_app.h"
+
 #ifdef _WIN32
 #include <windows.h>
 #else
 #include <unistd.h>
 #include <sys/mman.h>
-//#define __USE_VALGRIND__
+#define __USE_VALGRIND__
 #ifdef __USE_VALGRIND__
 #include "valgrind/valgrind.h"
 #endif
@@ -36,10 +38,13 @@ namespace core
 		ConvertFiberToThread();
 		this->m_pMainContext = nullptr;
 #else
-		delete reinterpret_cast<context*>(this->m_pMainContext);
+		context* pContext = reinterpret_cast<context*>(this->m_pMainContext);
+		SAFE_DELETE(pContext);
 		uint32_t nValgrindID = this->m_nValgrindID;
 		CCoroutineMgr::freeStack(this->m_pMainStack, this->m_nMainStackSize, nValgrindID);
 #endif
+
+		this->recycle(0);
 	}
 
 	bool CCoroutineMgr::init(uint32_t nStackSize)
@@ -89,7 +94,7 @@ namespace core
 
 #ifdef _WIN32
 		if (nStackSize == 0)
-			nStackSize = 64 * 1024;
+			nStackSize = CCoreApp::Inst()->getCoroutineStackSize();
 #endif
 
 		uint32_t nPageSize = base::process_util::getPageSize();
@@ -103,7 +108,7 @@ namespace core
 				pCoroutineImpl->setCallback(callback);
 				pCoroutineImpl->setState(eCS_SUSPEND);
 				this->m_listRecycleCoroutine.erase(iter);
-				this->recycle();
+				this->recycle(_MAX_CO_RECYCLE_COUNT);
 				this->m_mapCoroutine[pCoroutineImpl->getCoroutineID()] = pCoroutineImpl;
 				this->m_nTotalStackSize += nStackSize;
 				return pCoroutineImpl;
@@ -113,7 +118,7 @@ namespace core
 		CCoroutineImpl* pCoroutineImpl = new CCoroutineImpl();
 		if (!pCoroutineImpl->init(this->m_nNextCoroutineID++, nStackSize, callback))
 		{
-			delete pCoroutineImpl;
+			SAFE_DELETE(pCoroutineImpl);
 			return nullptr;
 		}
 
@@ -143,8 +148,7 @@ namespace core
 
 	void CCoroutineMgr::addRecycleCoroutine(CCoroutineImpl* pCoroutineImpl)
 	{
-		if (pCoroutineImpl == nullptr)
-			return;
+		DebugAst(pCoroutineImpl != nullptr);
 
 		this->m_mapCoroutine.erase(pCoroutineImpl->getCoroutineID());
 		this->m_nTotalStackSize -= pCoroutineImpl->getStackSize();
@@ -152,12 +156,12 @@ namespace core
 		this->m_listRecycleCoroutine.push_back(pCoroutineImpl);
 	}
 
-	void CCoroutineMgr::recycle()
+	void CCoroutineMgr::recycle(uint32_t nRemainCount)
 	{
-		while (this->m_listRecycleCoroutine.size() > _MAX_CO_RECYCLE_COUNT)
+		while (this->m_listRecycleCoroutine.size() > nRemainCount)
 		{
 			CCoroutineImpl* pCoroutineImpl = *this->m_listRecycleCoroutine.begin();
-			delete(pCoroutineImpl);
+			SAFE_DELETE(pCoroutineImpl);
 
 			this->m_listRecycleCoroutine.pop_front();
 		}
@@ -195,17 +199,10 @@ namespace core
 	}
 #endif
 
-#if defined(_MSC_VER) && _MSC_VER < 1900
-# define thread_local	__declspec(thread)
-#endif
-
 	CCoroutineMgr* getCoroutineMgr()
 	{
-		static thread_local CCoroutineMgr* s_Inst = nullptr;
+		static thread_local CCoroutineMgr s_Inst;
 
-		if (nullptr == s_Inst)
-			s_Inst = new CCoroutineMgr();
-
-		return s_Inst;
+		return &s_Inst;
 	}
 }

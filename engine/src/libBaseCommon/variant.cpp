@@ -181,7 +181,7 @@ namespace base
 		switch (this->m_eType)
 		{
 		case eVVT_String:
-			delete[] this->m_sText.szStr;
+			SAFE_DELETE_ARRAY(this->m_sText.szStr);
 			this->m_sText.nLen = 0;
 			break;
 

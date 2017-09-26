@@ -24,7 +24,7 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -55,7 +55,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>../../engine/inc;../../3rd/tinyxml2/include;../../3rd/protobuf/include;../../proto;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../engine/inc;../../3rd/tinyxml2/include;../../3rd/protobuf/include;../proto;</AdditionalIncludeDirectories>
       <StringPooling>true</StringPooling>
       <DisableSpecificWarnings>4251</DisableSpecificWarnings>
     </ClCompile>
@@ -69,13 +69,13 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>../../engine/inc;../../3rd/tinyxml2/include;../../3rd/protobuf/include;../../3rd/lua/include/;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../engine/inc;../../3rd/tinyxml2/include;../../3rd/protobuf/include;../proto;</AdditionalIncludeDirectories>
       <StringPooling>true</StringPooling>
     </ClCompile>
     <Link>
@@ -91,16 +91,16 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\proto\msg_proto_src\d2g_player_token_notify.pb.h" />
-    <ClInclude Include="..\..\proto\msg_proto_src\g2d_addr_notify.pb.h" />
-    <ClInclude Include="..\..\proto\msg_proto_src\g2d_online_count_notify.pb.h" />
-    <ClInclude Include="..\..\proto\msg_proto_src\g2s_player_enter_request.pb.h" />
-    <ClInclude Include="..\..\proto\msg_proto_src\g2s_player_enter_response.pb.h" />
-    <ClInclude Include="..\..\proto\msg_proto_src\g2s_player_heartbeat_notify.pb.h" />
-    <ClInclude Include="..\..\proto\msg_proto_src\g2s_player_leave_notify.pb.h" />
-    <ClInclude Include="..\..\proto\msg_proto_src\gate_handshake_request.pb.h" />
-    <ClInclude Include="..\..\proto\msg_proto_src\gate_handshake_response.pb.h" />
-    <ClInclude Include="..\..\proto\msg_proto_src\s2g_kick_player_notify.pb.h" />
+    <ClInclude Include="..\proto\client_proto_src\c2g_player_handshake_request.pb.h" />
+    <ClInclude Include="..\proto\client_proto_src\c2g_player_handshake_response.pb.h" />
+    <ClInclude Include="..\proto\server_proto_src\d2g_player_token_notify.pb.h" />
+    <ClInclude Include="..\proto\server_proto_src\g2d_addr_notify.pb.h" />
+    <ClInclude Include="..\proto\server_proto_src\g2d_online_count_notify.pb.h" />
+    <ClInclude Include="..\proto\server_proto_src\g2s_player_enter_request.pb.h" />
+    <ClInclude Include="..\proto\server_proto_src\g2s_player_enter_response.pb.h" />
+    <ClInclude Include="..\proto\server_proto_src\g2s_player_heartbeat_notify.pb.h" />
+    <ClInclude Include="..\proto\server_proto_src\g2s_player_leave_notify.pb.h" />
+    <ClInclude Include="..\proto\server_proto_src\s2g_kick_player_notify.pb.h" />
     <ClInclude Include="gate_client_message_handler.h" />
     <ClInclude Include="gate_service_message_handler.h" />
     <ClInclude Include="gate_connection_from_client.h" />
@@ -111,20 +111,16 @@
     <ClInclude Include="gate_client_connection_factory.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\proto\msg_proto_src\d2g_player_token_notify.pb.cc" />
-    <ClCompile Include="..\..\proto\msg_proto_src\g2d_addr_notify.pb.cc" />
-    <ClCompile Include="..\..\proto\msg_proto_src\g2d_online_count_notify.pb.cc" />
-    <ClCompile Include="..\..\proto\msg_proto_src\g2s_player_enter_request.pb.cc" />
-    <ClCompile Include="..\..\proto\msg_proto_src\g2s_player_enter_response.pb.cc" />
-    <ClCompile Include="..\..\proto\msg_proto_src\g2s_player_heartbeat_notify.pb.cc" />
-    <ClCompile Include="..\..\proto\msg_proto_src\g2s_player_leave_notify.pb.cc" />
-    <ClCompile Include="..\..\proto\msg_proto_src\gate_handshake_request.pb.cc">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="..\..\proto\msg_proto_src\gate_handshake_response.pb.cc">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="..\..\proto\msg_proto_src\s2g_kick_player_notify.pb.cc" />
+    <ClCompile Include="..\proto\client_proto_src\c2g_player_handshake_request.pb.cc" />
+    <ClCompile Include="..\proto\client_proto_src\c2g_player_handshake_response.pb.cc" />
+    <ClCompile Include="..\proto\server_proto_src\d2g_player_token_notify.pb.cc" />
+    <ClCompile Include="..\proto\server_proto_src\g2d_addr_notify.pb.cc" />
+    <ClCompile Include="..\proto\server_proto_src\g2d_online_count_notify.pb.cc" />
+    <ClCompile Include="..\proto\server_proto_src\g2s_player_enter_request.pb.cc" />
+    <ClCompile Include="..\proto\server_proto_src\g2s_player_enter_response.pb.cc" />
+    <ClCompile Include="..\proto\server_proto_src\g2s_player_heartbeat_notify.pb.cc" />
+    <ClCompile Include="..\proto\server_proto_src\g2s_player_leave_notify.pb.cc" />
+    <ClCompile Include="..\proto\server_proto_src\s2g_kick_player_notify.pb.cc" />
     <ClCompile Include="gate_client_message_handler.cpp" />
     <ClCompile Include="gate_service_message_handler.cpp" />
     <ClCompile Include="gate_connection_from_client.cpp" />

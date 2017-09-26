@@ -113,8 +113,7 @@ namespace base
 		*pDbRecordset = new CDbRecordset();
 		if (!(*pDbRecordset)->init(this, pRes, szSQL))
 		{
-			delete *pDbRecordset;
-			(*pDbRecordset) = nullptr;
+			SAFE_DELETE(*pDbRecordset);
 			return eMET_Unknwon;
 		}
 		return eMET_OK;

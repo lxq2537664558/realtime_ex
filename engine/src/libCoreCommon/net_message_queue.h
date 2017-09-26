@@ -8,7 +8,6 @@
 
 namespace core
 {
-
 	class CNetMessageQueue :
 		public base::noncopyable
 	{

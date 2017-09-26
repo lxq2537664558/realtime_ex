@@ -1,0 +1,5 @@
+syntax = "proto2";
+
+message c2s_active_hero_patch_request {
+	required uint32 id = 1;
+}

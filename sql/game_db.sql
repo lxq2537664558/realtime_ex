@@ -1,10 +1,10 @@
 /*
 MySQL Data Transfer
 Source Host: localhost
-Source Database: game_db
+Source Database: game_db_1
 Target Host: localhost
-Target Database: game_db
-Date: 2017/8/22 18:44:43
+Target Database: game_db_1
+Date: 2017/8/31 15:38:24
 */
 
 SET FOREIGN_KEY_CHECKS=0;
@@ -18,7 +18,9 @@ CREATE TABLE `player_base` (
   `last_login_time` bigint(20) unsigned NOT NULL DEFAULT '0',
   `last_logout_time` bigint(20) unsigned NOT NULL DEFAULT '0',
   `name` varchar(64) NOT NULL DEFAULT '',
+  `face` int(10) unsigned NOT NULL DEFAULT '0',
   `lv` int(10) unsigned NOT NULL DEFAULT '1',
+  `exp` bigint(20) unsigned NOT NULL DEFAULT '0',
   `gold` bigint(20) unsigned NOT NULL DEFAULT '0',
   `money` bigint(20) unsigned NOT NULL DEFAULT '0',
   `vitality` bigint(20) unsigned NOT NULL DEFAULT '0',
@@ -27,12 +29,31 @@ CREATE TABLE `player_base` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- ----------------------------
+-- Table structure for player_hero
+-- ----------------------------
+CREATE TABLE `player_hero` (
+  `player_id` bigint(20) unsigned NOT NULL,
+  `hero_data` text,
+  `patch_data` text,
+  PRIMARY KEY (`player_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- ----------------------------
 -- Table structure for player_id_gen
 -- ----------------------------
 CREATE TABLE `player_id_gen` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=50 DEFAULT CHARSET=utf8;
+
+-- ----------------------------
+-- Table structure for player_item
+-- ----------------------------
+CREATE TABLE `player_item` (
+  `player_id` bigint(20) unsigned NOT NULL,
+  `data` text,
+  PRIMARY KEY (`player_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Procedure structure for sp_create_player_base
@@ -63,3 +84,7 @@ BEGIN
 	commit;
 END;;
 DELIMITER ;
+
+-- ----------------------------
+-- Records 
+-- ----------------------------

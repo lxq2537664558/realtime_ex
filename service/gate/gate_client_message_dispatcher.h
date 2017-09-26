@@ -1,7 +1,7 @@
 #pragma once
 #include "libBaseCommon/singleton.h"
 #include "libCoreCommon/core_common.h"
-#include "libCoreCommon/normal_protobuf_factory.h"
+#include "libCoreCommon/normal_protobuf_serializer.h"
 
 #include "gate_client_session.h"
 #include "gate_connection_from_client.h"

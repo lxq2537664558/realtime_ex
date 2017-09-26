@@ -12,10 +12,9 @@ namespace base
 		this->exit();
 	}
 
-	bool CDbThreadMgr::init(const std::string& szHost, uint16_t nPort, const std::string& szDb, const std::string& szUser, const std::string& szPassword, const std::string& szCharacterset, uint32_t nDbThreadCount, uint64_t nMaxCacheSize, uint32_t nWritebackTime)
+	bool CDbThreadMgr::init(const std::string& szHost, uint16_t nPort, const std::string& szDb, const std::string& szUser, const std::string& szPassword, const std::string& szCharacterset, uint32_t nDbThreadCount, const db::SCacheConfigInfo& sCacheConfigInfo)
 	{
 		DebugAstEx(nDbThreadCount > 0, false);
-		DebugAstEx(nWritebackTime > 0, false);
 
 		this->m_sDbConnectionInfo.szHost = szHost;
 		this->m_sDbConnectionInfo.nPort = nPort;
@@ -24,12 +23,11 @@ namespace base
 		this->m_sDbConnectionInfo.szPassword = szPassword;
 		this->m_sDbConnectionInfo.szCharacterset = szCharacterset;
 
-		nMaxCacheSize = nMaxCacheSize / nDbThreadCount;
 		this->m_vecDbThread.resize(nDbThreadCount);
 		for (uint32_t i = 0; i < nDbThreadCount; ++i)
 		{
 			this->m_vecDbThread[i] = new CDbThread();
-			if (!this->m_vecDbThread[i]->init(this, nMaxCacheSize, nWritebackTime))
+			if (!this->m_vecDbThread[i]->init(this, sCacheConfigInfo))
 				return false;
 		}
 
@@ -40,9 +38,26 @@ namespace base
 	{
 		for (uint32_t i = 0; i < this->m_vecDbThread.size(); ++i)
 		{
+			if (this->m_vecDbThread[i] == nullptr)
+				continue;
+
+			this->m_vecDbThread[i]->quit();
 			this->m_vecDbThread[i]->join();
-			delete this->m_vecDbThread[i];
 		}
+
+		// 再执行一次，确保残留的db操作完成
+		for (uint32_t i = 0; i < this->m_vecDbThread.size(); ++i)
+		{
+			if (this->m_vecDbThread[i] == nullptr)
+				continue;
+
+			if (!this->m_vecDbThread[i]->isConnectDb())
+				continue;
+
+			this->m_vecDbThread[i]->onProcess();
+			SAFE_DELETE(this->m_vecDbThread[i]);
+		}
+
 		this->m_vecDbThread.clear();
 	}
 

@@ -40,7 +40,7 @@ namespace core
 
 	private:
 		struct SNetAccepterHandler :
-			public base::INetAccepterHandler
+			public base::net::INetAccepterHandler
 		{
 			std::string			szContext;
 			std::string			szType;
@@ -48,14 +48,14 @@ namespace core
 			CCoreConnectionMgr*	pCoreConnectionMgr;
 			MessageParser		messageParser;
 
-			virtual base::INetConnecterHandler* onAccept( base::INetConnecter* pNetConnecter );
+			virtual base::net::INetConnecterHandler* onAccept( base::net::INetConnecter* pNetConnecter );
 		};
 
 		/**
 		@brief: 主动发起连接时等待连接建立的处理器，这个设计主要为了屏蔽逻辑层在发起连接请求到真正连接成功会有一段时间这个问题
 		*/
 		struct SNetActiveWaitConnecterHandler :
-			public base::INetConnecterHandler
+			public base::net::INetConnecterHandler
 		{
 			std::string			szContext;
 			std::string			szType;
@@ -69,8 +69,8 @@ namespace core
 			virtual void		onConnectFail();
 		};
 
-		base::INetEventLoop*								m_pNetEventLoop;
-		std::vector<base::INetAccepterHandler*>				m_vecNetAccepterHandler;
+		base::net::INetEventLoop*							m_pNetEventLoop;
+		std::vector<base::net::INetAccepterHandler*>		m_vecNetAccepterHandler;
 		std::list<SNetActiveWaitConnecterHandler*>			m_listActiveNetWaitConnecterHandler;
 
 		std::map<std::string, std::list<CCoreConnection*>>	m_mapCoreConnectionByTypeID;
@@ -78,10 +78,10 @@ namespace core
 		uint64_t											m_nNextCoreConnectionID;
 		
 	private:
-		base::INetConnecterHandler*	onAccept( SNetAccepterHandler* pNetAccepterHandler, base::INetConnecter* pNetConnecter );
-		void						onConnect( SNetActiveWaitConnecterHandler* pNetActiveWaitConnecterHandler );
-		void						delActiveWaitConnecterHandler( SNetActiveWaitConnecterHandler* pWaitActiveConnecterHandler );
+		base::net::INetConnecterHandler*	onAccept(SNetAccepterHandler* pNetAccepterHandler, base::net::INetConnecter* pNetConnecter);
+		void								onConnect(SNetActiveWaitConnecterHandler* pNetActiveWaitConnecterHandler);
+		void								delActiveWaitConnecterHandler(SNetActiveWaitConnecterHandler* pWaitActiveConnecterHandler);
 
-		CCoreConnection*			createCoreConnection(const std::string& szType, const std::string& szContext, const MessageParser& messageParser, uint8_t nCoreConnectionType);
+		CCoreConnection*					createCoreConnection(const std::string& szType, const std::string& szContext, const MessageParser& messageParser, uint8_t nCoreConnectionType);
 	};
 }

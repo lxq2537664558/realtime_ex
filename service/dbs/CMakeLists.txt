@@ -8,7 +8,6 @@ list(APPEND DIR_SRCS ${PROTO_SRCS})
 include_directories(../../engine/inc)
 include_directories(../../3rd/tinyxml2/include)
 include_directories(../../3rd/protobuf/include)
-include_directories(../../proto)
 
 # …Ë÷√ ‰≥ˆƒø¬º
 SET(LIBRARY_OUTPUT_PATH ${BIN_OUTPUT_PATH})

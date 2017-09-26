@@ -9,7 +9,6 @@ namespace core
 	{
 		eMCT_QUIT,
 		eMCT_FRAME,
-		eMCT_REQUEST_SOCKET_LISTEN,
 		eMCT_REQUEST_SOCKET_CONNECT,
 		eMCT_REQUEST_SOCKET_SHUTDOWN,
 		eMCT_NOTIFY_SOCKET_CONNECT,
@@ -27,19 +26,7 @@ namespace core
 		eMCT_BROADCAST_SOCKET_DATA1,
 		eMCT_BROADCAST_SOCKET_DATA2,
 		eMCT_TICKER,
-	};
-
-	struct SMCT_REQUEST_SOCKET_LISTEN
-	{
-		std::string			szHost;
-		uint16_t			nPort;
-		uint8_t				nReusePort;
-		std::string			szContext;
-		std::string			szType;
-		uint8_t				nCoreConnectionType;
-		uint32_t			nSendBufferSize;
-		uint32_t			nRecvBufferSize;
-		MessageParser		messageParser;
+		eMCT_SYSTEM,
 	};
 
 	struct SMCT_REQUEST_SOCKET_CONNECT
@@ -102,18 +89,23 @@ namespace core
 		uint32_t	nFromServiceID;
 		uint64_t	nToActorID;
 		uint32_t	nToServiceID;
-		google::protobuf::Message*
-					pMessage;
+		uint8_t		nMessageSerializerType;
+		uint16_t	nMessageDataLen;
+		uint16_t	nMessageNameLen;
+		char		szMessageName[1];
 	};
 
 	struct SMCT_RESPONSE
 	{
 		uint64_t	nSessionID;
+		uint32_t	nFromServiceID;
 		uint64_t	nToActorID;
 		uint32_t	nToServiceID;
 		uint8_t		nResult;
-		google::protobuf::Message*
-					pMessage;
+		uint8_t		nMessageSerializerType;
+		uint16_t	nMessageDataLen;
+		uint16_t	nMessageNameLen;
+		char		szMessageName[1];
 	};
 
 	struct SMCT_TO_GATE
@@ -138,8 +130,7 @@ namespace core
 		uint32_t	nFromServiceID;
 		uint64_t	nToActorID;
 		uint32_t	nToServiceID;
-		google::protobuf::Message*
-					pMessage;
+		uint16_t	nMessageDataLen;
 	};
 
 	struct SMCT_SEND_SOCKET_DATA

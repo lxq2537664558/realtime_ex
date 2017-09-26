@@ -10,6 +10,11 @@
 
 namespace core
 {
+	class CTickerRunnable;
+	class CLogicRunnable;
+	class CNetRunnable;
+	class CCoreActor;
+
 	// 定时器对象不支持直接拷贝，因为直接拷贝时如果有定时行为，这个行为是带过去呢还是拷贝一个空的定时器呢？
 	// 这里定时器对象的拷贝只能通过用move的方式
 	// 当然你也可以以指针的形式持有CTicker对象，但是这样一来需要你自己管理这块内存，如果忘记删除，定时器还是在跑的，很可能就悲剧了
@@ -19,7 +24,10 @@ namespace core
 		public base::noncopyable
 	{
 		friend class CTickerRunnable;
-		
+		friend class CLogicRunnable;
+		friend class CNetRunnable;
+		friend class CCoreActor;
+
 	public:
 		enum ETickerType
 		{

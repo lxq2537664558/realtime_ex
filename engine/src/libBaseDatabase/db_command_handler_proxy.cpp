@@ -9,6 +9,8 @@
 #include "db_command_update_handler.h"
 #include "db_protobuf.h"
 
+#include "libBaseCommon/debug_helper.h"
+
 namespace base
 {
 	CDbCommandHandlerProxy::CDbCommandHandlerProxy()
@@ -26,7 +28,8 @@ namespace base
 	{
 		for (auto iter = this->m_mapDbCommandHandler.begin(); iter != this->m_mapDbCommandHandler.end(); ++iter)
 		{
-			delete iter->second;
+			CDbCommandHandler* pDbCommandHandler = iter->second;
+			SAFE_DELETE(pDbCommandHandler);
 		}
 	}
 
@@ -41,7 +44,7 @@ namespace base
 
 		for (auto iter = this->m_mapDbCommandHandler.begin(); iter != this->m_mapDbCommandHandler.end(); ++iter)
 		{
-			auto& pDbCommandHandler = iter->second;
+			CDbCommandHandler* pDbCommandHandler = iter->second;
 			if (pDbCommandHandler == nullptr)
 				continue;
 

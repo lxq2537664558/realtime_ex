@@ -3,6 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <math.h>
+#include <algorithm>
 
 #include "md5.h"
 #include "function_util.h"
@@ -81,7 +82,7 @@ extern const struct ltc_hash_descriptor md5_desc;
 	in             += block_size;                                                   \
 	inlen          -= block_size;                                                   \
 	} else {                                                                            \
-	n = __min(inlen, (block_size - md-> state_var .curlen));                             \
+	n = std::min<unsigned long>(inlen, (block_size - md-> state_var .curlen));                             \
 	memcpy(md-> state_var .buf + md-> state_var.curlen, in, (size_t)n);             \
 	md-> state_var .curlen += n;                                                     \
 	in             += n;                                                            \

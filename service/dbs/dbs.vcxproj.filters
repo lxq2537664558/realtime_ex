@@ -13,7 +13,7 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="proto_src">
+    <Filter Include="server_proto">
       <UniqueIdentifier>{eb696e68-34b4-4c73-b82f-c6937b575651}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -28,28 +28,28 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="proto_src\call_command.pb.h">
-      <Filter>proto_src</Filter>
+      <Filter>server_proto</Filter>
     </ClInclude>
     <ClInclude Include="proto_src\delete_command.pb.h">
-      <Filter>proto_src</Filter>
+      <Filter>server_proto</Filter>
     </ClInclude>
     <ClInclude Include="proto_src\flush_command.pb.h">
-      <Filter>proto_src</Filter>
+      <Filter>server_proto</Filter>
     </ClInclude>
     <ClInclude Include="proto_src\insert_command.pb.h">
-      <Filter>proto_src</Filter>
+      <Filter>server_proto</Filter>
     </ClInclude>
     <ClInclude Include="proto_src\nop_command.pb.h">
-      <Filter>proto_src</Filter>
+      <Filter>server_proto</Filter>
     </ClInclude>
     <ClInclude Include="proto_src\query_command.pb.h">
-      <Filter>proto_src</Filter>
+      <Filter>server_proto</Filter>
     </ClInclude>
     <ClInclude Include="proto_src\select_command.pb.h">
-      <Filter>proto_src</Filter>
+      <Filter>server_proto</Filter>
     </ClInclude>
     <ClInclude Include="proto_src\update_command.pb.h">
-      <Filter>proto_src</Filter>
+      <Filter>server_proto</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -60,28 +60,28 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="proto_src\call_command.pb.cc">
-      <Filter>proto_src</Filter>
+      <Filter>server_proto</Filter>
     </ClCompile>
     <ClCompile Include="proto_src\delete_command.pb.cc">
-      <Filter>proto_src</Filter>
+      <Filter>server_proto</Filter>
     </ClCompile>
     <ClCompile Include="proto_src\flush_command.pb.cc">
-      <Filter>proto_src</Filter>
+      <Filter>server_proto</Filter>
     </ClCompile>
     <ClCompile Include="proto_src\insert_command.pb.cc">
-      <Filter>proto_src</Filter>
+      <Filter>server_proto</Filter>
     </ClCompile>
     <ClCompile Include="proto_src\nop_command.pb.cc">
-      <Filter>proto_src</Filter>
+      <Filter>server_proto</Filter>
     </ClCompile>
     <ClCompile Include="proto_src\query_command.pb.cc">
-      <Filter>proto_src</Filter>
+      <Filter>server_proto</Filter>
     </ClCompile>
     <ClCompile Include="proto_src\select_command.pb.cc">
-      <Filter>proto_src</Filter>
+      <Filter>server_proto</Filter>
     </ClCompile>
     <ClCompile Include="proto_src\update_command.pb.cc">
-      <Filter>proto_src</Filter>
+      <Filter>server_proto</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

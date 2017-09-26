@@ -18,7 +18,7 @@ namespace base
 
 	bool CReadBuf::init(const void* pBuf, uint32_t nSize)
 	{
-		DebugAstEx(pBuf != nullptr && nSize > 0, false);
+		DebugAstEx(pBuf != nullptr, false);
 
 		this->m_szBuf = reinterpret_cast<const char*>(pBuf);
 		this->m_nBufSize = nSize;
@@ -193,7 +193,17 @@ namespace base
 	{
 		DebugAst(szBuf.size() < UINT16_MAX);
 
-		this->write(szBuf.c_str());
+		uint16_t nBufLen = (uint16_t)szBuf.size();
+		
+		int32_t nRemainSize = this->m_nBufSize - this->m_nCurPos;
+		DebugAst(nRemainSize >= 0);
+		if (nRemainSize < (int32_t)nBufLen + 2)
+			this->resizeWriteBuf((uint32_t)(this->m_nBufSize + nBufLen + 2 - nRemainSize));
+
+		uint16_t& nLen = *reinterpret_cast<uint16_t*>(this->m_szBuf + this->m_nCurPos);
+		nLen = (uint16_t)nBufLen;
+		memcpy(this->m_szBuf + this->m_nCurPos + 2, szBuf.c_str(), nBufLen);
+		this->m_nCurPos += (int32_t)(nBufLen + 2);
 	}
 
 	void CWriteBuf::write(const char* szBuf)

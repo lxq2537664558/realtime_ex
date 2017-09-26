@@ -20,15 +20,13 @@
 #endif
 
 #ifdef _DEBUG
-#	define DebugAbort(Msg)			do{ base::saveErrorLog("DebugAbort(%s) in %s, %d", #Msg, __FILE__, __LINE__); BREAK_POINT;  } while(0)
+#	define DebugAbort(Msg)			do{ base::log::saveError("DebugAbort(%s) in %s, %d", #Msg, __FILE__, __LINE__); BREAK_POINT;  } while(0)
 #else
-#	define DebugAbort(Msg)			do{ base::saveErrorLog("DebugAbort(%s) in %s, %d", #Msg, __FILE__, __LINE__); exit( 0 );  } while(0)
+#	define DebugAbort(Msg)			do{ base::log::saveError("DebugAbort(%s) in %s, %d", #Msg, __FILE__, __LINE__); exit( 0 );  } while(0)
 #endif
 
-#define	DebugThrow( Exp )	throw base::CBaseException(Exp)
+#define	DebugAst(Exp)			do{ if(!(Exp)) { base::log::saveError("DebugAst(%s) in %s, %d", #Exp, __FILE__, __LINE__); BREAK_POINT; return; } } while(0)
+#define	DebugAstEx(Exp, Ret)	do{ if(!(Exp)) { base::log::saveError("DebugAstEx(%s) in %s, %d", #Exp, __FILE__, __LINE__); BREAK_POINT; return Ret; } } while(0)
 
-#define	DebugAst(Exp)			do{ if(!(Exp)) { base::saveErrorLog("DebugAst(%s) in %s, %d", #Exp, __FILE__, __LINE__); BREAK_POINT; return; } } while(0)
-#define	DebugAstEx(Exp, Ret)	do{ if(!(Exp)) { base::saveErrorLog("DebugAstEx(%s) in %s, %d", #Exp, __FILE__, __LINE__); BREAK_POINT; return Ret; } } while(0)
-
-#define	IF_NOT(Exp) if(!(Exp) ? (base::saveErrorLog("IF_NOT(%s) in %s, %d", #Exp, __FILE__, __LINE__), 1) : 0)
-#define	IF_OK(Exp)  if((Exp) ? 1 : (base::saveErrorLog("IF_OK(%s) in %s, %d", #Exp, __FILE__, __LINE__), 0))
+#define	IF_NOT(Exp) if(!(Exp) ? (base::log::saveError("IF_NOT(%s) in %s, %d", #Exp, __FILE__, __LINE__), 1) : 0)
+#define	IF_OK(Exp)  if((Exp) ? 1 : (base::log::saveError("IF_OK(%s) in %s, %d", #Exp, __FILE__, __LINE__), 0))

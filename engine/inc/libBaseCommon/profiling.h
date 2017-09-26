@@ -5,14 +5,17 @@
 
 namespace base
 {
-	__BASE_COMMON_API__ bool initProfiling(bool bEnableProfiling);
-	__BASE_COMMON_API__ void enableProfiling(bool bEnable);
-	__BASE_COMMON_API__ void uninitProfiling();
-	__BASE_COMMON_API__ void profilingBeginByLabel(const char* szLabel, uint32_t nContext);
-	__BASE_COMMON_API__ void profilingEndByLabel(const char* szLabel, uint32_t nContext);
-	__BASE_COMMON_API__ void profilingBeginByAddr(const void* pAddr);
-	__BASE_COMMON_API__ void profilingEndByAddr(const void* pAddr);
-	__BASE_COMMON_API__ void profiling(int64_t nTotalTime);
+	namespace profiling
+	{
+		__BASE_COMMON_API__ bool init(bool bEnableProfiling);
+		__BASE_COMMON_API__ void enable(bool bEnable);
+		__BASE_COMMON_API__ void uninit();
+		__BASE_COMMON_API__ void beginByLabel(const char* szLabel, uint32_t nContext);
+		__BASE_COMMON_API__ void endByLabel(const char* szLabel, uint32_t nContext);
+		__BASE_COMMON_API__ void beginByAddr(const void* pAddr);
+		__BASE_COMMON_API__ void endByAddr(const void* pAddr);
+		__BASE_COMMON_API__ void update(int64_t nTotalTime);
+	}
 }
 
 #define __PROFILING_OPEN
@@ -26,11 +29,11 @@ namespace base
 #	define PROFILING_END_EX(Label, Context)
 #	define PROFILING_GUARD_EX(Label, Context)
 #else
-#	define PROFILING_BEGIN(Label)					base::profilingBeginByLabel(#Label, -1);
-#	define PROFILING_END(Label)						base::profilingEndByLabel(#Label, -1);
-#	define PROFILING_GUARD(Label)					base::profilingBeginByLabel(#Label, -1); defer([](){ base::profilingEndByLabel(#Label, -1); });
+#	define PROFILING_BEGIN(Label)					base::profiling::beginByLabel(#Label, -1);
+#	define PROFILING_END(Label)						base::profiling::endByLabel(#Label, -1);
+#	define PROFILING_GUARD(Label)					base::profiling::beginByLabel(#Label, -1); defer([](){ base::profiling::endByLabel(#Label, -1); });
 
-#	define PROFILING_BEGIN_EX(Label, Context)		base::profilingBeginByLabel(#Label, Context);
-#	define PROFILING_END_EX(Label, Context)			base::profilingEndByLabel(#Label, Context);
-#	define PROFILING_GUARD_EX(Label, Context)		base::profilingBeginByLabel(#Label, Context); defer([](){ base::profilingEndByLabel(#Label, Context); });
+#	define PROFILING_BEGIN_EX(Label, Context)		base::profiling::beginByLabel(#Label, Context);
+#	define PROFILING_END_EX(Label, Context)			base::profiling::endByLabel(#Label, Context);
+#	define PROFILING_GUARD_EX(Label, Context)		base::profiling::beginByLabel(#Label, Context); defer([](){ base::profiling::endByLabel(#Label, Context); });
 #endif

@@ -1,5 +1,6 @@
 #pragma once
 #include "db_cache.h"
+#include "database.h"
 
 #include <unordered_map>
 #include <map>
@@ -16,7 +17,7 @@ namespace base
 		CDbCacheMgr();
 		~CDbCacheMgr();
 
-		bool				init(CDbThread* pDbThread, uint64_t nMaxCacheSize, uint32_t nWritebackTime);
+		bool				init(CDbThread* pDbThread, const db::SCacheConfigInfo& sCacheConfigInfo);
 		google::protobuf::Message*
 							getData(uint64_t nID, const std::string& szDataName);
 		bool				setData(uint64_t nID, const google::protobuf::Message* pData);
@@ -42,9 +43,11 @@ namespace base
 		uint32_t												m_nCurIndex;
 		std::map<uint64_t, std::shared_ptr<CDbCache>>			m_mapDirtyCache;
 		int64_t													m_nDataSize;
-		int64_t													m_nMaxCacheSize;
 		int64_t													m_nLastCleanCacheTime;
 		int64_t													m_nLastWritebackTime;
+		
 		uint32_t												m_nWritebackTime;
+		int64_t													m_nMaxCacheSize;
+		std::set<std::string>									m_setAllowDataName;
 	};
 }

@@ -1,0 +1,6 @@
+syntax = "proto2";
+
+message s2c_update_player_attribute_notify {
+	required uint32 type = 1;	// ¿‡–Õ
+	required uint64 value = 2;	// ÷µ
+}

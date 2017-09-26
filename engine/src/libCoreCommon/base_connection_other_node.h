@@ -11,13 +11,13 @@ namespace core
 		CBaseConnectionOtherNode();
 		virtual ~CBaseConnectionOtherNode();
 
-		virtual void		release();
+		virtual void	release();
 
-		virtual void		onConnect();
-		virtual void		onDisconnect();
-		virtual void		onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize);
+		virtual void	onConnect();
+		virtual void	onDisconnect();
+		virtual void	onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize);
 
-		uint32_t			getNodeID() const;
+		uint32_t		getNodeID() const;
 
 	private:
 		uint32_t	m_nNodeID;

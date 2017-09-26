@@ -1,5 +1,0 @@
-syntax = "proto2";
-
-message s2u_player_heartbeat_notify {
-	required uint64 player_id = 1;
-}

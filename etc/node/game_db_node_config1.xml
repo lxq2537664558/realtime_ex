@@ -1,0 +1,25 @@
+﻿<!--服务器配置-->
+<root>
+	<!--服务基本信息-->
+	<base_info work_path = "./conf/" connections = "2000">
+		<log async = "0" path = "./log/" debug = "1"/>
+		<profiling sampling_time = "1000"/>
+		<heartbeat heartbeat_limit = "100000" heartbeat_time = "10000"/>
+		<time year = "2013" month = "4" day = "27" hour = "23" minute = "57" second = "0" enable = "0"/>
+	</base_info>
+	
+	<!--节点信息-->
+	<node_info node_id = "6" node_name = "test_node_6" host = "127.0.0.1" port = "6006" send_buf_size = "1024" recv_buf_size = "1024" invoke_timeout = "100000000">
+		<service_info service_id = "70001" service_name = "game_dbs_1" service_type = "game_dbs" lib_name = "dbs" config_file_name = "service/game_dbs_config1.xml"/>
+	</node_info>
+	
+	<!--本节点需要连接的服务-->
+	<connect_service_info invoke_timeout = "100000000">
+		<!--如果需要连接所有某一个类型的服务，用*通配-->
+	</connect_service_info>
+	
+	<!--连接master地址-->
+	<monster_info>
+		<master id = "30001" host = "127.0.0.1" port = "10001"/>
+	</monster_info>
+</root>

@@ -9,8 +9,6 @@
 #include "ticker.h"
 #include "core_common.h"
 
-#include "google/protobuf/message.h"
-
 namespace core
 {
 	struct SPendingResponseInfo
@@ -23,9 +21,8 @@ namespace core
 					iterHolder;
 
 		int64_t		nBeginTime;	// 发送时间
-		std::string	szMessageName;	// 消息ID
-		
-		std::function<void(std::shared_ptr<google::protobuf::Message>, uint32_t)>
+		uint32_t	nToServiceID;
+		std::function<void(std::shared_ptr<void>, uint32_t)>
 					callback;
 	};
 }

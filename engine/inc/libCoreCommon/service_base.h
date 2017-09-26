@@ -3,7 +3,7 @@
 #include "core_common.h"
 #include "ticker.h"
 #include "service_id_converter.h"
-#include "protobuf_factory.h"
+#include "message_serializer.h"
 #include "service_selector.h"
 #include "actor_factory.h"
 
@@ -24,7 +24,9 @@ namespace core
 
 	class CActorBase;
 	class CServiceInvoker;
+	class CServiceInvokeHolder;
 	class CCoreService;
+	class CCoreServiceMgr;
 	/**
 	@brief: 服务基础类
 	*/
@@ -33,9 +35,11 @@ namespace core
 	{
 		friend class CCoreService;
 		friend class CServiceInvoker;
-		
+		friend class CServiceInvokeHolder;
+		friend class CCoreServiceMgr;
+
 	public:
-		CServiceBase();
+		CServiceBase(const SServiceBaseInfo& sServiceBaseInfo, const std::string& szConfigFileName);
 		virtual ~CServiceBase();
 
 		uint32_t			getServiceID() const;
@@ -68,20 +72,20 @@ namespace core
 		/**
 		@brief: 注册普通服务消息
 		*/
-		void				registerServiceMessageHandler(const std::string& szMessageName, const std::function<void(CServiceBase*, SSessionInfo, const google::protobuf::Message*)>& callback);
+		void				registerServiceMessageHandler(const std::string& szMessageName, const std::function<void(CServiceBase*, SSessionInfo, const void*)>& callback);
 		/**
 		@brief: 注册经网关服务转发客户端的服务消息
 		*/
-		void				registerServiceForwardHandler(const std::string& szMessageName, const std::function<void(CServiceBase*, SClientSessionInfo, const google::protobuf::Message*)>& callback);
+		void				registerServiceForwardHandler(const std::string& szMessageName, const std::function<void(CServiceBase*, SClientSessionInfo, const void*)>& callback);
 		
 		/**
 		@brief: 注册普通actor消息
 		*/
-		void				registerActorMessageHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SSessionInfo, const google::protobuf::Message*)>& callback);
+		void				registerActorMessageHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SSessionInfo, const void*)>& callback);
 		/**
 		@brief: 注册经网关服务转发客户端的actor消息
 		*/
-		void				registerActorForwardHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SClientSessionInfo, const google::protobuf::Message*)>& callback);
+		void				registerActorForwardHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SClientSessionInfo, const void*)>& callback);
 
 		/**
 		@brief: 获取客户端转发消息名字
@@ -113,7 +117,7 @@ namespace core
 		/**
 		@brief: 创建actor
 		*/
-		CActorBase*			createActor(const std::string& szType, uint64_t nActorID, const std::string& szContext);
+		CActorBase*			createActor(const std::string& szType, uint64_t nActorID, const void* pContext);
 		/**
 		@brief: 销毁actor
 		*/
@@ -137,16 +141,30 @@ namespace core
 		void				doQuit();
 
 		/**
-		@brief: 获取service消息的protobuf生成器
+		@brief: 添加消息的序列化器
 		*/
-		virtual CProtobufFactory*
-							getServiceProtobufFactory() const { return nullptr; }
+		void				addServiceMessageSerializer(CMessageSerializer* pMessageSerializer);
 		/**
-		@brief: 获取forward消息的protobuf生成器
+		@brief: 设置某一个service所使用的序列化器
 		*/
-		virtual CProtobufFactory*
-							getForwardProtobufFactory() const { return nullptr; }
+		void				setServiceMessageSerializer(uint32_t nServiceID, uint32_t nType);
+		/**
+		@brief: 设置forward消息的序列化器
+		*/
+		void				setForwardMessageSerializer(CMessageSerializer* pMessageSerializer);
+		/**
+		@brief: 获取某一个跟指定服务通讯时消息的序列化器
+		*/
+		CMessageSerializer*	getServiceMessageSerializer(uint32_t nServiceID) const;
+		/**
+		@brief: 获取某一个跟指定服务通讯时消息的序列化器类型
+		*/
+		uint32_t			getServiceMessageSerializerType(uint32_t nServiceID) const;
 
+		/**
+		@brief: 获取forward消息的序列化器
+		*/
+		CMessageSerializer*	getForwardMessageSerializer() const;
 		/**
 		@brief: 设置service_id转换器
 		*/
@@ -169,17 +187,3 @@ namespace core
 		CCoreService*	m_pCoreService;
 	};
 }
-
-template<class T, class M>
-inline void register_service_message_handler(core::CServiceBase* pServiceBase, T* pObject, void(T::*handler)(core::CServiceBase*, core::SSessionInfo, const M*));
-
-template<class T, class M>
-inline void register_forward_message_handler(core::CServiceBase* pServiceBase, T* pObject, void(T::*handler)(core::CServiceBase*, core::SClientSessionInfo, const M*));
-
-template<class T, class M>
-inline void register_actor_message_handler(core::CServiceBase* pServiceBase, T* pObject, void(T::*handler)(core::CActorBase*, core::SSessionInfo, const M*));
-
-template<class T, class M>
-inline void register_actor_forward_handler(core::CServiceBase* pServiceBase, T* pObject, void(T::*handler)(core::CActorBase*, core::SClientSessionInfo, const M*));
-
-#include "service_base.inl"

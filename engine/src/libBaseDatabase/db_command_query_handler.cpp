@@ -62,7 +62,7 @@ namespace base
 		CDbRecordset* pDbRecordset = nullptr;
 		defer([&]()
 		{
-			delete pDbRecordset;
+			SAFE_DELETE(pDbRecordset);
 		});
 
 		uint32_t nErrorType = this->m_pDbConnection->execute(szSQL, &pDbRecordset);

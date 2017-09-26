@@ -1,6 +1,0 @@
-<!--服务器配置-->
-<root>
-	<!--数据库信息-->
-	<cache_info proto_dir = "db_proto" thread_count = "5" cache_size = "100000" write_back_time = "1"/>
-	<mysql host = "127.0.0.1" port = "3306" user = "root" password = "123456" name = "game_db_1" charset = "utf8"/>
-</root>

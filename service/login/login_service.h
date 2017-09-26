@@ -1,24 +1,21 @@
 #pragma once
 #include "libCoreCommon/service_base.h"
+#include "libCoreCommon/json_protobuf_serializer.h"
+#include "libCoreCommon/core_common.h"
 
 #include "login_client_connection_factory.h"
 #include "login_client_message_dispatcher.h"
 #include "login_client_message_handler.h"
 
-#include "libCoreCommon/json_protobuf_factory.h"
-
 class CLoginService :
 	public core::CServiceBase
 {
 public:
-	CLoginService();
+	CLoginService(const core::SServiceBaseInfo& sServiceBaseInfo, const std::string& szConfigFileName);
 	virtual ~CLoginService();
 
 	CLoginClientMessageDispatcher*	getLoginClientMessageDispatcher() const;
 
-	virtual core::CProtobufFactory*	getServiceProtobufFactory() const;
-	virtual core::CProtobufFactory*	getForwardProtobufFactory() const;
-	
 	virtual void					release();
 
 private:
@@ -27,10 +24,10 @@ private:
 	virtual void					onQuit();
 
 private:
-	CLoginClientConnectionFactory*		m_pLoginClientConnectionFactory;
-	CLoginClientMessageDispatcher*		m_pLoginClientMessageDispatcher;
-	CLoginClientMessageHandler*			m_pLoginClientMessageHandler;
+	std::unique_ptr<CLoginClientConnectionFactory>		m_pLoginClientConnectionFactory;
+	std::unique_ptr<CLoginClientMessageDispatcher>		m_pLoginClientMessageDispatcher;
+	std::unique_ptr<CLoginClientMessageHandler>			m_pLoginClientMessageHandler;
 
-	core::CNormalProtobufFactory*		m_pNormalProtobufFactory;
-	core::CJsonProtobufFactory*			m_pJsonProtobufFactory;
+	std::unique_ptr<core::CNormalProtobufSerializer>	m_pNormalProtobufSerializer;
+	std::unique_ptr<core::CJsonProtobufSerializer>		m_pJsonProtobufSerializer;
 };

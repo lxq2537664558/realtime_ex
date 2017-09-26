@@ -1,4 +1,7 @@
 add_subdirectory(libBaseCommon)
+add_subdirectory(libBaseCommon/test/TestBaseCommon)
 add_subdirectory(libBaseNetwork)
 add_subdirectory(libBaseDatabase)
+add_subdirectory(libBaseLua)
+add_subdirectory(libBaseLua/test/TestBaseLua)
 add_subdirectory(libCoreCommon)

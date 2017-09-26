@@ -1,0 +1,14 @@
+syntax = "proto2";
+
+message s2c_player_hero_data {
+	required uint32 id = 1;
+}
+
+message s2c_player_hero_patch_data {
+	required uint32 id = 1;
+}
+
+message s2c_player_hero_notify {
+	repeated s2c_player_hero_data hero_data = 1;
+	repeated s2c_player_hero_patch_data patch_data = 2;
+}

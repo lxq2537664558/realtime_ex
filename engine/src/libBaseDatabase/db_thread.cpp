@@ -17,13 +17,14 @@ namespace base
 
 	CDbThread::CDbThread()
 		: m_pDbThreadMgr(nullptr)
-		, m_quit(0)
+		, m_pThreadBase(nullptr)
 		, m_nQPS(0)
 	{
 	}
 
 	CDbThread::~CDbThread()
 	{
+		SAFE_RELEASE(this->m_pThreadBase);
 	}
 
 	bool CDbThread::connectDb(bool bInit)
@@ -51,53 +52,33 @@ namespace base
 		return true;
 	}
 
-	void CDbThread::join()
-	{
-		this->m_quit = 1;
-		this->m_thread.join();
-	}
-
-	bool CDbThread::init(CDbThreadMgr* pDbThreadMgr, uint64_t nMaxCacheSize, uint32_t nWritebackTime)
+	bool CDbThread::init(CDbThreadMgr* pDbThreadMgr, const db::SCacheConfigInfo& sCacheConfigInfo)
 	{
 		DebugAstEx(pDbThreadMgr != nullptr, false);
 		this->m_pDbThreadMgr = pDbThreadMgr;
 		if (!this->m_dbCommandHandlerProxy.init())
 			return false;
 
-		if (!this->m_dbCacheMgr.init(this, nMaxCacheSize, nWritebackTime))
+		if (!this->m_dbCacheMgr.init(this, sCacheConfigInfo))
 			return false;
 
 		if (!this->connectDb(true))
 			return false;
 
-		this->m_thread = std::thread([this]()
-		{
-			while (true)
-			{
-				this->onProcess();
-				if (this->m_quit != 0)
-				{
-					std::unique_lock<std::mutex> lock(this->m_tCommandLock);
-					if (this->m_listCommand.empty())
-						break;
-				}
-			}
-
-			this->flushCache(0, true);
-
-			this->m_dbConnection.close();
-			this->m_dbCommandHandlerProxy.onDisconnect();
-		});
-
-		return true;
+		this->m_pThreadBase = base::CThreadBase::createNew(this);
+		
+		return this->m_pThreadBase != nullptr;
 	}
 
 	void base::CDbThread::onDestroy()
 	{
+		this->flushCache(0, true);
 
+		this->m_dbConnection.close();
+		this->m_dbCommandHandlerProxy.onDisconnect();
 	}
 
-	void CDbThread::onProcess()
+	bool CDbThread::onProcess()
 	{
 		if (!this->m_dbConnection.isConnect() || !this->m_dbConnection.ping())
 		{
@@ -114,7 +95,7 @@ namespace base
 			while (this->m_listCommand.empty())
 			{
 				if (std::cv_status::timeout == this->m_condition.wait_for(lock, std::chrono::seconds(1)))
-					return;
+					return true;
 			}
 
 			listCommand.splice(listCommand.end(), this->m_listCommand);
@@ -150,12 +131,11 @@ namespace base
 					this->m_listCommand.splice(this->m_listCommand.begin(), listCommand, iter, listCommand.end());
 					break;
 				}
+				else if (nErrorCode == db::eDBRC_OK)
+				{
+					this->onPostCache(sDbCommand.nType, pRequestMessage, pResponseMessage);
+				}
 			}
-			if (nErrorCode == db::eDBRC_OK)
-				this->onPostCache(sDbCommand.nType, pRequestMessage, pResponseMessage);
-
-			if (nErrorCode == db::eDBRC_EmptyRecordset)
-				nErrorCode = db::eDBRC_OK;
 
 			if (sDbCommand.callback == nullptr)
 				continue;
@@ -168,6 +148,8 @@ namespace base
 
 			this->m_pDbThreadMgr->addResultInfo(sDbResultInfo);
 		}
+
+		return true;
 	}
 
 	bool CDbThread::onPreCache(uint32_t nType, const google::protobuf::Message* pRequestMessage, std::shared_ptr<google::protobuf::Message>& pResponseMessage)
@@ -248,6 +230,11 @@ namespace base
 		this->m_listCommand.push_back(sDbCommand);
 
 		this->m_condition.notify_one();
+	}
+
+	bool CDbThread::isConnectDb() const
+	{
+		return this->m_dbConnection.isConnect();
 	}
 
 	uint32_t CDbThread::getQueueSize()

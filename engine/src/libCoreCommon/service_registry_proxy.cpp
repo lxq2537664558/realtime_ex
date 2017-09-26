@@ -25,11 +25,21 @@ namespace core
 		tinyxml2::XMLElement* pConnectServiceInfoXML = pXMLElement->FirstChildElement("connect_service_info");
 		if (pConnectServiceInfoXML != nullptr)
 		{
+			uint32_t nGlobalServiceInvokeTimeout = pConnectServiceInfoXML->UnsignedAttribute("invoke_timeout");
+			if (nGlobalServiceInvokeTimeout == 0)
+			{
+				PrintWarning("global invoke timeout errror");
+				return false;
+			}
+
 			for (tinyxml2::XMLElement* pServiceInfoXML = pConnectServiceInfoXML->FirstChildElement("service_info"); pServiceInfoXML != nullptr; pServiceInfoXML = pServiceInfoXML->NextSiblingElement("service_info"))
 			{
 				std::string szServiceName = pServiceInfoXML->Attribute("service_name");
 				std::string szServiceType = pServiceInfoXML->Attribute("service_type");
 				uint32_t nServiceInvokeTimeout = pServiceInfoXML->UnsignedAttribute("invoke_timeout");
+				if (nServiceInvokeTimeout == 0)
+					nServiceInvokeTimeout = nGlobalServiceInvokeTimeout;
+
 				if (szServiceName == "*")
 					this->m_mapConnectServiceType[szServiceType] = nServiceInvokeTimeout;
 				else
@@ -56,14 +66,36 @@ namespace core
 
 		CCoreApp::Inst()->getLogicRunnable()->getBaseConnectionMgr()->addConnectFailCallback("master", std::bind(&CServiceRegistryProxy::onConnectRefuse, this, std::placeholders::_1));
 
-		const std::vector<SServiceBaseInfo>& vecServiceBaseInfo = CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->getServiceBaseInfo();
+		std::vector<SServiceBaseInfo> vecServiceBaseInfo = CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->getServiceBaseInfo();
 		for (size_t i = 0; i < vecServiceBaseInfo.size(); ++i)
 		{
 			const SServiceBaseInfo& sServiceBaseInfo = vecServiceBaseInfo[i];
 			this->m_mapServiceIDByServiceType[sServiceBaseInfo.szType].push_back(sServiceBaseInfo.nID);
+			this->m_mapServiceNameByID[sServiceBaseInfo.szName] = sServiceBaseInfo.nID;
+			this->m_mapServiceIDByName[sServiceBaseInfo.nID] = sServiceBaseInfo.szName;
 		}
 
 		return true;
+	}
+
+	uint32_t CServiceRegistryProxy::getServiceInvokeTimeout(uint32_t nServiceID) const
+	{
+		auto iterService = this->m_mapServiceProxyInfo.find(nServiceID);
+		if (iterService == this->m_mapServiceProxyInfo.end())
+			return 0;
+
+		const std::string& szName = iterService->second.sServiceBaseInfo.szName;
+		const std::string& szType = iterService->second.sServiceBaseInfo.szType;
+
+		auto iter = this->m_mapConnectServiceName.find(szName);
+		if (iter != this->m_mapConnectServiceName.end())
+			return iter->second;
+
+		auto iterType = this->m_mapConnectServiceType.find(szType);
+		if (iterType != this->m_mapConnectServiceType.end())
+			return iterType->second;
+		
+		return 0;
 	}
 
 	void CServiceRegistryProxy::addNodeProxyInfo(const SNodeBaseInfo& sNodeBaseInfo, const std::vector<SServiceBaseInfo>& vecServiceBaseInfo, bool bMaster)
@@ -74,8 +106,8 @@ namespace core
 
 		for (size_t i = 0; i < vecServiceBaseInfo.size(); ++i)
 		{
-			DebugAst(this->m_mapServiceName.find(vecServiceBaseInfo[i].szName) == this->m_mapServiceName.end());
-			DebugAst(this->m_mapServiceProxyInfo.find(vecServiceBaseInfo[i].nID) == this->m_mapServiceProxyInfo.end());
+			DebugAst(this->m_mapServiceNameByID.find(vecServiceBaseInfo[i].szName) == this->m_mapServiceNameByID.end());
+			DebugAst(this->m_mapServiceIDByName.find(vecServiceBaseInfo[i].nID) == this->m_mapServiceIDByName.end());
 		}
 		
 		SNodeProxyInfo& sNodeProxyInfo = this->m_mapNodeProxyInfo[sNodeBaseInfo.nID];
@@ -83,7 +115,7 @@ namespace core
 		sNodeProxyInfo.sNodeBaseInfo = sNodeBaseInfo;
 		sNodeProxyInfo.vecServiceBaseInfo = vecServiceBaseInfo;
 		
-		sNodeProxyInfo.pTicker = std::unique_ptr<CTicker>(new core::CTicker());
+		sNodeProxyInfo.pTicker = std::make_unique<CTicker>();
 		// 不用担心sNodeProxyInfo的生命周期问题
 		sNodeProxyInfo.pTicker->setCallback([&sNodeProxyInfo](uint64_t nContext)
 		{
@@ -98,13 +130,15 @@ namespace core
 
 		for (size_t i = 0; i < vecServiceBaseInfo.size(); ++i)
 		{
-			this->m_mapServiceName[vecServiceBaseInfo[i].szName] = vecServiceBaseInfo[i].nID;
-			this->m_mapServiceProxyInfo[vecServiceBaseInfo[i].nID] = { vecServiceBaseInfo[i], nullptr };
-		}
-
-		for (size_t i = 0; i < vecServiceBaseInfo.size(); ++i)
-		{
 			const SServiceBaseInfo& sServiceBaseInfo = vecServiceBaseInfo[i];
+
+			SServiceProxyInfo sServiceProxyInfo;
+			sServiceProxyInfo.sServiceBaseInfo = vecServiceBaseInfo[i];
+			sServiceProxyInfo.pBaseConnectionOtherNode = nullptr;
+			this->m_mapServiceProxyInfo[sServiceBaseInfo.nID] = sServiceProxyInfo;
+
+			this->m_mapServiceNameByID[sServiceBaseInfo.szName] = sServiceBaseInfo.nID;
+			this->m_mapServiceIDByName[sServiceBaseInfo.nID] = sServiceBaseInfo.szName;
 			this->m_mapServiceIDByServiceType[sServiceBaseInfo.szType].push_back(sServiceBaseInfo.nID);
 		}
 
@@ -145,7 +179,7 @@ namespace core
 
 		for (size_t i = 0; i < sNodeProxyInfo.vecServiceBaseInfo.size(); ++i)
 		{
-			this->m_mapServiceName.erase(sNodeProxyInfo.vecServiceBaseInfo[i].szName);
+			this->m_mapServiceNameByID.erase(sNodeProxyInfo.vecServiceBaseInfo[i].szName);
 			this->m_mapServiceProxyInfo.erase(sNodeProxyInfo.vecServiceBaseInfo[i].nID);
 		}
 
@@ -163,20 +197,15 @@ namespace core
 		}
 
 		this->m_mapNodeProxyInfo.erase(iter);
+		
 		PrintInfo("del proxy node node_id: {} node_name: {}", nID, szName);
 	}
 
 	uint32_t CServiceRegistryProxy::getServiceID(const std::string& szName) const
 	{
-		auto iter = this->m_mapServiceName.find(szName);
-		if (iter == this->m_mapServiceName.end())
-		{
-			CCoreService* pCoreService = CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->getCoreServiceByName(szName);
-			if (pCoreService == nullptr)
-				return 0;
-
-			return pCoreService->getServiceID();
-		}
+		auto iter = this->m_mapServiceNameByID.find(szName);
+		if (iter == this->m_mapServiceNameByID.end())
+			return 0;
 
 		return iter->second;
 	}
@@ -186,7 +215,7 @@ namespace core
 		auto iter = this->m_mapServiceProxyInfo.find(nServiceID);
 		if (iter == this->m_mapServiceProxyInfo.end())
 		{
-			CCoreService* pCoreService = CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->getCoreServiceByID(nServiceID);
+			CCoreService* pCoreService = CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->getCoreService(nServiceID);
 			if (pCoreService == nullptr)
 				return "";
 
@@ -198,17 +227,11 @@ namespace core
 
 	std::string CServiceRegistryProxy::getServiceName(uint32_t nServiceID) const
 	{
-		auto iter = this->m_mapServiceProxyInfo.find(nServiceID);
-		if (iter == this->m_mapServiceProxyInfo.end())
-		{
-			CCoreService* pCoreService = CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->getCoreServiceByID(nServiceID);
-			if (pCoreService == nullptr)
-				return "";
+		auto iter = this->m_mapServiceIDByName.find(nServiceID);
+		if (iter == this->m_mapServiceIDByName.end())
+			return "";
 
-			return pCoreService->getServiceBaseInfo().szName;
-		}
-
-		return iter->second.sServiceBaseInfo.szName;
+		return iter->second;
 	}
 
 	const std::vector<uint32_t>& CServiceRegistryProxy::getServiceIDByTypeName(const std::string& szName) const
@@ -368,5 +391,10 @@ namespace core
 		DebugAst(iter != this->m_mapMasterInfo.end());
 
 		iter->second.bActive = false;
+	}
+
+	bool CServiceRegistryProxy::isValidService(uint32_t nServiceID) const
+	{
+		return this->m_mapServiceIDByName.find(nServiceID) != this->m_mapServiceIDByName.end();
 	}
 }

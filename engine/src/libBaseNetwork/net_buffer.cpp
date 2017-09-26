@@ -16,7 +16,7 @@ namespace base
 
 	CNetRecvBuffer::~CNetRecvBuffer()
 	{
-		delete []this->m_pBuf;
+		SAFE_DELETE_ARRAY(this->m_pBuf);
 	}
 
 	bool CNetRecvBuffer::init(uint32_t nBufSize)
@@ -38,7 +38,7 @@ namespace base
 		this->m_nBufSize = nSize;
 		this->m_nWritePos = this->m_nWritePos - this->m_nReadPos;
 		this->m_nReadPos = 0;
-		delete []this->m_pBuf;
+		SAFE_DELETE_ARRAY(this->m_pBuf);
 		this->m_pBuf = pNewBuf;
 	}
 
@@ -98,7 +98,7 @@ namespace base
 
 	CNetSendBufferBlock::~CNetSendBufferBlock()
 	{
-		delete []this->m_pBuf;
+		SAFE_DELETE_ARRAY(this->m_pBuf);
 	}
 
 	bool CNetSendBufferBlock::init(uint32_t nBufSize)
@@ -168,14 +168,14 @@ namespace base
 		{
 			CNetSendBufferBlock* pDelSendBufferBlock = pSendBufferBlock;
 			pSendBufferBlock = pSendBufferBlock->m_pNext;
-			delete pDelSendBufferBlock;
+			SAFE_DELETE(pDelSendBufferBlock);
 		}
 
 		for (CNetSendBufferBlock* pSendBufferBlock = this->m_pNoUse; pSendBufferBlock != nullptr;)
 		{
 			CNetSendBufferBlock* pDelSendBufferBlock = pSendBufferBlock;
 			pSendBufferBlock = pSendBufferBlock->m_pNext;
-			delete pDelSendBufferBlock;
+			SAFE_DELETE(pDelSendBufferBlock);
 		}
 	}
 
@@ -188,7 +188,7 @@ namespace base
 		this->m_pNoUse = new CNetSendBufferBlock();
 		if (!this->m_pNoUse->init(this->m_nBuffBlockSize))
 		{
-			delete this->m_pNoUse;
+			SAFE_DELETE(this->m_pNoUse);
 			return false;
 		}
 
@@ -202,7 +202,7 @@ namespace base
 			CNetSendBufferBlock* pBufferBlock = new CNetSendBufferBlock();
 			if (!pBufferBlock->init(this->m_nBuffBlockSize))
 			{
-				delete pBufferBlock;
+				SAFE_DELETE(pBufferBlock);
 				return nullptr;
 			}
 

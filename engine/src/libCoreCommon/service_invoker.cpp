@@ -22,7 +22,7 @@ namespace core
 
 	}
 
-	bool CServiceInvoker::send(uint32_t nServiceID, const google::protobuf::Message* pMessage)
+	bool CServiceInvoker::send(uint32_t nServiceID, const void* pMessage)
 	{
 		DebugAstEx(pMessage != nullptr, false);
 
@@ -30,7 +30,7 @@ namespace core
 		return CCoreApp::Inst()->getLogicRunnable()->getTransporter()->invoke(this->m_pServiceBase->m_pCoreService, 0, nCurWorkActorID, nServiceID, 0, pMessage);
 	}
 
-	bool CServiceInvoker::send_a(uint32_t nServiceID, uint64_t nActorID, const google::protobuf::Message* pMessage)
+	bool CServiceInvoker::send_a(uint32_t nServiceID, uint64_t nActorID, const void* pMessage)
 	{
 		DebugAstEx(pMessage != nullptr, false);
 
@@ -38,7 +38,7 @@ namespace core
 		return CCoreApp::Inst()->getLogicRunnable()->getTransporter()->invoke(this->m_pServiceBase->m_pCoreService, 0, nCurWorkActorID, nServiceID, nActorID, pMessage);
 	}
 
-	void CServiceInvoker::broadcast(const std::string& szServiceType, const google::protobuf::Message* pMessage)
+	void CServiceInvoker::broadcast(const std::string& szServiceType, const void* pMessage)
 	{
 		DebugAst(pMessage != nullptr);
 
@@ -49,20 +49,22 @@ namespace core
 		}
 	}
 
-	void CServiceInvoker::response(const SSessionInfo& sSessionInfo, const google::protobuf::Message* pMessage, uint32_t nErrorCode /* = eRRT_OK */)
+	void CServiceInvoker::response(const SSessionInfo& sSessionInfo, const void* pMessage, uint32_t nErrorCode /* = eRRT_OK */)
 	{
+		DebugAst(sSessionInfo.nSessionID != 0);
+
 		bool bRet = CCoreApp::Inst()->getLogicRunnable()->getTransporter()->response(this->m_pServiceBase->m_pCoreService, sSessionInfo.nFromServiceID, sSessionInfo.nFromActorID, sSessionInfo.nSessionID, (uint8_t)nErrorCode, pMessage);
 		DebugAst(bRet);
 	}
 
-	bool CServiceInvoker::send(const SClientSessionInfo& sClientSessionInfo, const google::protobuf::Message* pMessage)
+	bool CServiceInvoker::send(const SClientSessionInfo& sClientSessionInfo, const void* pMessage)
 	{
 		DebugAstEx(pMessage != nullptr, false);
 
 		return CCoreApp::Inst()->getLogicRunnable()->getTransporter()->send(this->m_pServiceBase->m_pCoreService, sClientSessionInfo.nSessionID, sClientSessionInfo.nGateServiceID, pMessage);
 	}
 
-	bool CServiceInvoker::send(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, google::protobuf::Message* pMessage)
+	bool CServiceInvoker::send(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const void* pMessage)
 	{
 		CServiceSelector* pServiceSelector = this->m_pServiceBase->getServiceSelector(nServiceSelectorType);
 		DebugAstEx(pServiceSelector != nullptr, false);
@@ -71,7 +73,7 @@ namespace core
 		return this->send(nServiceID, pMessage);
 	}
 
-	bool CServiceInvoker::broadcast(const std::vector<SClientSessionInfo>& vecClientSessionInfo, const google::protobuf::Message* pMessage)
+	bool CServiceInvoker::broadcast(const std::vector<SClientSessionInfo>& vecClientSessionInfo, const void* pMessage)
 	{
 		DebugAstEx(pMessage != nullptr, false);
 
@@ -89,12 +91,13 @@ namespace core
 		}
 
 		return bRet;
-
-		return true;
 	}
 
-	bool CServiceInvoker::invoke(uint32_t nServiceID, uint64_t nActorID, const google::protobuf::Message* pMessage, uint64_t nCoroutineID, const std::function<void(std::shared_ptr<google::protobuf::Message>, uint32_t)>& callback, CServiceInvokeHolder* pServiceInvokeHolder)
+	bool CServiceInvoker::invoke(uint32_t nServiceID, uint64_t nActorID, const void* pMessage, uint64_t nCoroutineID, const std::function<void(std::shared_ptr<void>, uint32_t)>& callback, CServiceInvokeHolder* pServiceInvokeHolder)
 	{
+		if (!this->m_pServiceBase->m_pCoreService->isServiceHealth(nServiceID))
+			return false;
+
 		uint64_t nCurWorkActorID = this->m_pServiceBase->m_pCoreService->getActorScheduler()->getCurWorkActorID();
 		if (nCurWorkActorID != 0)
 		{
@@ -102,21 +105,21 @@ namespace core
 			if (nullptr == pCoreActor)
 				return false;
 
-			uint64_t nSessionID = CCoreApp::Inst()->getLogicRunnable()->getTransporter()->genSessionID();
+			uint64_t nSessionID = this->m_pServiceBase->m_pCoreService->genSessionID();
 
 			if (!CCoreApp::Inst()->getLogicRunnable()->getTransporter()->invoke(this->m_pServiceBase->m_pCoreService, nSessionID, nCurWorkActorID, nServiceID, nActorID, pMessage))
 				return false;
 
-			SPendingResponseInfo* pPendingResponseInfo = pCoreActor->addPendingResponseInfo(nSessionID, nCoroutineID, pMessage->GetTypeName(), callback, pServiceInvokeHolder != nullptr ? pServiceInvokeHolder->getHolderID() : 0);
+			SPendingResponseInfo* pPendingResponseInfo = pCoreActor->addPendingResponseInfo(nServiceID, nSessionID, nCoroutineID, callback, pServiceInvokeHolder != nullptr ? pServiceInvokeHolder->getHolderID() : 0);
 			DebugAstEx(nullptr != pPendingResponseInfo, false);
 		}
 		else
 		{
-			uint64_t nSessionID = CCoreApp::Inst()->getLogicRunnable()->getTransporter()->genSessionID();
+			uint64_t nSessionID = this->m_pServiceBase->m_pCoreService->genSessionID();
 			if (!CCoreApp::Inst()->getLogicRunnable()->getTransporter()->invoke(this->m_pServiceBase->m_pCoreService, nSessionID, 0, nServiceID, nActorID, pMessage))
 				return false;
 
-			SPendingResponseInfo* pPendingResponseInfo = CCoreApp::Inst()->getLogicRunnable()->getTransporter()->addPendingResponseInfo(nSessionID, nCoroutineID, pMessage->GetTypeName(), callback, pServiceInvokeHolder != nullptr ? pServiceInvokeHolder->getHolderID() : 0);
+			SPendingResponseInfo* pPendingResponseInfo = this->m_pServiceBase->m_pCoreService->addPendingResponseInfo(nServiceID, nSessionID, nCoroutineID, callback, pServiceInvokeHolder != nullptr ? pServiceInvokeHolder->getHolderID() : 0);
 			DebugAstEx(pPendingResponseInfo != nullptr, false);
 		}
 

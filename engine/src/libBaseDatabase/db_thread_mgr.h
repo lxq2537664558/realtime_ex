@@ -2,7 +2,7 @@
 #include "db_thread.h"
 #include "database.h"
 
-#include <map>
+#include <list>
 #include <vector>
 
 namespace base
@@ -23,7 +23,7 @@ namespace base
 		CDbThreadMgr();
 		~CDbThreadMgr();
 
-		bool		init(const std::string& szHost, uint16_t nPort, const std::string& szDb, const std::string& szUser, const std::string& szPassword, const std::string& szCharacterset, uint32_t nDbThreadCount, uint64_t nMaxCacheSize, uint32_t nWritebackTime);
+		bool		init(const std::string& szHost, uint16_t nPort, const std::string& szDb, const std::string& szUser, const std::string& szPassword, const std::string& szCharacterset, uint32_t nDbThreadCount, const db::SCacheConfigInfo& sCacheConfigInfo);
 
 		uint32_t	getThreadCount() const;
 		void		query(uint32_t nThreadIndex, const SDbCommand& sDbCommand);

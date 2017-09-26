@@ -4,6 +4,8 @@
 
 #include "gate_connection_from_client.h"
 
+#include "google/protobuf/message.h"
+
 class CGateService;
 class CGateClientMessageHandler
 {

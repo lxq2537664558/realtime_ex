@@ -28,6 +28,51 @@ namespace
 		static SGmtProcessStartTimePoint s_sGmtProcessStartTime;
 		return s_sGmtProcessStartTime.nGmtStartProcessTime;
 	}
+
+	bool getTMByBuf(const char* szBuf, base::time_util::STime& sTime)
+	{
+		if (szBuf == nullptr)
+			return false;
+
+		std::string szTime = szBuf;
+		if (std::string::npos != szTime.find_first_not_of("0123456789-: "))
+			return false;
+
+		uint32_t nCount = 0;
+		std::string::size_type nPos = std::string::npos;
+		while (std::string::npos != (nPos = szTime.find_first_of("-: ")))
+		{
+			++nCount;
+			if (nCount >= 1 && nCount <= 2)
+			{
+				if ('-' != szTime[nPos])
+					return false;
+			}
+			else if (3 == nCount)
+			{
+				if (' ' != szTime[nPos])
+					return false;
+			}
+			else if (nCount >= 4)
+			{
+				if (':' != szTime[nPos])
+					return false;
+			}
+			szTime.erase(0, nPos + 1);
+		}
+
+		if (nCount != 5)
+			return false;
+
+#ifdef _WIN32
+		if (-1 == sscanf_s(szBuf, "%d-%d-%d %d:%d:%d", &sTime.nYear, &sTime.nMon, &sTime.nDay, &sTime.nHour, &sTime.nMin, &sTime.nSec))
+			return false;
+#else
+		if (-1 == sscanf(szBuf, "%d-%d-%d %d:%d:%d", &sTime.nYear, &sTime.nMon, &sTime.nDay, &sTime.nHour, &sTime.nMin, &sTime.nSec))
+			return false;
+#endif
+		return true;
+	}
 }
 
 namespace base
@@ -119,7 +164,7 @@ namespace base
 
 		int64_t getLocalTime()
 		{
-			// GmtTime = LocalTime + ZoneTime
+			// LocalTime = GmtTime - ZoneTime
 			return getGmtTime() - getZoneTime();
 		}
 
@@ -153,6 +198,7 @@ namespace base
 			sTime.nWDay = ttm.tm_wday;
 			sTime.nMon = ttm.tm_mon + 1;
 			sTime.nYear = (uint16_t)(1900 + ttm.tm_year);
+			sTime.nMSec = nTime % 1000;
 
 			return sTime;
 		}
@@ -177,6 +223,7 @@ namespace base
 			sTime.nWDay = ttm.tm_wday;
 			sTime.nMon = ttm.tm_mon + 1;
 			sTime.nYear = (uint16_t)(1900 + ttm.tm_year);
+			sTime.nMSec = nTime % 1000;
 
 			return sTime;
 		}
@@ -195,9 +242,7 @@ namespace base
 			ttm.tm_isdst = 0;
 
 			time_t tt = mktime(&ttm);
-			int64_t nTime = (int64_t)tt * 1000;
-
-			return gmt2LocalTime(nTime);
+			return gmt2LocalTime(((int64_t)tt) * 1000 + sTime.nMSec);
 		}
 
 		int64_t getGmtTimeByTM(const STime& sTime)
@@ -212,65 +257,30 @@ namespace base
 			ttm.tm_yday = 0;
 			ttm.tm_wday = 0;
 			ttm.tm_isdst = 0;
-
-			time_t tt = mktime(&ttm);
-			return ((int64_t)tt) * 1000;
+#ifdef _WIN32
+			time_t tt = _mkgmtime(&ttm);
+#else
+			time_t tt = timegm(&ttm);
+#endif
+			return ((int64_t)tt) * 1000 + sTime.nMSec;
 		}
 
-		int64_t getGmtTimeByBuf(char* szBuf)
+		int64_t getGmtTimeByBuf(const char* szBuf)
 		{
-			if (szBuf == nullptr)
-				return -1;
-
-			std::string szTime = szBuf;
-			if (std::string::npos != szTime.find_first_not_of("0123456789-: "))
-				return -1;
-
-			uint32_t nCount = 0;
-			std::string::size_type nPos = std::string::npos;
-			while (std::string::npos != (nPos = szTime.find_first_of("-: ")))
-			{
-				++nCount;
-				if (nCount >= 1 && nCount <= 2)
-				{
-					if ('-' != szTime[nPos])
-						return -1;
-				}
-				else if (3 == nCount)
-				{
-					if (' ' != szTime[nPos])
-						return -1;
-				}
-				else if (nCount >= 4)
-				{
-					if (':' != szTime[nPos])
-						return -1;
-				}
-				szTime.erase(0, nPos + 1);
-			}
-
-			if (nCount != 5)
-				return -1;
-
-#ifdef _WIN32
 			STime sTime;
-			if (-1 == sscanf_s(szBuf, "%d-%d-%d %d:%d:%d", &sTime.nYear, &sTime.nMon, &sTime.nDay, &sTime.nHour, &sTime.nMin, &sTime.nSec))
+			if (!getTMByBuf(szBuf, sTime))
 				return -1;
-#else
-			STime sTime;
-			if (-1 == sscanf(szBuf, "%d-%d-%d %d:%d:%d", &sTime.nYear, &sTime.nMon, &sTime.nDay, &sTime.nHour, &sTime.nMin, &sTime.nSec))
-				return -1;
-#endif
+
 			return getGmtTimeByTM(sTime);
 		}
 
-		int64_t getLocalTimeByBuf(char* szBuf)
+		int64_t getLocalTimeByBuf(const char* szBuf)
 		{
-			int64_t nTime = getGmtTimeByBuf(szBuf);
-			if (nTime < 0)
-				return nTime;
+			STime sTime;
+			if (!getTMByBuf(szBuf, sTime))
+				return -1;
 
-			return gmt2LocalTime(nTime);
+			return getLocalTimeByTM(sTime);
 		}
 
 		int64_t gmt2LocalTime(int64_t nTime)

@@ -1,5 +1,6 @@
 #pragma once
 #include "core_common.h"
+#include "ticker.h"
 
 namespace core
 {
@@ -24,8 +25,7 @@ namespace core
 		uint32_t			m_nMaxSendDataPerSecond;
 		uint32_t			m_nMaxRecvDataPerSecond;
 		CCoreConnection*	m_pCoreConnection;
-	};
 
-	void	initPacketMonitor();
-	void	uninitPacketMonitor();
+		core::CTicker		m_tickerMonitor;
+	};
 }

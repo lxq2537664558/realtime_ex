@@ -9,8 +9,8 @@
 #include "libCoreCommon/base_app.h"
 #include "libCoreCommon/service_base.h"
 
-#include "msg_proto_src/gate_handshake_request.pb.h"
-#include "msg_proto_src/gate_handshake_response.pb.h"
+#include "client_proto_src/c2g_player_handshake_request.pb.h"
+#include "client_proto_src/c2g_player_handshake_response.pb.h"
 
 using namespace core;
 
@@ -19,7 +19,7 @@ CGateClientMessageHandler::CGateClientMessageHandler(CGateService*	pGateService)
 {
 	this->m_szBuf.resize(UINT16_MAX);
 
-	this->m_pGateService->getGateClientMessageDispatcher()->registerMessageHandler("gate_handshake_request", std::bind(&CGateClientMessageHandler::handshake, this, std::placeholders::_1, std::placeholders::_2));
+	this->m_pGateService->getGateClientMessageDispatcher()->registerMessageHandler("c2g_player_handshake_request", std::bind(&CGateClientMessageHandler::handshake, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 CGateClientMessageHandler::~CGateClientMessageHandler()
@@ -33,7 +33,7 @@ void CGateClientMessageHandler::sendClientMessage(CBaseConnection* pBaseConnecti
 
 	message_header* pHeader = reinterpret_cast<message_header*>(&this->m_szBuf[0]);
 
-	int32_t nDataSize = this->m_pGateService->getForwardProtobufFactory()->serialize_protobuf_message_to_buf(pMessage, &this->m_szBuf[0] + sizeof(message_header), (uint32_t)(this->m_szBuf.size() - sizeof(message_header)));
+	int32_t nDataSize = this->m_pGateService->getForwardMessageSerializer()->serializeMessageToBuf(pMessage, &this->m_szBuf[0] + sizeof(message_header), (uint32_t)(this->m_szBuf.size() - sizeof(message_header)));
 	if (nDataSize < 0)
 		return;
 
@@ -46,7 +46,7 @@ void CGateClientMessageHandler::sendClientMessage(CBaseConnection* pBaseConnecti
 
 void CGateClientMessageHandler::handshake(CGateConnectionFromClient* pGateConnectionFromClient, const google::protobuf::Message* pMessage)
 {
-	const gate_handshake_request* pRequest = dynamic_cast<const gate_handshake_request*>(pMessage);
+	const c2g_player_handshake_request* pRequest = dynamic_cast<const c2g_player_handshake_request*>(pMessage);
 	DebugAst(pRequest != nullptr);
 
 	const std::string& szKey = pRequest->key();

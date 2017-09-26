@@ -118,7 +118,7 @@ namespace core
 		return this->m_pCoreConnection->getContext();
 	}
 
-	base::ENetConnecterMode CBaseConnection::getMode() const
+	base::net::ENetConnecterMode CBaseConnection::getMode() const
 	{
 		return this->m_pCoreConnection->getMode();
 	}

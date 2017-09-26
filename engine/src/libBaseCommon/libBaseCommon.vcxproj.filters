@@ -108,6 +108,9 @@
     <ClInclude Include="..\..\inc\libBaseCommon\csv_parser.h">
       <Filter>inc</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\inc\libBaseCommon\rw_lock.h">
+      <Filter>inc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="encryptor.cpp">

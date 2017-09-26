@@ -1,0 +1,5 @@
+syntax = "proto2";
+
+message s2c_player_battlearray_notify {
+	required map<uint32, map<uint32, uint32>> battlearrays = 1;
+}

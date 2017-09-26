@@ -1,0 +1,6 @@
+syntax = "proto2";
+
+message c2l_player_login_request {
+	required string account_name = 1;
+	required uint32 server_id = 2;
+}

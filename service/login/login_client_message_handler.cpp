@@ -10,10 +10,12 @@
 #include "libCoreCommon/service_base.h"
 #include "libCoreCommon/service_invoker.h"
 
-#include "msg_proto_src/player_login_request.pb.h"
-#include "msg_proto_src/player_login_response.pb.h"
-#include "msg_proto_src/l2d_validate_login_request.pb.h"
-#include "msg_proto_src/l2d_validate_login_response.pb.h"
+#include "client_proto_src/c2l_player_login_request.pb.h"
+#include "client_proto_src/c2l_player_login_response.pb.h"
+#include "server_proto_src/l2d_validate_login_request.pb.h"
+#include "server_proto_src/l2d_validate_login_response.pb.h"
+
+#include "../common/error_code.h"
 
 using namespace core;
 
@@ -22,7 +24,7 @@ CLoginClientMessageHandler::CLoginClientMessageHandler(CLoginService*	pLoginServ
 {
 	this->m_szBuf.resize(UINT16_MAX);
 
-	this->m_pLoginService->getLoginClientMessageDispatcher()->registerMessageHandler("player_login_request", std::bind(&CLoginClientMessageHandler::login, this, std::placeholders::_1, std::placeholders::_2));
+	this->m_pLoginService->getLoginClientMessageDispatcher()->registerMessageHandler("c2l_player_login_request", std::bind(&CLoginClientMessageHandler::login, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 CLoginClientMessageHandler::~CLoginClientMessageHandler()
@@ -36,7 +38,7 @@ void CLoginClientMessageHandler::sendClientMessage(CBaseConnection* pBaseConnect
 
 	message_header* pHeader = reinterpret_cast<message_header*>(&this->m_szBuf[0]);
 
-	int32_t nDataSize = this->m_pLoginService->getForwardProtobufFactory()->serialize_protobuf_message_to_buf(pMessage, &this->m_szBuf[0] + sizeof(message_header), (uint32_t)(this->m_szBuf.size() - sizeof(message_header)));
+	int32_t nDataSize = this->m_pLoginService->getForwardMessageSerializer()->serializeMessageToBuf(pMessage, &this->m_szBuf[0] + sizeof(message_header), (uint32_t)(this->m_szBuf.size() - sizeof(message_header)));
 	if (nDataSize < 0)
 		return;
 
@@ -48,7 +50,7 @@ void CLoginClientMessageHandler::sendClientMessage(CBaseConnection* pBaseConnect
 
 void CLoginClientMessageHandler::login(CLoginConnectionFromClient* pLoginConnectionFromClient, const google::protobuf::Message* pMessage)
 {
-	const player_login_request* pRequest = dynamic_cast<const player_login_request*>(pMessage);
+	const c2l_player_login_request* pRequest = dynamic_cast<const c2l_player_login_request*>(pMessage);
 	DebugAst(pRequest != nullptr);
 
 	uint64_t nSocketID = pLoginConnectionFromClient->getID();
@@ -63,7 +65,16 @@ void CLoginClientMessageHandler::login(CLoginConnectionFromClient* pLoginConnect
 	request_msg.set_server_id(nServerID);
 
 	std::shared_ptr<const l2d_validate_login_response> pResponseMessage;
-	this->m_pLoginService->getServiceInvoker()->sync_invoke("dispatch", eSST_Random, 0, &request_msg, pResponseMessage);
+	if (this->m_pLoginService->getServiceInvoker()->sync_invoke("dispatch", eSST_Random, 0, &request_msg, pResponseMessage) != eRRT_OK)
+	{
+		c2l_player_login_response response_msg;
+		response_msg.set_result(eEC_Login_InvokeDispatchError);
+		response_msg.set_key("");
+		response_msg.set_gate_addr("");
+		this->sendClientMessage(pLoginConnectionFromClient, &response_msg);
+
+		pLoginConnectionFromClient->shutdown(false, "validate login error");
+	}
 	
 	pLoginConnectionFromClient = dynamic_cast<CLoginConnectionFromClient*>(CBaseApp::Inst()->getBaseConnectionMgr()->getBaseConnectionBySocketID(nSocketID));
 	if (nullptr == pLoginConnectionFromClient)
@@ -76,8 +87,8 @@ void CLoginClientMessageHandler::login(CLoginConnectionFromClient* pLoginConnect
 	{
 		PrintInfo("CLoginClientMessageHandler::login nErrorCode != eRRT_OK || pResponse == nullptr account_name: {} server_id: {} socket_id: {}", szAccountName, nServerID, nSocketID);
 
-		player_login_response response_msg;
-		response_msg.set_result(1);
+		c2l_player_login_response response_msg;
+		response_msg.set_result(eEC_Login_InvokeDispatchError);
 		response_msg.set_key("");
 		response_msg.set_gate_addr("");
 		this->sendClientMessage(pLoginConnectionFromClient, &response_msg);
@@ -87,7 +98,7 @@ void CLoginClientMessageHandler::login(CLoginConnectionFromClient* pLoginConnect
 		return;
 	}
 
-	player_login_response response_msg;
+	c2l_player_login_response response_msg;
 	response_msg.set_result(pResponseMessage->result());
 	response_msg.set_key(pResponseMessage->key());
 	response_msg.set_gate_addr(pResponseMessage->gate_addr());

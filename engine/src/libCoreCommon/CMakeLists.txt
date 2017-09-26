@@ -17,7 +17,7 @@ SET(LIBRARY_OUTPUT_PATH ${BIN_OUTPUT_PATH})
 set(CMAKE_ASM_FLAGS "${CFLAGS} -x assembler-with-cpp")
 enable_language(C ASM)
 
-set(LINK_LIBS ${PROJECT_SOURCE_DIR}/3rd/protobuf/lib/linux/libprotobuf.a ${BIN_OUTPUT_PATH}/libBaseCommon.so ${BIN_OUTPUT_PATH}/libBaseNetwork.so)
+set(LINK_LIBS ${BIN_OUTPUT_PATH}/libBaseCommon.so ${BIN_OUTPUT_PATH}/libBaseNetwork.so)
 
 # Éú³ÉlibCoreCommon.so
 add_library(CoreCommon SHARED ${DIR_SRCS})

@@ -9,6 +9,7 @@
 
 #include <string.h>
 #include <limits.h>
+#include <memory>
 
 #ifdef _WIN32
 #pragma warning(error:4244)
@@ -21,8 +22,6 @@
 #	define INVALID_8BIT  UINT8_MAX
 
 #	define __INVALID_ID 0
-
-#	define OBJID uint64_t
 
 #ifndef INFINITE
 #	define INFINITE 0xFFFFFFFF
@@ -55,23 +54,25 @@ typedef unsigned long		_ulong;
 #	define _TRUNCATE (size_t)-1
 #endif
 
-#ifdef _WIN32
-
-#else
-
-#	define __max(a, b) ((a)<(b)?(b):(a))
-#	define __min(a, b) ((a)<(b)?(a):(b))
-
-#	define ZeroMemory(ptr,size) memset((ptr),0,(size))
-
-#	define Sleep(t) usleep((t)*1000)
-
+#ifndef _WIN32
 #	define stricmp(a,b) strcasecmp(a, b)
 #	define strnicmp(a,b, c) strncasecmp(a, b, c)
 #	define _strnicmp(a,b,c) strncasecmp(a, b, c)
 #	define strncmp(a,b,c) strncmp(a, b, c)
 #	define _chdir	chdir
 #	define _getcwd	getcwd
+
+namespace std
+{
+	// 这里用std名字空间是迫不得已，因为make_unique是在c++14中定义，工程是以c++11方式编译
+#if __cplusplus <= 201103L
+	template<typename T, typename... Args>
+	std::unique_ptr<T> make_unique(Args&&... args)
+	{
+		return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+	}
+#endif
+}
 
 #endif
 

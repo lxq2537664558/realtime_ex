@@ -1,8 +1,9 @@
 #!/bin/sh
 
-git clone -b 5.0.0 https://github.com/leethomason/tinyxml2.git ./tinyxml2_src
+git clone https://github.com/leethomason/tinyxml2.git ./tinyxml2_src
 
 cd tinyxml2_src
+git checkout 5.0.0
 
 cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=./install ./
 make

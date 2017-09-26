@@ -1,0 +1,5 @@
+syntax = "proto2";
+
+message c2g_player_handshake_request {
+	required string key = 1;
+}

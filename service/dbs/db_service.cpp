@@ -6,23 +6,26 @@
 
 using namespace core;
 
-CDbService::CDbService()
-	: m_pDbServiceMessageHandler(nullptr)
+CDbService::CDbService(const SServiceBaseInfo& sServiceBaseInfo, const std::string& szConfigFileName)
+	: CServiceBase(sServiceBaseInfo, szConfigFileName)
 	, m_nDbID(0)
 {
 }
 
 CDbService::~CDbService()
 {
-	SAFE_DELETE(this->m_pDbServiceMessageHandler);
 }
 
 bool CDbService::onInit()
 {
-	this->m_pDbServiceMessageHandler = new CDbServiceMessageHandler(this);
+	this->m_pDbServiceMessageHandler = std::make_unique<CDbServiceMessageHandler>(this);
 	
-	this->m_pNormalProtobufFactory = new CNormalProtobufFactory();
+	this->m_pNormalProtobufSerializer = std::make_unique<CNormalProtobufSerializer>();
 	
+	this->addServiceMessageSerializer(this->m_pNormalProtobufSerializer.get());
+
+	this->setServiceMessageSerializer(0, eMST_Protobuf);
+
 	tinyxml2::XMLDocument* pConfigXML = new tinyxml2::XMLDocument();
 	if (pConfigXML->LoadFile(this->getConfigFileName().c_str()) != tinyxml2::XML_SUCCESS)
 	{
@@ -54,7 +57,21 @@ bool CDbService::onInit()
 	const std::string szName = pMysqlXML->Attribute("name");
 	const std::string szCharset = pMysqlXML->Attribute("charset");
 
-	this->m_nDbID = base::db::create(szHost, nPort, szName, szUser, szPassword, szCharset, szProtoDir, nThreadCount, nCacheSize, nWriteBackTime);
+	base::db::SCacheConfigInfo sCacheConfigInfo;
+	sCacheConfigInfo.nMaxCacheSize = nCacheSize;
+	sCacheConfigInfo.nWritebackTime = nWriteBackTime;
+
+	tinyxml2::XMLElement* pTableCacheXML = pRootXML->FirstChildElement("cache_table");
+	if (pTableCacheXML != nullptr)
+	{
+		for (tinyxml2::XMLElement* pTableInfoXML = pTableCacheXML->FirstChildElement("table_info"); pTableInfoXML != nullptr; pTableInfoXML = pTableInfoXML->NextSiblingElement("table_info"))
+		{
+			std::string szName = pTableInfoXML->Attribute("name");
+			sCacheConfigInfo.vecTable.push_back(szName);
+		}
+	}
+
+	this->m_nDbID = base::db::create(szHost, nPort, szName, szUser, szPassword, szCharset, szProtoDir, nThreadCount, sCacheConfigInfo);
 	if (0 == this->m_nDbID)
 	{
 		PrintWarning("0 == this->m_nDbID");
@@ -63,6 +80,7 @@ bool CDbService::onInit()
 
 	SAFE_DELETE(pConfigXML);
 
+	PrintInfo("connect db successful addr: {}:{} db_name: {} charset: {}", szHost, nPort, szName, szCharset);
 	PrintInfo("CDbService::onInit");
 
 	return true;
@@ -75,17 +93,20 @@ void CDbService::onFrame()
 
 void CDbService::onQuit()
 {
-
+	PrintInfo("CDbService::onQuit");
+	if (this->m_nDbID != 0)
+	{
+		base::db::release(this->m_nDbID);
+		this->m_nDbID = 0;
+	}
+	
+	this->doQuit();
 }
 
 void CDbService::release()
 {
 	delete this;
-}
-
-CProtobufFactory* CDbService::getServiceProtobufFactory() const
-{
-	return this->m_pNormalProtobufFactory;
+	google::protobuf::ShutdownProtobufLibrary();
 }
 
 uint32_t CDbService::getDbID() const
@@ -97,7 +118,7 @@ extern "C"
 #ifdef _WIN32
 __declspec(dllexport)
 #endif
-CServiceBase* createServiceBase()
+CServiceBase* createServiceBase(const SServiceBaseInfo& sServiceBaseInfo, const std::string& szConfigFileName)
 {
-	return new CDbService();
+	return new CDbService(sServiceBaseInfo, szConfigFileName);
 }

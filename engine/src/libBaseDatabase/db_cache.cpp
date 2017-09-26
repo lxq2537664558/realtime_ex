@@ -35,13 +35,13 @@ namespace base
 		google::protobuf::Message* pMessage = createMessage(szDataName);
 		if (nullptr == pMessage)
 		{
-			PrintWarning("");
+			PrintWarning("CDbCache::getData error nullptr == pMessage data_name: {}", szDataName);
 			return nullptr;
 		}
 		if (!pMessage->ParseFromArray(iter->second.szData.c_str(), (int32_t)iter->second.szData.size()))
 		{
-			PrintWarning("");
-			delete pMessage;
+			PrintWarning("CDbCache::getData error pMessage->ParseFromArray data_name: {}", szDataName);
+			SAFE_DELETE(pMessage);
 			return nullptr;
 		}
 
@@ -78,7 +78,7 @@ namespace base
 
 		defer([&]()
 		{
-			delete pDstData;
+			SAFE_DELETE(pDstData);
 		});
 
 		if (!pDstData->ParseFromString(iter->second.szData))
@@ -204,13 +204,13 @@ namespace base
 				const std::string& szDataName = this->m_pDbCacheMgr->getDataName(iter->first);
 				if (szDataName.empty())
 				{
-					PrintWarning("");
+					PrintWarning("CDbCache::writeback error szDataName.empty() index: {}", iter->first);
 					continue;
 				}
 				google::protobuf::Message* pMessage = createMessage(szDataName);
 				if (nullptr == pMessage)
 				{
-					PrintWarning("");
+					PrintWarning("CDbCache::writeback error nullptr == pMessage data_name: {}", szDataName);
 					continue;
 				}
 				defer([&]()
@@ -220,13 +220,13 @@ namespace base
 
 				if (!pMessage->ParseFromString(sCacheInfo.szData))
 				{
-					PrintWarning("");
+					PrintWarning("CDbCache::writeback error pMessage->ParseFromString data_name: {}", szDataName);
 					continue;
 				}
 				uint32_t nErrorCode = m_pDbCacheMgr->getDbThread()->getDbCommandHandlerProxy().onDbCommand(db::eDBCT_Update, pMessage, nullptr);
 				if (nErrorCode != db::eDBRC_OK)
 				{
-					PrintWarning("");
+					PrintWarning("CDbCache::writeback error nErrorCode != db::eDBRC_OK data_name: {} error_code: {}", szDataName, nErrorCode);
 				}
 			}
 			else

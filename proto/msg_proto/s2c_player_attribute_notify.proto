@@ -1,9 +1,0 @@
-syntax = "proto2";
-
-message s2c_player_attribute_notify {
-	required string name = 2;		// 玩家名字
-	required uint32 lv = 3;			// 等级
-	required uint64 gold = 4;		// 金币
-	required uint64 money = 5;		// 砖石
-	required uint64 vitality = 6;	// 体力
-}

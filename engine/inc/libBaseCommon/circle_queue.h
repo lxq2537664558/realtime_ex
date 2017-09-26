@@ -1,6 +1,6 @@
 #pragma once
 #include "noncopyable.h"
-
+#include "debug_helper.h"
 
 namespace base
 {

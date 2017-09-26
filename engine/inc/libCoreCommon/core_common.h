@@ -3,8 +3,6 @@
 #include <functional>
 #include <memory>
 
-#include "google/protobuf/message.h"
-
 #include "libBaseCommon/function_util.h"
 
 #ifdef _WIN32
@@ -22,6 +20,7 @@
 #endif
 
 #define _GET_MESSAGE_ID(szMessageName) (base::function_util::hash(szMessageName.c_str()))
+#define _GET_MESSAGE_ID_EX(szMessageName) (base::function_util::hash(szMessageName))
 
 enum EResponseResultType
 {
@@ -51,7 +50,7 @@ class MessageName : public core::message_header\
 {\
 public:\
 	MessageName() : core::message_header(nMessageID) { nMessageSize = sizeof(MessageName); }\
-	static  uint16_t	getMessageID() { return nMessageID; }\
+	static  uint32_t	getMessageID() { return nMessageID; }\
 	static  const char*	getMessageName() { return #MessageName; }
 
 #define message_end };
@@ -90,7 +89,6 @@ enum EMessageType
 	eMT_TO_GATE				= 6,		// 其他服务通过网关服务转发客户端消息
 	eMT_TO_GATE_BROADCAST	= 7,		// 其他服务通过网关服务广播客户端消息
 	eMT_CLIENT				= 8,		// 客户端消息
-	eMT_TICKER				= 9,		// 定时器
 };
 
 enum ECoreConnectionType
@@ -104,6 +102,15 @@ enum EServiceSelectorType
 	eSST_Random = 1,
 	eSST_Hash	= 2,
 };
+
+enum EMessageSerializerType
+{
+	eMST_Protobuf		= 1,
+	eMST_JsonProtobuf	= 2,
+	eMST_Native			= 3,
+};
+
+#define _MAX_MESSAGE_NAME_LEN 128
 
 namespace core
 {
@@ -119,11 +126,11 @@ namespace core
 	struct	SActorMessagePacket
 	{
 		uint8_t		nType;
+		uint8_t		nMessageSerializerType;
 		uint32_t	nFromServiceID;
 		uint64_t	nData;
 		uint64_t	nSessionID;
-		google::protobuf::Message*		
-					pMessage;
+		void*		pMessage;
 	};
 
 	struct SNodeBaseInfo
@@ -159,7 +166,7 @@ namespace core
 	struct SSyncCallResultInfo
 	{
 		uint8_t	nResult;
-		std::shared_ptr<google::protobuf::Message>
+		std::shared_ptr<void>
 				pMessage;
 	};
 
@@ -191,6 +198,7 @@ namespace core
 		uint32_t	nFromServiceID;
 		uint64_t	nToActorID;
 		uint32_t	nToServiceID;
+		uint8_t		nMessageSerializerType;
 		uint16_t	nMessageNameLen;
 		char		szMessageName[1];
 	};
@@ -198,11 +206,27 @@ namespace core
 	struct response_cookice
 	{
 		uint64_t	nSessionID;
+		uint32_t	nFromServiceID;
 		uint64_t	nToActorID;
 		uint32_t	nToServiceID;
+		uint8_t		nMessageSerializerType;
 		uint8_t		nResult;
 		uint16_t	nMessageNameLen;
 		char		szMessageName[1];
+	};
+
+	struct health_request_cookice
+	{
+		uint64_t	nSessionID;
+		uint32_t	nFromServiceID;
+		uint32_t	nToServiceID;
+	};
+
+	struct health_response_cookice
+	{
+		uint64_t	nSessionID;
+		uint32_t	nToServiceID;
+		uint8_t		nResult;
 	};
 
 #pragma pack(pop)

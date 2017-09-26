@@ -12,8 +12,8 @@
 #include "libBaseCommon/debug_helper.h"
 
 #ifndef _WIN32
-extern "C" int32_t	save_context(int64_t* reg);
-extern "C" void		restore_context(int64_t* reg, int32_t);
+extern "C" int32_t	save_context(void* reg);
+extern "C" void		restore_context(void* reg, int32_t);
 #endif
 
 using namespace core::coroutine;
@@ -41,8 +41,8 @@ namespace core
 #else
 			if (!pCoroutineImpl->m_bOwnerStack)
 				pCoroutineImpl->m_nStackSize = 0;
-			if (save_context(reinterpret_cast<context*>(pCoroutineImpl->m_pContext)->regs) == 0)
-				restore_context(reinterpret_cast<context*>(pCoroutineMgr->getMainContext())->regs, 1);
+			if (save_context(pCoroutineImpl->m_pContext) == 0)
+				restore_context(pCoroutineMgr->getMainContext(), 1);
 #endif
 		}
 	}
@@ -55,7 +55,7 @@ namespace core
 
 		if (this->m_nStackCap < (uintptr_t)(pStack - &nDummy))
 		{
-			delete [] this->m_pStack;
+			SAFE_DELETE_ARRAY(this->m_pStack);
 			this->m_nStackCap = pStack - &nDummy;
 			this->m_pStack= new char[this->m_nStackCap];
 		}
@@ -86,12 +86,17 @@ namespace core
 	{
 		uint32_t nValgrindID = 0;
 #ifndef _WIN32
-		delete reinterpret_cast<context*>(this->m_pContext);
+		context* pContext = reinterpret_cast<context*>(this->m_pContext);
+		SAFE_DELETE(pContext);
 		nValgrindID = this->m_nValgrindID;
 		if (this->m_bOwnerStack)
+		{
 			CCoroutineMgr::freeStack(this->m_pStack, (uint32_t)this->m_nStackSize, nValgrindID);
+		}
 		else
-			delete[]this->m_pStack;
+		{
+			SAFE_DELETE_ARRAY(this->m_pStack);
+		}
 #endif
 	}
 
@@ -108,7 +113,7 @@ namespace core
 		if (this->m_pContext == nullptr)
 			return false;
 #else
-		if (save_context(reinterpret_cast<context*>(this->m_pContext)->regs) != 0)
+		if (save_context(this->m_pContext) != 0)
 		{
 			CCoroutineImpl::onCallback();
 
@@ -162,8 +167,8 @@ namespace core
 		if (!this->m_bOwnerStack)
 			this->saveStack();
 
-		if (save_context(reinterpret_cast<context*>(this->m_pContext)->regs) == 0)
-			restore_context(reinterpret_cast<context*>(pCoroutineMgr->getMainContext())->regs, 1);
+		if (save_context(this->m_pContext) == 0)
+			restore_context(pCoroutineMgr->getMainContext(), 1);
 #endif	
 		return this->m_nContext;
 	}
@@ -184,8 +189,8 @@ namespace core
 		if (!this->m_bOwnerStack)
 			memcpy(pCoroutineMgr->getMainStack() - this->m_nStackSize, this->m_pStack, this->m_nStackSize);
 
-		if (save_context(reinterpret_cast<context*>(pCoroutineMgr->getMainContext())->regs) == 0)
-			restore_context(reinterpret_cast<context*>(this->m_pContext)->regs, 1);
+		if (save_context(pCoroutineMgr->getMainContext()) == 0)
+			restore_context(this->m_pContext, 1);
 #endif
 	}
 

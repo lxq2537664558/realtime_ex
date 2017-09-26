@@ -13,7 +13,7 @@ namespace core
 	class CBaseConnection;
 	class CBaseConnectionMgr;
 	class CCoreConnection :
-		public base::INetConnecterHandler
+		public base::net::INetConnecterHandler
 	{
 		friend class CCoreConnectionMgr;
 		friend class CBaseConnectionMgr;
@@ -57,7 +57,7 @@ namespace core
 
 		void				onConnectAck();
 
-		base::ENetConnecterMode
+		base::net::ENetConnecterMode
 							getMode() const;
 
 	private:

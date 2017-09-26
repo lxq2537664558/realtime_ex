@@ -1,0 +1,6 @@
+syntax = "proto2";
+
+message c2s_update_player_battlearray_request {
+	required uint32 type = 1;	// 类型
+	optional map<uint32, uint32> heros = 2;
+}

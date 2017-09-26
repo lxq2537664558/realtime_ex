@@ -4,6 +4,8 @@
 
 #include "login_connection_from_client.h"
 
+#include "google/protobuf/message.h"
+
 class CLoginService;
 class CLoginClientMessageHandler
 {

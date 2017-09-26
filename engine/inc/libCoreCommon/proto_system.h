@@ -15,6 +15,8 @@ enum ESystemMessageType
 	eSMT_remove_node_base_info		= 5,	// master向各个节点同步其他节点离开信息
 	eSMT_notify_node_base_info		= 6,	// 主动发起的节点向被动接收的节点通知节点基本信息
 	eSMT_notify_ack_node_base_info	= 7,	// 被动接收的节点向主动发起的节点确认节点基本信息
+	eSMT_request_service_health		= 8,	// 服务之间的健康度请求消息
+	eSMT_response_service_health	= 9,	// 服务之间的健康度响应消息
 };
 
 namespace core
@@ -258,5 +260,27 @@ message_begin(smt_notify_ack_node_base_info, eSMT_notify_ack_node_base_info)
 		unpack_end();
 	}
 message_end
-
+// 
+// message_begin(smt_request_service_health, eSMT_request_service_health)
+// 	uint32_t nToServiceID;
+// 	
+// 
+// 	void pack(base::CWriteBuf& writeBuf)
+// 	{
+// 		pack_begin(writeBuf);
+// 
+// 		writeBuf.write(nNodeID);
+// 
+// 		pack_end(writeBuf);
+// 	}
+// 
+// 	void unpack(const void* pBuf, uint16_t nSize)
+// 	{
+// 		unpack_begin(pBuf, nSize);
+// 
+// 		readBuf.read(nNodeID);
+// 
+// 		unpack_end();
+// 	}
+// message_end
 }

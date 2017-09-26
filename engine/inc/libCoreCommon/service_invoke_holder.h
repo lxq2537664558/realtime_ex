@@ -8,8 +8,6 @@
 #include "service_base.h"
 #include "service_invoker.h"
 
-#include "google/protobuf/message.h"
-
 namespace core
 {
 	/*
@@ -25,50 +23,50 @@ namespace core
 		CServiceInvokeHolder& operator = (CServiceInvokeHolder& rhs);
 
 		//==================================调用指定服务方法=======================================//
-		bool			send(uint32_t nServiceID, const google::protobuf::Message* pMessage);
+		bool			send(uint32_t nServiceID, const void* pMessage);
 
-		void			broadcast(const std::string& szServiceType, const google::protobuf::Message* pMessage);
+		void			broadcast(const std::string& szServiceType, const void* pMessage);
 
 		template<class T>
-		inline void		async_invoke(uint32_t nServiceID, const google::protobuf::Message* pMessage, const std::function<void(const T*, uint32_t)>& callback);
+		inline void		async_invoke(uint32_t nServiceID, const void* pMessage, const std::function<void(const T*, uint32_t)>& callback);
 		
 		template<class T>
-		inline void		async_invoke(uint32_t nServiceID, const google::protobuf::Message* pMessage, CFuture<T>& sFuture);
+		inline void		async_invoke(uint32_t nServiceID, const void* pMessage, CFuture<T>& sFuture);
 		
 		template<class T>
-		inline uint32_t	sync_invoke(uint32_t nServiceID, const google::protobuf::Message* pMessage, std::shared_ptr<T>& pResponseMessage);
+		inline uint32_t	sync_invoke(uint32_t nServiceID, const void* pMessage, std::shared_ptr<T>& pResponseMessage);
 		//==================================调用指定服务方法=======================================//
 
 
 
 		//==================================调用指定服务类型方法=======================================//
-		bool			send(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, google::protobuf::Message* pMessage);
+		bool			send(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const void* pMessage);
 
 		template<class T>
-		inline void		async_invoke(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, const std::function<void(const T*, uint32_t)>& callback);
+		inline void		async_invoke(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const void* pMessage, const std::function<void(const T*, uint32_t)>& callback);
 		
 		template<class T>
-		inline void		async_invoke(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, CFuture<T>& sFuture);
+		inline void		async_invoke(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const void* pMessage, CFuture<T>& sFuture);
 		
 		template<class T>
-		inline uint32_t	sync_invoke(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, std::shared_ptr<T>& pResponseMessage);
+		inline uint32_t	sync_invoke(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const void* pMessage, std::shared_ptr<T>& pResponseMessage);
 		//==================================调用指定服务类型方法=======================================//
 
 
 
 		//==================================调用指定actor方法=======================================//
-		bool				send_a(uint32_t nServiceID, uint64_t nActorID, const google::protobuf::Message* pMessage);
+		bool				send_a(uint32_t nServiceID, uint64_t nActorID, const void* pMessage);
 		
 		template<class T>
-		inline void			async_invoke_a(uint32_t nServiceID, uint64_t nActorID, const google::protobuf::Message* pMessage, const std::function<void(const T*, uint32_t)>& callback, CServiceInvokeHolder* pServiceInvokeHolder = nullptr);
+		inline void			async_invoke_a(uint32_t nServiceID, uint64_t nActorID, const void* pMessage, const std::function<void(const T*, uint32_t)>& callback, CServiceInvokeHolder* pServiceInvokeHolder = nullptr);
 		
 		template<class T>
-		inline void			async_invoke_a(uint32_t nServiceID, uint64_t nActorID, const google::protobuf::Message* pMessage, CFuture<T>& sFuture, CServiceInvokeHolder* pServiceInvokeHolder = nullptr);
+		inline void			async_invoke_a(uint32_t nServiceID, uint64_t nActorID, const void* pMessage, CFuture<T>& sFuture, CServiceInvokeHolder* pServiceInvokeHolder = nullptr);
 		//==================================调用指定actor方法=======================================//
 
 
 
-		void				response(const SSessionInfo& sSessionInfo, const google::protobuf::Message* pMessage, uint32_t nErrorCode = eRRT_OK);
+		void				response(const SSessionInfo& sSessionInfo, const void* pMessage, uint32_t nErrorCode = eRRT_OK);
 
 		uint64_t			getHolderID() const;
 		CServiceBase*		getServiceBase() const;

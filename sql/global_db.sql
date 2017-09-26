@@ -19,7 +19,7 @@ CREATE TABLE `account_base_0` (
   `create_time` bigint(20) unsigned NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `account_name` (`account_name`,`server_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 -- ----------------------------
 -- Table structure for account_base_1
@@ -32,7 +32,7 @@ CREATE TABLE `account_base_1` (
   `create_time` bigint(20) unsigned NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `account_name` (`account_name`,`server_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 -- ----------------------------
 -- Table structure for account_base_2
@@ -45,7 +45,7 @@ CREATE TABLE `account_base_2` (
   `create_time` bigint(20) unsigned NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `account_name` (`account_name`,`server_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 -- ----------------------------
 -- Table structure for account_base_3
@@ -57,7 +57,7 @@ CREATE TABLE `account_base_3` (
   `create_time` bigint(20) unsigned NOT NULL,
   PRIMARY KEY (`account_name`),
   UNIQUE KEY `account_name` (`account_name`,`server_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 -- ----------------------------
 -- Table structure for account_base_4
@@ -70,7 +70,7 @@ CREATE TABLE `account_base_4` (
   `create_time` bigint(20) unsigned NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `account_name` (`account_name`,`server_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 -- ----------------------------
 -- Table structure for account_base_5
@@ -83,7 +83,7 @@ CREATE TABLE `account_base_5` (
   `create_time` bigint(20) unsigned NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `account_name` (`account_name`,`server_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 -- ----------------------------
 -- Table structure for account_base_6
@@ -96,7 +96,7 @@ CREATE TABLE `account_base_6` (
   `create_time` bigint(20) unsigned NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `account_name` (`account_name`,`server_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 -- ----------------------------
 -- Table structure for account_base_7
@@ -109,7 +109,7 @@ CREATE TABLE `account_base_7` (
   `create_time` bigint(20) unsigned NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `account_name` (`account_name`,`server_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 -- ----------------------------
 -- Table structure for account_base_8
@@ -121,7 +121,7 @@ CREATE TABLE `account_base_8` (
   `create_time` bigint(20) unsigned NOT NULL,
   PRIMARY KEY (`account_name`),
   UNIQUE KEY `account_name` (`account_name`,`server_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 -- ----------------------------
 -- Table structure for account_base_9
@@ -134,4 +134,4 @@ CREATE TABLE `account_base_9` (
   `create_time` bigint(20) unsigned NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `account_name` (`account_name`,`server_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;

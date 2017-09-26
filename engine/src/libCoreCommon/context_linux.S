@@ -18,6 +18,8 @@ save_context:
 	movq 56(%rdi),%r11
 	movq %rsi,56(%rdi)
 	movq %r11,%rsi
+	stmxcsr 64(%rdi)
+    fnstcw  68(%rdi)
 	pop  %r11
 	ret
 
@@ -34,6 +36,8 @@ restore_context:
 	movq 32(%rdi),%r13
 	movq 40(%rdi),%r14
 	movq 48(%rdi),%r15
+	ldmxcsr 64(%rdi)
+    fldcw   68(%rdi)
 	jmp *56(%rdi)
 
 	.size restore_context,.-restore_context

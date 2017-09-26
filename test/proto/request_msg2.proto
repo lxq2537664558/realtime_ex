@@ -1,6 +1,0 @@
-syntax = "proto2";
-
-message request_msg2 {
-	optional uint32 id = 1;
-	optional string name = 2;
-}

@@ -13,7 +13,10 @@ namespace core
 		{
 			CCoroutineImpl* pCoroutineImpl = getCoroutineMgr()->getCoroutine(nID);
 			if (nullptr == pCoroutineImpl)
+			{
+				PrintWarning("resume error invalid coroutine id: {}", nID);
 				return;
+			}
 
 			pCoroutineImpl->resume(nContext);
 		}
@@ -61,8 +64,7 @@ namespace core
 		{
 			CCoroutineMgr* pCoroutineMgr = getCoroutineMgr();
 			CCoroutineImpl* pCoroutineImpl = pCoroutineMgr->getCurrentCoroutine();
-			if (nullptr == pCoroutineImpl)
-				return;
+			DebugAst(pCoroutineImpl != nullptr);
 
 			DebugAst(pCoroutineImpl->getCoroutineID() != nID);
 

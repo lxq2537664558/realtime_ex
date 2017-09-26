@@ -1,0 +1,5 @@
+syntax = "proto2";
+
+message s2c_active_player_hero_patch_notify {
+	required uint32 id = 1;
+}

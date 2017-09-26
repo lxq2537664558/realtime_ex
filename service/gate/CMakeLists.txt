@@ -1,14 +1,16 @@
 # 查找当前目录下的所有源文件
 # 并将名称保存到 DIR_SRCS 变量
 aux_source_directory(. DIR_SRCS)
-aux_source_directory(../../proto/msg_proto_src MSG_PROTO_SRCS)
-list(APPEND DIR_SRCS ${MSG_PROTO_SRCS})
+aux_source_directory(../proto/server_proto_src SERVER_PROTO_SRCS)
+list(APPEND DIR_SRCS ${SERVER_PROTO_SRCS})
+aux_source_directory(../proto/client_proto_src CLIENT_PROTO_SRCS)
+list(APPEND DIR_SRCS ${CLIENT_PROTO_SRCS})
 
 # 设置头文件
 include_directories(../../engine/inc)
 include_directories(../../3rd/tinyxml2/include)
 include_directories(../../3rd/protobuf/include)
-include_directories(../../proto)
+include_directories(../proto)
 
 # 设置输出目录
 SET(LIBRARY_OUTPUT_PATH ${BIN_OUTPUT_PATH})

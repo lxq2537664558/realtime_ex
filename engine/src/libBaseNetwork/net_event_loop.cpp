@@ -36,7 +36,7 @@ namespace base
 
 			pSocket->release();
 		}
-		delete this->m_pWakeup;
+		SAFE_DELETE(this->m_pWakeup);
 		this->m_vecSocket.clear();
 		this->m_listCloseSocket.clear();
 #ifndef _WIN32
@@ -65,43 +65,43 @@ namespace base
 		this->m_pWakeup = new CNetWakeup();
 		if (!this->m_pWakeup->init(this))
 		{
-			delete this->m_pWakeup;
+			SAFE_DELETE(this->m_pWakeup);
 			return false;
 		}
 		return true;
 	}
 
-	bool CNetEventLoop::listen(const SNetAddr& netAddr, bool bReusePort, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, INetAccepterHandler* pHandler)
+	bool CNetEventLoop::listen(const SNetAddr& netAddr, bool bReusePort, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, net::INetAccepterHandler* pHandler)
 	{
 		CNetAccepter* pNetAccepter = new CNetAccepter();
 		if (!pNetAccepter->init(nSendBufferSize, nRecvBufferSize, this))
 		{
-			delete pNetAccepter;
+			SAFE_DELETE(pNetAccepter);
 			return false;
 		}
 		pNetAccepter->setHandler(pHandler);
 
 		if (!pNetAccepter->listen(netAddr, bReusePort))
 		{
-			delete pNetAccepter;
+			SAFE_DELETE(pNetAccepter);
 			return false;
 		}
 
 		return true;
 	}
 
-	bool CNetEventLoop::connect(const SNetAddr& netAddr, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, INetConnecterHandler* pHandler)
+	bool CNetEventLoop::connect(const SNetAddr& netAddr, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, net::INetConnecterHandler* pHandler)
 	{
 		CNetConnecter* pNetConnecter = new CNetConnecter();
 		if (!pNetConnecter->init(nSendBufferSize, nRecvBufferSize, this))
 		{
-			delete pNetConnecter;
+			SAFE_DELETE(pNetConnecter);
 			return false;
 		}
 		pNetConnecter->setHandler(pHandler);
 		if (!pNetConnecter->connect(netAddr))
 		{
-			delete pNetConnecter;
+			SAFE_DELETE(pNetConnecter);
 			return false;
 		}
 		return true;
@@ -361,33 +361,36 @@ namespace base
 		this->m_pWakeup->wakeup();
 	}
 
-	INetEventLoop* createNetEventLoop()
+	namespace net
 	{
-		CNetEventLoop* pNetFacade = new CNetEventLoop();
-
-		return pNetFacade;
-	}
-
-	bool startupNetwork()
-	{
-#ifdef _WIN32
-		WSADATA wsaData;
-		uint16_t nVersion = MAKEWORD(2, 0);
-		int32_t nRet = WSAStartup(nVersion, &wsaData);
-		if (nRet != 0)
+		INetEventLoop* createEventLoop()
 		{
-			PrintWarning("WSAStartup error {}", getLastError());
-			return false;
-		}
-#endif
-		
-		return true;
-	}
+			CNetEventLoop* pNetFacade = new CNetEventLoop();
 
-	void cleanupNetwork()
-	{
+			return pNetFacade;
+		}
+
+		bool startup()
+		{
 #ifdef _WIN32
-		WSACleanup();
+			WSADATA wsaData;
+			uint16_t nVersion = MAKEWORD(2, 0);
+			int32_t nRet = WSAStartup(nVersion, &wsaData);
+			if (nRet != 0)
+			{
+				PrintWarning("WSAStartup error {}", getLastError());
+				return false;
+			}
 #endif
+
+			return true;
+		}
+
+		void cleanup()
+		{
+#ifdef _WIN32
+			WSACleanup();
+#endif
+		}
 	}
 }

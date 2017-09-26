@@ -56,35 +56,31 @@ namespace base
 			CNetConnecter* pNetConnecter = new CNetConnecter();
 			if (!pNetConnecter->init(this->getSendBufferSize(), this->getRecvBufferSize(), this->m_pNetEventLoop))
 			{
-				delete pNetConnecter;
+				SAFE_DELETE(pNetConnecter);
 				::closesocket(nSocketID);
 				continue;
 			}
 			pNetConnecter->setSocketID(nSocketID);
 			pNetConnecter->setLocalAddr();
 			pNetConnecter->setRemoteAddr();
-			pNetConnecter->setConnecterMode(eNCM_Passive);
-			pNetConnecter->setConnecterState(eNCS_Connecting);
+			pNetConnecter->setConnecterMode(net::eNCM_Passive);
+			pNetConnecter->setConnecterState(net::eNCS_Connecting);
 			if (!pNetConnecter->nonblock())
 			{
-				delete pNetConnecter;
+				SAFE_DELETE(pNetConnecter);
 				::closesocket(nSocketID);
 				continue;
 			}
-			INetConnecterHandler* pHandler = this->m_pHandler->onAccept(pNetConnecter);
+			net::INetConnecterHandler* pHandler = this->m_pHandler->onAccept(pNetConnecter);
 			if (nullptr == pHandler)
 			{
-				delete pNetConnecter;
+				SAFE_DELETE(pNetConnecter);
 				::closesocket(nSocketID);
 				continue;
 			}
-			if (!this->m_pNetEventLoop->addSocket(pNetConnecter))
-			{
-				delete pNetConnecter;
-				delete pHandler;
-				::closesocket(nSocketID);
-				continue;
-			}
+			
+			this->m_pNetEventLoop->addSocket(pNetConnecter);
+
 			pNetConnecter->setHandler(pHandler);
 		}
 	}
@@ -177,7 +173,7 @@ namespace base
 		return true;
 	}
 
-	void CNetAccepter::setHandler(INetAccepterHandler* pHandler)
+	void CNetAccepter::setHandler(net::INetAccepterHandler* pHandler)
 	{
 		DebugAst(pHandler != nullptr);
 

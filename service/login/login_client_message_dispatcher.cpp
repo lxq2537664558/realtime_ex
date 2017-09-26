@@ -54,10 +54,10 @@ void CLoginClientMessageDispatcher::dispatch(CLoginConnectionFromClient* pLoginC
 	const char* pMessageData = reinterpret_cast<const char*>(pHeader + 1);
 	const std::string& szMessageName = iter->second.szMessageName;
 
-	google::protobuf::Message* pMessage = this->m_pLoginService->getForwardProtobufFactory()->unserialize_protobuf_message_from_buf(szMessageName, pMessageData, nSize - sizeof(message_header));
+	google::protobuf::Message* pMessage = static_cast<google::protobuf::Message*>(this->m_pLoginService->getForwardMessageSerializer()->unserializeMessageFromBuf(szMessageName, pMessageData, nSize - sizeof(message_header)));
 	if (nullptr == pMessage)
 	{
-		PrintWarning("unserialize_protobuf_message_from_buf error message_name: {}", szMessageName);
+		PrintWarning("unserializeMessageFromBuf error message_name: {}", szMessageName);
 		return;
 	}
 

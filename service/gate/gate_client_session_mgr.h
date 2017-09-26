@@ -22,6 +22,8 @@ public:
 
 	uint32_t			getSessionCount() const;
 
+	void				onGasDisconnect(uint32_t nGasID);
+
 private:
 	uint32_t								m_nNextSessionID;
 	std::map<uint64_t, CGateClientSession*>	m_mapClientSessionByPlayerID;

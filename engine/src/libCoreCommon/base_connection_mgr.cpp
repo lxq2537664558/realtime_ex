@@ -8,6 +8,7 @@
 #include "net_runnable.h"
 
 #include "libBaseCommon/time_util.h"
+#include "core_connection_mgr.h"
 
 namespace core
 {
@@ -74,25 +75,13 @@ namespace core
 		this->connect(szHost, nPort, "CBaseConnectionOtherNode", "", nSendBufferSize, nRecvBufferSize, nullptr);
 	}
 
-	void CBaseConnectionMgr::listen(const std::string& szHost, uint16_t nPort, bool bReusePort, const std::string& szType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser, ECoreConnectionType eCoreConnectionType /* = eCCT_Normal */)
+	bool CBaseConnectionMgr::listen(const std::string& szHost, uint16_t nPort, bool bReusePort, const std::string& szType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser, ECoreConnectionType eCoreConnectionType /* = eCCT_Normal */)
 	{
-		SMCT_REQUEST_SOCKET_LISTEN* pContext = new SMCT_REQUEST_SOCKET_LISTEN();
-		pContext->szHost = szHost;
-		pContext->nPort = nPort;
-		pContext->nReusePort = bReusePort;
-		pContext->szContext = szContext;
-		pContext->szType = szType;
-		pContext->nCoreConnectionType = (uint8_t)eCoreConnectionType;
-		pContext->nRecvBufferSize = nRecvBufferSize;
-		pContext->nSendBufferSize = nSendBufferSize;
-		pContext->messageParser = messageParser;
+		CCoreApp::Inst()->getNetRunnable()->pause();
+		bool bRet = CCoreApp::Inst()->getNetRunnable()->getCoreConnectionMgr()->listen(szHost, nPort, bReusePort, szType, szContext, nSendBufferSize, nRecvBufferSize, messageParser, (uint8_t)eCoreConnectionType);
+		CCoreApp::Inst()->getNetRunnable()->resume();
 
-		SMessagePacket sMessagePacket;
-		sMessagePacket.nType = eMCT_REQUEST_SOCKET_LISTEN;
-		sMessagePacket.pData = pContext;
-		sMessagePacket.nDataSize = sizeof(SMCT_REQUEST_SOCKET_LISTEN);
-
-		CCoreApp::Inst()->getNetRunnable()->getMessageQueue()->send(sMessagePacket);
+		return bRet;
 	}
 
 	uint32_t CBaseConnectionMgr::getBaseConnectionCount(const std::string& szType) const

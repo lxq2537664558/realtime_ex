@@ -1,5 +1,0 @@
-syntax = "proto2";
-
-message gate_handshake_request {
-	required string key = 1;
-}

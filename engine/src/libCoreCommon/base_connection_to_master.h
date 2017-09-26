@@ -11,13 +11,13 @@ namespace core
 		CBaseConnectionToMaster();
 		virtual ~CBaseConnectionToMaster();
 
-		virtual void		release();
+		virtual void	release();
 
-		uint32_t			getMasterID() const;
+		uint32_t		getMasterID() const;
 
-		virtual void		onConnect();
-		virtual void		onDisconnect();
-		virtual void		onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize);
+		virtual void	onConnect();
+		virtual void	onDisconnect();
+		virtual void	onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize);
 
 	private:
 		uint32_t	m_nMasterID;

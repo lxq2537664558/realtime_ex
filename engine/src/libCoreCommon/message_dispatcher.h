@@ -2,8 +2,6 @@
 
 #include "libCoreCommon/core_common.h"
 
-#include "google/protobuf/message.h"
-
 #include "message_command.h"
 
 namespace core

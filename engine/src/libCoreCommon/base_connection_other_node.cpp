@@ -26,7 +26,7 @@ namespace core
 
 	void CBaseConnectionOtherNode::onConnect()
 	{
-		if (this->getMode() == base::eNCM_Initiative)
+		if (this->getMode() == base::net::eNCM_Initiative)
 		{
 			// 同步节点名字
 			smt_notify_node_base_info netMsg;

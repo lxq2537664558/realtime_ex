@@ -31,7 +31,8 @@ namespace core
 		if (this == &rhs)
 			return rhs;
 
-		CCoreApp::Inst()->getLogicRunnable()->getTransporter()->delPendingResponseInfo(this->m_nID);
+		if (this->m_pServiceBase != nullptr)
+			this->m_pServiceBase->m_pCoreService->delPendingResponseInfo(this->m_nID);
 		this->m_pServiceBase = rhs.m_pServiceBase;
 		this->m_nID = genHolderID();
 
@@ -40,38 +41,39 @@ namespace core
 
 	CServiceInvokeHolder::~CServiceInvokeHolder()
 	{
-		CCoreApp::Inst()->getLogicRunnable()->getTransporter()->delPendingResponseInfo(this->m_nID);
+		if (this->m_pServiceBase != nullptr)
+			this->m_pServiceBase->m_pCoreService->delPendingResponseInfo(this->m_nID);
 	}
 
-	bool CServiceInvokeHolder::send(uint32_t nServiceID, const google::protobuf::Message* pMessage)
+	bool CServiceInvokeHolder::send(uint32_t nServiceID, const void* pMessage)
 	{
 		DebugAstEx(this->m_pServiceBase != nullptr, false);
 
 		return this->m_pServiceBase->getServiceInvoker()->send(nServiceID, pMessage);
 	}
 
-	bool CServiceInvokeHolder::send(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, google::protobuf::Message* pMessage)
+	bool CServiceInvokeHolder::send(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const void* pMessage)
 	{
 		DebugAstEx(this->m_pServiceBase != nullptr, false);
 
 		return this->m_pServiceBase->getServiceInvoker()->send(szServiceType, nServiceSelectorType, nServiceSelectorContext, pMessage);
 	}
 
-	void CServiceInvokeHolder::broadcast(const std::string& szServiceType, const google::protobuf::Message* pMessage)
+	void CServiceInvokeHolder::broadcast(const std::string& szServiceType, const void* pMessage)
 	{
 		DebugAst(this->m_pServiceBase != nullptr);
 
 		return this->m_pServiceBase->getServiceInvoker()->broadcast(szServiceType, pMessage);
 	}
 
-	bool CServiceInvokeHolder::send_a(uint32_t nServiceID, uint64_t nActorID, const google::protobuf::Message* pMessage)
+	bool CServiceInvokeHolder::send_a(uint32_t nServiceID, uint64_t nActorID, const void* pMessage)
 	{
 		DebugAstEx(this->m_pServiceBase != nullptr, false);
 
 		return this->m_pServiceBase->getServiceInvoker()->send_a(nServiceID, nActorID, pMessage);
 	}
 
-	void CServiceInvokeHolder::response(const SSessionInfo& sSessionInfo, const google::protobuf::Message* pMessage, uint32_t nErrorCode /*= eRRT_OK*/)
+	void CServiceInvokeHolder::response(const SSessionInfo& sSessionInfo, const void* pMessage, uint32_t nErrorCode /*= eRRT_OK*/)
 	{
 		DebugAst(this->m_pServiceBase != nullptr);
 

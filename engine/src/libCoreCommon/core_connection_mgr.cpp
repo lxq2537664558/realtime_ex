@@ -19,7 +19,7 @@
 
 namespace core
 {
-	base::INetConnecterHandler* CCoreConnectionMgr::SNetAccepterHandler::onAccept(base::INetConnecter* pNetConnecter)
+	base::net::INetConnecterHandler* CCoreConnectionMgr::SNetAccepterHandler::onAccept(base::net::INetConnecter* pNetConnecter)
 	{
 		return pCoreConnectionMgr->onAccept(this, pNetConnecter);
 	}
@@ -66,14 +66,14 @@ namespace core
 
 	bool CCoreConnectionMgr::init(uint32_t nMaxConnectionCount)
 	{
-		if (!base::startupNetwork())
+		if (!base::net::startup())
 			return false;
 
-		this->m_pNetEventLoop = base::createNetEventLoop();
+		this->m_pNetEventLoop = base::net::createEventLoop();
 		return this->m_pNetEventLoop->init(nMaxConnectionCount);
 	}
 
-	base::INetConnecterHandler* CCoreConnectionMgr::onAccept(SNetAccepterHandler* pNetAccepterHandler, base::INetConnecter* pNetConnecter)
+	base::net::INetConnecterHandler* CCoreConnectionMgr::onAccept(SNetAccepterHandler* pNetAccepterHandler, base::net::INetConnecter* pNetConnecter)
 	{
 		DebugAstEx(pNetConnecter != nullptr && pNetAccepterHandler != nullptr, nullptr);
 
@@ -91,7 +91,7 @@ namespace core
 		if (nullptr == pCoreConnection)
 			return;
 
-		base::INetConnecter* pNetConnecter = pNetActiveWaitConnecterHandler->getNetConnecter();
+		base::net::INetConnecter* pNetConnecter = pNetActiveWaitConnecterHandler->getNetConnecter();
 
 		pNetConnecter->setHandler(pCoreConnection);
 		this->delActiveWaitConnecterHandler(pNetActiveWaitConnecterHandler);

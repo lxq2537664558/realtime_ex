@@ -13,8 +13,11 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="proto_src">
+    <Filter Include="client_proto">
       <UniqueIdentifier>{eb696e68-34b4-4c73-b82f-c6937b575651}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="server_proto">
+      <UniqueIdentifier>{14c98a96-a473-4796-9b99-f3b551d9d766}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -45,35 +48,35 @@
     <ClInclude Include="gate_client_session_mgr.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\proto\msg_proto_src\gate_handshake_request.pb.h">
-      <Filter>proto_src</Filter>
+    <ClInclude Include="..\proto\server_proto_src\d2g_player_token_notify.pb.h">
+      <Filter>server_proto</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\proto\msg_proto_src\gate_handshake_response.pb.h">
-      <Filter>proto_src</Filter>
+    <ClInclude Include="..\proto\server_proto_src\g2d_addr_notify.pb.h">
+      <Filter>server_proto</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\proto\msg_proto_src\g2d_addr_notify.pb.h">
-      <Filter>proto_src</Filter>
+    <ClInclude Include="..\proto\server_proto_src\g2d_online_count_notify.pb.h">
+      <Filter>server_proto</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\proto\msg_proto_src\g2d_online_count_notify.pb.h">
-      <Filter>proto_src</Filter>
+    <ClInclude Include="..\proto\server_proto_src\g2s_player_enter_request.pb.h">
+      <Filter>server_proto</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\proto\msg_proto_src\g2s_player_enter_request.pb.h">
-      <Filter>proto_src</Filter>
+    <ClInclude Include="..\proto\server_proto_src\g2s_player_enter_response.pb.h">
+      <Filter>server_proto</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\proto\msg_proto_src\g2s_player_enter_response.pb.h">
-      <Filter>proto_src</Filter>
+    <ClInclude Include="..\proto\server_proto_src\g2s_player_heartbeat_notify.pb.h">
+      <Filter>server_proto</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\proto\msg_proto_src\g2s_player_leave_notify.pb.h">
-      <Filter>proto_src</Filter>
+    <ClInclude Include="..\proto\server_proto_src\g2s_player_leave_notify.pb.h">
+      <Filter>server_proto</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\proto\msg_proto_src\d2g_player_token_notify.pb.h">
-      <Filter>proto_src</Filter>
+    <ClInclude Include="..\proto\server_proto_src\s2g_kick_player_notify.pb.h">
+      <Filter>server_proto</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\proto\msg_proto_src\g2s_player_heartbeat_notify.pb.h">
-      <Filter>proto_src</Filter>
+    <ClInclude Include="..\proto\client_proto_src\c2g_player_handshake_request.pb.h">
+      <Filter>client_proto</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\proto\msg_proto_src\s2g_kick_player_notify.pb.h">
-      <Filter>proto_src</Filter>
+    <ClInclude Include="..\proto\client_proto_src\c2g_player_handshake_response.pb.h">
+      <Filter>client_proto</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -101,35 +104,35 @@
     <ClCompile Include="gate_client_session_mgr.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\proto\msg_proto_src\gate_handshake_request.pb.cc">
-      <Filter>proto_src</Filter>
+    <ClCompile Include="..\proto\server_proto_src\d2g_player_token_notify.pb.cc">
+      <Filter>server_proto</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\proto\msg_proto_src\gate_handshake_response.pb.cc">
-      <Filter>proto_src</Filter>
+    <ClCompile Include="..\proto\server_proto_src\g2d_addr_notify.pb.cc">
+      <Filter>server_proto</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\proto\msg_proto_src\g2d_addr_notify.pb.cc">
-      <Filter>proto_src</Filter>
+    <ClCompile Include="..\proto\server_proto_src\g2d_online_count_notify.pb.cc">
+      <Filter>server_proto</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\proto\msg_proto_src\g2d_online_count_notify.pb.cc">
-      <Filter>proto_src</Filter>
+    <ClCompile Include="..\proto\server_proto_src\g2s_player_enter_request.pb.cc">
+      <Filter>server_proto</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\proto\msg_proto_src\g2s_player_enter_request.pb.cc">
-      <Filter>proto_src</Filter>
+    <ClCompile Include="..\proto\server_proto_src\g2s_player_enter_response.pb.cc">
+      <Filter>server_proto</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\proto\msg_proto_src\g2s_player_enter_response.pb.cc">
-      <Filter>proto_src</Filter>
+    <ClCompile Include="..\proto\server_proto_src\g2s_player_heartbeat_notify.pb.cc">
+      <Filter>server_proto</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\proto\msg_proto_src\g2s_player_leave_notify.pb.cc">
-      <Filter>proto_src</Filter>
+    <ClCompile Include="..\proto\server_proto_src\g2s_player_leave_notify.pb.cc">
+      <Filter>server_proto</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\proto\msg_proto_src\d2g_player_token_notify.pb.cc">
-      <Filter>proto_src</Filter>
+    <ClCompile Include="..\proto\server_proto_src\s2g_kick_player_notify.pb.cc">
+      <Filter>server_proto</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\proto\msg_proto_src\g2s_player_heartbeat_notify.pb.cc">
-      <Filter>proto_src</Filter>
+    <ClCompile Include="..\proto\client_proto_src\c2g_player_handshake_request.pb.cc">
+      <Filter>client_proto</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\proto\msg_proto_src\s2g_kick_player_notify.pb.cc">
-      <Filter>proto_src</Filter>
+    <ClCompile Include="..\proto\client_proto_src\c2g_player_handshake_response.pb.cc">
+      <Filter>client_proto</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

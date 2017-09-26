@@ -7,48 +7,43 @@
 
 #include "tinyxml2/tinyxml2.h"
 
-#include "msg_proto_src/g2d_addr_notify.pb.h"
-#include "msg_proto_src/g2d_online_count_notify.pb.h"
+#include "server_proto_src/g2d_addr_notify.pb.h"
+#include "server_proto_src/g2d_online_count_notify.pb.h"
 
-//#define _WEB_SOCKET_
+#define _WEB_SOCKET_
 
 using namespace core;
 
-CGateService::CGateService()
-	: m_pGateClientConnectionFactory(nullptr)
-	, m_pGateClientSessionMgr(nullptr)
-	, m_pGateClientMessageDispatcher(nullptr)
-	, m_pGateClientMessageHandler(nullptr)
-	, m_pNormalProtobufFactory(nullptr)
-	, m_pJsonProtobufFactory(nullptr)
+CGateService::CGateService(const SServiceBaseInfo& sServiceBaseInfo, const std::string& szConfigFileName)
+	: CServiceBase(sServiceBaseInfo, szConfigFileName)
 {
 }
 
 CGateService::~CGateService()
 {
-	SAFE_DELETE(this->m_pGateClientConnectionFactory);
-	SAFE_DELETE(this->m_pGateClientSessionMgr);
-	SAFE_DELETE(this->m_pGateClientMessageDispatcher);
-	SAFE_DELETE(this->m_pGateClientMessageHandler);
-	SAFE_DELETE(this->m_pNormalProtobufFactory);
-	SAFE_DELETE(this->m_pJsonProtobufFactory);
 }
 
 bool CGateService::onInit()
 {
-	this->m_pGateClientMessageDispatcher = new CGateClientMessageDispatcher(this);
-	this->m_pGateClientMessageHandler = new CGateClientMessageHandler(this);
-	this->m_pGateServiceMessageHandler = new CGateServiceMessageHandler(this);
+	this->m_pGateClientMessageDispatcher = std::make_unique<CGateClientMessageDispatcher>(this);
+	this->m_pGateClientMessageHandler = std::make_unique<CGateClientMessageHandler>(this);
+	this->m_pGateServiceMessageHandler = std::make_unique<CGateServiceMessageHandler>(this);
 
-	this->m_pGateClientSessionMgr = new CGateClientSessionMgr(this);
+	this->m_pGateClientSessionMgr = std::make_unique<CGateClientSessionMgr>(this);
 
-	this->m_pGateClientConnectionFactory = new CGateClientConnectionFactory();
-	CBaseApp::Inst()->getBaseConnectionMgr()->setBaseConnectionFactory("CGateConnectionFromClient", this->m_pGateClientConnectionFactory);
+	this->m_pGateClientConnectionFactory = std::make_unique<CGateClientConnectionFactory>();
+	CBaseApp::Inst()->getBaseConnectionMgr()->setBaseConnectionFactory("CGateConnectionFromClient", this->m_pGateClientConnectionFactory.get());
 
-	this->m_pNormalProtobufFactory = new CNormalProtobufFactory();
-	this->m_pJsonProtobufFactory = new CJsonProtobufFactory();
+	this->m_pNormalProtobufSerializer = std::make_unique<CNormalProtobufSerializer>();
+	this->m_pJsonProtobufSerializer = std::make_unique<CJsonProtobufSerializer>();
 	
+	this->setForwardMessageSerializer(this->m_pJsonProtobufSerializer.get());
+	this->addServiceMessageSerializer(this->m_pNormalProtobufSerializer.get());
+
+	this->setServiceMessageSerializer(0, eMST_Protobuf);
+
 	this->setServiceConnectCallback(std::bind(&CGateService::onServiceConnect, this, std::placeholders::_1, std::placeholders::_2));
+	this->setServiceDisconnectCallback(std::bind(&CGateService::onServiceDisconnect, this, std::placeholders::_1, std::placeholders::_2));
 
 	this->m_tickerNotifyOnlineCount.setCallback(std::bind(&CGateService::onNotifyOnlineCount, this, std::placeholders::_1));
 	this->registerTicker(&this->m_tickerNotifyOnlineCount, 5000, 5000, 0);
@@ -85,10 +80,14 @@ bool CGateService::onInit()
 
 	// 启动客户端连接
 #ifdef _WEB_SOCKET_
-	CBaseApp::Inst()->getBaseConnectionMgr()->listen(szHost, nPort, true, "CGateConnectionFromClient", szBuf, nSendBufSize, nRecvBufSize, default_client_message_parser, eCCT_Websocket);
+	if (!CBaseApp::Inst()->getBaseConnectionMgr()->listen(szHost, nPort, true, "CGateConnectionFromClient", szBuf, nSendBufSize, nRecvBufSize, default_client_message_parser, eCCT_Websocket))
 #else
-	CBaseApp::Inst()->getBaseConnectionMgr()->listen(szHost, nPort, true, "CGateConnectionFromClient", szBuf, nSendBufSize, nRecvBufSize, default_client_message_parser, eCCT_Normal);
+	if (!CBaseApp::Inst()->getBaseConnectionMgr()->listen(szHost, nPort, true, "CGateConnectionFromClient", szBuf, nSendBufSize, nRecvBufSize, default_client_message_parser, eCCT_Normal))
 #endif
+	{
+		PrintWarning("gate listen error");
+		return false;
+	}
 
 	SAFE_DELETE(pConfigXML);
 
@@ -104,32 +103,30 @@ void CGateService::onFrame()
 
 void CGateService::onQuit()
 {
-
+	PrintInfo("CGateService::onQuit");
+	this->doQuit();
 }
 
 CGateClientSessionMgr* CGateService::getGateClientSessionMgr() const
 {
-	return this->m_pGateClientSessionMgr;
+	return this->m_pGateClientSessionMgr.get();
 }
 
 CGateClientMessageDispatcher* CGateService::getGateClientMessageDispatcher() const
 {
-	return this->m_pGateClientMessageDispatcher;
+	return this->m_pGateClientMessageDispatcher.get();
 }
 
 void CGateService::release()
 {
 	delete this;
-}
 
-CProtobufFactory* CGateService::getServiceProtobufFactory() const
-{
-	return this->m_pNormalProtobufFactory;
+	google::protobuf::ShutdownProtobufLibrary();
 }
 
 CGateClientMessageHandler* CGateService::getGateClientMessageHandler() const
 {
-	return this->m_pGateClientMessageHandler;
+	return this->m_pGateClientMessageHandler.get();
 }
 
 void CGateService::onServiceConnect(const std::string& szType, uint32_t nServiceID)
@@ -146,6 +143,14 @@ void CGateService::onServiceConnect(const std::string& szType, uint32_t nService
 	}
 }
 
+void CGateService::onServiceDisconnect(const std::string& szType, uint32_t nServiceID)
+{
+	if (szType == "gas")
+	{
+		this->m_pGateClientSessionMgr->onGasDisconnect(nServiceID);
+	}
+}
+
 void CGateService::onNotifyOnlineCount(uint64_t nContext)
 {
 	g2d_online_count_notify msg;
@@ -153,20 +158,11 @@ void CGateService::onNotifyOnlineCount(uint64_t nContext)
 	this->getServiceInvoker()->broadcast("dispatch", &msg);
 }
 
-core::CProtobufFactory* CGateService::getForwardProtobufFactory() const
-{
-#ifdef _WEB_SOCKET_
-	return this->m_pJsonProtobufFactory;
-#else
-	return this->m_pNormalProtobufFactory;
-#endif
-}
-
 extern "C" 
 #ifdef _WIN32
 __declspec(dllexport)
 #endif
-CServiceBase* createServiceBase()
+CServiceBase* createServiceBase(const SServiceBaseInfo& sServiceBaseInfo, const std::string& szConfigFileName)
 {
-	return new CGateService();
+	return new CGateService(sServiceBaseInfo, szConfigFileName);
 }

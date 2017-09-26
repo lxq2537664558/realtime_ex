@@ -32,6 +32,9 @@ namespace core
 		std::string						getServiceType(uint32_t nServiceID) const;
 		std::string						getServiceName(uint32_t nServiceID) const;
 		const std::vector<uint32_t>&	getServiceIDByTypeName(const std::string& szName) const;
+		bool							isValidService(uint32_t nServiceID) const;
+
+		uint32_t						getServiceInvokeTimeout(uint32_t nServiceID) const;
 		
 		const SServiceBaseInfo*			getServiceBaseInfoByServiceID(uint32_t nServiceID) const;
 		bool							getServiceBaseInfoByNodeID(uint32_t nNodeID, std::vector<SServiceBaseInfo>& vecServiceBaseInfo) const;
@@ -59,8 +62,8 @@ namespace core
 
 		struct SServiceProxyInfo
 		{
-			SServiceBaseInfo				sServiceBaseInfo;
-			CBaseConnectionOtherNode*		pBaseConnectionOtherNode;
+			SServiceBaseInfo			sServiceBaseInfo;
+			CBaseConnectionOtherNode*	pBaseConnectionOtherNode;
 		};
 
 		struct SMasterInfo
@@ -75,7 +78,8 @@ namespace core
 
 		std::map<uint32_t, SNodeProxyInfo>		m_mapNodeProxyInfo;
 		std::map<uint32_t, SServiceProxyInfo>	m_mapServiceProxyInfo;
-		std::map<std::string, uint32_t>			m_mapServiceName;
+		std::map<std::string, uint32_t>			m_mapServiceNameByID;
+		std::map<uint32_t, std::string>			m_mapServiceIDByName;
 		std::map<std::string, std::vector<uint32_t>>
 												m_mapServiceIDByServiceType;
 

@@ -19,6 +19,11 @@ namespace core
 
 	CTicker::~CTicker()
 	{
+		SAFE_DELETE(this->m_callback);
+
+		if (!this->isRegister())
+			return;
+
 		CBaseApp::Inst()->unregisterTicker(this);
 	}
 
@@ -64,7 +69,10 @@ namespace core
 
 	bool CTicker::isRegister() const
 	{
-		return this->m_pCoreContext != nullptr;
+		if (this->m_pCoreContext == nullptr)
+			return false;
+
+		return reinterpret_cast<CCoreTickerNode*>(this->m_pCoreContext)->Value.m_nState == eRegister;
 	}
 
 	void CTicker::setCallback(const std::function<void(uint64_t)>& callback)

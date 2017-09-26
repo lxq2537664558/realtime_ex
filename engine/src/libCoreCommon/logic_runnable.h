@@ -21,7 +21,7 @@ namespace core
 		CLogicRunnable();
 		virtual ~CLogicRunnable();
 
-		bool					init(tinyxml2::XMLElement* pRootXML);
+		bool					init(CLogicMessageQueue* pMessageQueue, const std::vector<CServiceBase*>& vecServiceBase, tinyxml2::XMLElement* pRootXML);
 
 		CLogicMessageQueue*		getMessageQueue() const;
 		CBaseConnectionMgr*		getBaseConnectionMgr() const;
@@ -33,14 +33,14 @@ namespace core
 		void					sendInsideMessage(const SMessagePacket& sMessagePacket);
 		void					recvInsideMessage(std::vector<SMessagePacket>& vecMessagePacket);
 		
-		void					release();
-
 	private:
 		virtual bool			onInit();
 		virtual bool			onProcess();
 		virtual void			onDestroy();
 
 		bool					dispatch(const SMessagePacket& sMessagePacket);
+
+		void					printNodeInfo();
 
 	private:
 		base::CThreadBase*							m_pThreadBase;

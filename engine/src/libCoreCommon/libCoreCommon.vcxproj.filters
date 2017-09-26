@@ -31,12 +31,6 @@
     <Filter Include="inc\db">
       <UniqueIdentifier>{de4e2532-0feb-4274-80bf-05afd4a23f10}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\db">
-      <UniqueIdentifier>{53fc2fe6-ffc5-4313-ac87-8f3a59e7a99a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\db\proto_src">
-      <UniqueIdentifier>{0ce441fe-aeaa-4735-9bc2-e49b74de8935}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\inc\libCoreCommon\ticker.h">
@@ -132,9 +126,6 @@
     <ClInclude Include="message_command.h">
       <Filter>src\framework</Filter>
     </ClInclude>
-    <ClInclude Include="monitor.h">
-      <Filter>src\framework</Filter>
-    </ClInclude>
     <ClInclude Include="net_message_queue.h">
       <Filter>src\framework</Filter>
     </ClInclude>
@@ -158,9 +149,6 @@
     </ClInclude>
     <ClInclude Include="class_info_mgr.h">
       <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreCommon\protobuf_factory.h">
-      <Filter>inc\service_base</Filter>
     </ClInclude>
     <ClInclude Include="base_connection_mgr_impl.h">
       <Filter>src\framework</Filter>
@@ -189,12 +177,6 @@
     <ClInclude Include="..\..\inc\libCoreCommon\service_invoke_holder.h">
       <Filter>inc\service_base</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreCommon\json_protobuf_factory.h">
-      <Filter>inc\service_base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreCommon\normal_protobuf_factory.h">
-      <Filter>inc\service_base</Filter>
-    </ClInclude>
     <ClInclude Include="core_websocket_connection.h">
       <Filter>src\http</Filter>
     </ClInclude>
@@ -213,29 +195,29 @@
     <ClInclude Include="..\..\inc\libCoreCommon\db_service_invoke_holder.h">
       <Filter>inc\db</Filter>
     </ClInclude>
-    <ClInclude Include="proto_src\call_command.pb.h">
-      <Filter>src\db\proto_src</Filter>
+    <ClInclude Include="..\..\inc\libCoreCommon\message_serializer.h">
+      <Filter>inc\service_base</Filter>
     </ClInclude>
-    <ClInclude Include="proto_src\delete_command.pb.h">
-      <Filter>src\db\proto_src</Filter>
+    <ClInclude Include="..\..\inc\libCoreCommon\normal_protobuf_serializer.h">
+      <Filter>inc\service_base</Filter>
     </ClInclude>
-    <ClInclude Include="proto_src\flush_command.pb.h">
-      <Filter>src\db\proto_src</Filter>
+    <ClInclude Include="..\..\inc\libCoreCommon\json_protobuf_serializer.h">
+      <Filter>inc\service_base</Filter>
     </ClInclude>
-    <ClInclude Include="proto_src\nop_command.pb.h">
-      <Filter>src\db\proto_src</Filter>
+    <ClInclude Include="..\..\inc\libCoreCommon\native_serializer.h">
+      <Filter>inc\service_base</Filter>
     </ClInclude>
-    <ClInclude Include="proto_src\query_command.pb.h">
-      <Filter>src\db\proto_src</Filter>
+    <ClInclude Include="..\..\inc\libCoreCommon\native_message.h">
+      <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="proto_src\select_command.pb.h">
-      <Filter>src\db\proto_src</Filter>
+    <ClInclude Include="native_proto_system.h">
+      <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="proto_src\insert_command.pb.h">
-      <Filter>src\db\proto_src</Filter>
+    <ClInclude Include="..\..\inc\libCoreCommon\db_native_message.h">
+      <Filter>inc\db</Filter>
     </ClInclude>
-    <ClInclude Include="proto_src\update_command.pb.h">
-      <Filter>src\db\proto_src</Filter>
+    <ClInclude Include="..\..\inc\libCoreCommon\register_message_util.h">
+      <Filter>inc\service_base</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -305,9 +287,6 @@
     <ClCompile Include="message_dispatcher.cpp">
       <Filter>src\framework</Filter>
     </ClCompile>
-    <ClCompile Include="monitor.cpp">
-      <Filter>src\framework</Filter>
-    </ClCompile>
     <ClCompile Include="net_message_queue.cpp">
       <Filter>src\framework</Filter>
     </ClCompile>
@@ -368,32 +347,11 @@
     <ClCompile Include="http_request_parser.cpp">
       <Filter>src\http</Filter>
     </ClCompile>
-    <ClCompile Include="db_service_invoke_holder.cpp">
-      <Filter>src\db</Filter>
+    <ClCompile Include="native_message.cpp">
+      <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="proto_src\call_command.pb.cc">
-      <Filter>src\db\proto_src</Filter>
-    </ClCompile>
-    <ClCompile Include="proto_src\delete_command.pb.cc">
-      <Filter>src\db\proto_src</Filter>
-    </ClCompile>
-    <ClCompile Include="proto_src\flush_command.pb.cc">
-      <Filter>src\db\proto_src</Filter>
-    </ClCompile>
-    <ClCompile Include="proto_src\nop_command.pb.cc">
-      <Filter>src\db\proto_src</Filter>
-    </ClCompile>
-    <ClCompile Include="proto_src\query_command.pb.cc">
-      <Filter>src\db\proto_src</Filter>
-    </ClCompile>
-    <ClCompile Include="proto_src\select_command.pb.cc">
-      <Filter>src\db\proto_src</Filter>
-    </ClCompile>
-    <ClCompile Include="proto_src\insert_command.pb.cc">
-      <Filter>src\db\proto_src</Filter>
-    </ClCompile>
-    <ClCompile Include="proto_src\update_command.pb.cc">
-      <Filter>src\db\proto_src</Filter>
+    <ClCompile Include="native_serializer.cpp">
+      <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -412,13 +370,16 @@
     <None Include="..\..\inc\libCoreCommon\service_invoke_holder.inl">
       <Filter>inc\service_base</Filter>
     </None>
-    <None Include="..\..\inc\libCoreCommon\json_protobuf_factory.inl">
+    <None Include="..\..\inc\libCoreCommon\normal_protobuf_serializer.inl">
       <Filter>inc\service_base</Filter>
     </None>
-    <None Include="..\..\inc\libCoreCommon\normal_protobuf_factory.inl">
+    <None Include="..\..\inc\libCoreCommon\json_protobuf_serializer.inl">
       <Filter>inc\service_base</Filter>
     </None>
-    <None Include="..\..\inc\libCoreCommon\service_base.inl">
+    <None Include="..\..\inc\libCoreCommon\db_service_invoke_holder.inl">
+      <Filter>inc\db</Filter>
+    </None>
+    <None Include="..\..\inc\libCoreCommon\register_message_util.inl">
       <Filter>inc\service_base</Filter>
     </None>
   </ItemGroup>

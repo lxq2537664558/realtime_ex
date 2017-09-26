@@ -17,7 +17,9 @@ namespace base
 	CCircleQueue<T, FIX>::~CCircleQueue()
 	{
 		if (this->m_pQueue != nullptr)
-			delete[] this->m_pQueue;
+		{
+			SAFE_DELETE_ARRAY(this->m_pQueue);
+		}
 	}
 
 	template<class T, bool FIX>
@@ -38,7 +40,7 @@ namespace base
 			this->m_nQueueBegin = 0;
 			this->m_nQueueEnd = this->m_nQueueCapacity;
 			this->m_nQueueCapacity *= 2;
-			delete [] this->m_pQueue;
+			SAFE_DELETE_ARRAY(this->m_pQueue);
 			this->m_pQueue = pNewMessageQueue;
 		}
 

@@ -7,10 +7,9 @@
 
 namespace core
 {
-	CServiceBase::CServiceBase()
-		: m_pCoreService(nullptr)
+	CServiceBase::CServiceBase(const SServiceBaseInfo& sServiceBaseInfo, const std::string& szConfigFileName)
 	{
-
+		this->m_pCoreService = new CCoreService(this, sServiceBaseInfo, szConfigFileName);
 	}
 
 	uint32_t CServiceBase::getServiceID() const
@@ -25,25 +24,25 @@ namespace core
 
 	CServiceBase::~CServiceBase()
 	{
-
+		SAFE_DELETE(this->m_pCoreService);
 	}
 
-	void CServiceBase::registerServiceMessageHandler(const std::string& szMessageName, const std::function<void(CServiceBase*, SSessionInfo, const google::protobuf::Message*)>& callback)
+	void CServiceBase::registerServiceMessageHandler(const std::string& szMessageName, const std::function<void(CServiceBase*, SSessionInfo, const void*)>& callback)
 	{
 		this->m_pCoreService->registerServiceMessageHandler(szMessageName, callback);
 	}
 
-	void CServiceBase::registerServiceForwardHandler(const std::string& szMessageName, const std::function<void(CServiceBase*, SClientSessionInfo, const google::protobuf::Message*)>& callback)
+	void CServiceBase::registerServiceForwardHandler(const std::string& szMessageName, const std::function<void(CServiceBase*, SClientSessionInfo, const void*)>& callback)
 	{
 		this->m_pCoreService->registerServiceForwardHandler(szMessageName, callback);
 	}
 
-	void CServiceBase::registerActorMessageHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SSessionInfo, const google::protobuf::Message*)>& callback)
+	void CServiceBase::registerActorMessageHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SSessionInfo, const void*)>& callback)
 	{
 		this->m_pCoreService->registerActorMessageHandler(szMessageName, callback);
 	}
 
-	void CServiceBase::registerActorForwardHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SClientSessionInfo, const google::protobuf::Message*)>& callback)
+	void CServiceBase::registerActorForwardHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SClientSessionInfo, const void*)>& callback)
 	{
 		this->m_pCoreService->registerActorForwardHandler(szMessageName, callback);
 	}
@@ -65,12 +64,12 @@ namespace core
 
 	void CServiceBase::registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
 	{
-		this->m_pCoreService->registerTicker(pTicker, nStartTime, nIntervalTime, nContext);
+		CCoreApp::Inst()->registerTicker(CTicker::eTT_Service, this->getServiceID(), 0, pTicker, nStartTime, nIntervalTime, nContext);
 	}
 
 	void CServiceBase::unregisterTicker(CTicker* pTicker)
 	{
-		this->m_pCoreService->unregisterTicker(pTicker);
+		CCoreApp::Inst()->unregisterTicker(pTicker);
 	}
 
 	void CServiceBase::doQuit()
@@ -83,7 +82,7 @@ namespace core
 		return this->m_pCoreService->getServiceInvoker();
 	}
 
-	CActorBase* CServiceBase::createActor(const std::string& szType, uint64_t nActorID, const std::string& szContext)
+	CActorBase* CServiceBase::createActor(const std::string& szType, uint64_t nActorID, const void* pContext)
 	{
 		DebugAstEx(nActorID != 0, nullptr);
 
@@ -103,7 +102,7 @@ namespace core
 		CActorBase* pActorBase = pActorFactory->createActor(szType);
 		if (nullptr == pActorBase)
 		{
-			PrintWarning("CServiceBase::createActor error factor create actor error actor_id: {} type: {}", nActorID, szType);
+			PrintWarning("CServiceBase::createActor error create actor error actor_id: {} type: {}", nActorID, szType);
 			return nullptr;
 		}
 
@@ -116,7 +115,7 @@ namespace core
 
 		this->m_pCoreService->getActorScheduler()->setCurWorkActorID(nActorID);
 
-		pActorBase->onInit(szContext);
+		pActorBase->onInit(pContext);
 // 		uint64_t nCoroutineID = coroutine::create(0, [pActorBase, szContext](uint64_t){ pActorBase->onInit(szContext); });
 // 		coroutine::resume(nCoroutineID, 0);
 
@@ -173,4 +172,35 @@ namespace core
 	{
 		this->m_pCoreService->setToGateBroadcastMessageCallback(callback);
 	}
+
+	void CServiceBase::addServiceMessageSerializer(CMessageSerializer* pMessageSerializer)
+	{
+		this->m_pCoreService->addServiceMessageSerializer(pMessageSerializer);
+	}
+
+	void CServiceBase::setServiceMessageSerializer(uint32_t nServiceID, uint32_t nType)
+	{
+		this->m_pCoreService->setServiceMessageSerializer(nServiceID, nType);
+	}
+
+	void CServiceBase::setForwardMessageSerializer(CMessageSerializer* pMessageSerializer)
+	{
+		this->m_pCoreService->setForwardMessageSerializer(pMessageSerializer);
+	}
+
+	CMessageSerializer* CServiceBase::getServiceMessageSerializer(uint32_t nServiceID) const
+	{
+		return this->m_pCoreService->getServiceMessageSerializer(nServiceID);
+	}
+
+	CMessageSerializer* CServiceBase::getForwardMessageSerializer() const
+	{
+		return this->m_pCoreService->getForwardMessageSerializer();
+	}
+
+	uint32_t CServiceBase::getServiceMessageSerializerType(uint32_t nServiceID) const
+	{
+		return this->m_pCoreService->getServiceMessageSerializerType(nServiceID);
+	}
+
 }

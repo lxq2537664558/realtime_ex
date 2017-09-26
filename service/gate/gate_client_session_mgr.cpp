@@ -8,7 +8,7 @@
 #include "libCoreCommon/base_app.h"
 #include "libCoreCommon/base_connection_mgr.h"
 
-#include "msg_proto_src/g2s_player_leave_notify.pb.h"
+#include "server_proto_src/g2s_player_leave_notify.pb.h"
 
 using namespace core;
 
@@ -124,6 +124,27 @@ void CGateClientSessionMgr::unbindSocketID(uint64_t nPlayerID)
 uint32_t CGateClientSessionMgr::getSessionCount() const
 {
 	return (uint32_t)this->m_mapClientSessionByPlayerID.size();
+}
+
+void CGateClientSessionMgr::onGasDisconnect(uint32_t nGasID)
+{
+	std::vector<uint64_t> vecPlayerID;
+	for (auto iter = this->m_mapClientSessionByPlayerID.begin(); iter != this->m_mapClientSessionByPlayerID.end(); ++iter)
+	{
+		CGateClientSession* pGateClientSession = iter->second;
+		if (nullptr == pGateClientSession)
+			continue;
+
+		if (pGateClientSession->getGasID() != nGasID)
+			continue;
+
+		vecPlayerID.push_back(pGateClientSession->getPlayerID());
+	}
+
+	for (size_t i = 0; i < vecPlayerID.size(); ++i)
+	{
+		this->destroySession(vecPlayerID[i], "gas disconnect");
+	}
 }
 
 CGateClientSession* CGateClientSessionMgr::getSessionBySocketID(uint64_t nSocketID) const

@@ -76,7 +76,7 @@ namespace base
 				{
 					bool bRet = false;
 #ifdef _WIN32
-					bRet = CreateDirectoryA(nPos.c_str(), NULL) ? true : false;
+					bRet = CreateDirectoryA(nPos.c_str(), nullptr) ? true : false;
 #else
 					bRet = (mkdir(nPos.c_str(), S_IRWXU | S_IRWXG | S_IRWXO) == 0);
 #endif

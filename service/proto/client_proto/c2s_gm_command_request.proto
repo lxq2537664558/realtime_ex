@@ -1,0 +1,6 @@
+syntax = "proto2";
+
+message c2s_gm_command_request {
+	required string name = 1;
+	optional string	arg	= 2;
+}

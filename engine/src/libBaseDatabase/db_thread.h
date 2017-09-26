@@ -1,5 +1,7 @@
 #pragma once
 
+#include "libBaseCommon/thread_base.h"
+
 #include "db_connection.h"
 #include "db_cache_mgr.h"
 #include "db_command_handler_proxy.h"
@@ -14,15 +16,18 @@
 namespace base
 {
 	class CDbThreadMgr;
-	class CDbThread
+	class CDbThread :
+		public IRunnable
 	{
+		friend class CDbThreadMgr;
+
 	public:
 		CDbThread();
 		~CDbThread();
 
-		bool		init(CDbThreadMgr* pDbThreadMgr, uint64_t nMaxCacheSize, uint32_t nWritebackTime);
+		bool		init(CDbThreadMgr* pDbThreadMgr, const db::SCacheConfigInfo& CacheConfigInfo);
 		void		query(const SDbCommand& sDbCommand);
-		void		join();
+		bool		isConnectDb() const;
 		uint32_t	getQueueSize();
 		uint32_t	getQPS();
 		CDbCommandHandlerProxy&
@@ -32,7 +37,7 @@ namespace base
 
 	private:
 		bool		connectDb(bool bInit);
-		void		onProcess();
+		bool		onProcess();
 		void		onDestroy();
 
 		bool		onPreCache(uint32_t nType, const google::protobuf::Message* pRequest, std::shared_ptr<google::protobuf::Message>& pResponse);
@@ -43,11 +48,11 @@ namespace base
 		volatile uint32_t		m_quit;
 		std::condition_variable	m_condition;
 		std::mutex				m_tCommandLock;
-		std::thread				m_thread;
 		std::list<SDbCommand>	m_listCommand;
 		CDbConnection			m_dbConnection;
 		CDbCommandHandlerProxy	m_dbCommandHandlerProxy;
 		CDbThreadMgr*			m_pDbThreadMgr;
+		CThreadBase*			m_pThreadBase;
 		CDbCacheMgr				m_dbCacheMgr;
 		uint32_t				m_nQPS;
 	};

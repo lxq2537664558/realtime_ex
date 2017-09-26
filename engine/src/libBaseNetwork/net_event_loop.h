@@ -21,15 +21,15 @@ namespace base
 
 	// 整个网络层，在Windows下采用select模型，在linux下采用epoll的水平触发模式
 	class CNetEventLoop :
-		public INetEventLoop
+		public net::INetEventLoop
 	{
 	public:
 		CNetEventLoop();
 		virtual ~CNetEventLoop();
 
 		virtual bool	init(uint32_t nMaxSocketCount);
-		virtual bool	listen(const SNetAddr& netAddr, bool bReusePort, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, INetAccepterHandler* pHandler);
-		virtual bool	connect(const SNetAddr& netAddr, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, INetConnecterHandler* pHandler);
+		virtual bool	listen(const SNetAddr& netAddr, bool bReusePort, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, net::INetAccepterHandler* pHandler);
+		virtual bool	connect(const SNetAddr& netAddr, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, net::INetConnecterHandler* pHandler);
 		virtual void	update(uint32_t nTime);
 		virtual void	wakeup();
 		virtual void	release();

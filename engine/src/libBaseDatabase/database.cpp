@@ -57,7 +57,7 @@ namespace base
 {
 	namespace db
 	{
-		uint32_t create(const std::string& szHost, uint16_t nPort, const std::string& szDb, const std::string& szUser, const std::string& szPassword, const std::string& szCharset, const std::string& szProtoDir, uint32_t nDbThreadCount, uint64_t nMaxCacheSize, uint32_t nWritebackTime)
+		uint32_t create(const std::string& szHost, uint16_t nPort, const std::string& szDb, const std::string& szUser, const std::string& szPassword, const std::string& szCharset, const std::string& szProtoDir, uint32_t nDbThreadCount, const SCacheConfigInfo& sCacheConfigInfo)
 		{
 			std::vector<std::string> vecProto;
 
@@ -104,9 +104,9 @@ namespace base
 				return 0;
 
 			CDbThreadMgr* pDbThreadMgr = new CDbThreadMgr();
-			if (!pDbThreadMgr->init(szHost, nPort, szDb, szUser, szPassword, szCharset, nDbThreadCount, nMaxCacheSize, nWritebackTime))
+			if (!pDbThreadMgr->init(szHost, nPort, szDb, szUser, szPassword, szCharset, nDbThreadCount, sCacheConfigInfo))
 			{
-				delete pDbThreadMgr;
+				SAFE_DELETE(pDbThreadMgr);
 				return 0;
 			}
 
@@ -128,8 +128,9 @@ namespace base
 				DebugAst(pDbThreadMgr != nullptr);
 			}
 			pDbThreadMgr->exit();
+			pDbThreadMgr->update();
 
-			delete pDbThreadMgr;
+			SAFE_DELETE(pDbThreadMgr);
 		}
 
 		void query(uint32_t nID, const google::protobuf::Message* pRequest, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback)
@@ -191,7 +192,13 @@ namespace base
 					return;
 				}
 
-				pMessage->CopyFrom(*pRequest);
+				std::string szData = pRequest->SerializeAsString();
+				if (!pMessage->ParseFromString(szData))
+				{
+					PrintWarning("ParseFromString message error {}", szMessageName);
+					SAFE_DELETE(pMessage);
+					return;
+				}
 			}
 			else if (szMessageName == "proto.db.query_command")
 			{
@@ -208,7 +215,13 @@ namespace base
 					return;
 				}
 
-				pMessage->CopyFrom(*pRequest);
+				std::string szData = pRequest->SerializeAsString();
+				if (!pMessage->ParseFromString(szData))
+				{
+					PrintWarning("ParseFromString message error {}", szMessageName);
+					SAFE_DELETE(pMessage);
+					return;
+				}
 			}
 			else if (szMessageName == "proto.db.insert_command")
 			{
@@ -256,7 +269,13 @@ namespace base
 					return;
 				}
 
-				pMessage->CopyFrom(*pRequest);
+				std::string szData = pRequest->SerializeAsString();
+				if (!pMessage->ParseFromString(szData))
+				{
+					PrintWarning("ParseFromString message error {}", szMessageName);
+					SAFE_DELETE(pMessage);
+					return;
+				}
 			}
 			else if (szMessageName == "proto.db.call_command")
 			{
@@ -273,7 +292,13 @@ namespace base
 					return;
 				}
 
-				pMessage->CopyFrom(*pRequest);
+				std::string szData = pRequest->SerializeAsString();
+				if (!pMessage->ParseFromString(szData))
+				{
+					PrintWarning("ParseFromString message error {}", szMessageName);
+					SAFE_DELETE(pMessage);
+					return;
+				}
 			}
 			else if (szMessageName == "proto.db.delete_command")
 			{
@@ -290,7 +315,13 @@ namespace base
 					return;
 				}
 
-				pMessage->CopyFrom(*pRequest);
+				std::string szData = pRequest->SerializeAsString();
+				if (!pMessage->ParseFromString(szData))
+				{
+					PrintWarning("ParseFromString message error {}", szMessageName);
+					SAFE_DELETE(pMessage);
+					return;
+				}
 			}
 			else if (szMessageName == "proto.db.nop_command")
 			{
@@ -307,7 +338,13 @@ namespace base
 					return;
 				}
 
-				pMessage->CopyFrom(*pRequest);
+				std::string szData = pRequest->SerializeAsString();
+				if (!pMessage->ParseFromString(szData))
+				{
+					PrintWarning("ParseFromString message error {}", szMessageName);
+					SAFE_DELETE(pMessage);
+					return;
+				}
 			}
 			else
 			{

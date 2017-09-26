@@ -46,9 +46,13 @@ namespace core
 		return g_pBaseApp;
 	}
 
-	bool CBaseApp::runAndServe(const std::string& szInstanceName, const std::string& szConfig)
+	bool CBaseApp::runAndServe(size_t argc, char** argv, const std::vector<CServiceBase*>& vecServiceBase)
 	{
-		return CCoreApp::Inst()->runAndServe(szInstanceName, szConfig);
+		if (!CCoreApp::Inst()->runAndServe(argc, argv, vecServiceBase))
+			return false;
+
+		CCoreApp::Inst()->release();
+		return true;
 	}
 
 	void CBaseApp::registerTicker(uint8_t nType, uint32_t nFromServiceID, uint64_t nFromActorID, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
@@ -78,7 +82,7 @@ namespace core
 
 	CServiceBase* CBaseApp::getServiceBase(uint32_t nServiceID) const
 	{
-		CCoreService* pCoreService = CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->getCoreServiceByID(nServiceID);
+		CCoreService* pCoreService = CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->getCoreService(nServiceID);
 		if (pCoreService == nullptr)
 			return nullptr;
 
@@ -104,7 +108,7 @@ namespace core
 
 	void CBaseApp::profiling(bool bEnable)
 	{
-		base::enableProfiling(bEnable);
+		base::profiling::enable(bEnable);
 	}
 
 	uint32_t CBaseApp::getQPS() const
@@ -114,7 +118,7 @@ namespace core
 
 	void CBaseApp::debugLog(bool bEnable)
 	{
-		base::debugLog(bEnable);
+		base::log::debug(bEnable);
 	}
 
 	bool CBaseApp::isLocalService(uint32_t nServiceID) const
@@ -126,15 +130,4 @@ namespace core
 	{
 		return CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->getServiceIDByTypeName(szName);
 	}
-}
-
-extern "C"
-#ifdef _WIN32
-__declspec(dllexport)
-#endif
-void runAndServe(const std::string& szInstanceName, const std::string& szConfig)
-{
-	core::CBaseApp* pBaseApp = new core::CBaseApp();
-	pBaseApp->runAndServe(szInstanceName, szConfig);
-	SAFE_DELETE(pBaseApp);
 }

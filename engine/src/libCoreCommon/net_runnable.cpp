@@ -15,12 +15,6 @@
 
 #define _CYCLE_TIME 10
 
-namespace
-{
-	// 放这里为了调试或者看dump的时候方便
-	core::CNetRunnable*	g_pNetRunnable;
-}
-
 namespace core
 {
 	CNetRunnable::CNetRunnable()
@@ -30,21 +24,22 @@ namespace core
 		, m_nLastCheckTime(0)
 		, m_nTotalSamplingTime(0)
 	{
-		this->m_pMessageQueue = new CNetMessageQueue();
-		this->m_pCoreConnectionMgr = new CCoreConnectionMgr();
 	}
 
 	CNetRunnable::~CNetRunnable()
 	{
-		SAFE_DELETE(this->m_pMessageQueue);
-		SAFE_DELETE(this->m_pCoreConnectionMgr);
 		SAFE_RELEASE(this->m_pThreadBase);
 	}
 
-	bool CNetRunnable::init(uint32_t nMaxSocketCount)
+	bool CNetRunnable::init(CNetMessageQueue* pMessageQueue, uint32_t nMaxSocketCount)
 	{
+		DebugAstEx(pMessageQueue != nullptr, false);
+
+		this->m_pCoreConnectionMgr = new CCoreConnectionMgr();
 		if (!this->m_pCoreConnectionMgr->init(nMaxSocketCount))
 			return false;
+
+		this->m_pMessageQueue = pMessageQueue;
 
 		this->m_nLastCheckTime = base::time_util::getGmtTime();
 
@@ -69,7 +64,7 @@ namespace core
 
 	void CNetRunnable::onDestroy()
 	{
-
+		SAFE_DELETE(this->m_pCoreConnectionMgr);
 	}
 
 	bool CNetRunnable::onProcess()
@@ -87,23 +82,23 @@ namespace core
 
 			switch (sMessagePacket.nType)
 			{
-			case eMCT_REQUEST_SOCKET_LISTEN:
-			{
-				PROFILING_GUARD(eMCT_REQUEST_SOCKET_LISTEN)
-				SMCT_REQUEST_SOCKET_LISTEN* pContext = reinterpret_cast<SMCT_REQUEST_SOCKET_LISTEN*>(sMessagePacket.pData);
-
-				this->m_pCoreConnectionMgr->listen(pContext->szHost, pContext->nPort, pContext->nReusePort != 0, pContext->szType, pContext->szContext, pContext->nSendBufferSize, pContext->nSendBufferSize, pContext->messageParser, pContext->nCoreConnectionType);
-
-				SAFE_DELETE(pContext);
-			}
-			break;
-
 			case eMCT_REQUEST_SOCKET_CONNECT:
 			{
 				PROFILING_GUARD(eMCT_REQUEST_SOCKET_CONNECT)
 				SMCT_REQUEST_SOCKET_CONNECT* pContext = reinterpret_cast<SMCT_REQUEST_SOCKET_CONNECT*>(sMessagePacket.pData);
 
-				this->m_pCoreConnectionMgr->connect(pContext->szHost, pContext->nPort, pContext->szType, pContext->szContext, pContext->nSendBufferSize, pContext->nSendBufferSize, pContext->messageParser);
+				if (!this->m_pCoreConnectionMgr->connect(pContext->szHost, pContext->nPort, pContext->szType, pContext->szContext, pContext->nSendBufferSize, pContext->nSendBufferSize, pContext->messageParser))
+				{
+					SMCT_NOTIFY_SOCKET_CONNECT_FAIL* pFailContext = new SMCT_NOTIFY_SOCKET_CONNECT_FAIL();
+					pFailContext->szContext = pContext->szContext;
+
+					SMessagePacket sMessagePacket;
+					sMessagePacket.nType = eMCT_NOTIFY_SOCKET_CONNECT_FAIL;
+					sMessagePacket.pData = pFailContext;
+					sMessagePacket.nDataSize = sizeof(SMCT_NOTIFY_SOCKET_CONNECT_FAIL);
+
+					CCoreApp::Inst()->getLogicRunnable()->getMessageQueue()->send(sMessagePacket);
+				}
 
 				SAFE_DELETE(pContext);
 			}
@@ -211,7 +206,14 @@ namespace core
 				}
 
 				CTicker* pTicker = pCoreTickerNode->Value.m_pTicker;
-				pTicker->getCallback()(pTicker->getContext());
+				if (pCoreTickerNode->Value.getRef() == 1)
+				{
+					CCoreApp::Inst()->unregisterTicker(pTicker);
+				}
+
+				auto& callback = pTicker->getCallback();
+				if (callback != nullptr)
+					callback(pTicker->getContext());
 				pCoreTickerNode->Value.release();
 			}
 			break;
@@ -226,7 +228,7 @@ namespace core
 
 		if (this->m_nTotalSamplingTime / 1000 >= CCoreApp::Inst()->getSamplingTime())
 		{
-			base::profiling(this->m_nTotalSamplingTime);
+			base::profiling::update(this->m_nTotalSamplingTime);
 			this->m_nTotalSamplingTime = 0;
 		}
 

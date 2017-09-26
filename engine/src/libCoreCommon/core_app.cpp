@@ -5,6 +5,7 @@
 #else
 #include <fcntl.h>
 #include <sys/resource.h>
+#include <dlfcn.h>
 #endif
 
 #include <signal.h>
@@ -24,7 +25,6 @@
 #include "core_app.h"
 #include "base_app.h"
 #include "base_object.h"
-#include "monitor.h"
 #include "base_connection_mgr.h"
 #include "base_connection.h"
 #include "message_command.h"
@@ -36,6 +36,8 @@
 #define _DEFAULT_HEARTBEAT_TIME		10
 #define _DEFAULT_SAMPLING_TIME		1000
 #define _DEFAULT_INVOKE_TIMEOUT	30*1000
+#define _MAX_NOFILE_SIZE 1024*10
+#define _DEFAULT_COROUTINE_STACK_SIZE 64 * 1024
 
 #ifndef _WIN32
 // 环境变量
@@ -105,10 +107,13 @@ namespace core
 		, m_nHeartbeatLimit(_DEFAULT_HEARTBEAT_LIMIT)
 		, m_nHeartbeatTime(_DEFAULT_HEARTBEAT_TIME)
 		, m_nSamplingTime(_DEFAULT_SAMPLING_TIME)
-		, m_nInvokeTimeout(_DEFAULT_INVOKE_TIMEOUT)
+		, m_nCoroutineStackSize(_DEFAULT_COROUTINE_STACK_SIZE)
 		, m_nQPS(0)
-		, m_pLogicRunnable(nullptr)
+		, m_nLocalServiceInvokeTimeout(_DEFAULT_INVOKE_TIMEOUT)
+		, m_pLogicMessageQueue(nullptr)
+		, m_pNetMessageQueue(nullptr)
 		, m_pNetRunnable(nullptr)
+		, m_pLogicRunnable(nullptr)
 		, m_pTickerRunnable(nullptr)
 	{
 		this->m_vecWebsocketBuf.reserve(UINT16_MAX);
@@ -119,19 +124,24 @@ namespace core
 
 	}
 
-	bool CCoreApp::runAndServe(const std::string& szInstanceName, const std::string& szConfig)
+	bool CCoreApp::runAndServe(size_t argc, char** argv, const std::vector<CServiceBase*>& vecServiceBase)
 	{
-		this->m_szConfig = szConfig;
+		if (argc < 2)
+			return false;
 
-		base::process_util::setInstanceName(szInstanceName.c_str());
+		this->m_szConfig = argv[1];
 
 		base::initProcessExceptionHander();
 		base::initThreadExceptionHander();
 
-		if (!this->init())
+		if (!this->init(argc, argv, vecServiceBase))
 			return false;
 
 		this->m_pLogicRunnable->join();
+
+		this->m_pTickerRunnable->quit();
+		this->m_pNetRunnable->quit();
+		
 		this->m_pTickerRunnable->join();
 		this->m_pNetRunnable->join();
 
@@ -163,8 +173,38 @@ namespace core
 		return const_cast<base::CWriteBuf&>(this->m_writeBuf);
 	}
 
-	bool CCoreApp::init()
+	bool CCoreApp::init(size_t argc, char** argv, const std::vector<CServiceBase*>& vecServiceBase)
 	{
+#ifndef _WIN32
+		struct rlimit rlp;
+		if (getrlimit(RLIMIT_CORE, &rlp) != 0)
+		{
+			fprintf(stderr, "getrlimit error: %u", base::getLastError());
+			return false;
+		}
+		if (rlp.rlim_max != RLIM_INFINITY)
+		{
+			fprintf(stderr, "core dump size error");
+			return false;
+		}
+		rlp.rlim_cur = rlp.rlim_max;
+		if (setrlimit(RLIMIT_CORE, &rlp) != 0)
+		{
+			fprintf(stderr, "setrlimit error: %u", base::getLastError());
+			return false;
+		}
+
+		if (getrlimit(RLIMIT_NOFILE, &rlp) != 0)
+		{
+			fprintf(stderr, "getrlimit error: %u", base::getLastError());
+			return false;
+		}
+		if (rlp.rlim_cur < _MAX_NOFILE_SIZE)
+		{
+			fprintf(stderr, "nofile too small");
+			return false;
+		}
+#endif
 		// 首先获取可执行文件目录
 		char szBinPath[MAX_PATH] = { 0 };
 		_getcwd(szBinPath, MAX_PATH);
@@ -231,20 +271,48 @@ namespace core
 			int32_t nMinute = pServerTimeXML->IntAttribute("minute");
 			int32_t nSecond = pServerTimeXML->IntAttribute("second");
 
-			base::time_util::STime time;
-			time.nYear = nYear;
-			time.nMon = nMonth;
-			time.nDay = nDay;
-			time.nHour = nHour;
-			time.nMin = nMinute;
-			time.nSec = nSecond;
+			base::time_util::STime sTime;
+			sTime.nYear = nYear;
+			sTime.nMon = nMonth;
+			sTime.nDay = nDay;
+			sTime.nHour = nHour;
+			sTime.nMin = nMinute;
+			sTime.nSec = nSecond;
 
-			int64_t nTime = base::time_util::getLocalTimeByTM(time);
-			nTime = base::time_util::local2GmtTime(nTime);
+			int64_t nTime = base::time_util::getGmtTimeByTM(sTime);
 			base::time_util::setGmtTime(nTime);
 		}
 
-#ifndef _WIN32
+		tinyxml2::XMLElement* pNodeInfoXML = pRootXML->FirstChildElement("node_info");
+		if (pNodeInfoXML == nullptr)
+		{
+			PrintWarning("pNodeInfoXML == nullptr");
+			return false;
+		}
+
+		uint32_t nID = pNodeInfoXML->UnsignedAttribute("node_id");
+		if (nID > UINT16_MAX)
+		{
+			PrintWarning("too big node id: {}", nID);
+			return false;
+		}
+		// 加载节点基本信息
+		this->m_sNodeBaseInfo.nID = nID;
+		this->m_sNodeBaseInfo.szName = pNodeInfoXML->Attribute("node_name");
+		if (pNodeInfoXML->Attribute("host") != nullptr)
+			this->m_sNodeBaseInfo.szHost = pNodeInfoXML->Attribute("host");
+		this->m_sNodeBaseInfo.nPort = (uint16_t)pNodeInfoXML->UnsignedAttribute("port");
+		this->m_sNodeBaseInfo.nRecvBufSize = pNodeInfoXML->UnsignedAttribute("recv_buf_size");
+		this->m_sNodeBaseInfo.nSendBufSize = pNodeInfoXML->UnsignedAttribute("send_buf_size");
+		this->m_nLocalServiceInvokeTimeout = pNodeInfoXML->UnsignedAttribute("invoke_timeout");
+		if (this->m_nLocalServiceInvokeTimeout == 0)
+			this->m_nLocalServiceInvokeTimeout = _DEFAULT_INVOKE_TIMEOUT;
+
+		base::process_util::setInstanceName(this->m_sNodeBaseInfo.szName.c_str());
+
+#ifdef _WIN32
+		::SetConsoleTitleA(base::process_util::getInstanceName());
+#else
 		// 避免在向一个已经关闭的socket写数据导致进程终止
 		struct sigaction sig_action;
 		memset(&sig_action, 0, sizeof(sig_action));
@@ -282,6 +350,7 @@ namespace core
 		}
 
 		this->m_szPID = szPID;
+		initProcessInfo(argc, argv, base::process_util::getInstanceName());
 #endif
 
 		tinyxml2::XMLElement* pLogXML = pBaseInfoXML->FirstChildElement("log");
@@ -291,13 +360,16 @@ namespace core
 			return false;
 		}
 
-		if (!base::initLog(pLogXML->IntAttribute("async") != 0, false, pLogXML->Attribute("path")))
+		if (!base::log::init(pLogXML->IntAttribute("async") != 0, false, pLogXML->Attribute("path")))
 		{
 			fprintf(stderr, "init log error\n");
 			return false;
 		}
 
-		base::debugLog(pLogXML->IntAttribute("debug") != 0);
+		base::log::debug(pLogXML->IntAttribute("debug") != 0);
+
+		this->m_pLogicMessageQueue = new CLogicMessageQueue();
+		this->m_pNetMessageQueue = new CNetMessageQueue();
 
 		this->m_pTickerRunnable = new CTickerRunnable();
 		this->m_pNetRunnable = new CNetRunnable();
@@ -311,41 +383,13 @@ namespace core
 			bProfiling = true;
 		}
 		
-		if (!base::initProfiling(bProfiling))
+		if (!base::profiling::init(bProfiling))
 		{
 			PrintWarning("base::initProfiling()");
 			return false;
 		}
 
-		if (!initMonitor())
-		{
-			PrintWarning("initMonitor()");
-			return false;
-		}
-
 		uint32_t nMaxConnectionCount = (uint32_t)pBaseInfoXML->IntAttribute("connections");
-
-		tinyxml2::XMLElement* pNodeInfoXML = pRootXML->FirstChildElement("node_info");
-		if (pNodeInfoXML == nullptr)
-		{
-			PrintWarning("pNodeInfoXML == nullptr");
-			return false;
-		}
-
-		uint32_t nID = pNodeInfoXML->UnsignedAttribute("node_id");
-		if (nID > UINT16_MAX)
-		{
-			PrintWarning("too big node id: {}", nID);
-			return false;
-		}
-		// 加载节点基本信息
-		this->m_sNodeBaseInfo.nID = nID;
-		this->m_sNodeBaseInfo.szName = pNodeInfoXML->Attribute("node_name");
-		if (pNodeInfoXML->Attribute("host") != nullptr)
-			this->m_sNodeBaseInfo.szHost = pNodeInfoXML->Attribute("host");
-		this->m_sNodeBaseInfo.nPort = (uint16_t)pNodeInfoXML->UnsignedAttribute("port");
-		this->m_sNodeBaseInfo.nRecvBufSize = pNodeInfoXML->UnsignedAttribute("recv_buf_size");
-		this->m_sNodeBaseInfo.nSendBufSize = pNodeInfoXML->UnsignedAttribute("send_buf_size");
 		
 		// 加载服务连接心跳信息
 		tinyxml2::XMLElement* pHeartbeatXML = pBaseInfoXML->FirstChildElement("heartbeat");
@@ -358,13 +402,13 @@ namespace core
 		this->m_tickerQPS.setCallback(std::bind(&CCoreApp::onQPS, this, std::placeholders::_1));
 		this->registerTicker(CTicker::eTT_Service, 0, 0, &this->m_tickerQPS, 1000, 1000, 0);
 
-		if (!this->m_pNetRunnable->init(nMaxConnectionCount))
+		if (!this->m_pNetRunnable->init(this->m_pNetMessageQueue, nMaxConnectionCount))
 		{
 			PrintWarning("this->m_pNetRunnable->init(nMaxConnectionCount)");
 			return false;
 		}
 
-		if (!this->m_pLogicRunnable->init(pRootXML))
+		if (!this->m_pLogicRunnable->init(this->m_pLogicMessageQueue, vecServiceBase, pRootXML))
 		{
 			PrintWarning("this->m_pLogicRunnable->init(pRootXML)");
 			return false;
@@ -387,16 +431,20 @@ namespace core
 	{
 		PrintInfo("CCoreApp::destroy");
 
-		SAFE_DELETE(this->m_pLogicRunnable);
-		SAFE_DELETE(this->m_pTickerRunnable);
-		SAFE_DELETE(this->m_pNetRunnable);
-
+		this->unregisterTicker(&this->m_tickerQPS);
 		CClassInfoMgr::Inst()->unRegisterClassInfo();
-		
-		uninitMonitor();
-		base::uninitProfiling();
-		base::uninitLog();
+		CClassInfoMgr::Inst()->release();
 
+		base::profiling::uninit();
+
+		SAFE_DELETE(this->m_pLogicRunnable);
+		SAFE_DELETE(this->m_pNetRunnable);
+		SAFE_DELETE(this->m_pTickerRunnable);
+
+		SAFE_DELETE(this->m_pNetMessageQueue);
+		SAFE_DELETE(this->m_pLogicMessageQueue);
+
+		base::log::uninit();
 #ifndef _WIN32
 		// 删除pid文件
 		remove(this->m_szPID.c_str());
@@ -473,9 +521,16 @@ namespace core
 		return this->m_pLogicRunnable;
 	}
 
-	uint32_t CCoreApp::getInvokeTimeout() const
+	uint32_t CCoreApp::getInvokeTimeout(uint32_t nServiceID) const
 	{
-		return this->m_nInvokeTimeout;
+		if (this->m_pLogicRunnable->getCoreServiceMgr()->isLocalService(nServiceID))
+			return this->m_nLocalServiceInvokeTimeout;
+
+		uint32_t nInvokeTimeout = this->m_pLogicRunnable->getServiceRegistryProxy()->getServiceInvokeTimeout(nServiceID);
+		if (nInvokeTimeout != 0)
+			return nInvokeTimeout;
+
+		return _DEFAULT_INVOKE_TIMEOUT;
 	}
 
 	std::vector<char>& CCoreApp::getWebsocketBuf()
@@ -483,4 +538,13 @@ namespace core
 		return this->m_vecWebsocketBuf;
 	}
 
+	uint32_t CCoreApp::getLocalServiceInvokeTimeout() const
+	{
+		return this->m_nLocalServiceInvokeTimeout;
+	}
+
+	uint32_t CCoreApp::getCoroutineStackSize() const
+	{
+		return this->m_nCoroutineStackSize;
+	}
 }

@@ -29,7 +29,7 @@ namespace core
 		/**
 		@brief: 启动框架
 		*/
-		bool						runAndServe(const std::string& szInstanceName, const std::string& szConfig);
+		bool						runAndServe(size_t argc, char** argv, const std::vector<CServiceBase*>& vecServiceBase);
 		/**
 		@brief: 注册定时器
 		nStartTime 第一次触发定时器的时间
@@ -91,7 +91,7 @@ namespace core
 
 	protected:
 		virtual bool				onInit() { return true; }
-		virtual bool				onProcess() { return true; }
+		virtual void				onProcess() { }
 		virtual void				onDestroy() { }
 	};
 }

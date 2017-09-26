@@ -1,0 +1,10 @@
+syntax = "proto2";
+
+message s2c_player_item_data {
+	required uint32 id = 1;
+	required uint32 count = 2;
+}
+
+message s2c_player_item_notify {
+	repeated s2c_player_item_data data = 1;
+}

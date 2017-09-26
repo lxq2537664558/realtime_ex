@@ -42,7 +42,7 @@ namespace core
 	{
 		if (this->m_eWebSocketState == eWSS_Connectting)
 		{
-			if (this->getMode() != base::eNCM_Passive)
+			if (this->getMode() != base::net::eNCM_Passive)
 			{
 				this->m_pNetConnecter->shutdown(true, "websocket not support active mode");
 				return nDataSize;
@@ -196,7 +196,7 @@ namespace core
 	{
 		this->m_eWebSocketState = eWSS_Connectting;
 
-		if (this->getMode() != base::eNCM_Initiative)
+		if (this->getMode() != base::net::eNCM_Initiative)
 			return;
 	}
 

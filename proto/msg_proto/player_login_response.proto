@@ -1,7 +1,0 @@
-syntax = "proto2";
-
-message player_login_response {
-	required string key = 1;
-	required uint32 result = 2;
-	required string gate_addr = 3;
-}

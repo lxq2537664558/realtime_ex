@@ -215,38 +215,22 @@ namespace core
 			DebugAst(nSize > sizeof(request_cookice) + pCookice->nMessageNameLen);
 			DebugAst(pCookice->szMessageName[pCookice->nMessageNameLen] == 0);
 
-			CCoreService* pCoreService = CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->getCoreServiceByID(pCookice->nToServiceID);
-			if (pCoreService == nullptr)
-			{
-				PrintWarning("CCoreConnection::onDispatch eMT_REQUEST error pCoreService == nullptr service_id: {}", pCookice->nToServiceID);
-				return;
-			}
-
-			CProtobufFactory* pProtobufFactory = pCoreService->getServiceBase()->getServiceProtobufFactory();
-			if (pProtobufFactory == nullptr)
-			{
-				PrintWarning("CCoreConnection::onDispatch eMT_REQUEST error pProtobufFactory == nullptr service_id: {}", pCookice->nToServiceID);
-				return;
-			}
-
 			const char* pMessageData = reinterpret_cast<const char*>(pCookice + 1) + pCookice->nMessageNameLen;
-			const std::string szMessageName = pCookice->szMessageName;
+			uint16_t nMessageDataLen = nSize - sizeof(request_cookice) - pCookice->nMessageNameLen;
+			const char* szMessageName = pCookice->szMessageName;
 
-			google::protobuf::Message* pMessage = pProtobufFactory->unserialize_protobuf_message_from_buf(szMessageName, pMessageData, nSize - sizeof(request_cookice) - pCookice->nMessageNameLen);
-			if (nullptr == pMessage)
-			{
-				PrintWarning("CCoreConnection::onDispatch eMT_REQUEST error pMessage == nullptr service_id: {} message_name: {}", pCookice->nToServiceID, szMessageName);
-				return;
-			}
-
-			char* szBuf = new char[sizeof(SMCT_REQUEST)];
+			char* szBuf = new char[sizeof(SMCT_REQUEST) + pCookice->nMessageNameLen + nMessageDataLen];
 			SMCT_REQUEST* pContext = reinterpret_cast<SMCT_REQUEST*>(szBuf);
 			pContext->nSessionID = pCookice->nSessionID;
 			pContext->nFromActorID = pCookice->nFromActorID;
 			pContext->nFromServiceID = pCookice->nFromServiceID;
 			pContext->nToActorID = pCookice->nToActorID;
 			pContext->nToServiceID = pCookice->nToServiceID;
-			pContext->pMessage = pMessage;
+			pContext->nMessageSerializerType = pCookice->nMessageSerializerType;
+			pContext->nMessageNameLen = pCookice->nMessageNameLen;
+			pContext->nMessageDataLen = nMessageDataLen;
+			base::function_util::strcpy(pContext->szMessageName, pCookice->nMessageNameLen + 1, szMessageName);
+			memcpy(szBuf + sizeof(SMCT_REQUEST) + pContext->nMessageNameLen, pMessageData, nMessageDataLen);
 
 			SMessagePacket sMessagePacket;
 			sMessagePacket.nType = eMCT_REQUEST;
@@ -263,41 +247,22 @@ namespace core
 			DebugAst(nSize >= sizeof(response_cookice) + pCookice->nMessageNameLen);
 			DebugAst(pCookice->szMessageName[pCookice->nMessageNameLen] == 0);
 
-			CCoreService* pCoreService = CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->getCoreServiceByID(pCookice->nToServiceID);
-			if (pCoreService == nullptr)
-			{
-				PrintWarning("CCoreConnection::onDispatch eMT_RESPONSE error pCoreService == nullptr service_id: {}", pCookice->nToServiceID);
-				return;
-			}
-
-			CProtobufFactory* pProtobufFactory = pCoreService->getServiceBase()->getServiceProtobufFactory();
-			if (pProtobufFactory == nullptr)
-			{
-				PrintWarning("CCoreConnection::onDispatch eMT_RESPONSE error pProtobufFactory == nullptr service_id: {}", pCookice->nToServiceID);
-				return;
-			}
-
 			const char* pMessageData = reinterpret_cast<const char*>(pCookice + 1) + pCookice->nMessageNameLen;
-			const std::string szMessageName = pCookice->szMessageName;
+			uint16_t nMessageDataLen = nSize - sizeof(response_cookice) - pCookice->nMessageNameLen;
+			const char* szMessageName = pCookice->szMessageName;
 
-			google::protobuf::Message* pMessage = nullptr;
-			if (!szMessageName.empty())
-			{
-				pMessage = pProtobufFactory->unserialize_protobuf_message_from_buf(szMessageName, pMessageData, nSize - sizeof(response_cookice) - pCookice->nMessageNameLen);
-				if (nullptr == pMessage)
-				{
-					PrintWarning("CCoreConnection::onDispatch eMT_RESPONSE error pMessage == nullptr service_id: {} message_name: {}", pCookice->nToServiceID, szMessageName);
-					return;
-				}
-			}
-
-			char* szBuf = new char[sizeof(SMCT_RESPONSE)];
+			char* szBuf = new char[sizeof(SMCT_RESPONSE) + pCookice->nMessageNameLen + nMessageDataLen];
 			SMCT_RESPONSE* pContext = reinterpret_cast<SMCT_RESPONSE*>(szBuf);
 			pContext->nSessionID = pCookice->nSessionID;
+			pContext->nFromServiceID = pCookice->nFromServiceID;
 			pContext->nToActorID = pCookice->nToActorID;
 			pContext->nToServiceID = pCookice->nToServiceID;
+			pContext->nMessageSerializerType = pCookice->nMessageSerializerType;
 			pContext->nResult = pCookice->nResult;
-			pContext->pMessage = pMessage;
+			pContext->nMessageNameLen = pCookice->nMessageNameLen;
+			pContext->nMessageDataLen = nMessageDataLen;
+			base::function_util::strcpy(pContext->szMessageName, pCookice->nMessageNameLen + 1, szMessageName);
+			memcpy(szBuf + sizeof(SMCT_RESPONSE) + pContext->nMessageNameLen, pMessageData, nMessageDataLen);
 
 			SMessagePacket sMessagePacket;
 			sMessagePacket.nType = eMCT_RESPONSE;
@@ -312,45 +277,17 @@ namespace core
 
 			DebugAst(nSize > sizeof(gate_forward_cookice));
 
-			CCoreService* pCoreService = CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->getCoreServiceByID(pCookice->nToServiceID);
-			if (pCoreService == nullptr)
-			{
-				PrintWarning("CCoreConnection::onDispatch eMT_GATE_FORWARD error pCoreService == nullptr service_id: {}", pCookice->nToServiceID);
-				return;
-			}
-
-			CProtobufFactory* pProtobufFactory = pCoreService->getServiceBase()->getForwardProtobufFactory();
-			if (pProtobufFactory == nullptr)
-			{
-				PrintWarning("CCoreConnection::onDispatch eMT_GATE_FORWARD error pProtobufFactory == nullptr service_id: {}", pCookice->nToServiceID);
-				return;
-			}
-
 			const message_header* pHeader = reinterpret_cast<const message_header*>(pCookice + 1);
 			DebugAst(sizeof(gate_forward_cookice) + pHeader->nMessageSize == nSize);
-			const std::string& szMessageName = pCoreService->getForwardMessageName(pHeader->nMessageID);
-			if (szMessageName.empty())
-			{
-				PrintWarning("CCoreConnection::onDispatch eMT_GATE_FORWARD error szMessageName.empty() service_id: {} message_id: {}", pCookice->nToServiceID, pHeader->nMessageID);
-				return;
-			}
 
-			const char* pMessageData = reinterpret_cast<const char*>(pHeader + 1);
-
-			google::protobuf::Message* pMessage = pProtobufFactory->unserialize_protobuf_message_from_buf(szMessageName, pMessageData, nSize - sizeof(gate_forward_cookice) - sizeof(message_header));
-			if (nullptr == pMessage)
-			{
-				PrintWarning("CCoreConnection::onDispatch eMT_GATE_FORWARD error pMessage == nullptr service_id: {} message_name: {}", pCookice->nToServiceID, szMessageName);
-				return;
-			}
-
-			char* szBuf = new char[sizeof(SMCT_GATE_FORWARD)];
+			char* szBuf = new char[sizeof(SMCT_GATE_FORWARD) + pHeader->nMessageSize];
 			SMCT_GATE_FORWARD* pContext = reinterpret_cast<SMCT_GATE_FORWARD*>(szBuf);
 			pContext->nSessionID = pCookice->nSessionID;
 			pContext->nFromServiceID = pCookice->nFromServiceID;
 			pContext->nToActorID = pCookice->nToActorID;
 			pContext->nToServiceID = pCookice->nToServiceID;
-			pContext->pMessage = pMessage;
+			pContext->nMessageDataLen = pHeader->nMessageSize;
+			memcpy(szBuf + sizeof(SMCT_GATE_FORWARD), pHeader, pHeader->nMessageSize);
 
 			SMessagePacket sMessagePacket;
 			sMessagePacket.nType = eMCT_GATE_FORWARD;
@@ -561,10 +498,10 @@ namespace core
 		return this->m_nState;
 	}
 
-	base::ENetConnecterMode CCoreConnection::getMode() const
+	base::net::ENetConnecterMode CCoreConnection::getMode() const
 	{
 		if (this->m_pNetConnecter == nullptr)
-			return base::eNCM_Unknown;
+			return base::net::eNCM_Unknown;
 
 		return this->m_pNetConnecter->getConnecterMode();
 	}

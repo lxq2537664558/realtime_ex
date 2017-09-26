@@ -20,13 +20,17 @@
     <ClInclude Include="..\..\inc\libCoreCommon\base_object.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\core_common.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\coroutine.h" />
+    <ClInclude Include="..\..\inc\libCoreCommon\db_native_message.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\db_service_invoke_holder.h" />
-    <ClInclude Include="..\..\inc\libCoreCommon\normal_protobuf_factory.h" />
+    <ClInclude Include="..\..\inc\libCoreCommon\native_message.h" />
+    <ClInclude Include="..\..\inc\libCoreCommon\native_serializer.h" />
+    <ClInclude Include="..\..\inc\libCoreCommon\normal_protobuf_serializer.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\future.h" />
-    <ClInclude Include="..\..\inc\libCoreCommon\json_protobuf_factory.h" />
+    <ClInclude Include="..\..\inc\libCoreCommon\json_protobuf_serializer.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\promise.h" />
-    <ClInclude Include="..\..\inc\libCoreCommon\protobuf_factory.h" />
+    <ClInclude Include="..\..\inc\libCoreCommon\message_serializer.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\proto_system.h" />
+    <ClInclude Include="..\..\inc\libCoreCommon\register_message_util.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\service_base.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\service_id_converter.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\service_invoker.h" />
@@ -49,14 +53,7 @@
     <ClInclude Include="http_request.h" />
     <ClInclude Include="http_request_parser.h" />
     <ClInclude Include="http_response.h" />
-    <ClInclude Include="proto_src\call_command.pb.h" />
-    <ClInclude Include="proto_src\delete_command.pb.h" />
-    <ClInclude Include="proto_src\flush_command.pb.h" />
-    <ClInclude Include="proto_src\insert_command.pb.h" />
-    <ClInclude Include="proto_src\nop_command.pb.h" />
-    <ClInclude Include="proto_src\query_command.pb.h" />
-    <ClInclude Include="proto_src\select_command.pb.h" />
-    <ClInclude Include="proto_src\update_command.pb.h" />
+    <ClInclude Include="native_proto_system.h" />
     <ClInclude Include="random_service_selector.h" />
     <ClInclude Include="service_registry_proxy.h" />
     <ClInclude Include="core_common_define.h" />
@@ -67,7 +64,6 @@
     <ClInclude Include="logic_runnable.h" />
     <ClInclude Include="message_command.h" />
     <ClInclude Include="message_dispatcher.h" />
-    <ClInclude Include="monitor.h" />
     <ClInclude Include="net_message_queue.h" />
     <ClInclude Include="net_runnable.h" />
     <ClInclude Include="node_connection_factory.h" />
@@ -94,19 +90,12 @@
     <ClCompile Include="base_connection_other_node.cpp" />
     <ClCompile Include="base_connection_to_master.cpp" />
     <ClCompile Include="core_websocket_connection.cpp" />
-    <ClCompile Include="db_service_invoke_holder.cpp" />
     <ClCompile Include="hash_service_selector.cpp" />
     <ClCompile Include="http_request.cpp" />
     <ClCompile Include="http_request_parser.cpp" />
     <ClCompile Include="http_response.cpp" />
-    <ClCompile Include="proto_src\call_command.pb.cc" />
-    <ClCompile Include="proto_src\delete_command.pb.cc" />
-    <ClCompile Include="proto_src\flush_command.pb.cc" />
-    <ClCompile Include="proto_src\insert_command.pb.cc" />
-    <ClCompile Include="proto_src\nop_command.pb.cc" />
-    <ClCompile Include="proto_src\query_command.pb.cc" />
-    <ClCompile Include="proto_src\select_command.pb.cc" />
-    <ClCompile Include="proto_src\update_command.pb.cc" />
+    <ClCompile Include="native_message.cpp" />
+    <ClCompile Include="native_serializer.cpp" />
     <ClCompile Include="random_service_selector.cpp" />
     <ClCompile Include="service_invoke_holder.cpp" />
     <ClCompile Include="service_registry_proxy.cpp" />
@@ -118,7 +107,6 @@
     <ClCompile Include="logic_runnable.cpp" />
     <ClCompile Include="memory_new.cpp" />
     <ClCompile Include="message_dispatcher.cpp" />
-    <ClCompile Include="monitor.cpp" />
     <ClCompile Include="net_message_queue.cpp" />
     <ClCompile Include="net_runnable.cpp" />
     <ClCompile Include="node_connection_factory.cpp" />
@@ -138,11 +126,12 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\inc\libCoreCommon\normal_protobuf_factory.inl" />
+    <None Include="..\..\inc\libCoreCommon\db_service_invoke_holder.inl" />
+    <None Include="..\..\inc\libCoreCommon\normal_protobuf_serializer.inl" />
     <None Include="..\..\inc\libCoreCommon\future.inl" />
-    <None Include="..\..\inc\libCoreCommon\json_protobuf_factory.inl" />
+    <None Include="..\..\inc\libCoreCommon\json_protobuf_serializer.inl" />
     <None Include="..\..\inc\libCoreCommon\promise.inl" />
-    <None Include="..\..\inc\libCoreCommon\service_base.inl" />
+    <None Include="..\..\inc\libCoreCommon\register_message_util.inl" />
     <None Include="..\..\inc\libCoreCommon\service_invoker.inl" />
     <None Include="..\..\inc\libCoreCommon\service_invoke_holder.inl" />
     <None Include="..\..\inc\libCoreCommon\when_all.inl" />
@@ -151,6 +140,7 @@
     <ProjectGuid>{AC3EF028-D610-4F35-904F-C981CA278960}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>libCoreCommon</RootNamespace>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -160,7 +150,7 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -198,8 +188,8 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\..\..\3rd\tinyxml2\lib\win32\$(Configuration);..\..\..\3rd\protobuf\lib\win32\$(Configuration);$(OutDir);</AdditionalLibraryDirectories>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;libBaseCommon.lib;libBaseNetwork.lib;tinyxml2d.lib;libprotobufd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\..\3rd\tinyxml2\lib\win32\$(Configuration);$(OutDir);</AdditionalLibraryDirectories>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;libBaseCommon.lib;libBaseNetwork.lib;tinyxml2d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>del /a $(OutDir)tinyxml2d.dll
@@ -224,9 +214,9 @@ copy /y ..\..\..\3rd\tinyxml2\lib\win32\$(Configuration)\tinyxml2d.pdb $(OutDir)
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;__BUILD_CORE_COMMON_DLL__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>../../inc;../../inc/libCoreCommon;../../../3rd/tinyxml2/include;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../inc;../../inc/libCoreCommon;./proto_src;../../../3rd/tinyxml2/include;../../../3rd/protobuf/include;</AdditionalIncludeDirectories>
       <StringPooling>true</StringPooling>
     </ClCompile>
     <Link>
@@ -234,6 +224,8 @@ copy /y ..\..\..\3rd\tinyxml2\lib\win32\$(Configuration)\tinyxml2d.pdb $(OutDir)
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>..\..\..\3rd\tinyxml2\lib\win32\$(Configuration);$(OutDir);</AdditionalLibraryDirectories>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;libBaseCommon.lib;libBaseNetwork.lib;tinyxml2.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Lib>
       <AdditionalDependencies>
@@ -242,12 +234,10 @@ copy /y ..\..\..\3rd\tinyxml2\lib\win32\$(Configuration)\tinyxml2d.pdb $(OutDir)
       </AdditionalLibraryDirectories>
     </Lib>
     <PreBuildEvent>
-      <Command>
-      </Command>
+      <Command>del /a $(OutDir)tinyxml2.dll</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>
-      </Command>
+      <Command>copy /y ..\..\..\3rd\tinyxml2\lib\win32\$(Configuration)\tinyxml2.dll $(OutDir)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -15,6 +15,12 @@ namespace base
 			uint32_t nHour;	// 时	[0,23]
 			uint32_t nMin;	// 分	[0,59]
 			uint32_t nSec;	// 秒	[0,59]
+			uint32_t nMSec;	// 毫秒 [0,999]
+
+			STime()
+			{
+				memset(this, 0, sizeof(STime));
+			}
 		};
 
 		/**
@@ -26,13 +32,13 @@ namespace base
 		*/
 		__BASE_COMMON_API__ STime	getGmtTimeTM(int64_t nTime = 0);
 		/**
-		@brief: 根据格式化的本地时间获取数值时间，单位毫秒
+		@brief: 根据格式化的格林威治时间获取数值时间，单位毫秒
 		*/
 		__BASE_COMMON_API__ int64_t	getGmtTimeByTM(const STime& sTime);
 		/**
 		@brief: 根据字符串格式的时间获取数值时间(字符串格式：2010-01-01 01:01:01)，单位毫秒
 		*/
-		__BASE_COMMON_API__ int64_t	getGmtTimeByBuf(char* szBuf);
+		__BASE_COMMON_API__ int64_t	getGmtTimeByBuf(const char* szBuf);
 		/**
 		@brief: 获取本地时间，单位毫秒
 		*/
@@ -48,7 +54,7 @@ namespace base
 		/**
 		@brief: 根据字符串格式的时间获取数值时间(字符串格式：2010-01-01 01:01:01)，单位毫秒
 		*/
-		__BASE_COMMON_API__ int64_t	getLocalTimeByBuf(char* szBuf);
+		__BASE_COMMON_API__ int64_t	getLocalTimeByBuf(const char* szBuf);
 		/**
 		@brief: 获取当前时区，单位毫秒
 		*/

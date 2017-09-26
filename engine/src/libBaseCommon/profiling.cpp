@@ -193,7 +193,7 @@ namespace
 		if (nTotalTime <= 0 || !g_bEnableProfiling)
 			return;
 
-		base::saveLogEx("Profiling", false, "thread_id: %d", base::CThreadBase::getCurrentID());
+		base::log::saveEx("Profiling", false, "thread_id: %d", base::CThreadBase::getCurrentID());
 		for (auto iter = this->m_mapProfilingInfoByLabel.begin(); iter != this->m_mapProfilingInfoByLabel.end(); ++iter)
 		{
 			auto& mapProfilingInfo = iter->second;
@@ -205,7 +205,7 @@ namespace
 				float fAvgTime = 0.0f;
 				if (sProfilerInfo.nCount != 0)
 					fAvgTime = (float)(sProfilerInfo.nTotalTime / (float)sProfilerInfo.nCount);
-				base::saveLogEx("Profiling", false, "label: %s context: %u min_time: %d max_time: %d avg_time: %f total_time: " INT64FMT " percentage: %f hit_count %d", iter->first, nContext, sProfilerInfo.nMinTime, sProfilerInfo.nMaxTime, fAvgTime, sProfilerInfo.nTotalTime, fPercentage, sProfilerInfo.nCount);
+				base::log::saveEx("Profiling", false, "label: %s context: %u min_time: %d max_time: %d avg_time: %f total_time: " INT64FMT " percentage: %f hit_count %d", iter->first, nContext, sProfilerInfo.nMinTime, sProfilerInfo.nMaxTime, fAvgTime, sProfilerInfo.nTotalTime, fPercentage, sProfilerInfo.nCount);
 				sProfilerInfo.nPreTime = 0;
 				sProfilerInfo.nCount = 0;
 				sProfilerInfo.nTotalTime = 0;
@@ -225,7 +225,7 @@ namespace
 
 
 			base::getFunctionInfo(iter->first, szAddr, _countof(szAddr));
-			base::saveLogEx("Profiling", false, "addr: %s min_time: %d max_time: %d avg_time: %f total_time: " INT64FMT " percentage: %f hit_count %d", szAddr, sProfilerInfo.nMinTime, sProfilerInfo.nMaxTime, fAvgTime, sProfilerInfo.nTotalTime, fPercentage, sProfilerInfo.nCount);
+			base::log::saveEx("Profiling", false, "addr: %s min_time: %d max_time: %d avg_time: %f total_time: " INT64FMT " percentage: %f hit_count %d", szAddr, sProfilerInfo.nMinTime, sProfilerInfo.nMaxTime, fAvgTime, sProfilerInfo.nTotalTime, fPercentage, sProfilerInfo.nCount);
 			sProfilerInfo.nPreTime = 0;
 			sProfilerInfo.nCount = 0;
 			sProfilerInfo.nTotalTime = 0;
@@ -234,66 +234,61 @@ namespace
 		}
 		this->m_mapProfilingInfoByLabel.clear();
 		this->m_mapProfilingInfoByAddr.clear();
-		base::saveLogEx("Profiling", false, "profiling spend: %f", this->m_nProfilingMgrSpend / (float)nTotalTime);
+		base::log::saveEx("Profiling", false, "profiling spend: %f", this->m_nProfilingMgrSpend / (float)nTotalTime);
 		this->m_nProfilingMgrSpend = 0;
 	}
 
-	// VS2013 不支持thread_local关键字
-#if defined(_MSC_VER) && _MSC_VER < 1900
-# define thread_local	__declspec(thread)
-#endif
-
-	thread_local CProfilingMgr* g_pProfilingMgr = nullptr;
-
 	CProfilingMgr* getProfilingMgr()
 	{
-		if (g_pProfilingMgr == nullptr)
-			g_pProfilingMgr = new CProfilingMgr();
+		static thread_local CProfilingMgr s_Inst;
 
-		return g_pProfilingMgr;
+		return &s_Inst;
 	}
 }
 
 namespace base
 {
-	bool initProfiling(bool bEnableProfiling)
+	namespace profiling
 	{
-		g_bEnableProfiling = bEnableProfiling;
-		return true;
-	}
+		bool init(bool bEnable)
+		{
+			g_bEnableProfiling = bEnable;
+			return true;
+		}
 
-	void enableProfiling(bool bEnable)
-	{
-		g_bEnableProfiling = bEnable;
-	}
+		void enable(bool bEnable)
+		{
+			g_bEnableProfiling = bEnable;
+		}
 
-	void uninitProfiling()
-	{
-		
-	}
+		void uninit()
+		{
 
-	void profilingBeginByLabel(const char* szLabel, uint32_t nContext)
-	{
-		getProfilingMgr()->profilingBeginByLabel(szLabel, nContext);
-	}
+		}
 
-	void profilingEndByLabel(const char* szLabel, uint32_t nContext)
-	{
-		getProfilingMgr()->endProfilingByLabel(szLabel, nContext);
-	}
+		void beginByLabel(const char* szLabel, uint32_t nContext)
+		{
+			getProfilingMgr()->profilingBeginByLabel(szLabel, nContext);
+		}
 
-	void profilingBeginByAddr(const void* pAddr)
-	{
-		getProfilingMgr()->profilingBeginByAddr(pAddr);
-	}
+		void endByLabel(const char* szLabel, uint32_t nContext)
+		{
+			getProfilingMgr()->endProfilingByLabel(szLabel, nContext);
+		}
 
-	void profilingEndByAddr(const void* pAddr)
-	{
-		getProfilingMgr()->endProfilingByAddr(pAddr);
-	}
+		void beginByAddr(const void* pAddr)
+		{
+			getProfilingMgr()->profilingBeginByAddr(pAddr);
+		}
 
-	void profiling(int64_t nTotalTime)
-	{
-		getProfilingMgr()->profiling(nTotalTime);
+		void endByAddr(const void* pAddr)
+		{
+			getProfilingMgr()->endProfilingByAddr(pAddr);
+		}
+
+		void update(int64_t nTotalTime)
+		{
+			getProfilingMgr()->profiling(nTotalTime);
+		}
 	}
 }

@@ -4,6 +4,7 @@
 #include "string_util.h"
 
 #include <string>
+#include <type_traits>
 
 namespace base
 {
@@ -44,16 +45,23 @@ namespace base
 		if (nullptr == szValue)
 			return false;
 
+		if (szValue[0] == '\0')
+		{
+			if (std::is_integral<T>::value)
+			{
+				szValue = "0";
+			}
+		}
 		return base::string_util::convert_to_value(szValue, val);
 	}
 
 	template<class T>
 	bool CCSVParser::getValue(uint32_t nRow, const char* szColumn, T& val) const
 	{
-		const char* szValue = this->getValue(nRow, szColumn);
-		if (nullptr == szValue)
+		int32_t nColumn = this->findColumn(szColumn);
+		if (nColumn < 0)
 			return false;
 
-		return base::string_util::convert_to_value(szValue, val);
+		return this->getValue(nRow, nColumn, val);
 	}
 }

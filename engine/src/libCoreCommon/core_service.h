@@ -21,13 +21,12 @@ namespace core
 		friend class CCoreApp;
 
 	public:
-		CCoreService();
+		CCoreService(CServiceBase* pServiceBase, const SServiceBaseInfo& sServiceBaseInfo, const std::string& szConfigFileName);
 		~CCoreService();
 
-		bool					init(CServiceBase* pServiceBase, const SServiceBaseInfo& sServiceBaseInfo, const std::string& szConfigFileName);
 		void					quit();
 
-		void					run();
+		void					onFrame();
 
 		bool					onInit();
 		void					doQuit();
@@ -36,9 +35,6 @@ namespace core
 
 		uint32_t				getServiceID() const;
 		const SServiceBaseInfo&	getServiceBaseInfo() const;
-
-		void					registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
-		void					unregisterTicker(CTicker* pTicker);
 
 		CServiceInvoker*		getServiceInvoker() const;
 		CActorScheduler*		getActorScheduler() const;
@@ -55,20 +51,20 @@ namespace core
 		std::function<void(const uint64_t*, uint16_t, const void*, uint16_t)>&
 								getToGateBroadcastMessageCallback();
 
-		void					registerServiceMessageHandler(const std::string& szMessageName, const std::function<void(CServiceBase*, SSessionInfo, const google::protobuf::Message*)>& callback);
-		void					registerServiceForwardHandler(const std::string& szMessageName, const std::function<void(CServiceBase*, SClientSessionInfo, const google::protobuf::Message*)>& callback);
+		void					registerServiceMessageHandler(const std::string& szMessageName, const std::function<void(CServiceBase*, SSessionInfo, const void*)>& callback);
+		void					registerServiceForwardHandler(const std::string& szMessageName, const std::function<void(CServiceBase*, SClientSessionInfo, const void*)>& callback);
 		
-		void					registerActorMessageHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SSessionInfo, const google::protobuf::Message*)>& callback);
-		void					registerActorForwardHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SClientSessionInfo, const google::protobuf::Message*)>& callback);
+		void					registerActorMessageHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SSessionInfo, const void*)>& callback);
+		void					registerActorForwardHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SClientSessionInfo, const void*)>& callback);
 		
-		std::function<void(CServiceBase*, SSessionInfo, const google::protobuf::Message*)>&
+		std::function<void(CServiceBase*, SSessionInfo, const void*)>&
 								getServiceMessageHandler(const std::string& szMessageName);
-		std::function<void(CServiceBase*, SClientSessionInfo, const google::protobuf::Message*)>&
+		std::function<void(CServiceBase*, SClientSessionInfo, const void*)>&
 								getServiceForwardHandler(const std::string& szMessageName);
 
-		std::function<void(CActorBase*, SSessionInfo, const google::protobuf::Message*)>&
+		std::function<void(CActorBase*, SSessionInfo, const void*)>&
 								getActorMessageHandler(const std::string& szMessageName);
-		std::function<void(CActorBase*, SClientSessionInfo, const google::protobuf::Message*)>&
+		std::function<void(CActorBase*, SClientSessionInfo, const void*)>&
 								getActorForwardHandler(const std::string& szMessageName);
 
 		const std::string&		getForwardMessageName(uint32_t nMessageID);
@@ -83,6 +79,27 @@ namespace core
 		EServiceRunState		getRunState() const;
 		const std::string&		getConfigFileName() const;
 		
+		bool					isServiceHealth(uint32_t nServiceID) const;
+		void					updateServiceHealth(uint32_t nServiceID, bool bTimeout);
+		
+		SPendingResponseInfo*	getPendingResponseInfo(uint64_t nSessionID);
+		SPendingResponseInfo*	addPendingResponseInfo(uint32_t nToServiceID, uint64_t nSessionID, uint64_t nCoroutineID, const std::function<void(std::shared_ptr<void>, uint32_t)>& callback, uint64_t nHolderID);
+		void					delPendingResponseInfo(uint64_t nHolderID);
+
+		uint64_t				genSessionID();
+
+		void					addServiceMessageSerializer(CMessageSerializer* pMessageSerializer);
+		void					setServiceMessageSerializer(uint32_t nServiceID, uint32_t nType);
+		void					setForwardMessageSerializer(CMessageSerializer* pMessageSerializer);
+		uint32_t				getServiceMessageSerializerType(uint32_t nServiceID) const;
+		CMessageSerializer*		getServiceMessageSerializer(uint32_t nServiceID) const;
+		CMessageSerializer*		getServiceMessageSerializerByType(uint8_t nType) const;
+		CMessageSerializer*		getForwardMessageSerializer() const;
+
+	private:
+		void					onCheckServiceHealth(uint64_t nContext);
+		void					onRequestMessageTimeout(uint64_t nContext);
+
 	private:
 		SServiceBaseInfo		m_sServiceBaseInfo;
 		std::string				m_szConfigFileName;
@@ -91,15 +108,25 @@ namespace core
 		CServiceInvoker*		m_pServiceInvoker;
 		CActorScheduler*		m_pActorScheduler;
 		CMessageDispatcher*		m_pMessageDispatcher;
-		
-		std::map<std::string, std::function<void(CServiceBase*, SSessionInfo, const google::protobuf::Message*)>>
+		CTicker					m_tickerCheckHealth;
+
+		uint64_t				m_nNextSessionID;
+		std::map<uint64_t, SPendingResponseInfo*>	
+								m_mapPendingResponseInfo;
+		std::map<uint64_t, std::list<uint64_t>>
+								m_mapHolderSessionIDList;
+
+		std::map<uint32_t, int32_t>	
+								m_mapServiceHealth;	// ·þÎñ½¡¿µ¶È
+
+		std::map<std::string, std::function<void(CServiceBase*, SSessionInfo, const void*)>>
 								m_mapServiceMessageHandler;
-		std::map<std::string, std::function<void(CServiceBase*, SClientSessionInfo, const google::protobuf::Message*)>>
+		std::map<std::string, std::function<void(CServiceBase*, SClientSessionInfo, const void*)>>
 								m_mapServiceForwardHandler;
 
-		std::map<std::string, std::function<void(CActorBase*, SSessionInfo, const google::protobuf::Message*)>>
+		std::map<std::string, std::function<void(CActorBase*, SSessionInfo, const void*)>>
 								m_mapActorMessageHandler;
-		std::map<std::string, std::function<void(CActorBase*, SClientSessionInfo, const google::protobuf::Message*)>>
+		std::map<std::string, std::function<void(CActorBase*, SClientSessionInfo, const void*)>>
 								m_mapActorForwardHandler;
 
 		std::map<uint32_t, std::string>
@@ -118,5 +145,12 @@ namespace core
 
 		std::map<uint32_t, CServiceSelector*>
 								m_mapServiceSelector;
+
+		std::map<uint32_t, CMessageSerializer*>
+								m_mapMessageSerializer;
+		std::map<uint32_t, uint32_t>
+								m_mapServiceMessageSerializerType;
+		uint32_t				m_nDefaultServiceMessageSerializerType;
+		CMessageSerializer*		m_pForwardMessageSerializer;
 	};
 }

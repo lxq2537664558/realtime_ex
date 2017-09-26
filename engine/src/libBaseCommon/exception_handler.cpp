@@ -3,6 +3,7 @@
 #include "function_util.h"
 #include "time_util.h"
 #include "process_util.h"
+#include "file_util.h"
 
 #ifdef _WIN32
 #include <direct.h>
@@ -25,7 +26,7 @@
 #include <iostream>
 #include <memory>
 #include <mutex>
-#include "file_util.h"
+#include <algorithm>
 
 #ifdef _WIN32
 #pragma comment( lib, "dbghelp.lib" )
@@ -171,7 +172,7 @@ namespace
 				pStack[i - nBegin] = reinterpret_cast<void*>(sf.AddrPC.Offset);
 		}
 
-		return __min(i - nBegin, nStackSize);
+		return std::min<uint32_t>(i - nBegin, nStackSize);
 	}
 
 	size_t CGenWinDump::getStackInfo(void** pStack, uint32_t nDepth, char* szBuf, size_t nBufSize)

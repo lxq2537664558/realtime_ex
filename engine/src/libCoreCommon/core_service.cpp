@@ -5,43 +5,48 @@
 #include "actor_base.h"
 #include "hash_service_selector.h"
 #include "random_service_selector.h"
+#include "native_proto_system.h"
+#include "native_serializer.h"
 
-#include <mutex>
+#include "libBaseCommon/rand_gen.h"
+#include "libBaseCommon/time_util.h"
+#include "libBaseCommon/defer.h"
+
+#define _MAX_SERVICE_HEALTH 100
+#define _HIGH_SERVICE_HEALTH 80
+#define _LOW_SERVICE_HEALTH 20
+#define _SUCCESS_HEALTH		1
+#define _TIMEOUT_HEALTH		2
+#define _CHECK_SERVICE_HEALTH_TIME 100
 
 namespace core
 {
-	CCoreService::CCoreService()
+	CCoreService::CCoreService(CServiceBase* pServiceBase, const SServiceBaseInfo& sServiceBaseInfo, const std::string& szConfigFileName)
 		: m_eRunState(eSRS_Start)
-		, m_pServiceInvoker(nullptr)
-		, m_pActorScheduler(nullptr)
-		, m_pMessageDispatcher(nullptr)
-		, m_pServiceBase(nullptr)
+		, m_szConfigFileName(szConfigFileName)
+		, m_sServiceBaseInfo(sServiceBaseInfo)
+		, m_pServiceBase(pServiceBase)
+		, m_nNextSessionID(0)
+		, m_pForwardMessageSerializer(nullptr)
+		, m_nDefaultServiceMessageSerializerType(0)
 	{
-
-	}
-
-	CCoreService::~CCoreService()
-	{
-
-	}
-
-	bool CCoreService::init(CServiceBase* pServiceBase, const SServiceBaseInfo& sServiceBaseInfo, const std::string& szConfigFileName)
-	{
-		DebugAstEx(pServiceBase != nullptr, false);
-		
-		this->m_szConfigFileName = szConfigFileName;
-		this->m_sServiceBaseInfo = sServiceBaseInfo;
-		this->m_pServiceBase = pServiceBase;
-		this->m_pServiceBase->m_pCoreService = this;
-		
 		this->m_pActorScheduler = new CActorScheduler(this);
 		this->m_pServiceInvoker = new CServiceInvoker(pServiceBase);
 		this->m_pMessageDispatcher = new CMessageDispatcher(this);
 
 		this->m_mapServiceSelector[eSST_Random] = new CRandomServiceSelector();
 		this->m_mapServiceSelector[eSST_Hash] = new CHashServiceSelector();
+		this->m_tickerCheckHealth.setCallback(std::bind(&CCoreService::onCheckServiceHealth, this, std::placeholders::_1));
+	}
 
-		return true;
+	CCoreService::~CCoreService()
+	{
+		SAFE_DELETE(this->m_pActorScheduler);
+		SAFE_DELETE(this->m_pServiceInvoker);
+		SAFE_DELETE(this->m_pMessageDispatcher);
+
+		SAFE_DELETE(this->m_mapServiceSelector[eSST_Random]);
+		SAFE_DELETE(this->m_mapServiceSelector[eSST_Hash]);
 	}
 
 	void CCoreService::quit()
@@ -59,6 +64,17 @@ namespace core
 
 		this->m_eRunState = eSRS_Normal;
 
+		this->addServiceMessageSerializer(new CNativeSerializer());
+		this->registerServiceMessageHandler("service_health_request", [this](CServiceBase* pServiceBase, SSessionInfo sSessionInfo, const void*)
+		{
+			service_health_response response_msg;
+			uint32_t nMessageSerializer = this->getServiceMessageSerializerType(sSessionInfo.nFromServiceID);
+			pServiceBase->setServiceMessageSerializer(sSessionInfo.nFromServiceID, eMST_Native);
+			pServiceBase->getServiceInvoker()->response(sSessionInfo, &response_msg, eRRT_OK);
+			pServiceBase->setServiceMessageSerializer(sSessionInfo.nFromServiceID, nMessageSerializer);
+		});
+
+		this->m_pServiceBase->registerTicker(&this->m_tickerCheckHealth, _CHECK_SERVICE_HEALTH_TIME, _CHECK_SERVICE_HEALTH_TIME, 0);
 		return true;
 	}
 
@@ -77,12 +93,12 @@ namespace core
 		return this->m_sServiceBaseInfo;
 	}
 
-	void CCoreService::registerServiceMessageHandler(const std::string& szMessageName, const std::function<void(CServiceBase*, SSessionInfo, const google::protobuf::Message*)>& callback)
+	void CCoreService::registerServiceMessageHandler(const std::string& szMessageName, const std::function<void(CServiceBase*, SSessionInfo, const void*)>& callback)
 	{
 		this->m_mapServiceMessageHandler[szMessageName] = callback;
 	}
 
-	void CCoreService::registerServiceForwardHandler(const std::string& szMessageName, const std::function<void(CServiceBase*, SClientSessionInfo, const google::protobuf::Message*)>& callback)
+	void CCoreService::registerServiceForwardHandler(const std::string& szMessageName, const std::function<void(CServiceBase*, SClientSessionInfo, const void*)>& callback)
 	{
 		uint32_t nMessageID = _GET_MESSAGE_ID(szMessageName);
 
@@ -99,12 +115,12 @@ namespace core
 		this->m_mapServiceForwardHandler[szMessageName] = callback;
 	}
 
-	void CCoreService::registerActorMessageHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SSessionInfo, const google::protobuf::Message*)>& callback)
+	void CCoreService::registerActorMessageHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SSessionInfo, const void*)>& callback)
 	{
 		this->m_mapActorMessageHandler[szMessageName] = callback;
 	}
 
-	void CCoreService::registerActorForwardHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SClientSessionInfo, const google::protobuf::Message*)>& callback)
+	void CCoreService::registerActorForwardHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SClientSessionInfo, const void*)>& callback)
 	{
 		uint32_t nMessageID = _GET_MESSAGE_ID(szMessageName);
 
@@ -121,80 +137,64 @@ namespace core
 		this->m_mapActorForwardHandler[szMessageName] = callback;
 	}
 
-	std::function<void(CServiceBase*, SSessionInfo, const google::protobuf::Message*)>& CCoreService::getServiceMessageHandler(const std::string& szMessageName)
+	std::function<void(CServiceBase*, SSessionInfo, const void*)>& CCoreService::getServiceMessageHandler(const std::string& szMessageName)
 	{
 		auto iter = this->m_mapServiceMessageHandler.find(szMessageName);
 		if (iter == this->m_mapServiceMessageHandler.end())
 		{
-			static std::function<void(CServiceBase*, SSessionInfo, const google::protobuf::Message*)> callback;
+			static std::function<void(CServiceBase*, SSessionInfo, const void*)> callback;
 			return callback;
 		}
 
 		return iter->second;
 	}
 
-	std::function<void(CServiceBase*, SClientSessionInfo, const google::protobuf::Message*)>& CCoreService::getServiceForwardHandler(const std::string& szMessageName)
+	std::function<void(CServiceBase*, SClientSessionInfo, const void*)>& CCoreService::getServiceForwardHandler(const std::string& szMessageName)
 	{
 		auto iter = this->m_mapServiceForwardHandler.find(szMessageName);
 		if (iter == this->m_mapServiceForwardHandler.end())
 		{
-			static std::function<void(CServiceBase*, SClientSessionInfo, const google::protobuf::Message*)> callback;
+			static std::function<void(CServiceBase*, SClientSessionInfo, const void*)> callback;
 			return callback;
 		}
 
 		return iter->second;
 	}
 
-	std::function<void(CActorBase*, SSessionInfo, const google::protobuf::Message*)>& CCoreService::getActorMessageHandler(const std::string& szMessageName)
+	std::function<void(CActorBase*, SSessionInfo, const void*)>& CCoreService::getActorMessageHandler(const std::string& szMessageName)
 	{
 		auto iter = this->m_mapActorMessageHandler.find(szMessageName);
 		if (iter == this->m_mapActorMessageHandler.end())
 		{
-			static std::function<void(CActorBase*, SSessionInfo, const google::protobuf::Message*)> callback;
+			static std::function<void(CActorBase*, SSessionInfo, const void*)> callback;
 			return callback;
 		}
 
 		return iter->second;
 	}
 
-	std::function<void(CActorBase*, SClientSessionInfo, const google::protobuf::Message*)>& CCoreService::getActorForwardHandler(const std::string& szMessageName)
+	std::function<void(CActorBase*, SClientSessionInfo, const void*)>& CCoreService::getActorForwardHandler(const std::string& szMessageName)
 	{
 		auto iter = this->m_mapActorForwardHandler.find(szMessageName);
 		if (iter == this->m_mapActorForwardHandler.end())
 		{
-			static std::function<void(CActorBase*, SClientSessionInfo, const google::protobuf::Message*)> callback;
+			static std::function<void(CActorBase*, SClientSessionInfo, const void*)> callback;
 			return callback;
 		}
 
 		return iter->second;
-	}
-
-	void CCoreService::registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
-	{
-		uint64_t nCurWorkActorID = this->m_pActorScheduler->getCurWorkActorID();
-		if (nCurWorkActorID != 0)
-		{
-			CCoreApp::Inst()->registerTicker(CTicker::eTT_Actor, this->getServiceID(), nCurWorkActorID, pTicker, nStartTime, nIntervalTime, nContext);
-		}
-		else
-		{
-			CCoreApp::Inst()->registerTicker(CTicker::eTT_Service, this->getServiceID(), 0, pTicker, nStartTime, nIntervalTime, nContext);
-		}
-	}
-
-	void CCoreService::unregisterTicker(CTicker* pTicker)
-	{
-		CCoreApp::Inst()->unregisterTicker(pTicker);
 	}
 
 	void CCoreService::doQuit()
 	{
 		DebugAst(this->m_eRunState == eSRS_Quitting);
 
+		PrintInfo("CCoreService::doQuit service_id: {}", this->getServiceID());
+		
 		this->m_eRunState = eSRS_Quit;
 	}
 
-	void CCoreService::run()
+	void CCoreService::onFrame()
 	{
 		this->m_pServiceBase->onFrame();
 	}
@@ -294,4 +294,256 @@ namespace core
 	{
 		return this->m_fnToGateBroadcastMessageCallback;
 	}
+
+	bool CCoreService::isServiceHealth(uint32_t nServiceID) const
+	{
+		if (!CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->isValidService(nServiceID))
+			return false;
+
+		auto iter = this->m_mapServiceHealth.find(nServiceID);
+		if (iter == this->m_mapServiceHealth.end())
+			return true;
+
+		if (iter->second >= _HIGH_SERVICE_HEALTH)
+			return true;
+		
+		uint32_t nRand = base::CRandGen::getGlobalRand(_MAX_SERVICE_HEALTH);
+		return nRand <= (uint32_t)iter->second;
+	}
+
+	void CCoreService::updateServiceHealth(uint32_t nServiceID, bool bTimeout)
+	{
+		auto iter = this->m_mapServiceHealth.find(nServiceID);
+		if (iter == this->m_mapServiceHealth.end())
+		{
+			this->m_mapServiceHealth[nServiceID] = _MAX_SERVICE_HEALTH;
+			iter = this->m_mapServiceHealth.find(nServiceID);
+			if (iter == this->m_mapServiceHealth.end())
+				return;
+		}
+
+		int32_t& nHealth = iter->second;
+		if (bTimeout)
+			nHealth = std::max<int32_t>(nHealth - _TIMEOUT_HEALTH, 0);
+		else
+			nHealth = std::min<int32_t>(nHealth + _SUCCESS_HEALTH, _MAX_SERVICE_HEALTH);
+	}
+
+	uint64_t CCoreService::genSessionID()
+	{
+		++this->m_nNextSessionID;
+		if (this->m_nNextSessionID == 0)
+			this->m_nNextSessionID = 1;
+
+		return this->m_nNextSessionID;
+	}
+
+	void CCoreService::onRequestMessageTimeout(uint64_t nContext)
+	{
+		auto iter = this->m_mapPendingResponseInfo.find(nContext);
+		if (iter == this->m_mapPendingResponseInfo.end())
+		{
+			PrintWarning("iter == this->m_mapProtoBufResponseInfo.end() session_id: {}", nContext);
+			return;
+		}
+
+		SPendingResponseInfo* pPendingResponseInfo = iter->second;
+		this->m_mapPendingResponseInfo.erase(iter);
+		if (nullptr == pPendingResponseInfo)
+		{
+			PrintWarning("nullptr == pPendingResponseInfo session_id: {}", nContext);
+			return;
+		}
+
+		defer([&]()
+		{
+			SAFE_DELETE(pPendingResponseInfo);
+		});
+
+		this->updateServiceHealth(pPendingResponseInfo->nToServiceID, true);
+
+		if (pPendingResponseInfo->nCoroutineID != 0)
+		{
+			SSyncCallResultInfo* pSyncCallResultInfo = new SSyncCallResultInfo();
+			pSyncCallResultInfo->nResult = eRRT_TIME_OUT;
+			pSyncCallResultInfo->pMessage = nullptr;
+			coroutine::setLocalData(pPendingResponseInfo->nCoroutineID, "response", reinterpret_cast<uint64_t>(pSyncCallResultInfo));
+
+			coroutine::resume(pPendingResponseInfo->nCoroutineID, 0);
+		}
+		else
+		{
+			DebugAst(pPendingResponseInfo->callback != nullptr);
+
+			pPendingResponseInfo->callback(nullptr, eRRT_TIME_OUT);
+		}
+	}
+
+	SPendingResponseInfo* CCoreService::getPendingResponseInfo(uint64_t nSessionID)
+	{
+		auto iter = this->m_mapPendingResponseInfo.find(nSessionID);
+		if (iter == this->m_mapPendingResponseInfo.end())
+			return nullptr;
+
+		SPendingResponseInfo* pPendingResponseInfo = iter->second;
+		this->m_mapPendingResponseInfo.erase(iter);
+		if (pPendingResponseInfo->nHolderID != 0)
+		{
+			auto iter = this->m_mapHolderSessionIDList.find(pPendingResponseInfo->nHolderID);
+			if (iter != this->m_mapHolderSessionIDList.end())
+			{
+				std::list<uint64_t>& listSessionID = iter->second;
+				listSessionID.erase(pPendingResponseInfo->iterHolder);
+			}
+		}
+		return pPendingResponseInfo;
+	}
+
+	SPendingResponseInfo* CCoreService::addPendingResponseInfo(uint32_t nToServiceID, uint64_t nSessionID, uint64_t nCoroutineID, const std::function<void(std::shared_ptr<void>, uint32_t)>& callback, uint64_t nHolderID)
+	{
+		auto iter = this->m_mapPendingResponseInfo.find(nSessionID);
+		DebugAstEx(iter == this->m_mapPendingResponseInfo.end(), nullptr);
+
+		SPendingResponseInfo* pPendingResponseInfo = new SPendingResponseInfo();
+		pPendingResponseInfo->callback = callback;
+		pPendingResponseInfo->nSessionID = nSessionID;
+		pPendingResponseInfo->nCoroutineID = nCoroutineID;
+		pPendingResponseInfo->nHolderID = nHolderID;
+		pPendingResponseInfo->nBeginTime = base::time_util::getGmtTime();
+		pPendingResponseInfo->nToServiceID = nToServiceID;
+		pPendingResponseInfo->tickTimeout.setCallback(std::bind(&CCoreService::onRequestMessageTimeout, this, std::placeholders::_1));
+		CBaseApp::Inst()->registerTicker(CTicker::eTT_Service, 0, 0, &pPendingResponseInfo->tickTimeout, CCoreApp::Inst()->getInvokeTimeout(pPendingResponseInfo->nToServiceID), 0, nSessionID);
+
+		this->m_mapPendingResponseInfo[pPendingResponseInfo->nSessionID] = pPendingResponseInfo;
+
+		if (nHolderID != 0)
+		{
+			std::list<uint64_t>& listSessionID = this->m_mapHolderSessionIDList[nHolderID];
+			listSessionID.push_back(nSessionID);
+			pPendingResponseInfo->iterHolder = (--listSessionID.end());
+			pPendingResponseInfo->nHolderID = nHolderID;
+		}
+
+		return pPendingResponseInfo;
+	}
+
+	void CCoreService::delPendingResponseInfo(uint64_t nHolderID)
+	{
+		auto iter = this->m_mapHolderSessionIDList.find(nHolderID);
+		if (iter == this->m_mapHolderSessionIDList.end())
+			return;
+
+		std::list<uint64_t>& listSessionID = iter->second;
+		for (auto iter = listSessionID.begin(); iter != listSessionID.end(); ++iter)
+		{
+			auto iterPendingResponseInfo = this->m_mapPendingResponseInfo.find(*iter);
+			if (iterPendingResponseInfo == this->m_mapPendingResponseInfo.end())
+				continue;
+
+			SPendingResponseInfo* pPendingResponseInfo = iterPendingResponseInfo->second;
+			this->m_mapPendingResponseInfo.erase(iterPendingResponseInfo);
+
+			SAFE_DELETE(pPendingResponseInfo);
+		}
+
+		this->m_mapHolderSessionIDList.erase(iter);
+	}
+
+	void CCoreService::onCheckServiceHealth(uint64_t nContext)
+	{
+		for (auto iter = this->m_mapServiceHealth.begin(); iter != this->m_mapServiceHealth.end(); ++iter)
+		{
+			uint32_t nToServiceID = iter->first;
+			int32_t nHealth = iter->second;
+
+			if (nHealth > _LOW_SERVICE_HEALTH)
+				continue;
+
+			uint32_t nMessageSerializer = this->getServiceMessageSerializerType(nToServiceID);
+			this->setServiceMessageSerializer(nToServiceID, eMST_Native);
+			defer([&, nMessageSerializer]()
+			{
+				this->setServiceMessageSerializer(nToServiceID, nMessageSerializer);
+			});
+
+			service_health_request request_msg;
+			uint64_t nSessionID = this->genSessionID();
+			if (!CCoreApp::Inst()->getLogicRunnable()->getTransporter()->invoke(this, nSessionID, 0, nToServiceID, 0, &request_msg))
+				continue;
+
+			auto callback = [this, nToServiceID](std::shared_ptr<void>, uint32_t nErrorCode)
+			{
+				if (nErrorCode != eRRT_OK)
+					return;
+
+				this->updateServiceHealth(nToServiceID, false);
+			};
+
+			this->addPendingResponseInfo(nToServiceID, nSessionID, 0, callback, 0);
+		}
+	}
+
+	void CCoreService::addServiceMessageSerializer(CMessageSerializer* pMessageSerializer)
+	{
+		DebugAst(pMessageSerializer != nullptr);
+
+		this->m_mapMessageSerializer[pMessageSerializer->getType()] = pMessageSerializer;
+	}
+
+	void CCoreService::setServiceMessageSerializer(uint32_t nServiceID, uint32_t nType)
+	{
+		if (nServiceID == 0)
+		{
+			this->m_nDefaultServiceMessageSerializerType = nType;
+			return;
+		}
+
+		this->m_mapServiceMessageSerializerType[nServiceID] = nType;
+	}
+
+	void CCoreService::setForwardMessageSerializer(CMessageSerializer* pMessageSerializer)
+	{
+		DebugAst(pMessageSerializer != nullptr);
+
+		this->m_pForwardMessageSerializer = pMessageSerializer;
+	}
+
+	CMessageSerializer* CCoreService::getServiceMessageSerializer(uint32_t nServiceID) const
+	{
+		uint32_t nMessageSerializerType = this->m_nDefaultServiceMessageSerializerType;
+		auto iter = this->m_mapServiceMessageSerializerType.find(nServiceID);
+		if (iter != this->m_mapServiceMessageSerializerType.end())
+			nMessageSerializerType = iter->second;
+
+		auto iterSerializer = this->m_mapMessageSerializer.find(nMessageSerializerType);
+		if (iterSerializer == this->m_mapMessageSerializer.end())
+			return nullptr;
+
+		return iterSerializer->second;
+	}
+
+	CMessageSerializer* CCoreService::getForwardMessageSerializer() const
+	{
+		return this->m_pForwardMessageSerializer;
+	}
+
+	CMessageSerializer* CCoreService::getServiceMessageSerializerByType(uint8_t nType) const
+	{
+		auto iter = this->m_mapMessageSerializer.find(nType);
+		if (iter == this->m_mapMessageSerializer.end())
+			return nullptr;
+
+		return iter->second;
+	}
+
+	uint32_t CCoreService::getServiceMessageSerializerType(uint32_t nServiceID) const
+	{
+		uint32_t nMessageSerializerType = this->m_nDefaultServiceMessageSerializerType;
+		auto iter = this->m_mapServiceMessageSerializerType.find(nServiceID);
+		if (iter != this->m_mapServiceMessageSerializerType.end())
+			nMessageSerializerType = iter->second;
+
+		return nMessageSerializerType;
+	}
+
 }

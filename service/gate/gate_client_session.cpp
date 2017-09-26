@@ -5,10 +5,12 @@
 #include "libCoreCommon/base_connection_mgr.h"
 #include "libCoreCommon/service_invoker.h"
 
-#include "msg_proto_src/g2s_player_enter_request.pb.h"
-#include "msg_proto_src/g2s_player_enter_response.pb.h"
-#include "msg_proto_src/gate_handshake_response.pb.h"
-#include "msg_proto_src/g2s_player_heartbeat_notify.pb.h"
+#include "server_proto_src/g2s_player_enter_request.pb.h"
+#include "server_proto_src/g2s_player_enter_response.pb.h"
+#include "server_proto_src/g2s_player_heartbeat_notify.pb.h"
+#include "client_proto_src/c2g_player_handshake_response.pb.h"
+
+#include "../common/error_code.h"
 
 using namespace core;
 
@@ -81,13 +83,33 @@ void CGateClientSession::enterGas()
 	g2s_player_enter_request request_msg;
 	request_msg.set_player_id(this->getPlayerID());
 	std::shared_ptr<const g2s_player_enter_response> pResponseMessage = nullptr;
-	this->sync_invoke(this->getGasID(), &request_msg, pResponseMessage);
+	if (this->sync_invoke(this->getGasID(), &request_msg, pResponseMessage) != eRRT_OK)
+	{
+		CBaseConnection* pBaseConnection = CBaseApp::Inst()->getBaseConnectionMgr()->getBaseConnectionBySocketID(this->m_nSocketID);
+		DebugAst(pBaseConnection != nullptr);
+
+		c2g_player_handshake_response response_msg;
+		response_msg.set_player_id(this->m_nPlayerID);
+		response_msg.set_result(eEC_Login_InvokeGasError);
+		this->getGateService()->getGateClientMessageHandler()->sendClientMessage(pBaseConnection, &response_msg);
+
+		PrintWarning("CClientSession::enterGas error enter player error player_id: {}", this->m_nPlayerID);
+
+		this->getGateService()->getGateClientSessionMgr()->destroySession(this->m_nPlayerID, "enter gas error");
+
+		return;
+	}
 	
 	CBaseConnection* pBaseConnection = CBaseApp::Inst()->getBaseConnectionMgr()->getBaseConnectionBySocketID(this->m_nSocketID);
 	DebugAst(pBaseConnection != nullptr);
 
 	if (pResponseMessage == nullptr)
 	{
+		c2g_player_handshake_response response_msg;
+		response_msg.set_player_id(this->m_nPlayerID);
+		response_msg.set_result(eEC_Login_InvokeGasError);
+		this->getGateService()->getGateClientMessageHandler()->sendClientMessage(pBaseConnection, &response_msg);
+
 		PrintWarning("CClientSession::enterGas error enter player error player_id: {}", this->m_nPlayerID);
 
 		this->getGateService()->getGateClientSessionMgr()->destroySession(this->m_nPlayerID, "enter gas error");
@@ -95,11 +117,11 @@ void CGateClientSession::enterGas()
 		return;
 	}
 
-	gate_handshake_response response_msg;
+	c2g_player_handshake_response response_msg;
 	response_msg.set_player_id(this->m_nPlayerID);
 	response_msg.set_result(pResponseMessage->result());
 
-	if (pResponseMessage->result() != 0)
+	if (pResponseMessage->result() != eEC_Sucess)
 	{
 		PrintInfo("CClientSession::enterGas result error result: {} service_id: {} player_id: {} session_id: {} socket_id: {}", pResponseMessage->result(), this->m_nGasID, this->m_nPlayerID, this->m_nSessionID, this->m_nSocketID);
 

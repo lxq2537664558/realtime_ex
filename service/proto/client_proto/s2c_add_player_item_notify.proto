@@ -1,0 +1,7 @@
+syntax = "proto2";
+
+message s2c_add_player_item_notify {
+	required uint32 id = 1;
+	required uint32 delta = 2;
+	required uint32 count = 3;
+}

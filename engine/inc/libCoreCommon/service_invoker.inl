@@ -1,15 +1,15 @@
 namespace core
 {
 	template<class T>
-	void CServiceInvoker::async_invoke(uint32_t nServiceID, const google::protobuf::Message* pMessage, CFuture<T>& sFuture, CServiceInvokeHolder* pServiceInvokeHolder/* = nullptr*/)
+	void CServiceInvoker::async_invoke(uint32_t nServiceID, const void* pMessage, CFuture<T>& sFuture, CServiceInvokeHolder* pServiceInvokeHolder/* = nullptr*/)
 	{
 		DebugAst(pMessage != nullptr);
 		
 		auto pPromise = std::make_shared<CPromise<T>>();
 		
-		auto callback = [pPromise](std::shared_ptr<google::protobuf::Message> pResponseMessage, uint32_t nErrorCode)->void
+		auto callback = [pPromise](std::shared_ptr<void> pResponseMessage, uint32_t nErrorCode)->void
 		{
-			pPromise->setValue(std::dynamic_pointer_cast<T>(pResponseMessage), nErrorCode);
+			pPromise->setValue(std::static_pointer_cast<T>(pResponseMessage), nErrorCode);
 		};
 
 		if (!this->invoke(nServiceID, 0, pMessage, 0, callback, pServiceInvokeHolder))
@@ -19,14 +19,14 @@ namespace core
 	}
 
 	template<class T>
-	void CServiceInvoker::async_invoke(uint32_t nServiceID, const google::protobuf::Message* pMessage, const std::function<void(const T*, uint32_t)>& callback, CServiceInvokeHolder* pServiceInvokeHolder/* = nullptr*/)
+	void CServiceInvoker::async_invoke(uint32_t nServiceID, const void* pMessage, const std::function<void(const T*, uint32_t)>& callback, CServiceInvokeHolder* pServiceInvokeHolder/* = nullptr*/)
 	{
 		DebugAst(pMessage != nullptr);
 		DebugAst(callback != nullptr);
 
-		auto callback_ = [callback](std::shared_ptr<google::protobuf::Message> pResponseMessage, uint32_t nErrorCode)->void
+		auto callback_ = [callback](std::shared_ptr<void> pResponseMessage, uint32_t nErrorCode)->void
 		{
-			callback(dynamic_cast<T*>(pResponseMessage.get()), nErrorCode);
+			callback(static_cast<T*>(pResponseMessage.get()), nErrorCode);
 		};
 
 		if (!this->invoke(nServiceID, 0, pMessage, 0, callback_, pServiceInvokeHolder))
@@ -34,7 +34,7 @@ namespace core
 	}
 
 	template<class T>
-	uint32_t CServiceInvoker::sync_invoke(uint32_t nServiceID, const google::protobuf::Message* pMessage, std::shared_ptr<T>& pResponseMessage, CServiceInvokeHolder* pServiceInvokeHolder/* = nullptr*/)
+	uint32_t CServiceInvoker::sync_invoke(uint32_t nServiceID, const void* pMessage, std::shared_ptr<T>& pResponseMessage, CServiceInvokeHolder* pServiceInvokeHolder/* = nullptr*/)
 	{
 		if (!this->invoke(nServiceID, 0, pMessage, coroutine::getCurrentID(), nullptr, pServiceInvokeHolder))
 			return eRRT_ERROR;
@@ -47,7 +47,7 @@ namespace core
 		coroutine::delLocalData(coroutine::getCurrentID(), "response");
 
 		SSyncCallResultInfo* pSyncCallResultInfo = reinterpret_cast<SSyncCallResultInfo*>(nResponse);
-		pResponseMessage = std::dynamic_pointer_cast<T>(pSyncCallResultInfo->pMessage);
+		pResponseMessage = std::static_pointer_cast<T>(pSyncCallResultInfo->pMessage);
 
 		uint8_t nResult = pSyncCallResultInfo->nResult;
 
@@ -57,7 +57,7 @@ namespace core
 	}
 
 	template<class T>
-	void CServiceInvoker::async_invoke(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, const std::function<void(const T*, uint32_t)>& callback, CServiceInvokeHolder* pServiceInvokeHolder/* = nullptr*/)
+	void CServiceInvoker::async_invoke(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const void* pMessage, const std::function<void(const T*, uint32_t)>& callback, CServiceInvokeHolder* pServiceInvokeHolder/* = nullptr*/)
 	{
 		CServiceSelector* pServiceSelector = this->m_pServiceBase->getServiceSelector(nServiceSelectorType);
 		DebugAst(pServiceSelector != nullptr);
@@ -68,7 +68,7 @@ namespace core
 	}
 
 	template<class T>
-	void CServiceInvoker::async_invoke(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, CFuture<T>& sFuture, CServiceInvokeHolder* pServiceInvokeHolder/* = nullptr*/)
+	void CServiceInvoker::async_invoke(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const void* pMessage, CFuture<T>& sFuture, CServiceInvokeHolder* pServiceInvokeHolder/* = nullptr*/)
 	{
 		CServiceSelector* pServiceSelector = this->m_pServiceBase->getServiceSelector(nServiceSelectorType);
 		DebugAst(pServiceSelector != nullptr);
@@ -79,7 +79,7 @@ namespace core
 	}
 
 	template<class T>
-	uint32_t CServiceInvoker::sync_invoke(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const google::protobuf::Message* pMessage, std::shared_ptr<T>& pResponseMessage, CServiceInvokeHolder* pServiceInvokeHolder /*= nullptr*/)
+	uint32_t CServiceInvoker::sync_invoke(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const void* pMessage, std::shared_ptr<T>& pResponseMessage, CServiceInvokeHolder* pServiceInvokeHolder /*= nullptr*/)
 	{
 		CServiceSelector* pServiceSelector = this->m_pServiceBase->getServiceSelector(nServiceSelectorType);
 		DebugAstEx(pServiceSelector != nullptr, eRRT_ERROR);
@@ -90,12 +90,12 @@ namespace core
 	}
 
 	template<class T>
-	void CServiceInvoker::async_invoke_a(uint32_t nServiceID, uint64_t nActorID, const google::protobuf::Message* pMessage, const std::function<void(const T*, uint32_t)>& callback, CServiceInvokeHolder* pServiceInvokeHolder /*= nullptr*/)
+	void CServiceInvoker::async_invoke_a(uint32_t nServiceID, uint64_t nActorID, const void* pMessage, const std::function<void(const T*, uint32_t)>& callback, CServiceInvokeHolder* pServiceInvokeHolder /*= nullptr*/)
 	{
 		DebugAst(pMessage != nullptr);
 		DebugAst(callback != nullptr);
 
-		auto callback_ = [callback](std::shared_ptr<google::protobuf::Message> pResponseMessage, uint32_t nErrorCode)->void
+		auto callback_ = [callback](std::shared_ptr<void> pResponseMessage, uint32_t nErrorCode)->void
 		{
 			callback(dynamic_cast<T*>(pResponseMessage.get()), nErrorCode);
 		};
@@ -105,13 +105,13 @@ namespace core
 	}
 
 	template<class T>
-	void CServiceInvoker::async_invoke_a(uint32_t nServiceID, uint64_t nActorID, const google::protobuf::Message* pMessage, CFuture<T>& sFuture, CServiceInvokeHolder* pServiceInvokeHolder /*= nullptr*/)
+	void CServiceInvoker::async_invoke_a(uint32_t nServiceID, uint64_t nActorID, const void* pMessage, CFuture<T>& sFuture, CServiceInvokeHolder* pServiceInvokeHolder /*= nullptr*/)
 	{
 		DebugAst(pMessage != nullptr);
 
 		auto pPromise = std::make_shared<CPromise<T>>();
 
-		auto callback = [pPromise](std::shared_ptr<google::protobuf::Message> pResponseMessage, uint32_t nErrorCode)->void
+		auto callback = [pPromise](std::shared_ptr<void> pResponseMessage, uint32_t nErrorCode)->void
 		{
 			pPromise->setValue(std::dynamic_pointer_cast<T>(pResponseMessage), nErrorCode);
 		};

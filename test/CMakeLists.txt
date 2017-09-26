@@ -1,6 +1,0 @@
-add_subdirectory(test_actor1)
-add_subdirectory(test_actor2)
-add_subdirectory(test_service1)
-add_subdirectory(test_service2)
-add_subdirectory(test_service3)
-add_subdirectory(test_websocket)

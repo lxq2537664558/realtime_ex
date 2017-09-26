@@ -57,7 +57,7 @@ namespace base
 		CDbRecordset* pDbRecordset = nullptr;
 		defer([&]()
 		{
-			delete pDbRecordset;
+			SAFE_DELETE(pDbRecordset);
 		});
 		
 		bool bOK = false;

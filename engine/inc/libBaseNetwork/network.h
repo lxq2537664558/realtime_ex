@@ -50,9 +50,6 @@ struct SNetAddr
 #pragma warning(pop)
 #endif
 
-namespace base
-{
-
 #ifdef _WIN32
 
 #	ifdef __BUILD_BASE_NETWORK_DLL__
@@ -67,218 +64,223 @@ namespace base
 
 #endif
 
-	enum ENetConnecterState
+namespace base
+{
+	namespace net
 	{
-		eNCS_Connecting,		// 连接进程中
-		eNCS_Connected,			// 连接完成
-		eNCS_Disconnecting,		// 断开连接进行中
-		eNCS_Disconnected,		// 断开连接完成
+		enum ENetConnecterState
+		{
+			eNCS_Connecting,		// 连接进程中
+			eNCS_Connected,			// 连接完成
+			eNCS_Disconnecting,		// 断开连接进行中
+			eNCS_Disconnected,		// 断开连接完成
 
-		eNCS_Unknown
-	};
+			eNCS_Unknown
+		};
 
-	enum ENetConnecterMode
-	{
-		eNCM_Initiative,	// 主动连接
-		eNCM_Passive,		// 被动连接
+		enum ENetConnecterMode
+		{
+			eNCM_Initiative,	// 主动连接
+			eNCM_Passive,		// 被动连接
 
-		eNCM_Unknown
-	};
+			eNCM_Unknown
+		};
 
-	class INetConnecter;
-	/**
-	@brief: 网络连接处理器
-	连接的超时机制需要逻辑层去处理，如果数据一直发送不了，或者连接已经是断开连接中，确迟迟无法全部断开，很可能是数据一直发送不了导致的，这个时候应该踢掉连接
-	*/
-	class INetConnecterHandler
-	{
-	protected:
-		INetConnecter* m_pNetConnecter;	// 连接对象
+		class INetConnecter;
+		/**
+		@brief: 网络连接处理器
+		连接的超时机制需要逻辑层去处理，如果数据一直发送不了，或者连接已经是断开连接中，确迟迟无法全部断开，很可能是数据一直发送不了导致的，这个时候应该踢掉连接
+		*/
+		class INetConnecterHandler
+		{
+		protected:
+			INetConnecter* m_pNetConnecter;	// 连接对象
 
-	public:
-		INetConnecterHandler() : m_pNetConnecter(nullptr) {}
-		virtual ~INetConnecterHandler() {}
+		public:
+			INetConnecterHandler() : m_pNetConnecter(nullptr) {}
+			virtual ~INetConnecterHandler() {}
 
-		/**
-		@brief: 设置连接处理器
-		*/
-		void				setNetConnecter(INetConnecter* pConnecter) { this->m_pNetConnecter = pConnecter; }
-		/**
-		@brief: 获取连接处理器
-		*/
-		INetConnecter*		getNetConnecter() const { return this->m_pNetConnecter; }
-		/**
-		@brief: 发送数据，对于后端基于帧的服务器可以考虑cache的方式，对于网关服务器，上行包可以考虑cache，下行包直接发送比较好，并且网关服务器最好采用基于事件驱动的方式
-		*/
-		inline void			send(const void* pData, uint32_t nSize, bool bCache);
-		/**
-		@brief: 数据到达回调，这个pData必须在回调中消费掉，这个回调结束后pData的有效性不保证
-		*/
-		virtual uint32_t	onRecv(const char* pData, uint32_t nDataSize) = 0;
-		/**
-		@brief: 数据发送完成回调（仅仅是发送到了socket缓存中，并不代表发送到对端，更别说被对方应用层处理，所以要准确的反馈数据被对方接收的事情需要应用层去处理）
-		*/
-		virtual void		onSendComplete(uint32_t nSize) = 0;
-		/**
-		@brief: 连接完成回调
-		*/
-		virtual void		onConnect() = 0;
-		/**
-		@brief: 连接断开回调
-		*/
-		virtual void		onDisconnect() = 0;
-		/**
-		@brief: 主动连接失败，在迟迟未收到syn包响应的情况下（rst包也没有），tcp会做指数避退，这个时间在各个平台不一致，但是至少大几十秒，所以如果连接广域网上的地址上层最好自己做超时处理，而不是依赖onConnectFail回调
-		*/
-		virtual void		onConnectFail() = 0;
-	};
+			/**
+			@brief: 设置连接处理器
+			*/
+			void				setNetConnecter(INetConnecter* pConnecter) { this->m_pNetConnecter = pConnecter; }
+			/**
+			@brief: 获取连接处理器
+			*/
+			INetConnecter*		getNetConnecter() const { return this->m_pNetConnecter; }
+			/**
+			@brief: 发送数据，对于后端基于帧的服务器可以考虑cache的方式，对于网关服务器，上行包可以考虑cache，下行包直接发送比较好，并且网关服务器最好采用基于事件驱动的方式
+			*/
+			inline void			send(const void* pData, uint32_t nSize, bool bCache);
+			/**
+			@brief: 数据到达回调，这个pData必须在回调中消费掉，这个回调结束后pData的有效性不保证
+			*/
+			virtual uint32_t	onRecv(const char* pData, uint32_t nDataSize) = 0;
+			/**
+			@brief: 数据发送完成回调（仅仅是发送到了socket缓存中，并不代表发送到对端，更别说被对方应用层处理，所以要准确的反馈数据被对方接收的事情需要应用层去处理）
+			*/
+			virtual void		onSendComplete(uint32_t nSize) = 0;
+			/**
+			@brief: 连接完成回调
+			*/
+			virtual void		onConnect() = 0;
+			/**
+			@brief: 连接断开回调
+			*/
+			virtual void		onDisconnect() = 0;
+			/**
+			@brief: 主动连接失败，在迟迟未收到syn包响应的情况下（rst包也没有），tcp会做指数避退，这个时间在各个平台不一致，但是至少大几十秒，所以如果连接广域网上的地址上层最好自己做超时处理，而不是依赖onConnectFail回调
+			*/
+			virtual void		onConnectFail() = 0;
+		};
 
-	class INetAccepter;
-	/**
-	@brief: 网络连接监听处理器
-	*/
-	class INetAccepterHandler
-	{
-	protected:
-		INetAccepter* m_pNetAccepter;	// 监听对象
-
-	public:
-		INetAccepterHandler() : m_pNetAccepter(nullptr) {}
-		virtual ~INetAccepterHandler() {}
-
+		class INetAccepter;
 		/**
-		@brief: 设置监听处理器
+		@brief: 网络连接监听处理器
 		*/
-		void                          setNetAccepter(INetAccepter* pAccepter) { this->m_pNetAccepter = pAccepter; }
-		/**
-		@brief: 获取监听处理器
-		*/
-		INetAccepter*                 getNetAccepter() const { return this->m_pNetAccepter; }
-		/**
-		@brief: 监听的端口有连接进来，试着获取对应连接的连接处理器
-		*/
-		virtual INetConnecterHandler* onAccept(INetConnecter* pNetConnecter) = 0;
-	};
+		class INetAccepterHandler
+		{
+		protected:
+			INetAccepter* m_pNetAccepter;	// 监听对象
 
-	/**
-	@brief: 网络监听器接口
-	*/
-	class INetAccepter
-	{
-	public:
-		INetAccepter() { }
-		virtual ~INetAccepter() {}
+		public:
+			INetAccepterHandler() : m_pNetAccepter(nullptr) {}
+			virtual ~INetAccepterHandler() {}
+
+			/**
+			@brief: 设置监听处理器
+			*/
+			void							setNetAccepter(INetAccepter* pAccepter) { this->m_pNetAccepter = pAccepter; }
+			/**
+			@brief: 获取监听处理器
+			*/
+			INetAccepter*					getNetAccepter() const { return this->m_pNetAccepter; }
+			/**
+			@brief: 监听的端口有连接进来，试着获取对应连接的连接处理器
+			*/
+			virtual INetConnecterHandler*	onAccept(INetConnecter* pNetConnecter) = 0;
+		};
 
 		/**
-		@brief: 设置监听器处理器
+		@brief: 网络监听器接口
 		*/
-		virtual void            setHandler(INetAccepterHandler* pHandler) = 0;
-		/**
-		@brief: 获取监听地址
-		*/
-		virtual const SNetAddr& getListenAddr() const = 0;
-		/**
-		@brief: 关闭监听器
-		*/
-		virtual void            shutdown() = 0;
-	};
+		class INetAccepter
+		{
+		public:
+			INetAccepter() { }
+			virtual ~INetAccepter() {}
 
-	/**
-	@brief: 网络连接器接口
-	*/
-	class INetConnecter
-	{
-	public:
-		INetConnecter() { }
-		virtual ~INetConnecter() { }
-
-		/**
-		@brief: 发送数据, 如果是缓存发送的模式，就直接把数据拷贝到网络层的缓存中，不然就是试着发送，发送不了才缓存
-		*/
-		virtual bool				send(const void* pData, uint32_t nSize, bool bCache) = 0;
-		/**
-		@brief: 关闭连接
-		*/
-		virtual void				shutdown(bool bForce, const char* szFormat, ...) = 0;
-		/**
-		@brief: 设置连接处理器
-		*/
-		virtual void				setHandler(INetConnecterHandler* pHandler) = 0;
-		/**
-		@brief: 获取连接本地地址
-		*/
-		virtual const SNetAddr&		getLocalAddr() const = 0;
-		/**
-		@brief: 获取连接远端地址
-		*/
-		virtual const SNetAddr&		getRemoteAddr() const = 0;
-		/**
-		@brief: 获取连接器模式
-		*/
-		virtual ENetConnecterMode	getConnecterMode() const = 0;
-		/**
-		@brief: 获取连接器状态
-		*/
-		virtual ENetConnecterState	getConnecterState() const = 0;
-		/**
-		@brief: 获取发送缓存区中的数据大小，这个一般缓存一帧数据，如果一帧内无法发送完数据还是会缓存
-		*/
-		virtual	uint32_t			getSendDataSize() const = 0;
-		/**
-		@brief: 获取接收缓存区大小
-		*/
-		virtual	uint32_t			getRecvDataSize() const = 0;
-		/**
-		@brief: 设置是否启动tcp协议栈的nodelay算法
-		*/
-		virtual bool				setNoDelay(bool bEnable) = 0;
-	};
-
-	/**
-	@brief: 网络事件循环器
-	*/
-	class INetEventLoop
-	{
-	public:
-		INetEventLoop() { }
-		virtual ~INetEventLoop() {}
+			/**
+			@brief: 设置监听器处理器
+			*/
+			virtual void            setHandler(INetAccepterHandler* pHandler) = 0;
+			/**
+			@brief: 获取监听地址
+			*/
+			virtual const SNetAddr& getListenAddr() const = 0;
+			/**
+			@brief: 关闭监听器
+			*/
+			virtual void            shutdown() = 0;
+		};
 
 		/**
-		@brief: 初始化
+		@brief: 网络连接器接口
 		*/
-		virtual bool	init(uint32_t nMaxSocketCount) = 0;
-		/**
-		@brief: 发起一个监听
-		*/
-		virtual bool	listen(const SNetAddr& netAddr, bool bReusePort, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, INetAccepterHandler* pHandler) = 0;
-		/**
-		@brief: 发起一个连接
-		*/
-		virtual bool	connect(const SNetAddr& netAddr, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, INetConnecterHandler* pHandler) = 0;
-		/**
-		@brief: 推动网络事件循环器
-		*/
-		virtual void	update(uint32_t nTime) = 0;
-		/**
-		@brief: 在事件循环等待中唤醒等待
-		*/
-		virtual void	wakeup() = 0;
-		/**
-		@brief: 释放网络事件循环器
-		*/
-		virtual void	release() = 0;
-	};
+		class INetConnecter
+		{
+		public:
+			INetConnecter() { }
+			virtual ~INetConnecter() { }
 
-	void INetConnecterHandler::send(const void* pData, uint32_t nSize, bool bCache)
-	{
-		if (this->m_pNetConnecter == nullptr)
-			return;
-		
-		this->m_pNetConnecter->send(pData, nSize, bCache);
+			/**
+			@brief: 发送数据, 如果是缓存发送的模式，就直接把数据拷贝到网络层的缓存中，不然就是试着发送，发送不了才缓存
+			*/
+			virtual bool				send(const void* pData, uint32_t nSize, bool bCache) = 0;
+			/**
+			@brief: 关闭连接
+			*/
+			virtual void				shutdown(bool bForce, const char* szFormat, ...) = 0;
+			/**
+			@brief: 设置连接处理器
+			*/
+			virtual void				setHandler(INetConnecterHandler* pHandler) = 0;
+			/**
+			@brief: 获取连接本地地址
+			*/
+			virtual const SNetAddr&		getLocalAddr() const = 0;
+			/**
+			@brief: 获取连接远端地址
+			*/
+			virtual const SNetAddr&		getRemoteAddr() const = 0;
+			/**
+			@brief: 获取连接器模式
+			*/
+			virtual ENetConnecterMode	getConnecterMode() const = 0;
+			/**
+			@brief: 获取连接器状态
+			*/
+			virtual ENetConnecterState	getConnecterState() const = 0;
+			/**
+			@brief: 获取发送缓存区中的数据大小，这个一般缓存一帧数据，如果一帧内无法发送完数据还是会缓存
+			*/
+			virtual	uint32_t			getSendDataSize() const = 0;
+			/**
+			@brief: 获取接收缓存区大小
+			*/
+			virtual	uint32_t			getRecvDataSize() const = 0;
+			/**
+			@brief: 设置是否启动tcp协议栈的nodelay算法
+			*/
+			virtual bool				setNoDelay(bool bEnable) = 0;
+		};
+
+		/**
+		@brief: 网络事件循环器
+		*/
+		class INetEventLoop
+		{
+		public:
+			INetEventLoop() { }
+			virtual ~INetEventLoop() {}
+
+			/**
+			@brief: 初始化
+			*/
+			virtual bool	init(uint32_t nMaxSocketCount) = 0;
+			/**
+			@brief: 发起一个监听
+			*/
+			virtual bool	listen(const SNetAddr& netAddr, bool bReusePort, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, INetAccepterHandler* pHandler) = 0;
+			/**
+			@brief: 发起一个连接
+			*/
+			virtual bool	connect(const SNetAddr& netAddr, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, INetConnecterHandler* pHandler) = 0;
+			/**
+			@brief: 推动网络事件循环器
+			*/
+			virtual void	update(uint32_t nTime) = 0;
+			/**
+			@brief: 在事件循环等待中唤醒等待
+			*/
+			virtual void	wakeup() = 0;
+			/**
+			@brief: 释放网络事件循环器
+			*/
+			virtual void	release() = 0;
+		};
+
+		void INetConnecterHandler::send(const void* pData, uint32_t nSize, bool bCache)
+		{
+			if (this->m_pNetConnecter == nullptr)
+				return;
+
+			this->m_pNetConnecter->send(pData, nSize, bCache);
+		}
+
+		__BASE_NETWORK_API__ bool			startup();
+		__BASE_NETWORK_API__ void			cleanup();
+
+		__BASE_NETWORK_API__ INetEventLoop*	createEventLoop();
 	}
-
-	__BASE_NETWORK_API__ bool			startupNetwork();
-	__BASE_NETWORK_API__ void			cleanupNetwork();
-
-	__BASE_NETWORK_API__ INetEventLoop*	createNetEventLoop();
 }

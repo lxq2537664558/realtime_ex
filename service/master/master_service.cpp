@@ -9,8 +9,9 @@
 
 using namespace core;
 
-CMasterService::CMasterService()
-	: m_pServiceRegistry(nullptr)
+CMasterService::CMasterService(const SServiceBaseInfo& sServiceBaseInfo, const std::string& szConfigFileName)
+	: CServiceBase(sServiceBaseInfo, szConfigFileName)
+	, m_pServiceRegistry(nullptr)
 	, m_writeBuf(UINT16_MAX)
 	, m_pNodeConnectionFactory(nullptr)
 	, m_nMasterID(0)
@@ -58,7 +59,11 @@ bool CMasterService::onInit()
 	char szBuf[256] = { 0 };
 	base::function_util::snprintf(szBuf, _countof(szBuf), "%d", this->getServiceID());
 
-	CBaseApp::Inst()->getBaseConnectionMgr()->listen(szHost, nPort, false, "CConnectionFromNode", szBuf, 10 * 1024, 10 * 1024, nullptr);
+	if (!CBaseApp::Inst()->getBaseConnectionMgr()->listen(szHost, nPort, false, "CConnectionFromNode", szBuf, 10 * 1024, 10 * 1024, nullptr))
+	{
+		PrintWarning("master listen error");
+		return false;
+	}
 
 	SAFE_DELETE(pConfigXML);
 
@@ -73,7 +78,8 @@ void CMasterService::onFrame()
 
 void CMasterService::onQuit()
 {
-
+	PrintInfo("CMasterService::onQuit");
+	this->doQuit();
 }
 
 CServiceRegistry* CMasterService::getServiceRegistry() const
@@ -97,16 +103,11 @@ void CMasterService::release()
 	delete this;
 }
 
-core::CProtobufFactory* CMasterService::getServiceProtobufFactory() const
-{
-	return nullptr;
-}
-
 extern "C" 
 #ifdef _WIN32
 __declspec(dllexport)
 #endif
-CServiceBase* createServiceBase()
+CServiceBase* createServiceBase(const SServiceBaseInfo& sServiceBaseInfo, const std::string& szConfigFileName)
 {
-	return new CMasterService();
+	return new CMasterService(sServiceBaseInfo, szConfigFileName);
 }

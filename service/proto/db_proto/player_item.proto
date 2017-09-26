@@ -1,0 +1,24 @@
+syntax = "proto2";
+
+import "db_option.proto";
+
+package proto.db;
+
+message player_item_data {
+	required uint32 id = 1;
+	required uint32 count = 2;
+}
+
+message player_item_data_wrap {
+	repeated player_item_data data = 1;
+}
+
+message player_item {
+	option (primary_key) = "player_id";
+	required uint64 player_id = 1;
+	optional player_item_data_wrap data = 2[(serialize_type) = 1];
+}
+
+message player_item_set {
+	repeated player_item item_set = 1;
+}

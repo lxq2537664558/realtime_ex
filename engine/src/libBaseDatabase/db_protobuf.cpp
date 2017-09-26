@@ -67,7 +67,7 @@ namespace
 		bool	init(const std::string& szDir, const std::vector<std::string>& vecFile);
 
 		google::protobuf::Message*
-			createMessage(const std::string& szName);
+				createMessage(const std::string& szName);
 
 	private:
 		google::protobuf::compiler::Importer*		m_pImporter;
@@ -82,8 +82,8 @@ namespace
 
 	CMessageFactory::~CMessageFactory()
 	{
-		delete this->m_pFactory;
-		delete this->m_pImporter;
+		SAFE_DELETE(this->m_pFactory);
+		SAFE_DELETE(this->m_pImporter);
 	}
 
 	CMessageFactory* CMessageFactory::Inst()
@@ -534,7 +534,7 @@ namespace base
 		}
 
 		const google::protobuf::Descriptor* pMainDescriptor = pMessage->GetDescriptor();
-		if (pMainDescriptor == NULL)
+		if (pMainDescriptor == nullptr)
 		{
 			PrintWarning("message[{}] can't get descriptor.", szMessageName);
 			return nullptr;
@@ -592,7 +592,7 @@ namespace base
 				const google::protobuf::FieldDescriptor* pFieldDescriptor = pDescriptor->FindFieldByName(szFieldName);
 				if (pFieldDescriptor == nullptr)
 				{
-					PrintWarning("field[{}.{}] descriptor is NULL.", pSubMessage->GetTypeName(), szFieldName);
+					PrintWarning("field[{}.{}] descriptor is nullptr.", pSubMessage->GetTypeName(), szFieldName);
 					return nullptr;
 				}
 
@@ -624,7 +624,7 @@ namespace base
 		}
 
 		const google::protobuf::Descriptor* pDescriptor = pMessage->GetDescriptor();
-		if (pDescriptor == NULL)
+		if (pDescriptor == nullptr)
 		{
 			PrintWarning("message[{}] can't get descriptor.", pMessage->GetTypeName());
 			return false;
@@ -640,15 +640,15 @@ namespace base
 			const google::protobuf::FieldDescriptor* pFieldDescriptor = pDescriptor->FindFieldByName(szFieldName);
 			if (pFieldDescriptor == nullptr)
 			{
-				PrintWarning("field[{}.{}] descriptor is NULL.", pMessage->GetTypeName(), szFieldName);
-				delete pMessage;
+				PrintWarning("field[{}.{}] descriptor is nullptr.", pMessage->GetTypeName(), szFieldName);
+				SAFE_DELETE(pMessage);
 				return nullptr;
 			}
 
 			if (!setFieldValue(pMessage, pReflection, pFieldDescriptor, szValue))
 			{
 				PrintWarning("setFieldValue[{}.{}] failed.", pMessage->GetTypeName(), szFieldName);
-				delete pMessage;
+				SAFE_DELETE(pMessage);
 				return nullptr;
 			}
 		}

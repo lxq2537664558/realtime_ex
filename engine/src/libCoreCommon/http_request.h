@@ -13,9 +13,6 @@ namespace core
 		CHttpRequest();
 		~CHttpRequest();
 
-		CHttpRequest(CHttpRequest&& rhs);
-		CHttpRequest& operator = (CHttpRequest&& rhs);
-
 		void				reset();
 
 		void				setVersion(EHttpVersion eVersion);

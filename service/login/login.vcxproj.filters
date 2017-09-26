@@ -13,8 +13,11 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="proto_src">
+    <Filter Include="client_proto">
       <UniqueIdentifier>{eb696e68-34b4-4c73-b82f-c6937b575651}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="server_proto">
+      <UniqueIdentifier>{24023f45-9f44-4895-a934-d35fca1a5af2}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -36,17 +39,17 @@
     <ClInclude Include="login_client_connection_factory.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\proto\msg_proto_src\player_login_request.pb.h">
-      <Filter>proto_src</Filter>
+    <ClInclude Include="..\proto\server_proto_src\l2d_validate_login_response.pb.h">
+      <Filter>server_proto</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\proto\msg_proto_src\player_login_response.pb.h">
-      <Filter>proto_src</Filter>
+    <ClInclude Include="..\proto\server_proto_src\l2d_validate_login_request.pb.h">
+      <Filter>server_proto</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\proto\msg_proto_src\l2d_validate_login_request.pb.h">
-      <Filter>proto_src</Filter>
+    <ClInclude Include="..\proto\client_proto_src\c2l_player_login_request.pb.h">
+      <Filter>client_proto</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\proto\msg_proto_src\l2d_validate_login_response.pb.h">
-      <Filter>proto_src</Filter>
+    <ClInclude Include="..\proto\client_proto_src\c2l_player_login_response.pb.h">
+      <Filter>client_proto</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -65,17 +68,17 @@
     <ClCompile Include="login_client_message_dispatcher.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\proto\msg_proto_src\player_login_request.pb.cc">
-      <Filter>proto_src</Filter>
+    <ClCompile Include="..\proto\server_proto_src\l2d_validate_login_response.pb.cc">
+      <Filter>server_proto</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\proto\msg_proto_src\player_login_response.pb.cc">
-      <Filter>proto_src</Filter>
+    <ClCompile Include="..\proto\server_proto_src\l2d_validate_login_request.pb.cc">
+      <Filter>server_proto</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\proto\msg_proto_src\l2d_validate_login_request.pb.cc">
-      <Filter>proto_src</Filter>
+    <ClCompile Include="..\proto\client_proto_src\c2l_player_login_request.pb.cc">
+      <Filter>client_proto</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\proto\msg_proto_src\l2d_validate_login_response.pb.cc">
-      <Filter>proto_src</Filter>
+    <ClCompile Include="..\proto\client_proto_src\c2l_player_login_response.pb.cc">
+      <Filter>client_proto</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

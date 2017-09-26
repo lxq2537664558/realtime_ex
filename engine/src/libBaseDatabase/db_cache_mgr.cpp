@@ -1,4 +1,6 @@
 #include "db_cache_mgr.h"
+#include "db_protobuf.h"
+
 #include "libBaseCommon/debug_helper.h"
 #include "libBaseCommon/time_util.h"
 #include "libBaseCommon/rand_gen.h"
@@ -12,6 +14,7 @@ namespace base
 	{
 		std::string s_szErrorName;
 	}
+
 	CDbCacheMgr::CDbCacheMgr()
 		: m_pDbThread(nullptr)
 		, m_nCurIndex(1)
@@ -29,19 +32,26 @@ namespace base
 
 	}
 
-	bool CDbCacheMgr::init(CDbThread* pDbThread, uint64_t nMaxCacheSize, uint32_t nWritebackTime)
+	bool CDbCacheMgr::init(CDbThread* pDbThread, const db::SCacheConfigInfo& sCacheConfigInfo)
 	{
 		DebugAstEx(pDbThread != nullptr, false);
 
 		this->m_pDbThread = pDbThread;
-		this->m_nMaxCacheSize = nMaxCacheSize;
-		this->m_nWritebackTime = nWritebackTime;
+		this->m_nMaxCacheSize = sCacheConfigInfo.nMaxCacheSize;
+		this->m_nWritebackTime = sCacheConfigInfo.nWritebackTime;
+		for (size_t i = 0; i < sCacheConfigInfo.vecTable.size(); ++i)
+		{
+			this->m_setAllowDataName.insert(getMessageNameByTableName(sCacheConfigInfo.vecTable[i]));
+		}
 
 		return true;
 	}
 
 	uint32_t CDbCacheMgr::getDataID(const std::string& szDataName)
 	{
+		if (this->m_setAllowDataName.find(szDataName) == this->m_setAllowDataName.end())
+			return 0;
+
 		uint32_t nDataID = 0;
 		auto iter = this->m_mapDataIndex.find(szDataName);
 		if (iter == this->m_mapDataIndex.end())
@@ -71,7 +81,8 @@ namespace base
 	{
 		uint32_t nDataID = this->getDataID(szDataName);
 
-		DebugAstEx(nDataID != UINT32_MAX, nullptr);
+		if (nDataID == 0)
+			return nullptr;
 
 		auto iter = this->m_mapCache.find(nID);
 		if (iter == this->m_mapCache.end())
@@ -84,15 +95,17 @@ namespace base
 
 	bool CDbCacheMgr::setData(uint64_t nID, const google::protobuf::Message* pData)
 	{
-		if (this->m_nMaxCacheSize <= 0)
+		if (this->m_nMaxCacheSize <= 0 || this->m_nWritebackTime <= 0)
+			return false;
+
+		const std::string szDataName = pData->GetTypeName();
+
+		uint32_t nDataID = this->getDataID(szDataName);
+		if (nDataID == 0)
 			return false;
 
 		if (this->m_mapCache.find(nID) == this->m_mapCache.end())
 			return this->addData(nID, pData);
-
-		const std::string szDataName = pData->GetTypeName();
-		uint32_t nDataID = this->getDataID(szDataName);
-		DebugAstEx(nDataID != UINT32_MAX, false);
 
 		auto pDbCache = this->m_mapCache[nID];
 
@@ -110,11 +123,14 @@ namespace base
 
 	bool CDbCacheMgr::addData(uint64_t nID, const google::protobuf::Message* pData)
 	{
-		if (this->m_nMaxCacheSize <= 0)
+		if (this->m_nMaxCacheSize <= 0 || this->m_nWritebackTime <= 0)
 			return false;
 
-		uint32_t nDataID = this->getDataID(pData->GetTypeName());
-		DebugAstEx(nDataID != UINT32_MAX, false);
+		const std::string szDataName = pData->GetTypeName();
+
+		uint32_t nDataID = this->getDataID(szDataName);
+		if (nDataID == 0)
+			return false;
 
 		if (this->m_mapCache.find(nID) != this->m_mapCache.end())
 			return false;
@@ -134,15 +150,16 @@ namespace base
 
 	bool CDbCacheMgr::delData(uint64_t nID, const std::string& szDataName)
 	{
-		if (this->m_nMaxCacheSize <= 0)
+		if (this->m_nMaxCacheSize <= 0 || this->m_nWritebackTime <= 0)
+			return false;
+
+		uint32_t nDataID = this->getDataID(szDataName);
+		if (nDataID == 0)
 			return false;
 
 		auto iter = this->m_mapCache.find(nID);
 		if (iter == this->m_mapCache.end())
 			return false;
-
-		uint32_t nDataID = this->getDataID(szDataName);
-		DebugAstEx(nDataID != UINT32_MAX, false);
 
 		auto pDbCache = iter->second;
 
@@ -158,7 +175,7 @@ namespace base
 
 	void CDbCacheMgr::cleanCache(int64_t nTime)
 	{
-		if (this->m_nMaxCacheSize <= 0)
+		if (this->m_nMaxCacheSize <= 0 || this->m_nWritebackTime <= 0)
 			return;
 
 		if (this->m_nLastCleanCacheTime != 0 && this->m_nLastCleanCacheTime - nTime < _CLEAN_CACHE_TIME)
@@ -197,7 +214,7 @@ namespace base
 
 	void CDbCacheMgr::writeback(uint64_t nTime)
 	{
-		if (this->m_nMaxCacheSize <= 0)
+		if (this->m_nMaxCacheSize <= 0 || this->m_nWritebackTime <= 0)
 			return;
 
 		if (this->m_nLastWritebackTime != 0 && this->m_nLastWritebackTime - nTime < this->m_nWritebackTime)
@@ -216,7 +233,7 @@ namespace base
 
 	void CDbCacheMgr::flushCache(uint64_t nKey, bool bDel)
 	{
-		if (this->m_nMaxCacheSize <= 0)
+		if (this->m_nMaxCacheSize <= 0 || this->m_nWritebackTime <= 0)
 			return;
 
 		if (nKey != 0)

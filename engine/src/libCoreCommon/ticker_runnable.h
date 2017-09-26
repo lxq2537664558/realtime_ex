@@ -11,6 +11,12 @@
 
 namespace core
 {
+	enum ETickerState
+	{
+		eRegister,
+		eUnRegister,
+	};
+
 	class CTickerRunnable;
 	class CNetRunnable;
 	class CLogicRunnable;
@@ -42,6 +48,7 @@ namespace core
 		int64_t					m_nIntervalTime;	// 定时器运行的间隔时间
 		uint32_t				m_nType;
 		std::atomic<int32_t>	m_nRef;
+		std::atomic<int32_t>	m_nState;
 	};
 
 	typedef base::TLinkNode<CCoreTickerInfo> CCoreTickerNode;
@@ -70,8 +77,6 @@ namespace core
 		bool			registerTicker(uint8_t nType, uint32_t nFromServiceID, uint64_t nFromActorID, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
 		void			unregisterTicker(CTicker* pTicker);
 		
-		void			release();
-
 	private:
 		virtual bool	onInit();
 		virtual bool	onProcess();
@@ -88,7 +93,8 @@ namespace core
 		base::TLink<CCoreTickerNode>	m_listNearTicker[__TIME_NEAR_SIZE];								// 最近运行到的时间刻度
 		base::TLink<CCoreTickerNode>	m_listCascadeTicker[__TIME_CASCADE_COUNT][__TIME_CASCADE_SIZE];	// 联级时间刻度
 		base::TLink<CCoreTickerNode>	m_listFarTicker;												// 最远的定时器链表
-
+		std::vector<CCoreTickerNode*>	m_vecSwapTicker;												// 双队列交换的定时器
+		
 		std::vector<CCoreTickerNode*>	m_vecTempTickerNode;
 		int64_t							m_nLogicTime;													// 当前刻度时间
 		base::spin_lock					m_lock;

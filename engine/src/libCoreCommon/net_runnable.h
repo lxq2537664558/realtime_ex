@@ -16,11 +16,9 @@ namespace core
 		CNetRunnable();
 		virtual ~CNetRunnable();
 
-		bool				init(uint32_t nMaxSocketCount);
+		bool				init(CNetMessageQueue*	pMessageQueue, uint32_t nMaxSocketCount);
 		CCoreConnectionMgr*	getCoreConnectionMgr() const;
 		CNetMessageQueue*	getMessageQueue() const;
-
-		void				release();
 
 	private:
 		virtual bool		onInit();
@@ -28,8 +26,8 @@ namespace core
 		virtual void		onDestroy();
 
 	private:
-		CCoreConnectionMgr*	m_pCoreConnectionMgr;
 		base::CThreadBase*	m_pThreadBase;
+		CCoreConnectionMgr*	m_pCoreConnectionMgr;
 		CNetMessageQueue*	m_pMessageQueue;
 		int64_t				m_nLastCheckTime;
 		int64_t				m_nTotalSamplingTime;

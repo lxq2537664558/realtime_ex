@@ -24,6 +24,7 @@ namespace core
 		, m_pSyncPendingResponseInfo(nullptr)
 		, m_nSyncPendingResponseHolderID(0)
 		, m_nSyncPendingResponseResult(0)
+		, m_nSyncPendingResponseMessageSerializerType(0)
 		, m_eState(eABS_Normal)
 	{
 
@@ -31,7 +32,9 @@ namespace core
 
 	CCoreActor::~CCoreActor()
 	{
-		SAFE_DELETE(this->m_pSyncPendingResponseMessage);
+		CMessageSerializer* pMessageSerializer = this->m_pCoreService->getServiceMessageSerializerByType(this->m_nSyncPendingResponseMessageSerializerType);
+		if (pMessageSerializer != nullptr)
+			pMessageSerializer->destroyMessage(this->m_pSyncPendingResponseMessage);
 
 		while (true)
 		{
@@ -39,7 +42,18 @@ namespace core
 			if (!this->m_channel.recv(sActorMessagePacket))
 				break;
 
-			SAFE_DELETE(sActorMessagePacket.pMessage);
+			CMessageSerializer* pMessageSerializer = this->m_pCoreService->getServiceMessageSerializerByType(this->m_nSyncPendingResponseMessageSerializerType);
+			if (pMessageSerializer != nullptr)
+				pMessageSerializer->destroyMessage(sActorMessagePacket.pMessage);
+		}
+
+		for (auto iter = this->m_listerTicker.begin(); iter != this->m_listerTicker.end(); ++iter)
+		{
+			CCoreTickerNode* pCoreTickerNode = *iter;
+			if (pCoreTickerNode == nullptr)
+				continue;
+			
+			pCoreTickerNode->Value.release();
 		}
 	}
 
@@ -73,12 +87,50 @@ namespace core
 			sActorMessagePacket.nData = this->m_nSyncPendingResponseResult;
 			sActorMessagePacket.nSessionID = this->getSyncPendingResponseSessionID();
 			sActorMessagePacket.nType = eMT_RESPONSE;
+			sActorMessagePacket.nMessageSerializerType = this->m_nSyncPendingResponseMessageSerializerType;
 			sActorMessagePacket.pMessage = this->m_pSyncPendingResponseMessage;
 
 			this->dispatch(sActorMessagePacket);
 
 			this->m_pSyncPendingResponseMessage = nullptr;
 			this->m_nSyncPendingResponseResult = 0;
+			this->m_nSyncPendingResponseMessageSerializerType = 0;
+		}
+
+		while (this->m_eState == eABS_Normal)
+		{
+			auto iter = this->m_listerTicker.begin();
+			if (iter == this->m_listerTicker.end())
+				break;
+
+			CCoreTickerNode* pCoreTickerNode = *iter;
+			this->m_listerTicker.erase(iter);
+			if (pCoreTickerNode == nullptr)
+			{
+				PrintWarning("CCoreActor::dispatch error pCoreTickerNode == nullptr actor_id: {}", this->getID());
+				continue;
+			}
+
+			if (pCoreTickerNode->Value.m_pTicker == nullptr)
+			{
+				pCoreTickerNode->Value.release();
+				continue;
+			}
+
+			uint64_t nCoroutineID = coroutine::create(CCoreApp::Inst()->getCoroutineStackSize(), [pCoreTickerNode](uint64_t)
+			{
+				CTicker* pTicker = pCoreTickerNode->Value.m_pTicker;
+				if (pCoreTickerNode->Value.getRef() == 1)
+				{
+					CCoreApp::Inst()->unregisterTicker(pTicker);
+				}
+				auto& callback = pTicker->getCallback();
+				if (callback != nullptr)
+					callback(pTicker->getContext());
+				pCoreTickerNode->Value.release();
+			});
+
+			coroutine::resume(nCoroutineID, 0);
 		}
 
 		while (this->m_eState == eABS_Normal)
@@ -93,14 +145,34 @@ namespace core
 
 	void CCoreActor::dispatch(const SActorMessagePacket& sActorMessagePacket)
 	{
+		CMessageSerializer* pMessageSerializer = this->m_pCoreService->getServiceMessageSerializerByType(sActorMessagePacket.nMessageSerializerType);
+		DebugAst(pMessageSerializer != nullptr);
+
 		// 这里协程回调使用的pMessage的生命周期跟协程一致，采用值捕获lambda的方式来达到这一目的
 		if (sActorMessagePacket.nType == eMT_REQUEST)
 		{
-			auto pMessage = std::shared_ptr<google::protobuf::Message>(sActorMessagePacket.pMessage);
-			auto callback = this->m_pCoreService->getActorMessageHandler(pMessage->GetTypeName());
+			uint32_t nFromServiceID = sActorMessagePacket.nFromServiceID;
+			uint8_t nMessageSerializerType = sActorMessagePacket.nMessageSerializerType;
+			CCoreService* pCoreService = this->m_pCoreService;
+			auto pMessagePtr = std::shared_ptr<void>(sActorMessagePacket.pMessage, [pCoreService, nFromServiceID, nMessageSerializerType](void* pRawMessage)
+			{
+				CMessageSerializer* pMessageSerializer = pCoreService->getServiceMessageSerializerByType(nMessageSerializerType);
+				DebugAst(pMessageSerializer != nullptr);
+
+				pMessageSerializer->destroyMessage(pRawMessage);
+			});
+
+			char szMessageName[_MAX_MESSAGE_NAME_LEN] = { 0 };
+			if (!pMessageSerializer->getMessageName(sActorMessagePacket.pMessage, szMessageName, _countof(szMessageName)))
+			{
+				PrintWarning("CCoreActor::dispatch error nullptr == szMessageName actor_id: {}", this->getID());
+				return;
+			}
+
+			auto callback = this->m_pCoreService->getActorMessageHandler(szMessageName);
 			if (callback == nullptr)
 			{
-				PrintWarning("CCoreActor::dispatch error unknown request message actor_id: {}, message_name: {}", this->getID(), pMessage->GetTypeName());
+				PrintWarning("CCoreActor::dispatch error unknown request message actor_id: {}, message_name: {}", this->getID(), szMessageName);
 				return;
 			}
 
@@ -109,58 +181,87 @@ namespace core
 			sSessionInfo.nFromActorID = sActorMessagePacket.nData;
 			sSessionInfo.nSessionID = sActorMessagePacket.nSessionID;
 
-			uint64_t nCoroutineID = coroutine::create(0, [&callback, this, pMessage, sSessionInfo](uint64_t){ callback(this->m_pActorBase, sSessionInfo, pMessage.get()); });
+			uint64_t nCoroutineID = coroutine::create(CCoreApp::Inst()->getCoroutineStackSize(), [&callback, this, pMessagePtr, sSessionInfo](uint64_t){ callback(this->m_pActorBase, sSessionInfo, pMessagePtr.get()); });
 			coroutine::resume(nCoroutineID, 0);
 		}
 		else if (sActorMessagePacket.nType == eMT_RESPONSE)
 		{
-			auto pMessage = std::shared_ptr<google::protobuf::Message>(sActorMessagePacket.pMessage);
+			uint32_t nFromServiceID = sActorMessagePacket.nFromServiceID;
+			uint8_t nMessageSerializerType = sActorMessagePacket.nMessageSerializerType;
+			CCoreService* pCoreService = this->m_pCoreService;
+			auto pMessage = std::shared_ptr<void>(sActorMessagePacket.pMessage, [pCoreService, nFromServiceID, nMessageSerializerType](void* pRawMessage)
+			{
+				if (pRawMessage == nullptr)
+					return;
+
+				CMessageSerializer* pMessageSerializer = pCoreService->getServiceMessageSerializerByType(nMessageSerializerType);
+				DebugAst(pMessageSerializer != nullptr);
+
+				pMessageSerializer->destroyMessage(pRawMessage);
+			});
+
 			SPendingResponseInfo* pPendingResponseInfo = this->getPendingResponseInfo(sActorMessagePacket.nSessionID);
+			if (nullptr == pPendingResponseInfo)
+				return;
+
 			defer([&]() 
 			{
 				SAFE_DELETE(pPendingResponseInfo);
 			});
+			
+			this->m_pCoreService->updateServiceHealth(pPendingResponseInfo->nToServiceID, sActorMessagePacket.nData == eRRT_TIME_OUT);
 
-			if (nullptr != pPendingResponseInfo)
+			if (pPendingResponseInfo->nCoroutineID != 0)
 			{
-				if (pPendingResponseInfo->nCoroutineID != 0)
+				// 这里不能直接传pMessage的地址
+				SSyncCallResultInfo* pSyncCallResultInfo = new SSyncCallResultInfo();
+				pSyncCallResultInfo->nResult = (uint8_t)sActorMessagePacket.nData;
+				pSyncCallResultInfo->pMessage = pMessage;
+				coroutine::setLocalData(pPendingResponseInfo->nCoroutineID, "response", reinterpret_cast<uint64_t>(pSyncCallResultInfo));
+
+				coroutine::resume(pPendingResponseInfo->nCoroutineID, 0);
+			}
+			else if (pPendingResponseInfo->callback != nullptr)
+			{
+				uint8_t nResult = (uint8_t)sActorMessagePacket.nData;
+				if (nResult == eRRT_OK)
 				{
-					// 这里不能直接传pMessage的地址
-					SSyncCallResultInfo* pSyncCallResultInfo = new SSyncCallResultInfo();
-					pSyncCallResultInfo->nResult = (uint8_t)sActorMessagePacket.nData;
-					pSyncCallResultInfo->pMessage = pMessage;
-					coroutine::setLocalData(pPendingResponseInfo->nCoroutineID, "response", reinterpret_cast<uint64_t>(pSyncCallResultInfo));
-					
-					coroutine::resume(pPendingResponseInfo->nCoroutineID, 0);
-				}
-				else if (pPendingResponseInfo->callback != nullptr)
-				{
-					uint8_t nResult = (uint8_t)sActorMessagePacket.nData;
-					if (nResult == eRRT_OK)
-					{
-						uint64_t nCoroutineID = coroutine::create(0, [&pPendingResponseInfo, pMessage, nResult](uint64_t){ pPendingResponseInfo->callback(pMessage, nResult); });
-						coroutine::resume(nCoroutineID, 0);
-					}
-					else
-					{
-						uint64_t nCoroutineID = coroutine::create(0, [&pPendingResponseInfo, nResult](uint64_t){ pPendingResponseInfo->callback(nullptr, nResult); });
-						coroutine::resume(nCoroutineID, 0);
-					}
+					uint64_t nCoroutineID = coroutine::create(CCoreApp::Inst()->getCoroutineStackSize(), [&pPendingResponseInfo, pMessage, nResult](uint64_t) { pPendingResponseInfo->callback(pMessage, nResult); });
+					coroutine::resume(nCoroutineID, 0);
 				}
 				else
 				{
-					PrintWarning("invalid response session_id: {} actor_id: {} message_name: {}", pPendingResponseInfo->nSessionID, this->getID(), pPendingResponseInfo->szMessageName);
+					uint64_t nCoroutineID = coroutine::create(CCoreApp::Inst()->getCoroutineStackSize(), [&pPendingResponseInfo, nResult](uint64_t) { pPendingResponseInfo->callback(nullptr, nResult); });
+					coroutine::resume(nCoroutineID, 0);
 				}
+			}
+			else
+			{
+				PrintWarning("invalid response session_id: {} actor_id: {}", pPendingResponseInfo->nSessionID, this->getID());
 			}
 		}
 		else if (sActorMessagePacket.nType == eMT_GATE_FORWARD)
 		{
-			auto pMessage = std::shared_ptr<google::protobuf::Message>(sActorMessagePacket.pMessage);
+			CCoreService* pCoreService = this->m_pCoreService;
+			auto pMessage = std::shared_ptr<void>(sActorMessagePacket.pMessage, [pCoreService](void* pRawMessage)
+			{
+				CMessageSerializer* pMessageSerializer = pCoreService->getForwardMessageSerializer();
+				DebugAst(pMessageSerializer != nullptr);
 
-			auto callback = this->m_pCoreService->getActorForwardHandler(pMessage->GetTypeName());
+				pMessageSerializer->destroyMessage(pRawMessage);
+			});
+
+			char szMessageName[_MAX_MESSAGE_NAME_LEN] = { 0 };
+			if (!pMessageSerializer->getMessageName(sActorMessagePacket.pMessage, szMessageName, _countof(szMessageName)))
+			{
+				PrintWarning("CCoreActor::dispatch error nullptr == szMessageName actor_id: {}", this->getID());
+				return;
+			}
+
+			auto callback = this->m_pCoreService->getActorForwardHandler(szMessageName);
 			if (callback == nullptr)
 			{
-				PrintWarning("CCoreActor::dispatch error unknown gate forawrd message actor_id: {}, message_name: {}", this->getID(), pMessage->GetTypeName());
+				PrintWarning("CCoreActor::dispatch error unknown gate forawrd message actor_id: {}, message_name: {}", this->getID(), szMessageName);
 				return;
 			}
 			
@@ -168,30 +269,7 @@ namespace core
 			sClientSessionInfo.nSessionID = sActorMessagePacket.nSessionID;
 			sClientSessionInfo.nGateServiceID = sActorMessagePacket.nFromServiceID;
 			
-			uint64_t nCoroutineID = coroutine::create(0, [&callback, this, pMessage, sClientSessionInfo](uint64_t){ callback(this->m_pActorBase, sClientSessionInfo, pMessage.get()); });
-			coroutine::resume(nCoroutineID, 0);
-		}
-		else if (sActorMessagePacket.nType == eMT_TICKER)
-		{
-			CCoreTickerNode* pCoreTickerNode = reinterpret_cast<CCoreTickerNode*>(sActorMessagePacket.nSessionID);
-			if (pCoreTickerNode == nullptr)
-			{
-				PrintWarning("CCoreActor::dispatch error pCoreTickerNode == nullptr actor_id: {}", this->getID());
-				return;
-			}
-
-			if (pCoreTickerNode->Value.m_pTicker == nullptr)
-			{
-				pCoreTickerNode->Value.release();
-				return;
-			}
-
-			uint64_t nCoroutineID = coroutine::create(0, [pCoreTickerNode](uint64_t)
-			{
-				CTicker* pTicker = pCoreTickerNode->Value.m_pTicker;
-				pTicker->getCallback()(pTicker->getContext());
-				pCoreTickerNode->Value.release();
-			});
+			uint64_t nCoroutineID = coroutine::create(CCoreApp::Inst()->getCoroutineStackSize(), [&callback, this, pMessage, sClientSessionInfo](uint64_t){ callback(this->m_pActorBase, sClientSessionInfo, pMessage.get()); });
 			coroutine::resume(nCoroutineID, 0);
 		}
 	}
@@ -209,11 +287,12 @@ namespace core
 		return this->m_pSyncPendingResponseInfo->nSessionID;
 	}
 
-	void CCoreActor::setSyncPendingResponseMessage(uint8_t nResult, google::protobuf::Message* pMessage)
+	void CCoreActor::setSyncPendingResponseMessage(uint8_t nResult, void* pMessage, uint8_t nMessageSerializerType)
 	{
 		DebugAst(this->m_eState == eABS_Pending);
 
 		this->m_nSyncPendingResponseResult = nResult;
+		this->m_nSyncPendingResponseMessageSerializerType = nMessageSerializerType;
 		this->m_pSyncPendingResponseMessage = pMessage;
 
 		this->m_eState = eABS_RecvPending;
@@ -239,12 +318,13 @@ namespace core
 		sActorMessagePacket.nData = eRRT_TIME_OUT;
 		sActorMessagePacket.nSessionID = pPendingResponseInfo->nSessionID;
 		sActorMessagePacket.nType = eMT_RESPONSE;
+		sActorMessagePacket.nMessageSerializerType = 0;
 		sActorMessagePacket.pMessage = nullptr;
 
 		this->m_channel.send(sActorMessagePacket);
 	}
 
-	SPendingResponseInfo* CCoreActor::addPendingResponseInfo(uint64_t nSessionID, uint64_t nCoroutineID, const std::string& szMessageName, const std::function<void(std::shared_ptr<google::protobuf::Message>, uint32_t)>& callback, uint64_t nHolderID)
+	SPendingResponseInfo* CCoreActor::addPendingResponseInfo(uint32_t nToServiceID, uint64_t nSessionID, uint64_t nCoroutineID, const std::function<void(std::shared_ptr<void>, uint32_t)>& callback, uint64_t nHolderID)
 	{
 		if (nCoroutineID == 0)
 		{
@@ -255,10 +335,10 @@ namespace core
 			pPendingResponseInfo->callback = callback;
 			pPendingResponseInfo->nSessionID = nSessionID;
 			pPendingResponseInfo->nCoroutineID = nCoroutineID;
-			pPendingResponseInfo->szMessageName = szMessageName;
 			pPendingResponseInfo->nBeginTime = base::time_util::getGmtTime();
+			pPendingResponseInfo->nToServiceID = nToServiceID;
 			pPendingResponseInfo->tickTimeout.setCallback(std::bind(&CCoreActor::onRequestMessageTimeout, this, std::placeholders::_1));
-			this->getCoreService()->registerTicker(&pPendingResponseInfo->tickTimeout, CCoreApp::Inst()->getInvokeTimeout(), 0, nSessionID);
+			this->getCoreService()->getServiceBase()->registerTicker(&pPendingResponseInfo->tickTimeout, CCoreApp::Inst()->getInvokeTimeout(pPendingResponseInfo->nToServiceID), 0, nSessionID);
 
 			this->m_mapPendingResponseInfo[pPendingResponseInfo->nSessionID] = pPendingResponseInfo;
 
@@ -283,9 +363,8 @@ namespace core
 			this->m_pSyncPendingResponseInfo->callback = nullptr;
 			this->m_pSyncPendingResponseInfo->nSessionID = nSessionID;
 			this->m_pSyncPendingResponseInfo->nCoroutineID = nCoroutineID;
-			this->m_pSyncPendingResponseInfo->szMessageName = szMessageName;
 			this->m_pSyncPendingResponseInfo->nBeginTime = base::time_util::getGmtTime();
-
+			this->m_pSyncPendingResponseInfo->nToServiceID = nToServiceID;
 			this->m_nSyncPendingResponseHolderID = nHolderID;
 
 			this->m_pCoreService->getActorScheduler()->addPendingCoreActor(this);
@@ -358,10 +437,11 @@ namespace core
 		if (this->m_pSyncPendingResponseInfo == nullptr)
 			return false;
 
-		if (nCurTime - this->m_pSyncPendingResponseInfo->nBeginTime < CCoreApp::Inst()->getInvokeTimeout())
+		if (nCurTime - this->m_pSyncPendingResponseInfo->nBeginTime < CCoreApp::Inst()->getInvokeTimeout(this->m_pSyncPendingResponseInfo->nToServiceID))
 			return false;
 		
-		this->setSyncPendingResponseMessage(eRRT_TIME_OUT, nullptr);
+		// TODO
+		this->setSyncPendingResponseMessage(eRRT_TIME_OUT, nullptr, 0);
 		
 		this->m_pCoreService->getActorScheduler()->addWorkCoreActor(this);
 
@@ -372,4 +452,12 @@ namespace core
 	{
 		return this->m_pActorBase;
 	}
+
+	void CCoreActor::addTicker(CCoreTickerNode* pCoreTickerNode)
+	{
+		DebugAst(pCoreTickerNode != nullptr);
+
+		this->m_listerTicker.push_back(pCoreTickerNode);
+	}
+
 }
