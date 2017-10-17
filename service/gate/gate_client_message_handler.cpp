@@ -112,7 +112,7 @@ void CGateClientMessageHandler::handshake(CGateConnectionFromClient* pGateConnec
 		this->m_pGateService->getGateClientSessionMgr()->unbindSocketID(pGateClientSession->getPlayerID());
 
 		// 把老的链接踢掉
-		CBaseConnection* pBaseConnection = CBaseApp::Inst()->getBaseConnectionMgr()->getBaseConnectionBySocketID(nOldSocketID);
+		CBaseConnection* pBaseConnection = this->m_pGateService->getBaseConnectionMgr()->getBaseConnectionBySocketID(nOldSocketID);
 		if (nullptr != pBaseConnection)
 			pBaseConnection->shutdown(true, "dup");
 

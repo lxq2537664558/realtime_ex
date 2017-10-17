@@ -38,6 +38,10 @@ namespace core
 		*/
 		__CORE_COMMON_API__ uint64_t	yield();
 		/**
+		@brief: 更新，做一些清理工作
+		*/
+		__CORE_COMMON_API__ void		update();
+		/**
 		@brief: 获取协程状态
 		*/
 		__CORE_COMMON_API__ uint32_t	getState(uint64_t nID);

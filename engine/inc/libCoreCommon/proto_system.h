@@ -19,15 +19,45 @@ enum ESystemMessageType
 	eSMT_response_service_health	= 9,	// 服务之间的健康度响应消息
 };
 
+#define system_message_begin(MessageName, nMessageID) \
+class MessageName : public core::message_header\
+{\
+public:\
+	MessageName() : core::message_header(nMessageID) { nMessageSize = sizeof(MessageName); }\
+	static  uint32_t	getMessageID() { return nMessageID; }\
+	static  const char*	getMessageName() { return #MessageName; }
+
+#define system_message_end };
+
+#define system_pack_begin(writeBuf)\
+	writeBuf.clear();\
+	writeBuf.write(this, sizeof(core::message_header));
+
+#define system_pack_end(writeBuf)\
+	do\
+	{\
+		uint16_t nPos = (uint16_t)writeBuf.getCurSize(); \
+		writeBuf.seek(base::eBST_Begin, 0); \
+		writeBuf.write(nPos); \
+		writeBuf.seek(base::eBST_Begin, nPos);\
+	} while(0)
+
+#define system_unpack_begin(buf, size)\
+	base::CReadBuf readBuf;\
+	readBuf.init(buf, size);\
+	readBuf.read(this, sizeof(core::message_header));
+
+#define system_unpack_end()
+
 namespace core
 {
-message_begin(smt_register_node_base_info, eSMT_register_node_base_info)
+system_message_begin(smt_register_node_base_info, eSMT_register_node_base_info)
 	SNodeBaseInfo					sNodeBaseInfo;
 	std::vector<SServiceBaseInfo>	vecServiceBaseInfo;
 
 	void pack(base::CWriteBuf& writeBuf)
 	{
-		pack_begin(writeBuf);
+		system_pack_begin(writeBuf);
 
 		writeBuf.write(sNodeBaseInfo.nID);
 		writeBuf.write(sNodeBaseInfo.szName);
@@ -45,12 +75,12 @@ message_begin(smt_register_node_base_info, eSMT_register_node_base_info)
 			writeBuf.write(vecServiceBaseInfo[i].szType);
 		}
 
-		pack_end(writeBuf);
+		system_pack_end(writeBuf);
 	}
 
 	void unpack(const void* pBuf, uint16_t nSize)
 	{
-		unpack_begin(pBuf, nSize);
+		system_unpack_begin(pBuf, nSize);
 
 		readBuf.read(sNodeBaseInfo.nID);
 		readBuf.read(sNodeBaseInfo.szName);
@@ -67,62 +97,62 @@ message_begin(smt_register_node_base_info, eSMT_register_node_base_info)
 			readBuf.read(vecServiceBaseInfo[i].szName);
 			readBuf.read(vecServiceBaseInfo[i].szType);
 		}
-		unpack_end();
+		system_unpack_end();
 	}
 
-message_end
+system_message_end
 
-message_begin(smt_unregister_node_base_info, eSMT_unregister_node_base_info)
+system_message_begin(smt_unregister_node_base_info, eSMT_unregister_node_base_info)
 	std::string	szName;
 
 	void pack(base::CWriteBuf& writeBuf)
 	{
-		pack_begin(writeBuf);
+		system_pack_begin(writeBuf);
 
 		writeBuf.write(szName);
 
-		pack_end(writeBuf);
+		system_pack_end(writeBuf);
 	}
 
 	void unpack(const void* pBuf, uint16_t nSize)
 	{
-		unpack_begin(pBuf, nSize);
+		system_unpack_begin(pBuf, nSize);
 
 		readBuf.read(szName);
 
-		unpack_end();
+		system_unpack_end();
 	}
-message_end
+system_message_end
 
-message_begin(smt_sync_master_info, eSMT_sync_master_info)
+system_message_begin(smt_sync_master_info, eSMT_sync_master_info)
 	uint32_t nMasterID;
 
 	void pack(base::CWriteBuf& writeBuf)
 	{
-		pack_begin(writeBuf);
+		system_pack_begin(writeBuf);
 
 		writeBuf.write(nMasterID);
 
-		pack_end(writeBuf);
+		system_pack_end(writeBuf);
 	}
 
 	void unpack(const void* pBuf, uint16_t nSize)
 	{
-		unpack_begin(pBuf, nSize);
+		system_unpack_begin(pBuf, nSize);
 
 		readBuf.read(nMasterID);
 
-		unpack_end();
+		system_unpack_end();
 	}
-message_end
+system_message_end
 
-message_begin(smt_sync_node_base_info, eSMT_sync_node_base_info)
+system_message_begin(smt_sync_node_base_info, eSMT_sync_node_base_info)
 	SNodeBaseInfo					sNodeBaseInfo;
 	std::vector<SServiceBaseInfo>	vecServiceBaseInfo;
 
 	void pack(base::CWriteBuf& writeBuf)
 	{
-		pack_begin(writeBuf);
+		system_pack_begin(writeBuf);
 
 		writeBuf.write(sNodeBaseInfo.nID);
 		writeBuf.write(sNodeBaseInfo.szName);
@@ -140,12 +170,12 @@ message_begin(smt_sync_node_base_info, eSMT_sync_node_base_info)
 			writeBuf.write(vecServiceBaseInfo[i].szType);
 		}
 
-		pack_end(writeBuf);
+		system_pack_end(writeBuf);
 	}
 
 	void unpack(const void* pBuf, uint16_t nSize)
 	{
-		unpack_begin(pBuf, nSize);
+		system_unpack_begin(pBuf, nSize);
 
 		readBuf.read(sNodeBaseInfo.nID);
 		readBuf.read(sNodeBaseInfo.szName);
@@ -162,40 +192,40 @@ message_begin(smt_sync_node_base_info, eSMT_sync_node_base_info)
 			readBuf.read(vecServiceBaseInfo[i].szName);
 			readBuf.read(vecServiceBaseInfo[i].szType);
 		}
-		unpack_end();
+		system_unpack_end();
 	}
 
-message_end
+system_message_end
 
-message_begin(smt_remove_node_base_info, eSMT_remove_node_base_info)
+system_message_begin(smt_remove_node_base_info, eSMT_remove_node_base_info)
 	uint32_t nNodeID;
 
 	void pack(base::CWriteBuf& writeBuf)
 	{
-		pack_begin(writeBuf);
+		system_pack_begin(writeBuf);
 
 		writeBuf.write(nNodeID);
 		
-		pack_end(writeBuf);
+		system_pack_end(writeBuf);
 	}
 
 	void unpack(const void* pBuf, uint16_t nSize)
 	{
-		unpack_begin(pBuf, nSize);
+		system_unpack_begin(pBuf, nSize);
 
 		readBuf.read(nNodeID);
 		
-		unpack_end();
+		system_unpack_end();
 	}
-message_end
+system_message_end
 
-message_begin(smt_notify_node_base_info, eSMT_notify_node_base_info)
+system_message_begin(smt_notify_node_base_info, eSMT_notify_node_base_info)
 	SNodeBaseInfo					sNodeBaseInfo;
 	std::vector<SServiceBaseInfo>	vecServiceBaseInfo;
 
 	void pack(base::CWriteBuf& writeBuf)
 	{
-		pack_begin(writeBuf);
+		system_pack_begin(writeBuf);
 
 		writeBuf.write(sNodeBaseInfo.nID);
 		writeBuf.write(sNodeBaseInfo.szName);
@@ -213,12 +243,12 @@ message_begin(smt_notify_node_base_info, eSMT_notify_node_base_info)
 			writeBuf.write(vecServiceBaseInfo[i].szType);
 		}
 
-		pack_end(writeBuf);
+		system_pack_end(writeBuf);
 	}
 
 	void unpack(const void* pBuf, uint16_t nSize)
 	{
-		unpack_begin(pBuf, nSize);
+		system_unpack_begin(pBuf, nSize);
 
 		readBuf.read(sNodeBaseInfo.nID);
 		readBuf.read(sNodeBaseInfo.szName);
@@ -235,31 +265,31 @@ message_begin(smt_notify_node_base_info, eSMT_notify_node_base_info)
 			readBuf.read(vecServiceBaseInfo[i].szName);
 			readBuf.read(vecServiceBaseInfo[i].szType);
 		}
-		unpack_end();
+		system_unpack_end();
 	}
-	message_end
+	system_message_end
 
-message_begin(smt_notify_ack_node_base_info, eSMT_notify_ack_node_base_info)
+system_message_begin(smt_notify_ack_node_base_info, eSMT_notify_ack_node_base_info)
 	uint32_t nNodeID;
 
 	void pack(base::CWriteBuf& writeBuf)
 	{
-		pack_begin(writeBuf);
+		system_pack_begin(writeBuf);
 
 		writeBuf.write(nNodeID);
 
-		pack_end(writeBuf);
+		system_pack_end(writeBuf);
 	}
 
 	void unpack(const void* pBuf, uint16_t nSize)
 	{
-		unpack_begin(pBuf, nSize);
+		system_unpack_begin(pBuf, nSize);
 
 		readBuf.read(nNodeID);
 
-		unpack_end();
+		system_unpack_end();
 	}
-message_end
+system_message_end
 // 
 // message_begin(smt_request_service_health, eSMT_request_service_health)
 // 	uint32_t nToServiceID;

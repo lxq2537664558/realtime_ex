@@ -1,9 +1,7 @@
 #include "stdafx.h"
 #include "base_connection_mgr_impl.h"
 #include "base_connection.h"
-#include "base_app.h"
 #include "core_app.h"
-#include "base_connection_factory.h"
 #include "message_command.h"
 #include "net_runnable.h"
 #include "core_connection.h"
@@ -12,13 +10,19 @@
 
 namespace core
 {
-	CBaseConnectionMgrImpl::CBaseConnectionMgrImpl()
+	CBaseConnectionMgrImpl::CBaseConnectionMgrImpl(CLogicMessageQueue* pMessageQueue)
+		: m_pMessageQueue(pMessageQueue)
 	{
 	}
 
 	CBaseConnectionMgrImpl::~CBaseConnectionMgrImpl()
 	{
 
+	}
+
+	CLogicMessageQueue* CBaseConnectionMgrImpl::getMessageQueue() const
+	{
+		return this->m_pMessageQueue;
 	}
 
 	void CBaseConnectionMgrImpl::addConnectCallback(const std::string& szKey, const std::function<void(CBaseConnection*)>& callback)
@@ -104,7 +108,7 @@ namespace core
 		sMessagePacket.pData = pContext;
 		sMessagePacket.nDataSize = sizeof(SMCT_NOTIFY_SOCKET_CONNECT_ACK);
 
-		CCoreApp::Inst()->getNetRunnable()->getMessageQueue()->send(sMessagePacket);
+		CNetRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
 
 		pBaseConnection->onConnect();
 

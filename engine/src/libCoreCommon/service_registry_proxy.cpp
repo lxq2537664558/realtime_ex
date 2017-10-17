@@ -4,6 +4,7 @@
 #include "core_app.h"
 
 #include "libBaseCommon/string_util.h"
+#include "libBaseCommon/defer.h"
 
 #define _CHECK_CONNECT_TIME 5000
 
@@ -28,7 +29,7 @@ namespace core
 			uint32_t nGlobalServiceInvokeTimeout = pConnectServiceInfoXML->UnsignedAttribute("invoke_timeout");
 			if (nGlobalServiceInvokeTimeout == 0)
 			{
-				PrintWarning("global invoke timeout errror");
+				PrintWarning("global invoke timeout error");
 				return false;
 			}
 
@@ -61,19 +62,28 @@ namespace core
 				this->m_mapMasterInfo[sMasterInfo.nID] = sMasterInfo;
 			}
 
-			CCoreApp::Inst()->registerTicker(CTicker::eTT_Service, 0, 0, &this->m_tickCheckConnectMaster, 5 * 1000, 5 * 1000, 0);
+			CCoreApp::Inst()->registerTicker(CCoreApp::Inst()->getGlobalLogicMessageQueue(), &this->m_tickCheckConnectMaster, 1000, 5 * 1000, 0);
 		}
 
-		CCoreApp::Inst()->getLogicRunnable()->getBaseConnectionMgr()->addConnectFailCallback("master", std::bind(&CServiceRegistryProxy::onConnectRefuse, this, std::placeholders::_1));
+		CCoreApp::Inst()->getBaseConnectionMgr()->addConnectFailCallback("master", std::bind(&CServiceRegistryProxy::onConnectRefuse, this, std::placeholders::_1));
 
-		std::vector<SServiceBaseInfo> vecServiceBaseInfo = CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->getServiceBaseInfo();
+		std::set<std::string> setType;
+		std::vector<SServiceBaseInfo> vecServiceBaseInfo = CCoreApp::Inst()->getCoreServiceMgr()->getServiceBaseInfo();
 		for (size_t i = 0; i < vecServiceBaseInfo.size(); ++i)
 		{
 			const SServiceBaseInfo& sServiceBaseInfo = vecServiceBaseInfo[i];
-			this->m_mapServiceIDByServiceType[sServiceBaseInfo.szType].push_back(sServiceBaseInfo.nID);
+
 			this->m_mapServiceNameByID[sServiceBaseInfo.szName] = sServiceBaseInfo.nID;
 			this->m_mapServiceIDByName[sServiceBaseInfo.nID] = sServiceBaseInfo.szName;
+			
+			SServiceIDInfo& sServiceIDInfo = this->m_mapServiceIDInfoByType[sServiceBaseInfo.szType];
+			sServiceIDInfo.setServiceID.insert(sServiceBaseInfo.nID);
+			sServiceIDInfo.setActiveServiceID.insert(sServiceBaseInfo.nID);
+
+			setType.insert(sServiceBaseInfo.szType);
 		}
+
+		this->updateActiveServiceID(setType);
 
 		return true;
 	}
@@ -110,37 +120,46 @@ namespace core
 			DebugAst(this->m_mapServiceIDByName.find(vecServiceBaseInfo[i].nID) == this->m_mapServiceIDByName.end());
 		}
 		
+		// 只会在单一线程写，所以上面的查询不需要加锁
+		this->m_sLock.lock(base::CRWLock::eLT_Write);
 		SNodeProxyInfo& sNodeProxyInfo = this->m_mapNodeProxyInfo[sNodeBaseInfo.nID];
-		sNodeProxyInfo.pBaseConnectionOtherNode = nullptr;
+
+		sNodeProxyInfo.nSocketID = 0;
 		sNodeProxyInfo.sNodeBaseInfo = sNodeBaseInfo;
 		sNodeProxyInfo.vecServiceBaseInfo = vecServiceBaseInfo;
-		
-		sNodeProxyInfo.pTicker = std::make_unique<CTicker>();
-		// 不用担心sNodeProxyInfo的生命周期问题
-		sNodeProxyInfo.pTicker->setCallback([&sNodeProxyInfo](uint64_t nContext)
-		{
-			if (sNodeProxyInfo.pBaseConnectionOtherNode != nullptr)
-				return;
 
-			if (sNodeProxyInfo.sNodeBaseInfo.nPort == 0 || sNodeProxyInfo.sNodeBaseInfo.szHost.empty())
-				return;
-
-			CCoreApp::Inst()->getLogicRunnable()->getBaseConnectionMgr()->connect(sNodeProxyInfo.sNodeBaseInfo.szHost, sNodeProxyInfo.sNodeBaseInfo.nPort, "CBaseConnectionOtherNode", "", sNodeProxyInfo.sNodeBaseInfo.nSendBufSize, sNodeProxyInfo.sNodeBaseInfo.nRecvBufSize, nullptr);
-		});
-
+		std::set<std::string> setType;
 		for (size_t i = 0; i < vecServiceBaseInfo.size(); ++i)
 		{
 			const SServiceBaseInfo& sServiceBaseInfo = vecServiceBaseInfo[i];
 
 			SServiceProxyInfo sServiceProxyInfo;
 			sServiceProxyInfo.sServiceBaseInfo = vecServiceBaseInfo[i];
-			sServiceProxyInfo.pBaseConnectionOtherNode = nullptr;
+			sServiceProxyInfo.nSocketID = 0;
 			this->m_mapServiceProxyInfo[sServiceBaseInfo.nID] = sServiceProxyInfo;
 
 			this->m_mapServiceNameByID[sServiceBaseInfo.szName] = sServiceBaseInfo.nID;
 			this->m_mapServiceIDByName[sServiceBaseInfo.nID] = sServiceBaseInfo.szName;
-			this->m_mapServiceIDByServiceType[sServiceBaseInfo.szType].push_back(sServiceBaseInfo.nID);
+			
+			SServiceIDInfo& sServiceIDInfo = this->m_mapServiceIDInfoByType[sServiceBaseInfo.szType];
+			sServiceIDInfo.setServiceID.insert(sServiceBaseInfo.nID);
+			sServiceIDInfo.setActiveServiceID.insert(sServiceBaseInfo.nID);
+
+			setType.insert(sServiceBaseInfo.szType);
 		}
+		this->updateActiveServiceID(setType);
+		this->m_sLock.unlock(base::CRWLock::eLT_Write);
+
+		sNodeProxyInfo.pTicker = std::make_unique<CTicker>();
+		// 不用担心sNodeProxyInfo的生命周期问题
+		sNodeProxyInfo.pTicker->setCallback([&sNodeProxyInfo](uint64_t nContext)
+		{
+			// 只会在单一线程写，所以不需要加锁
+			if (sNodeProxyInfo.nSocketID != 0)
+				return;
+
+			CCoreApp::Inst()->getBaseConnectionMgr()->connect(sNodeProxyInfo.sNodeBaseInfo.szHost, sNodeProxyInfo.sNodeBaseInfo.nPort, "CBaseConnectionOtherNode", "", sNodeProxyInfo.sNodeBaseInfo.nSendBufSize, sNodeProxyInfo.sNodeBaseInfo.nRecvBufSize, nullptr);
+		});
 
 		bool bConnect = false;
 		for (size_t i = 0; i < vecServiceBaseInfo.size(); ++i)
@@ -158,10 +177,14 @@ namespace core
 			}
 		}
 
-		if (bConnect)
-			CCoreApp::Inst()->registerTicker(CTicker::eTT_Service, 0, 0, sNodeProxyInfo.pTicker.get(), _CHECK_CONNECT_TIME, _CHECK_CONNECT_TIME, 0);
-
 		PrintInfo("add proxy node node_id: {} node_name: {}", sNodeBaseInfo.nID, sNodeBaseInfo.szName);
+
+		if (bConnect)
+		{
+			DebugAst(!sNodeProxyInfo.sNodeBaseInfo.szHost.empty() && sNodeProxyInfo.sNodeBaseInfo.nPort != 0);
+
+			CCoreApp::Inst()->registerTicker(CCoreApp::Inst()->getGlobalLogicMessageQueue(), sNodeProxyInfo.pTicker.get(), _CHECK_CONNECT_TIME, _CHECK_CONNECT_TIME, 0);
+		}
 	}
 	
 	void CServiceRegistryProxy::delNodeProxyInfo(uint32_t nID)
@@ -174,35 +197,47 @@ namespace core
 
 		std::string szName = sNodeProxyInfo.sNodeBaseInfo.szName;
 		
-		if (sNodeProxyInfo.pBaseConnectionOtherNode != nullptr)
-			sNodeProxyInfo.pBaseConnectionOtherNode->shutdown(true, "del node");
-
-		for (size_t i = 0; i < sNodeProxyInfo.vecServiceBaseInfo.size(); ++i)
+		if (sNodeProxyInfo.nSocketID != 0)
 		{
-			this->m_mapServiceNameByID.erase(sNodeProxyInfo.vecServiceBaseInfo[i].szName);
-			this->m_mapServiceProxyInfo.erase(sNodeProxyInfo.vecServiceBaseInfo[i].nID);
+			CBaseConnection* pBaseConnection = CCoreApp::Inst()->getBaseConnectionMgr()->getBaseConnectionBySocketID(sNodeProxyInfo.nSocketID);
+			if (nullptr != pBaseConnection)
+				pBaseConnection->shutdown(true, "del node");
 		}
 
+		this->m_sLock.lock(base::CRWLock::eLT_Write);
+
+		std::set<std::string> setType;
 		for (size_t i = 0; i < sNodeProxyInfo.vecServiceBaseInfo.size(); ++i)
 		{
 			const SServiceBaseInfo& sServiceBaseInfo = sNodeProxyInfo.vecServiceBaseInfo[i];
-			std::vector<uint32_t>& vecServiceID = this->m_mapServiceIDByServiceType[sServiceBaseInfo.szType];
-			for (size_t j = 0; j < vecServiceID.size(); ++j)
-			{
-				if (vecServiceID[j] == sServiceBaseInfo.nID)
-				{
-					vecServiceID.erase(vecServiceID.begin() + j);
-				}
-			}
+
+			this->m_mapServiceNameByID.erase(sServiceBaseInfo.szName);
+			this->m_mapServiceIDByName.erase(sServiceBaseInfo.nID);
+			this->m_mapServiceProxyInfo.erase(sServiceBaseInfo.nID);
+
+			SServiceIDInfo& sServiceIDInfo = this->m_mapServiceIDInfoByType[sServiceBaseInfo.szType];
+			sServiceIDInfo.setServiceID.erase(sServiceBaseInfo.nID);
+			sServiceIDInfo.setActiveServiceID.erase(sServiceBaseInfo.nID);
+			
+			setType.insert(sServiceBaseInfo.szType);
 		}
 
 		this->m_mapNodeProxyInfo.erase(iter);
-		
+		this->updateActiveServiceID(setType);
+
+		this->m_sLock.unlock(base::CRWLock::eLT_Write);
+
 		PrintInfo("del proxy node node_id: {} node_name: {}", nID, szName);
 	}
 
 	uint32_t CServiceRegistryProxy::getServiceID(const std::string& szName) const
 	{
+		const_cast<CServiceRegistryProxy*>(this)->m_sLock.lock(base::CRWLock::eLT_Read);
+		defer([this]()
+		{
+			const_cast<CServiceRegistryProxy*>(this)->m_sLock.unlock(base::CRWLock::eLT_Read);
+		});
+
 		auto iter = this->m_mapServiceNameByID.find(szName);
 		if (iter == this->m_mapServiceNameByID.end())
 			return 0;
@@ -212,10 +247,16 @@ namespace core
 
 	std::string CServiceRegistryProxy::getServiceType(uint32_t nServiceID) const
 	{
+		const_cast<CServiceRegistryProxy*>(this)->m_sLock.lock(base::CRWLock::eLT_Read);
+		defer([this]()
+		{
+			const_cast<CServiceRegistryProxy*>(this)->m_sLock.unlock(base::CRWLock::eLT_Read);
+		});
+
 		auto iter = this->m_mapServiceProxyInfo.find(nServiceID);
 		if (iter == this->m_mapServiceProxyInfo.end())
 		{
-			CCoreService* pCoreService = CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->getCoreService(nServiceID);
+			CCoreService* pCoreService = CCoreApp::Inst()->getCoreServiceMgr()->getCoreService(nServiceID);
 			if (pCoreService == nullptr)
 				return "";
 
@@ -227,6 +268,12 @@ namespace core
 
 	std::string CServiceRegistryProxy::getServiceName(uint32_t nServiceID) const
 	{
+		const_cast<CServiceRegistryProxy*>(this)->m_sLock.lock(base::CRWLock::eLT_Read);
+		defer([this]()
+		{
+			const_cast<CServiceRegistryProxy*>(this)->m_sLock.unlock(base::CRWLock::eLT_Read);
+		});
+
 		auto iter = this->m_mapServiceIDByName.find(nServiceID);
 		if (iter == this->m_mapServiceIDByName.end())
 			return "";
@@ -234,20 +281,50 @@ namespace core
 		return iter->second;
 	}
 
-	const std::vector<uint32_t>& CServiceRegistryProxy::getServiceIDByTypeName(const std::string& szName) const
+	const std::set<uint32_t>& CServiceRegistryProxy::getServiceIDByType(const std::string& szName) const
 	{
-		auto iter = this->m_mapServiceIDByServiceType.find(szName);
-		if (iter == this->m_mapServiceIDByServiceType.end())
+		const_cast<CServiceRegistryProxy*>(this)->m_sLock.lock(base::CRWLock::eLT_Read);
+		defer([this]()
+		{
+			const_cast<CServiceRegistryProxy*>(this)->m_sLock.unlock(base::CRWLock::eLT_Read);
+		});
+
+		auto iter = this->m_mapServiceIDInfoByType.find(szName);
+		if (iter == this->m_mapServiceIDInfoByType.end())
+		{
+			static std::set<uint32_t> setEmpty;
+			return setEmpty;
+		}
+		
+		return iter->second.setServiceID;
+	}
+
+	const std::vector<uint32_t>& CServiceRegistryProxy::getActiveServiceIDByType(const std::string& szName) const
+	{
+		const_cast<CServiceRegistryProxy*>(this)->m_sLock.lock(base::CRWLock::eLT_Read);
+		defer([this]()
+		{
+			const_cast<CServiceRegistryProxy*>(this)->m_sLock.unlock(base::CRWLock::eLT_Read);
+		});
+
+		auto iter = this->m_mapServiceIDInfoByType.find(szName);
+		if (iter == this->m_mapServiceIDInfoByType.end())
 		{
 			static std::vector<uint32_t> vecEmpty;
 			return vecEmpty;
 		}
-		
-		return iter->second;
+
+		return iter->second.vecActiveServiceID;
 	}
 
 	const SServiceBaseInfo* CServiceRegistryProxy::getServiceBaseInfoByServiceID(uint32_t nServiceID) const
 	{
+		const_cast<CServiceRegistryProxy*>(this)->m_sLock.lock(base::CRWLock::eLT_Read);
+		defer([this]()
+		{
+			const_cast<CServiceRegistryProxy*>(this)->m_sLock.unlock(base::CRWLock::eLT_Read);
+		});
+
 		auto iter = this->m_mapServiceProxyInfo.find(nServiceID);
 		if (iter == this->m_mapServiceProxyInfo.end())
 			return nullptr;
@@ -257,6 +334,12 @@ namespace core
 
 	bool CServiceRegistryProxy::getServiceBaseInfoByNodeID(uint32_t nNodeID, std::vector<SServiceBaseInfo>& vecServiceBaseInfo) const
 	{
+		const_cast<CServiceRegistryProxy*>(this)->m_sLock.lock(base::CRWLock::eLT_Read);
+		defer([this]()
+		{
+			const_cast<CServiceRegistryProxy*>(this)->m_sLock.unlock(base::CRWLock::eLT_Read);
+		});
+
 		auto iter = this->m_mapNodeProxyInfo.find(nNodeID);
 		if (iter == this->m_mapNodeProxyInfo.end())
 			return false;
@@ -265,78 +348,124 @@ namespace core
 		return true;
 	}
 
-	void CServiceRegistryProxy::delBaseConnectionOtherNodeByNodeID(uint32_t nNodeID)
+	void CServiceRegistryProxy::updateActiveServiceID(const std::set<std::string>& setType)
 	{
-		auto iter = this->m_mapNodeProxyInfo.find(nNodeID);
-		if (iter == this->m_mapNodeProxyInfo.end())
-			return;
-
-		SNodeProxyInfo& sNodeProxyInfo = iter->second;
-		for (size_t i = 0; i < sNodeProxyInfo.vecServiceBaseInfo.size(); ++i)
+		for (auto iter = setType.begin(); iter != setType.end(); ++iter)
 		{
-			auto iter = this->m_mapServiceProxyInfo.find(sNodeProxyInfo.vecServiceBaseInfo[i].nID);
-			if (iter == this->m_mapServiceProxyInfo.end())
-				continue;
-
-			SServiceProxyInfo& sServiceProxyInfo = iter->second;
-			sServiceProxyInfo.pBaseConnectionOtherNode = nullptr;
+			SServiceIDInfo& sActiveServiceIDInfo = this->m_mapServiceIDInfoByType[*iter];
+			sActiveServiceIDInfo.vecActiveServiceID.clear();
+			for (auto iter = sActiveServiceIDInfo.setActiveServiceID.begin(); iter != sActiveServiceIDInfo.setActiveServiceID.end(); ++iter)
+			{
+				sActiveServiceIDInfo.vecActiveServiceID.push_back(*iter);
+			}
 		}
-
-		sNodeProxyInfo.pBaseConnectionOtherNode = nullptr;
-
-		PrintInfo("other node disconnect node_id: {} node_name: {}", nNodeID, sNodeProxyInfo.sNodeBaseInfo.szName);
 	}
 
-	bool CServiceRegistryProxy::addBaseConnectionOtherNodeByNodeID(uint32_t nNodeID, CBaseConnectionOtherNode* pBaseConnectionOtherNode)
+	bool CServiceRegistryProxy::setOtherNodeSocketIDByNodeID(uint32_t nNodeID, uint64_t nSocketID)
 	{
-		DebugAstEx(pBaseConnectionOtherNode != nullptr, false);
-
 		auto iter = this->m_mapNodeProxyInfo.find(nNodeID);
 		if (iter == this->m_mapNodeProxyInfo.end())
 		{
-			PrintWarning("CServiceRegistryProxy::addBaseConnectionOtherNodeByNodeID unknwon node node_id: {} remote_addr: {} {}", nNodeID, pBaseConnectionOtherNode->getRemoteAddr().szHost, pBaseConnectionOtherNode->getRemoteAddr().nPort);
+			PrintWarning("CServiceRegistryProxy::setOtherNodeSocketIDByNodeID unknwon node node_id: {} socket_id: {}", nNodeID, nSocketID);
 			return false;
 		}
 
 		SNodeProxyInfo& sNodeProxyInfo = iter->second;
-		if (sNodeProxyInfo.pBaseConnectionOtherNode != nullptr)
+		if (nSocketID != 0)
 		{
-			PrintWarning("CServiceRegistryProxy::addBaseConnectionOtherNodeByNodeID dup node connection node_id: {} remote_addr: {} {}", nNodeID, pBaseConnectionOtherNode->getRemoteAddr().szHost, pBaseConnectionOtherNode->getRemoteAddr().nPort);
-			return false;
+			if (sNodeProxyInfo.nSocketID != 0)
+			{
+				PrintWarning("CServiceRegistryProxy::setOtherNodeSocketIDByNodeID dup node connection node_id: {} socket_id: {} {}", nNodeID, nSocketID);
+				return false;
+			}
+
+			this->m_sLock.lock(base::CRWLock::eLT_Write);
+			std::set<std::string> setType;
+			for (size_t i = 0; i < sNodeProxyInfo.vecServiceBaseInfo.size(); ++i)
+			{
+				auto iter = this->m_mapServiceProxyInfo.find(sNodeProxyInfo.vecServiceBaseInfo[i].nID);
+				if (iter == this->m_mapServiceProxyInfo.end())
+					continue;
+
+				SServiceProxyInfo& sServiceProxyInfo = iter->second;
+				SServiceBaseInfo& sServiceBaseInfo = sServiceProxyInfo.sServiceBaseInfo;
+				sServiceProxyInfo.nSocketID = nSocketID;
+
+				SServiceIDInfo& sServiceIDInfo = this->m_mapServiceIDInfoByType[sServiceBaseInfo.szType];
+				sServiceIDInfo.setActiveServiceID.insert(sServiceBaseInfo.nID);
+				
+				setType.insert(sServiceBaseInfo.szType);
+			}
+
+			sNodeProxyInfo.nSocketID = nSocketID;
+
+			this->updateActiveServiceID(setType);
+
+			this->m_sLock.unlock(base::CRWLock::eLT_Write);
+
+			PrintInfo("other node connect node_id: {} node_name: {}", nNodeID, sNodeProxyInfo.sNodeBaseInfo.szName);
+		}
+		else
+		{
+			this->m_sLock.lock(base::CRWLock::eLT_Write);
+			std::set<std::string> setType;
+			for (size_t i = 0; i < sNodeProxyInfo.vecServiceBaseInfo.size(); ++i)
+			{
+				auto iter = this->m_mapServiceProxyInfo.find(sNodeProxyInfo.vecServiceBaseInfo[i].nID);
+				if (iter == this->m_mapServiceProxyInfo.end())
+					continue;
+
+				SServiceProxyInfo& sServiceProxyInfo = iter->second;
+				SServiceBaseInfo& sServiceBaseInfo = sServiceProxyInfo.sServiceBaseInfo;
+
+				sServiceProxyInfo.nSocketID = 0;
+
+				SServiceIDInfo& sServiceIDInfo = this->m_mapServiceIDInfoByType[sServiceBaseInfo.szType];
+				sServiceIDInfo.setActiveServiceID.erase(sServiceBaseInfo.nID);
+				
+				setType.insert(sServiceBaseInfo.szType);
+			}
+
+			sNodeProxyInfo.nSocketID = 0;
+			
+			this->updateActiveServiceID(setType);
+
+			this->m_sLock.unlock(base::CRWLock::eLT_Write);
+
+			PrintInfo("other node disconnect node_id: {} node_name: {}", nNodeID, sNodeProxyInfo.sNodeBaseInfo.szName);
 		}
 
-		for (size_t i = 0; i < sNodeProxyInfo.vecServiceBaseInfo.size(); ++i)
-		{
-			auto iter = this->m_mapServiceProxyInfo.find(sNodeProxyInfo.vecServiceBaseInfo[i].nID);
-			if (iter == this->m_mapServiceProxyInfo.end())
-				continue;
-
-			SServiceProxyInfo& sServiceProxyInfo = iter->second;
-			sServiceProxyInfo.pBaseConnectionOtherNode = pBaseConnectionOtherNode;
-		}
-
-		sNodeProxyInfo.pBaseConnectionOtherNode = pBaseConnectionOtherNode;
-
-		PrintInfo("other node connect node_id: {} node_name: {}", nNodeID, sNodeProxyInfo.sNodeBaseInfo.szName);
 		return true;
 	}
 
-	CBaseConnectionOtherNode* CServiceRegistryProxy::getBaseConnectionOtherNodeByNodeID(uint32_t nNodeID) const
+	uint64_t CServiceRegistryProxy::getOtherNodeSocketIDByNodeID(uint32_t nNodeID) const
 	{
+		const_cast<CServiceRegistryProxy*>(this)->m_sLock.lock(base::CRWLock::eLT_Read);
+		defer([this]()
+		{
+			const_cast<CServiceRegistryProxy*>(this)->m_sLock.unlock(base::CRWLock::eLT_Read);
+		});
+
 		auto iter = this->m_mapNodeProxyInfo.find(nNodeID);
 		if (iter == this->m_mapNodeProxyInfo.end())
-			return nullptr;
+			return 0;
 
-		return iter->second.pBaseConnectionOtherNode;
+		return iter->second.nSocketID;
 	}
 
-	CBaseConnectionOtherNode* CServiceRegistryProxy::getBaseConnectionOtherNodeByServiceID(uint32_t nServiceID) const
+	uint64_t CServiceRegistryProxy::getOtherNodeSocketIDByServiceID(uint32_t nServiceID) const
 	{
+		const_cast<CServiceRegistryProxy*>(this)->m_sLock.lock(base::CRWLock::eLT_Read);
+		defer([this]()
+		{
+			const_cast<CServiceRegistryProxy*>(this)->m_sLock.unlock(base::CRWLock::eLT_Read);
+		});
+
 		auto iter = this->m_mapServiceProxyInfo.find(nServiceID);
 		if (iter == this->m_mapServiceProxyInfo.end())
-			return nullptr;
+			return 0;
 
-		return iter->second.pBaseConnectionOtherNode;
+		return iter->second.nSocketID;
 	}
 
 	bool CServiceRegistryProxy::addBaseConnectionToMaster(CBaseConnectionToMaster* pBaseConnectionToMaster)
@@ -375,7 +504,7 @@ namespace core
 			sMasterInfo.bActive = true;
 			char szBuf[256] = { 0 };
 			base::function_util::snprintf(szBuf, _countof(szBuf), "master%d", sMasterInfo.nID);
-			CBaseApp::Inst()->getBaseConnectionMgr()->connect(sMasterInfo.szHost, sMasterInfo.nPort, "CBaseConnectionToMaster", szBuf, 10 * 1024, 10 * 1024, nullptr);;
+			CCoreApp::Inst()->getBaseConnectionMgr()->connect(sMasterInfo.szHost, sMasterInfo.nPort, "CBaseConnectionToMaster", szBuf, 10 * 1024, 10 * 1024, nullptr);;
 		}
 	}
 
@@ -395,6 +524,12 @@ namespace core
 
 	bool CServiceRegistryProxy::isValidService(uint32_t nServiceID) const
 	{
+		const_cast<CServiceRegistryProxy*>(this)->m_sLock.lock(base::CRWLock::eLT_Read);
+		defer([this]()
+		{
+			const_cast<CServiceRegistryProxy*>(this)->m_sLock.unlock(base::CRWLock::eLT_Read);
+		});
+
 		return this->m_mapServiceIDByName.find(nServiceID) != this->m_mapServiceIDByName.end();
 	}
 }

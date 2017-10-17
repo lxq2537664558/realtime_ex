@@ -4,7 +4,7 @@ Source Host: localhost
 Source Database: game_db_1
 Target Host: localhost
 Target Database: game_db_1
-Date: 2017/8/31 15:38:24
+Date: 2017/9/30 16:50:20
 */
 
 SET FOREIGN_KEY_CHECKS=0;
@@ -29,6 +29,15 @@ CREATE TABLE `player_base` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- ----------------------------
+-- Table structure for player_battlearray
+-- ----------------------------
+CREATE TABLE `player_battlearray` (
+  `player_id` bigint(20) unsigned NOT NULL,
+  `data` text,
+  PRIMARY KEY (`player_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- ----------------------------
 -- Table structure for player_hero
 -- ----------------------------
 CREATE TABLE `player_hero` (
@@ -44,7 +53,7 @@ CREATE TABLE `player_hero` (
 CREATE TABLE `player_id_gen` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=50 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=51 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Table structure for player_item

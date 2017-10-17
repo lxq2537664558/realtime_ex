@@ -40,7 +40,8 @@ namespace core
 
 #endif
 
-	class CCoroutineMgr;
+	// 为了支持多线程，不支持共享栈，不然保存栈的时候需要加锁，但是此时正在执行的协程没法锁
+	class CCoroutineThread;
 	class CCoroutineImpl
 	{
 	public:
@@ -63,7 +64,6 @@ namespace core
 
 	private:
 #ifndef _WIN32
-		void		saveStack();
 		static void	onCallback();
 #endif
 		static void	onCallback(void* pParm);
@@ -78,7 +78,6 @@ namespace core
 		uintptr_t						m_nStackSize;
 
 #ifndef _WIN32
-		bool							m_bOwnerStack;
 		char*							m_pStack;
 		uintptr_t						m_nStackCap;
 		int32_t							m_nValgrindID;

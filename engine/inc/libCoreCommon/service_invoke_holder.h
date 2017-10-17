@@ -23,53 +23,40 @@ namespace core
 		CServiceInvokeHolder& operator = (CServiceInvokeHolder& rhs);
 
 		//==================================调用指定服务方法=======================================//
-		bool			send(uint32_t nServiceID, const void* pMessage);
+		bool			send(uint32_t nServiceID, const void* pMessage, uint8_t nMessageSerializerType = 0);
 
-		void			broadcast(const std::string& szServiceType, const void* pMessage);
+		void			broadcast(const std::string& szServiceType, const void* pMessage, uint8_t nMessageSerializerType = 0);
 
 		template<class T>
-		inline void		async_invoke(uint32_t nServiceID, const void* pMessage, const std::function<void(const T*, uint32_t)>& callback);
+		inline void		async_invoke(uint32_t nServiceID, const void* pMessage, const std::function<void(const T*, uint32_t)>& callback, uint8_t nMessageSerializerType = 0);
 		
 		template<class T>
-		inline void		async_invoke(uint32_t nServiceID, const void* pMessage, CFuture<T>& sFuture);
+		inline void		async_invoke(uint32_t nServiceID, const void* pMessage, CFuture<T>& sFuture, uint8_t nMessageSerializerType = 0);
 		
 		template<class T>
-		inline uint32_t	sync_invoke(uint32_t nServiceID, const void* pMessage, std::shared_ptr<T>& pResponseMessage);
+		inline uint32_t	sync_invoke(uint32_t nServiceID, const void* pMessage, std::shared_ptr<T>& pResponseMessage, uint8_t nMessageSerializerType = 0);
 		//==================================调用指定服务方法=======================================//
 
 
 
 		//==================================调用指定服务类型方法=======================================//
-		bool			send(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const void* pMessage);
+		bool			send(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const void* pMessage, uint8_t nMessageSerializerType = 0);
 
 		template<class T>
-		inline void		async_invoke(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const void* pMessage, const std::function<void(const T*, uint32_t)>& callback);
+		inline void		async_invoke(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const void* pMessage, const std::function<void(const T*, uint32_t)>& callback, uint8_t nMessageSerializerType = 0);
 		
 		template<class T>
-		inline void		async_invoke(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const void* pMessage, CFuture<T>& sFuture);
+		inline void		async_invoke(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const void* pMessage, CFuture<T>& sFuture, uint8_t nMessageSerializerType = 0);
 		
 		template<class T>
-		inline uint32_t	sync_invoke(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const void* pMessage, std::shared_ptr<T>& pResponseMessage);
+		inline uint32_t	sync_invoke(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const void* pMessage, std::shared_ptr<T>& pResponseMessage, uint8_t nMessageSerializerType = 0);
 		//==================================调用指定服务类型方法=======================================//
 
 
+		void			response(const SSessionInfo& sSessionInfo, const void* pMessage, uint32_t nErrorCode = eRRT_OK, uint8_t nMessageSerializerType = 0);
 
-		//==================================调用指定actor方法=======================================//
-		bool				send_a(uint32_t nServiceID, uint64_t nActorID, const void* pMessage);
-		
-		template<class T>
-		inline void			async_invoke_a(uint32_t nServiceID, uint64_t nActorID, const void* pMessage, const std::function<void(const T*, uint32_t)>& callback, CServiceInvokeHolder* pServiceInvokeHolder = nullptr);
-		
-		template<class T>
-		inline void			async_invoke_a(uint32_t nServiceID, uint64_t nActorID, const void* pMessage, CFuture<T>& sFuture, CServiceInvokeHolder* pServiceInvokeHolder = nullptr);
-		//==================================调用指定actor方法=======================================//
-
-
-
-		void				response(const SSessionInfo& sSessionInfo, const void* pMessage, uint32_t nErrorCode = eRRT_OK);
-
-		uint64_t			getHolderID() const;
-		CServiceBase*		getServiceBase() const;
+		uint64_t		getHolderID() const;
+		CServiceBase*	getServiceBase() const;
 
 	private:
 		CServiceBase*	m_pServiceBase;

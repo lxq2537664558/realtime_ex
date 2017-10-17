@@ -3,8 +3,10 @@
 #include "libBaseCommon/thread_base.h"
 #include "libBaseCommon/spin_lock.h"
 #include "libBaseCommon/link.h"
+#include "libBaseCommon/singleton.h"
 
 #include "ticker.h"
+#include "message_queue.h"
 
 #include <memory>
 #include <vector>
@@ -20,14 +22,12 @@ namespace core
 	class CTickerRunnable;
 	class CNetRunnable;
 	class CLogicRunnable;
-	class CCoreActor;
 	class CTicker;
 	class CCoreTickerInfo
 	{
 		friend class CTickerRunnable;
 		friend class CNetRunnable;
 		friend class CLogicRunnable;
-		friend class CCoreActor;
 		friend class CTicker;
 
 	public:
@@ -42,19 +42,20 @@ namespace core
 		int32_t	getRef() const;
 
 	private:
-		CTicker*				m_pTicker;
+		CTicker*				m_pTicker;			// 这个变量的访问跟修改都是在发起定时器的线程中，所以没有竞争问题
 		void*					m_pMemory;
 		int64_t					m_nNextTime;		// 下一次定时器运行时间
 		int64_t					m_nIntervalTime;	// 定时器运行的间隔时间
-		uint32_t				m_nType;
+		CMessageQueue*			m_pMessageQueue;
+		int32_t					m_nState;			// 这个变量的访问跟修改都是在发起定时器的线程中，所以没有竞争问题
 		std::atomic<int32_t>	m_nRef;
-		std::atomic<int32_t>	m_nState;
 	};
 
 	typedef base::TLinkNode<CCoreTickerInfo> CCoreTickerNode;
 
 	class CTickerRunnable :
-		public base::IRunnable
+		public base::IRunnable,
+		public base::CSingleton<CTickerRunnable>
 	{
 	private:
 		enum
@@ -74,7 +75,7 @@ namespace core
 
 		bool			init();
 
-		bool			registerTicker(uint8_t nType, uint32_t nFromServiceID, uint64_t nFromActorID, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
+		bool			registerTicker(CMessageQueue* pMessageQueue, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
 		void			unregisterTicker(CTicker* pTicker);
 		
 	private:
@@ -93,10 +94,12 @@ namespace core
 		base::TLink<CCoreTickerNode>	m_listNearTicker[__TIME_NEAR_SIZE];								// 最近运行到的时间刻度
 		base::TLink<CCoreTickerNode>	m_listCascadeTicker[__TIME_CASCADE_COUNT][__TIME_CASCADE_SIZE];	// 联级时间刻度
 		base::TLink<CCoreTickerNode>	m_listFarTicker;												// 最远的定时器链表
-		std::vector<CCoreTickerNode*>	m_vecSwapTicker;												// 双队列交换的定时器
-		
+		std::vector<CCoreTickerNode*>	m_vecRegisterTicker;											// 双队列交换的注册定时器
+		base::spin_lock					m_lockRegister;
+		std::vector<CCoreTickerNode*>	m_vecUnRegisterTicker;											// 双队列交换的反注册定时器
+		base::spin_lock					m_lockUnRegister;
+
 		std::vector<CCoreTickerNode*>	m_vecTempTickerNode;
 		int64_t							m_nLogicTime;													// 当前刻度时间
-		base::spin_lock					m_lock;
 	};
 }

@@ -129,6 +129,7 @@
     <ClCompile Include="gate_client_session.cpp" />
     <ClCompile Include="gate_client_session_mgr.cpp" />
     <ClCompile Include="gate_client_connection_factory.cpp" />
+    <ClCompile Include="memory_new.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\engine\src\libCoreCommon\libCoreCommon.vcxproj">

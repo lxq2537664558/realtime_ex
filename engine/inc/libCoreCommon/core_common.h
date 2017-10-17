@@ -3,8 +3,6 @@
 #include <functional>
 #include <memory>
 
-#include "libBaseCommon/function_util.h"
-
 #ifdef _WIN32
 
 #	ifdef __BUILD_CORE_COMMON_DLL__
@@ -29,53 +27,6 @@ enum EResponseResultType
 	eRRT_ERROR		= 3,
 };
 
-namespace core
-{
-#pragma pack(push,1)
-	// 消息头
-	struct message_header
-	{
-		uint16_t	nMessageSize;	// 包括消息头的
-		uint32_t	nMessageID;
-
-		message_header(uint32_t nMessageID) : nMessageID(nMessageID) { }
-		message_header() {}
-	};
-
-#pragma pack(pop)
-}
-
-#define message_begin(MessageName, nMessageID) \
-class MessageName : public core::message_header\
-{\
-public:\
-	MessageName() : core::message_header(nMessageID) { nMessageSize = sizeof(MessageName); }\
-	static  uint32_t	getMessageID() { return nMessageID; }\
-	static  const char*	getMessageName() { return #MessageName; }
-
-#define message_end };
-
-#define pack_begin(writeBuf)\
-	writeBuf.clear();\
-	writeBuf.write(this, sizeof(core::message_header));
-
-#define pack_end(writeBuf)\
-	do\
-	{\
-		uint16_t nPos = (uint16_t)writeBuf.getCurSize(); \
-		writeBuf.seek(base::eBST_Begin, 0); \
-		writeBuf.write(nPos); \
-		writeBuf.seek(base::eBST_Begin, nPos);\
-	} while(0)
-
-#define unpack_begin(buf, size)\
-	base::CReadBuf readBuf;\
-	readBuf.init(buf, size);\
-	readBuf.read(this, sizeof(core::message_header));
-
-#define unpack_end()
-
-
 #define _INVALID_SOCKET_ID			-1
 
 enum EMessageType
@@ -97,41 +48,24 @@ enum ECoreConnectionType
 	eCCT_Websocket,
 };
 
-enum EServiceSelectorType
-{
-	eSST_Random = 1,
-	eSST_Hash	= 2,
-};
-
-enum EMessageSerializerType
-{
-	eMST_Protobuf		= 1,
-	eMST_JsonProtobuf	= 2,
-	eMST_Native			= 3,
-};
-
 #define _MAX_MESSAGE_NAME_LEN 128
 
 namespace core
 {
+#pragma pack(push,1)
+	// 消息头
+	struct message_header
+	{
+		uint16_t	nMessageSize;	// 包括消息头的
+		uint32_t	nMessageID;
+
+		message_header(uint32_t nMessageID) : nMessageID(nMessageID) { }
+		message_header() {}
+	};
+
+#pragma pack(pop)
+
 	typedef std::function<int32_t(const char*, uint32_t, uint8_t&)>	MessageParser;	// 原生消息
-
-	struct	SMessagePacket
-	{
-		uint8_t		nType;
-		uint32_t	nDataSize;
-		void*		pData;
-	};
-
-	struct	SActorMessagePacket
-	{
-		uint8_t		nType;
-		uint8_t		nMessageSerializerType;
-		uint32_t	nFromServiceID;
-		uint64_t	nData;
-		uint64_t	nSessionID;
-		void*		pMessage;
-	};
 
 	struct SNodeBaseInfo
 	{
@@ -158,78 +92,9 @@ namespace core
 
 	struct SSessionInfo
 	{
-		uint32_t			nFromServiceID;
-		uint64_t			nFromActorID;
-		uint64_t			nSessionID;
-	};
-
-	struct SSyncCallResultInfo
-	{
-		uint8_t	nResult;
-		std::shared_ptr<void>
-				pMessage;
-	};
-
-#pragma pack(push,1)
-	struct gate_forward_cookice
-	{
-		uint64_t	nSessionID;
 		uint32_t	nFromServiceID;
-		uint64_t	nToActorID;
-		uint32_t	nToServiceID;
-	};
-
-	struct gate_send_cookice
-	{
 		uint64_t	nSessionID;
-		uint32_t	nToServiceID;
 	};
-
-	struct gate_broadcast_cookice
-	{
-		uint32_t	nToServiceID;
-		uint16_t	nSessionCount;
-	};
-
-	struct request_cookice
-	{
-		uint64_t	nSessionID;
-		uint64_t	nFromActorID;
-		uint32_t	nFromServiceID;
-		uint64_t	nToActorID;
-		uint32_t	nToServiceID;
-		uint8_t		nMessageSerializerType;
-		uint16_t	nMessageNameLen;
-		char		szMessageName[1];
-	};
-
-	struct response_cookice
-	{
-		uint64_t	nSessionID;
-		uint32_t	nFromServiceID;
-		uint64_t	nToActorID;
-		uint32_t	nToServiceID;
-		uint8_t		nMessageSerializerType;
-		uint8_t		nResult;
-		uint16_t	nMessageNameLen;
-		char		szMessageName[1];
-	};
-
-	struct health_request_cookice
-	{
-		uint64_t	nSessionID;
-		uint32_t	nFromServiceID;
-		uint32_t	nToServiceID;
-	};
-
-	struct health_response_cookice
-	{
-		uint64_t	nSessionID;
-		uint32_t	nToServiceID;
-		uint8_t		nResult;
-	};
-
-#pragma pack(pop)
 }
 
 inline int32_t default_client_message_parser(const char* pData, uint32_t nSize, uint8_t& nMessageType)

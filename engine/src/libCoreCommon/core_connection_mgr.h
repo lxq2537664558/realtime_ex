@@ -2,7 +2,6 @@
 
 #include <vector>
 #include <list>
-#include <unordered_map>
 #include <map>
 #include <functional>
 
@@ -15,6 +14,7 @@
 namespace core
 {
 	class CCoreConnection;
+	class CLogicMessageQueue;
 	class CBaseConnectionMgr;
 	class CCoreConnectionMgr :
 		public base::noncopyable
@@ -26,8 +26,8 @@ namespace core
 		~CCoreConnectionMgr();
 
 		bool				init(uint32_t nMaxConnectionCount);
-		bool				connect(const std::string& szHost, uint16_t nPort, const std::string& szType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser);
-		bool				listen(const std::string& szHost, uint16_t nPort, bool bReusePort, const std::string& szType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser, uint8_t nCoreConnectionType);
+		bool				connect(CLogicMessageQueue* pMessageQueue, const std::string& szHost, uint16_t nPort, const std::string& szType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser);
+		bool				listen(CLogicMessageQueue* pMessageQueue, const std::string& szHost, uint16_t nPort, bool bReusePort, const std::string& szType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser, uint8_t nCoreConnectionType);
 		void				update(uint32_t nTime);
 
 		void				broadcast(const std::string& szType, uint8_t nMessageType, const void* pData, uint16_t nSize, uint64_t* pExcludeID, uint16_t nExcludeIDCount);
@@ -42,6 +42,7 @@ namespace core
 		struct SNetAccepterHandler :
 			public base::net::INetAccepterHandler
 		{
+			CLogicMessageQueue* pMessageQueue;
 			std::string			szContext;
 			std::string			szType;
 			uint8_t				nCoreConnectionType;
@@ -57,6 +58,7 @@ namespace core
 		struct SNetActiveWaitConnecterHandler :
 			public base::net::INetConnecterHandler
 		{
+			CLogicMessageQueue* pMessageQueue;
 			std::string			szContext;
 			std::string			szType;
 			CCoreConnectionMgr*	pCoreConnectionMgr;
@@ -82,6 +84,6 @@ namespace core
 		void								onConnect(SNetActiveWaitConnecterHandler* pNetActiveWaitConnecterHandler);
 		void								delActiveWaitConnecterHandler(SNetActiveWaitConnecterHandler* pWaitActiveConnecterHandler);
 
-		CCoreConnection*					createCoreConnection(const std::string& szType, const std::string& szContext, const MessageParser& messageParser, uint8_t nCoreConnectionType);
+		CCoreConnection*					createCoreConnection(CLogicMessageQueue* pMessageQueue, std::string& szType, const std::string& szContext, const MessageParser& messageParser, uint8_t nCoreConnectionType);
 	};
 }

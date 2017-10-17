@@ -4,9 +4,14 @@
 
 #include "base_app.h"
 #include "service_base.h"
-#include "logic_runnable.h"
-#include "net_runnable.h"
-#include "ticker_runnable.h"
+#include "logic_message_queue_mgr.h"
+#include "transporter.h"
+#include "core_service_mgr.h"
+#include "service_registry_proxy.h"
+#include "node_connection_factory.h"
+#include "logic_message_queue.h"
+#include "base_connection_mgr_impl.h"
+#include "base_connection_mgr.h"
 
 namespace core
 {
@@ -25,13 +30,16 @@ namespace core
 		uint32_t				getNodeID() const;
 		const SNodeBaseInfo&	getNodeBaseInfo() const;
 
-		void					registerTicker(uint8_t nType, uint32_t nFromServiceID, uint64_t nFromActorID, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
+		void					registerTicker(CMessageQueue* pMessageQueue, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
 		void					unregisterTicker(CTicker* pTicker);
 
-		CNetRunnable*			getNetRunnable() const;
-		CLogicRunnable*			getLogicRunnable() const;
-		CTickerRunnable*		getTickerRunnable() const;
-
+		CLogicMessageQueueMgr*	getLogicMessageQueueMgr() const;
+		CLogicMessageQueue*		getGlobalLogicMessageQueue() const;
+		CCoreServiceMgr*		getCoreServiceMgr() const;
+		CTransporter*			getTransporter() const;
+		CServiceRegistryProxy*	getServiceRegistryProxy() const;
+		CBaseConnectionMgr*		getBaseConnectionMgr() const;
+		
 		uint32_t				getInvokeTimeout(uint32_t nServiceID) const;
 
 		const std::string&		getConfigFileName() const;
@@ -48,6 +56,8 @@ namespace core
 		
 		uint32_t				getSamplingTime() const;
 
+		uint32_t				getLogicThreadCount() const;
+
 		uint32_t				getLocalServiceInvokeTimeout() const;
 
 		uint32_t				getCoroutineStackSize() const;
@@ -60,28 +70,33 @@ namespace core
 		bool					init(size_t argc, char** argv, const std::vector<CServiceBase*>& vecServiceBase);
 		void					destroy();
 		void					onQPS(uint64_t nContext);
+		void					printNodeInfo();
 
 	protected:
-		SNodeBaseInfo		m_sNodeBaseInfo;
-		std::string			m_szConfig;
-		std::string			m_szPID;
-		base::CWriteBuf		m_writeBuf;
-		std::vector<char>	m_vecWebsocketBuf;
-		uint32_t			m_nCycleCount;
-		int64_t				m_nTotalSamplingTime;
-		uint32_t			m_nSamplingTime;
-		volatile uint32_t	m_nQuiting;
-		uint32_t			m_nHeartbeatLimit;
-		uint32_t			m_nHeartbeatTime;
-		uint32_t			m_nLocalServiceInvokeTimeout;
-		uint32_t			m_nCoroutineStackSize;
-		uint32_t			m_nQPS;
-		CTicker				m_tickerQPS;
-		CNetRunnable*		m_pNetRunnable;
-		CLogicRunnable*		m_pLogicRunnable;
-		CTickerRunnable*	m_pTickerRunnable;
+		SNodeBaseInfo			m_sNodeBaseInfo;
+		std::string				m_szConfig;
+		std::string				m_szPID;
+		base::CWriteBuf			m_writeBuf;
+		std::vector<char>		m_vecWebsocketBuf;
+		uint32_t				m_nCycleCount;
+		int64_t					m_nTotalSamplingTime;
+		uint32_t				m_nSamplingTime;
+		volatile uint32_t		m_nQuiting;
+		uint32_t				m_nHeartbeatLimit;
+		uint32_t				m_nHeartbeatTime;
+		uint32_t				m_nLogicThreadCount;
+		uint32_t				m_nLocalServiceInvokeTimeout;
+		uint32_t				m_nCoroutineStackSize;
+		uint32_t				m_nQPS;
+		CTicker					m_tickerQPS;
 
-		CNetMessageQueue*	m_pNetMessageQueue;
-		CLogicMessageQueue*	m_pLogicMessageQueue;
+		std::vector<CLogicRunnable*>	m_vecLogicRunnable;
+		CBaseConnectionMgr*				m_pBaseConnectionMgr;
+		CLogicMessageQueueMgr*			m_pLogicMessageQueueMgr;
+		CLogicMessageQueue*				m_pGlobalLogicMessageQueue;
+		CCoreServiceMgr*				m_pCoreServiceMgr;
+		CTransporter*					m_pTransporter;
+		CServiceRegistryProxy*			m_pServiceRegistryProxy;
+		CNodeConnectionFactory*			m_pNodeConnectionFactory;
 	};
 }

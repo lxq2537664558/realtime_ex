@@ -2,7 +2,6 @@
 #include "base_connection.h"
 #include "core_connection.h"
 #include "base_connection_mgr.h"
-#include "core_common.h"
 #include "message_command.h"
 #include "net_runnable.h"
 #include "core_app.h"
@@ -57,18 +56,18 @@ namespace core
 	{
 		DebugAst(pData != nullptr);
 
-		char* szBuf = new char[sizeof(SMCT_SEND_SOCKET_DATA) + nSize];
-		SMCT_SEND_SOCKET_DATA* pContext = reinterpret_cast<SMCT_SEND_SOCKET_DATA*>(szBuf);
+		char* szBuf = new char[sizeof(SMCT_SEND_SOCKET_DATA1) + nSize];
+		SMCT_SEND_SOCKET_DATA1* pContext = reinterpret_cast<SMCT_SEND_SOCKET_DATA1*>(szBuf);
 		pContext->nMessageType = nMessageType;
 		pContext->pCoreConnection = this->m_pCoreConnection;
-		memcpy(szBuf + sizeof(SMCT_SEND_SOCKET_DATA), pData, nSize);
+		memcpy(szBuf + sizeof(SMCT_SEND_SOCKET_DATA1), pData, nSize);
 
 		SMessagePacket sMessagePacket;
-		sMessagePacket.nType = eMCT_SEND_SOCKET_DATA;
+		sMessagePacket.nType = eMCT_SEND_SOCKET_DATA1;
 		sMessagePacket.pData = pContext;
-		sMessagePacket.nDataSize = sizeof(SMCT_SEND_SOCKET_DATA) + nSize;
+		sMessagePacket.nDataSize = sizeof(SMCT_SEND_SOCKET_DATA1) + nSize;
 
-		CCoreApp::Inst()->getNetRunnable()->getMessageQueue()->send(sMessagePacket);
+		CNetRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
 	}
 
 	void CBaseConnection::send(uint8_t nMessageType, const void* pData, uint16_t nSize, const void* pExtraBuf, uint16_t nExtraSize)
@@ -78,19 +77,19 @@ namespace core
 		if (pExtraBuf == nullptr || nExtraSize == 0)
 			return this->send(nMessageType, pData, nSize);
 
-		char* szBuf = new char[sizeof(SMCT_SEND_SOCKET_DATA) + nSize];
-		SMCT_SEND_SOCKET_DATA* pContext = reinterpret_cast<SMCT_SEND_SOCKET_DATA*>(szBuf);
+		char* szBuf = new char[sizeof(SMCT_SEND_SOCKET_DATA1) + nSize + nExtraSize];
+		SMCT_SEND_SOCKET_DATA1* pContext = reinterpret_cast<SMCT_SEND_SOCKET_DATA1*>(szBuf);
 		pContext->nMessageType = nMessageType;
 		pContext->pCoreConnection = this->m_pCoreConnection;
-		memcpy(szBuf + sizeof(SMCT_SEND_SOCKET_DATA), pData, nSize);
-		memcpy(szBuf + sizeof(SMCT_SEND_SOCKET_DATA) + nSize, pExtraBuf, nExtraSize);
+		memcpy(szBuf + sizeof(SMCT_SEND_SOCKET_DATA1), pData, nSize);
+		memcpy(szBuf + sizeof(SMCT_SEND_SOCKET_DATA1) + nSize, pExtraBuf, nExtraSize);
 
 		SMessagePacket sMessagePacket;
-		sMessagePacket.nType = eMCT_SEND_SOCKET_DATA;
+		sMessagePacket.nType = eMCT_SEND_SOCKET_DATA1;
 		sMessagePacket.pData = pContext;
-		sMessagePacket.nDataSize = sizeof(SMCT_SEND_SOCKET_DATA) + nSize + nExtraSize;
+		sMessagePacket.nDataSize = sizeof(SMCT_SEND_SOCKET_DATA1) + nSize + nExtraSize;
 
-		CCoreApp::Inst()->getNetRunnable()->getMessageQueue()->send(sMessagePacket);
+		CNetRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
 	}
 
 	void CBaseConnection::shutdown(bool bForce, const std::string& szMsg)
@@ -105,7 +104,7 @@ namespace core
 		sMessagePacket.pData = pContext;
 		sMessagePacket.nDataSize = sizeof(SMCT_REQUEST_SOCKET_SHUTDOWN);
 
-		CCoreApp::Inst()->getNetRunnable()->getMessageQueue()->send(sMessagePacket);
+		CNetRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
 	}
 
 	void CBaseConnection::enableHeartbeat(bool bEnable)

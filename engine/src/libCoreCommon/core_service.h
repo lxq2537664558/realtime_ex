@@ -3,14 +3,15 @@
 #include "core_common.h"
 #include "core_common_define.h"
 #include "service_base.h"
-#include "actor_scheduler.h"
 #include "service_invoker.h"
 #include "logic_message_queue.h"
 #include "message_dispatcher.h"
+#include "base_connection_mgr.h"
 
 #include "libBaseCommon/spin_lock.h"
 
 #include <map>
+#include <set>
 
 namespace core
 {
@@ -37,12 +38,15 @@ namespace core
 		const SServiceBaseInfo&	getServiceBaseInfo() const;
 
 		CServiceInvoker*		getServiceInvoker() const;
-		CActorScheduler*		getActorScheduler() const;
 		CMessageDispatcher*		getMessageDispatcher() const;
+
+		CLogicMessageQueue*		getMessageQueue() const;
 
 		void					setServiceSelector(uint32_t nType, CServiceSelector* pServiceSelector);
 		CServiceSelector*		getServiceSelector(uint32_t nType) const;
 
+		CBaseConnectionMgr*		getBaseConnectionMgr() const;
+		
 		void					setToGateMessageCallback(const std::function<void(uint64_t, const void*, uint16_t)>& callback);
 		std::function<void(uint64_t, const void*, uint16_t)>&
 								getToGateMessageCallback();
@@ -54,18 +58,10 @@ namespace core
 		void					registerServiceMessageHandler(const std::string& szMessageName, const std::function<void(CServiceBase*, SSessionInfo, const void*)>& callback);
 		void					registerServiceForwardHandler(const std::string& szMessageName, const std::function<void(CServiceBase*, SClientSessionInfo, const void*)>& callback);
 		
-		void					registerActorMessageHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SSessionInfo, const void*)>& callback);
-		void					registerActorForwardHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SClientSessionInfo, const void*)>& callback);
-		
 		std::function<void(CServiceBase*, SSessionInfo, const void*)>&
 								getServiceMessageHandler(const std::string& szMessageName);
 		std::function<void(CServiceBase*, SClientSessionInfo, const void*)>&
 								getServiceForwardHandler(const std::string& szMessageName);
-
-		std::function<void(CActorBase*, SSessionInfo, const void*)>&
-								getActorMessageHandler(const std::string& szMessageName);
-		std::function<void(CActorBase*, SClientSessionInfo, const void*)>&
-								getActorForwardHandler(const std::string& szMessageName);
 
 		const std::string&		getForwardMessageName(uint32_t nMessageID);
 
@@ -106,8 +102,10 @@ namespace core
 		CServiceBase*			m_pServiceBase;
 		EServiceRunState		m_eRunState;
 		CServiceInvoker*		m_pServiceInvoker;
-		CActorScheduler*		m_pActorScheduler;
 		CMessageDispatcher*		m_pMessageDispatcher;
+		CLogicMessageQueue*		m_pMessageQueue;
+		CBaseConnectionMgr*		m_pBaseConnectionMgr;
+		
 		CTicker					m_tickerCheckHealth;
 
 		uint64_t				m_nNextSessionID;
@@ -123,11 +121,6 @@ namespace core
 								m_mapServiceMessageHandler;
 		std::map<std::string, std::function<void(CServiceBase*, SClientSessionInfo, const void*)>>
 								m_mapServiceForwardHandler;
-
-		std::map<std::string, std::function<void(CActorBase*, SSessionInfo, const void*)>>
-								m_mapActorMessageHandler;
-		std::map<std::string, std::function<void(CActorBase*, SClientSessionInfo, const void*)>>
-								m_mapActorForwardHandler;
 
 		std::map<uint32_t, std::string>
 								m_mapForwardMessageName;

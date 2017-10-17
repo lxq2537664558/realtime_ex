@@ -105,6 +105,9 @@ namespace base
 		while (file.good())
 		{
 			std::getline(file, szLine);
+#ifndef _WIN32
+			szLine = base::string_util::rtrim(szLine, "\r");
+#endif
 			if (!szLine.empty())
 				vecContent.push_back(szLine);
 		}
@@ -134,6 +137,7 @@ namespace base
 		for (size_t i = 0; i < this->m_pParserInfo->vecHeader.size(); ++i)
 		{
 			const char* szSrcColumn = this->m_pParserInfo->vecHeader[i].c_str();
+
 			if (base::string_util::equal(szSrcColumn, szColumn, false))
 				return (int32_t)i;
 		}

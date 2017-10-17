@@ -32,5 +32,8 @@
     <ClCompile Include="launcher.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="memory_new.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

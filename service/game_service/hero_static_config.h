@@ -16,6 +16,7 @@ struct SHeroConfigInfo
 	uint16_t	nQuality;		// 品质
 	uint16_t	nOccupation;	// 职业
 	uint16_t	nSex;			// 性别
+	uint16_t	nLevel;			// 等级
 	uint16_t	nActiveReqLv;	// 解锁英雄需要的等级
 	uint32_t	nActiveReqPatchID;	// 解锁英雄需要的碎片id
 	std::vector<SAttributeValue>
@@ -31,6 +32,7 @@ struct SHeroConfigInfo
 	float		nCrit;			// 暴击率
 	float		nDodge;			// 闪避率
 	float		nAvoidInjury;	// 免伤率
+	uint32_t	nNormalSkillID;	// 普通攻击技能ID
 	std::vector<uint32_t>
 				vecSkillID;		// 英雄技能
 
@@ -40,6 +42,7 @@ struct SHeroConfigInfo
 		this->nQuality = 0;
 		this->nOccupation = 0;
 		this->nSex = 0;
+		this->nLevel = 0;
 		this->nActiveReqLv = 0;
 		this->nActiveReqPatchID = 0;
 		this->nBaseHP = 0;

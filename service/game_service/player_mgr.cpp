@@ -29,23 +29,15 @@ CPlayer* CPlayerMgr::createPlayer(uint64_t nPlayerID, const void* pContext)
 	if (nullptr != this->getPlayer(nPlayerID))
 		return nullptr;
 
-	CActorBase* pActorBase = this->m_pGameService->createActor("CPlayer", nPlayerID, pContext);
-	if (nullptr == pActorBase)
-		return nullptr;
-
-	CPlayer* pPlayer = dynamic_cast<CPlayer*>(pActorBase);
-	if (nullptr == pPlayer)
-	{
-		this->m_pGameService->destroyActor(pActorBase);
-		return nullptr;
-	}
+	CPlayer* pPlayer = new CPlayer(this->m_pGameService);
+	pPlayer->onInit(pContext);
 	
 	this->m_mapPlayer[nPlayerID] = pPlayer;
 
 	PrintInfo("CPlayerMgr::createPlayer player_id: {}", nPlayerID);
 
 	pPlayer->onLoadData();
-
+	
 	uint32_t nDBID = _GET_PLAYER_DB_ID(nPlayerID);
 	uint32_t nDbServiceID = nDBID + _GAME_DB_SERVICE_DELTA;
 	uint32_t nErrorCode = this->sync_nop(nDbServiceID, (uint32_t)nPlayerID);
@@ -83,7 +75,8 @@ void CPlayerMgr::destroyPlayer(uint64_t nPlayerID, const std::string& szMsg)
 	CPlayer* pPlayer = iter->second;
 	this->m_mapPlayer.erase(iter);
 
-	this->m_pGameService->destroyActor(pPlayer);
+	pPlayer->onDestroy();
+	SAFE_DELETE(pPlayer);
 
 	PrintInfo("CPlayerMgr::destroyPlayer player_id: {} msg: {}", nPlayerID, szMsg);
 }
@@ -108,10 +101,10 @@ void CPlayerMgr::onGateDisconnect(uint32_t nGateServiceID)
 		uint32_t nUCServiceID = pPlayer->getUCServiceID();
 
 		pPlayer->onPlayerLogout();
-		vecPlayerID.push_back(pPlayer->getActorID());
+		vecPlayerID.push_back(pPlayer->getPlayerID());
 		
 		s2u_player_leave_notify notify_msg;
-		notify_msg.set_player_id(pPlayer->getActorID());
+		notify_msg.set_player_id(pPlayer->getPlayerID());
 		this->m_pGameService->getServiceInvoker()->send(nUCServiceID, &notify_msg);
 	}
 

@@ -9,14 +9,7 @@ namespace core
 		command.message_name = pMessage->GetTypeName();
 		command.message_content = std::move(szData);
 
-		uint32_t nMessageSerializerType = this->m_sServiceInvokeHolder.getServiceBase()->getServiceMessageSerializerType(nDbServiceID);
-		this->m_sServiceInvokeHolder.getServiceBase()->setServiceMessageSerializer(nDbServiceID, eMST_Native);
-		defer([this, nMessageSerializerType, nDbServiceID]()
-		{
-			this->m_sServiceInvokeHolder.getServiceBase()->setServiceMessageSerializer(nDbServiceID, nMessageSerializerType);
-		});
-
- 		return this->m_sServiceInvokeHolder.send(nDbServiceID, &command);
+ 		return this->m_sServiceInvokeHolder.send(nDbServiceID, &command, eMST_Native);
 	}
 
 	bool CDbServiceInvokeHolder::remove(uint32_t nDbServiceID, uint64_t nID, const std::string& szTableName)
@@ -25,14 +18,7 @@ namespace core
 		command.id = nID;
 		command.table_name = szTableName;
 
-		uint32_t nMessageSerializerType = this->m_sServiceInvokeHolder.getServiceBase()->getServiceMessageSerializerType(nDbServiceID);
-		this->m_sServiceInvokeHolder.getServiceBase()->setServiceMessageSerializer(nDbServiceID, eMST_Native);
-		defer([this, nMessageSerializerType, nDbServiceID]()
-		{
-			this->m_sServiceInvokeHolder.getServiceBase()->setServiceMessageSerializer(nDbServiceID, nMessageSerializerType);
-		});
-
-		return this->m_sServiceInvokeHolder.send(nDbServiceID, &command);
+		return this->m_sServiceInvokeHolder.send(nDbServiceID, &command, eMST_Native);
 	}
 
 	bool CDbServiceInvokeHolder::insert(uint32_t nDbServiceID, const google::protobuf::Message* pMessage)
@@ -44,14 +30,7 @@ namespace core
 		command.message_name = pMessage->GetTypeName();
 		command.message_content = std::move(szData);
 
-		uint32_t nMessageSerializerType = this->m_sServiceInvokeHolder.getServiceBase()->getServiceMessageSerializerType(nDbServiceID);
-		this->m_sServiceInvokeHolder.getServiceBase()->setServiceMessageSerializer(nDbServiceID, eMST_Native);
-		defer([this, nMessageSerializerType, nDbServiceID]()
-		{
-			this->m_sServiceInvokeHolder.getServiceBase()->setServiceMessageSerializer(nDbServiceID, nMessageSerializerType);
-		});
-
-		return this->m_sServiceInvokeHolder.send(nDbServiceID, &command);
+		return this->m_sServiceInvokeHolder.send(nDbServiceID, &command, eMST_Native);
 	}
 
 	bool CDbServiceInvokeHolder::call(uint32_t nDbServiceID, uint32_t nChannelID, const std::string& szSQL, const std::vector<std::string>* vecArg)
@@ -68,14 +47,7 @@ namespace core
 			}
 		}
 
-		uint32_t nMessageSerializerType = this->m_sServiceInvokeHolder.getServiceBase()->getServiceMessageSerializerType(nDbServiceID);
-		this->m_sServiceInvokeHolder.getServiceBase()->setServiceMessageSerializer(nDbServiceID, eMST_Native);
-		defer([this, nMessageSerializerType, nDbServiceID]()
-		{
-			this->m_sServiceInvokeHolder.getServiceBase()->setServiceMessageSerializer(nDbServiceID, nMessageSerializerType);
-		});
-
-		return this->m_sServiceInvokeHolder.send(nDbServiceID, &command);
+		return this->m_sServiceInvokeHolder.send(nDbServiceID, &command, eMST_Native);
 	}
 
 	bool CDbServiceInvokeHolder::flush(uint32_t nDbServiceID, uint64_t nID, base::db::EFlushCacheType eType)
@@ -84,14 +56,7 @@ namespace core
 		command.id = nID;
 		command.type = (uint32_t)eType;
 
-		uint32_t nMessageSerializerType = this->m_sServiceInvokeHolder.getServiceBase()->getServiceMessageSerializerType(nDbServiceID);
-		this->m_sServiceInvokeHolder.getServiceBase()->setServiceMessageSerializer(nDbServiceID, eMST_Native);
-		defer([this, nMessageSerializerType, nDbServiceID]()
-		{
-			this->m_sServiceInvokeHolder.getServiceBase()->setServiceMessageSerializer(nDbServiceID, nMessageSerializerType);
-		});
-
-		return this->m_sServiceInvokeHolder.send(nDbServiceID, &command);
+		return this->m_sServiceInvokeHolder.send(nDbServiceID, &command, eMST_Native);
 	}
 
 	void CDbServiceInvokeHolder::async_select(uint32_t nDbServiceID, uint64_t nID, const std::string& szTableName, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback)
@@ -100,14 +65,7 @@ namespace core
 		command.id = nID;
 		command.table_name = szTableName;
 
-		uint32_t nMessageSerializerType = this->m_sServiceInvokeHolder.getServiceBase()->getServiceMessageSerializerType(nDbServiceID);
-		this->m_sServiceInvokeHolder.getServiceBase()->setServiceMessageSerializer(nDbServiceID, eMST_Native);
-		defer([this, nMessageSerializerType, nDbServiceID]()
-		{
-			this->m_sServiceInvokeHolder.getServiceBase()->setServiceMessageSerializer(nDbServiceID, nMessageSerializerType);
-		});
-
-		this->m_sServiceInvokeHolder.async_invoke(nDbServiceID, &command, callback);
+		this->m_sServiceInvokeHolder.async_invoke(nDbServiceID, &command, callback, eMST_Native);
 	}
 
 	void CDbServiceInvokeHolder::async_update(uint32_t nDbServiceID, const google::protobuf::Message* pMessage, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback)
@@ -119,14 +77,7 @@ namespace core
 		command.message_name = pMessage->GetTypeName();
 		command.message_content = std::move(szData);
 
-		uint32_t nMessageSerializerType = this->m_sServiceInvokeHolder.getServiceBase()->getServiceMessageSerializerType(nDbServiceID);
-		this->m_sServiceInvokeHolder.getServiceBase()->setServiceMessageSerializer(nDbServiceID, eMST_Native);
-		defer([this, nMessageSerializerType, nDbServiceID]()
-		{
-			this->m_sServiceInvokeHolder.getServiceBase()->setServiceMessageSerializer(nDbServiceID, nMessageSerializerType);
-		});
-
-		this->m_sServiceInvokeHolder.async_invoke(nDbServiceID, &command, callback);
+		this->m_sServiceInvokeHolder.async_invoke(nDbServiceID, &command, callback, eMST_Native);
 	}
 
 	void CDbServiceInvokeHolder::async_remove(uint32_t nDbServiceID, uint64_t nID, const std::string& szTableName, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback)
@@ -135,14 +86,7 @@ namespace core
 		command.id = nID;
 		command.table_name = szTableName;
 
-		uint32_t nMessageSerializerType = this->m_sServiceInvokeHolder.getServiceBase()->getServiceMessageSerializerType(nDbServiceID);
-		this->m_sServiceInvokeHolder.getServiceBase()->setServiceMessageSerializer(nDbServiceID, eMST_Native);
-		defer([this, nMessageSerializerType, nDbServiceID]()
-		{
-			this->m_sServiceInvokeHolder.getServiceBase()->setServiceMessageSerializer(nDbServiceID, nMessageSerializerType);
-		});
-
-		this->m_sServiceInvokeHolder.async_invoke(nDbServiceID, &command, callback);
+		this->m_sServiceInvokeHolder.async_invoke(nDbServiceID, &command, callback, eMST_Native);
 	}
 
 	void CDbServiceInvokeHolder::async_insert(uint32_t nDbServiceID, const google::protobuf::Message* pMessage, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback)
@@ -154,14 +98,7 @@ namespace core
 		command.message_name = pMessage->GetTypeName();
 		command.message_content = std::move(szData);
 
-		uint32_t nMessageSerializerType = this->m_sServiceInvokeHolder.getServiceBase()->getServiceMessageSerializerType(nDbServiceID);
-		this->m_sServiceInvokeHolder.getServiceBase()->setServiceMessageSerializer(nDbServiceID, eMST_Native);
-		defer([this, nMessageSerializerType, nDbServiceID]()
-		{
-			this->m_sServiceInvokeHolder.getServiceBase()->setServiceMessageSerializer(nDbServiceID, nMessageSerializerType);
-		});
-
-		this->m_sServiceInvokeHolder.async_invoke(nDbServiceID, &command, callback);
+		this->m_sServiceInvokeHolder.async_invoke(nDbServiceID, &command, callback, eMST_Native);
 	}
 
 	void CDbServiceInvokeHolder::async_query(uint32_t nDbServiceID, uint32_t nChannelID, const std::string& szTableName, const std::string& szWhereClause, const std::vector<std::string>* vecArg, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback)
@@ -179,14 +116,7 @@ namespace core
 			}
 		}
 
-		uint32_t nMessageSerializerType = this->m_sServiceInvokeHolder.getServiceBase()->getServiceMessageSerializerType(nDbServiceID);
-		this->m_sServiceInvokeHolder.getServiceBase()->setServiceMessageSerializer(nDbServiceID, eMST_Native);
-		defer([this, nMessageSerializerType, nDbServiceID]()
-		{
-			this->m_sServiceInvokeHolder.getServiceBase()->setServiceMessageSerializer(nDbServiceID, nMessageSerializerType);
-		});
-
-		this->m_sServiceInvokeHolder.async_invoke(nDbServiceID, &command, callback);
+		this->m_sServiceInvokeHolder.async_invoke(nDbServiceID, &command, callback, eMST_Native);
 	}
 
 	void CDbServiceInvokeHolder::async_call(uint32_t nDbServiceID, uint32_t nChannelID, const std::string& szSQL, const std::vector<std::string>* vecArg, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback)
@@ -203,14 +133,7 @@ namespace core
 			}
 		}
 
-		uint32_t nMessageSerializerType = this->m_sServiceInvokeHolder.getServiceBase()->getServiceMessageSerializerType(nDbServiceID);
-		this->m_sServiceInvokeHolder.getServiceBase()->setServiceMessageSerializer(nDbServiceID, eMST_Native);
-		defer([this, nMessageSerializerType, nDbServiceID]()
-		{
-			this->m_sServiceInvokeHolder.getServiceBase()->setServiceMessageSerializer(nDbServiceID, nMessageSerializerType);
-		});
-
-		this->m_sServiceInvokeHolder.async_invoke(nDbServiceID, &command, callback);
+		this->m_sServiceInvokeHolder.async_invoke(nDbServiceID, &command, callback, eMST_Native);
 	}
 
 	void CDbServiceInvokeHolder::async_nop(uint32_t nDbServiceID, uint32_t nChannelID, const std::function<void(uint32_t)>& callback)
@@ -223,14 +146,7 @@ namespace core
 			callback(nErrorCode);
 		};
 
-		uint32_t nMessageSerializerType = this->m_sServiceInvokeHolder.getServiceBase()->getServiceMessageSerializerType(nDbServiceID);
-		this->m_sServiceInvokeHolder.getServiceBase()->setServiceMessageSerializer(nDbServiceID, eMST_Native);
-		defer([this, nMessageSerializerType, nDbServiceID]()
-		{
-			this->m_sServiceInvokeHolder.getServiceBase()->setServiceMessageSerializer(nDbServiceID, nMessageSerializerType);
-		});
-
-		this->m_sServiceInvokeHolder.async_invoke<google::protobuf::Message>(nDbServiceID, &command, callback_);
+		this->m_sServiceInvokeHolder.async_invoke<google::protobuf::Message>(nDbServiceID, &command, callback_, eMST_Native);
 	}
 
 	uint32_t CDbServiceInvokeHolder::sync_select(uint32_t nDbServiceID, uint64_t nID, const std::string& szTableName, std::shared_ptr<const google::protobuf::Message>& pResponseMessage)
@@ -239,14 +155,7 @@ namespace core
 		command.id = nID;
 		command.table_name = szTableName;
 
-		uint32_t nMessageSerializerType = this->m_sServiceInvokeHolder.getServiceBase()->getServiceMessageSerializerType(nDbServiceID);
-		this->m_sServiceInvokeHolder.getServiceBase()->setServiceMessageSerializer(nDbServiceID, eMST_Native);
-		defer([this, nMessageSerializerType, nDbServiceID]()
-		{
-			this->m_sServiceInvokeHolder.getServiceBase()->setServiceMessageSerializer(nDbServiceID, nMessageSerializerType);
-		});
-
-		return this->m_sServiceInvokeHolder.sync_invoke(nDbServiceID, &command, pResponseMessage);
+		return this->m_sServiceInvokeHolder.sync_invoke(nDbServiceID, &command, pResponseMessage, eMST_Native);
 	}
 
 	uint32_t CDbServiceInvokeHolder::sync_update(uint32_t nDbServiceID, const google::protobuf::Message* pMessage, std::shared_ptr<const google::protobuf::Message>& pResponseMessage)
@@ -258,14 +167,7 @@ namespace core
 		command.message_name = pMessage->GetTypeName();
 		command.message_content = std::move(szData);
 
-		uint32_t nMessageSerializerType = this->m_sServiceInvokeHolder.getServiceBase()->getServiceMessageSerializerType(nDbServiceID);
-		this->m_sServiceInvokeHolder.getServiceBase()->setServiceMessageSerializer(nDbServiceID, eMST_Native);
-		defer([this, nMessageSerializerType, nDbServiceID]()
-		{
-			this->m_sServiceInvokeHolder.getServiceBase()->setServiceMessageSerializer(nDbServiceID, nMessageSerializerType);
-		});
-
-		return this->m_sServiceInvokeHolder.sync_invoke(nDbServiceID, &command, pResponseMessage);
+		return this->m_sServiceInvokeHolder.sync_invoke(nDbServiceID, &command, pResponseMessage, eMST_Native);
 	}
 
 	uint32_t CDbServiceInvokeHolder::sync_remove(uint32_t nDbServiceID, uint64_t nID, const std::string& szTableName, std::shared_ptr<const google::protobuf::Message>& pResponseMessage)
@@ -274,14 +176,7 @@ namespace core
 		command.id = nID;
 		command.table_name = szTableName;
 
-		uint32_t nMessageSerializerType = this->m_sServiceInvokeHolder.getServiceBase()->getServiceMessageSerializerType(nDbServiceID);
-		this->m_sServiceInvokeHolder.getServiceBase()->setServiceMessageSerializer(nDbServiceID, eMST_Native);
-		defer([this, nMessageSerializerType, nDbServiceID]()
-		{
-			this->m_sServiceInvokeHolder.getServiceBase()->setServiceMessageSerializer(nDbServiceID, nMessageSerializerType);
-		});
-
-		return this->m_sServiceInvokeHolder.sync_invoke(nDbServiceID, &command, pResponseMessage);
+		return this->m_sServiceInvokeHolder.sync_invoke(nDbServiceID, &command, pResponseMessage, eMST_Native);
 	}
 
 	uint32_t CDbServiceInvokeHolder::sync_insert(uint32_t nDbServiceID, const google::protobuf::Message* pMessage, std::shared_ptr<const google::protobuf::Message>& pResponseMessage)
@@ -293,14 +188,7 @@ namespace core
 		command.message_name = pMessage->GetTypeName();
 		command.message_content = std::move(szData);
 
-		uint32_t nMessageSerializerType = this->m_sServiceInvokeHolder.getServiceBase()->getServiceMessageSerializerType(nDbServiceID);
-		this->m_sServiceInvokeHolder.getServiceBase()->setServiceMessageSerializer(nDbServiceID, eMST_Native);
-		defer([this, nMessageSerializerType, nDbServiceID]()
-		{
-			this->m_sServiceInvokeHolder.getServiceBase()->setServiceMessageSerializer(nDbServiceID, nMessageSerializerType);
-		});
-
-		return this->m_sServiceInvokeHolder.sync_invoke(nDbServiceID, &command, pResponseMessage);
+		return this->m_sServiceInvokeHolder.sync_invoke(nDbServiceID, &command, pResponseMessage, eMST_Native);
 	}
 
 	uint32_t CDbServiceInvokeHolder::sync_query(uint32_t nDbServiceID, uint32_t nChannelID, const std::string& szTableName, const std::string& szWhereClause, const std::vector<std::string>* vecArg, std::shared_ptr<const google::protobuf::Message>& pResponseMessage)
@@ -318,14 +206,7 @@ namespace core
 			}
 		}
 
-		uint32_t nMessageSerializerType = this->m_sServiceInvokeHolder.getServiceBase()->getServiceMessageSerializerType(nDbServiceID);
-		this->m_sServiceInvokeHolder.getServiceBase()->setServiceMessageSerializer(nDbServiceID, eMST_Native);
-		defer([this, nMessageSerializerType, nDbServiceID]()
-		{
-			this->m_sServiceInvokeHolder.getServiceBase()->setServiceMessageSerializer(nDbServiceID, nMessageSerializerType);
-		});
-
-		return this->m_sServiceInvokeHolder.sync_invoke(nDbServiceID, &command, pResponseMessage);
+		return this->m_sServiceInvokeHolder.sync_invoke(nDbServiceID, &command, pResponseMessage, eMST_Native);
 	}
 
 	uint32_t CDbServiceInvokeHolder::sync_call(uint32_t nDbServiceID, uint32_t nChannelID, const std::string& szSQL, const std::vector<std::string>* vecArg, std::shared_ptr<const google::protobuf::Message>& pResponseMessage)
@@ -342,14 +223,7 @@ namespace core
 			}
 		}
 
-		uint32_t nMessageSerializerType = this->m_sServiceInvokeHolder.getServiceBase()->getServiceMessageSerializerType(nDbServiceID);
-		this->m_sServiceInvokeHolder.getServiceBase()->setServiceMessageSerializer(nDbServiceID, eMST_Native);
-		defer([this, nMessageSerializerType, nDbServiceID]()
-		{
-			this->m_sServiceInvokeHolder.getServiceBase()->setServiceMessageSerializer(nDbServiceID, nMessageSerializerType);
-		});
-
-		return this->m_sServiceInvokeHolder.sync_invoke(nDbServiceID, &command, pResponseMessage);
+		return this->m_sServiceInvokeHolder.sync_invoke(nDbServiceID, &command, pResponseMessage, eMST_Native);
 	}
 
 	uint32_t CDbServiceInvokeHolder::sync_nop(uint32_t nDbServiceID, uint32_t nChannelID)
@@ -357,15 +231,8 @@ namespace core
 		nop_command command;
 		command.channel_id = nChannelID;
 
-		uint32_t nMessageSerializerType = this->m_sServiceInvokeHolder.getServiceBase()->getServiceMessageSerializerType(nDbServiceID);
-		this->m_sServiceInvokeHolder.getServiceBase()->setServiceMessageSerializer(nDbServiceID, eMST_Native);
-		defer([this, nMessageSerializerType, nDbServiceID]()
-		{
-			this->m_sServiceInvokeHolder.getServiceBase()->setServiceMessageSerializer(nDbServiceID, nMessageSerializerType);
-		});
-
 		std::shared_ptr<const google::protobuf::Message> pResponseMessage;
-		return this->m_sServiceInvokeHolder.sync_invoke(nDbServiceID, &command, pResponseMessage);
+		return this->m_sServiceInvokeHolder.sync_invoke(nDbServiceID, &command, pResponseMessage, eMST_Native);
 	}
 
 	bool CDbServiceInvokeHolder::update(const google::protobuf::Message* pMessage)

@@ -9,7 +9,11 @@
 
 namespace core
 {
+	class CCoreApp;
+	class CCoreService;
 	class CBaseConnection;
+	class CLogicMessageQueue;
+	class CBaseConnectionMgrImpl;
 	class CBaseConnectionFactory;
 	/**
 	@brief: 基础连接管理类，主要管理基础连接以及发起连接跟发起监听
@@ -17,22 +21,27 @@ namespace core
 	class __CORE_COMMON_API__ CBaseConnectionMgr :
 		public base::noncopyable
 	{
-	public:
-		CBaseConnectionMgr();
-		~CBaseConnectionMgr();
+		friend class CCoreApp;
+		friend class CCoreService;
 
+	public:
+		CBaseConnectionMgrImpl*	getBaseConnectionMgrImpl() const;
 		/**
 		@brief: 主动发起一个连接（异步）
 		*/
 		void					connect(const std::string& szHost, uint16_t nPort, const std::string& szType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, const MessageParser& messageParser);
 		/**
-		@brief: 直接连接目标节点
-		*/
-		void					connect_n(const std::string& szHost, uint16_t nPort, uint32_t nSendBufferSize, uint32_t nRecvBufferSize);
-		/**
 		@brief: 发起一个监听
 		*/
 		bool					listen(const std::string& szHost, uint16_t nPort, bool bReusePort, const std::string& szType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser, ECoreConnectionType eCoreConnectionType = eCCT_Normal);
+		/**
+		@brief: 根据socket_id 发送数据
+		*/
+		void					send(uint64_t nSocketID, uint8_t nMessageType, const void* pData, uint16_t nSize);
+		/**
+		@brief: 根据socket_id 发送数据
+		*/
+		void					send(uint64_t nSocketID, uint8_t nMessageType, const void* pData, uint16_t nSize, const void* pExtraBuf, uint16_t nExtraSize);
 
 		/**
 		@brief: 设置某一个类型的连接创建工厂
@@ -86,5 +95,12 @@ namespace core
 		@brief: 删除全局的主动发起连接被失败回调
 		*/
 		void					delConnectFailCallback(const std::string& szKey);
+
+	private:
+		CBaseConnectionMgr(CLogicMessageQueue* pMessageQueue);
+		~CBaseConnectionMgr();
+
+	private:
+		CBaseConnectionMgrImpl*	m_pBaseConnectionMgrImpl;
 	};
 }

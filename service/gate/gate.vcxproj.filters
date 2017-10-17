@@ -134,5 +134,8 @@
     <ClCompile Include="..\proto\client_proto_src\c2g_player_handshake_response.pb.cc">
       <Filter>client_proto</Filter>
     </ClCompile>
+    <ClCompile Include="memory_new.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

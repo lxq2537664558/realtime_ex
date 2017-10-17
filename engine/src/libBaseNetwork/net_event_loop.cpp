@@ -10,6 +10,7 @@
 
 #include "libBaseCommon/logger.h"
 #include "libBaseCommon/debug_helper.h"
+#include "libBaseCommon/profiling.h"
 
 namespace base
 {
@@ -114,6 +115,7 @@ namespace base
 
 	void CNetEventLoop::update(uint32_t nTime)
 	{
+		PROFILING_BEGIN(CloseSocket_Process)
 		for (auto iter = this->m_listCloseSocket.begin(); iter != this->m_listCloseSocket.end(); ++iter)
 		{
 			CNetSocket* pSocket = *iter;
@@ -123,7 +125,9 @@ namespace base
 			pSocket->release();
 		}
 		this->m_listCloseSocket.clear();
+		PROFILING_END(CloseSocket_Process)
 
+		PROFILING_BEGIN(FlushSend_Process)
 		// 对写事件的处理主要采用先主动的写socket，如果写到写缓存都写满了，此时逻辑缓存还有数据，那么打开底层的写监听
 		// 接下来的写事件就让底层来触发好了，这个写事件导致逻辑缓存的数据都发送完了，那么就移除该事件
 		for (int32_t i = 0; i < this->m_nSendConnecterCount; ++i)
@@ -136,12 +140,15 @@ namespace base
 			pNetConnecter->setSendConnecterIndex(_Invalid_SendConnecterIndex);
 		}
 		this->m_nSendConnecterCount = 0;
+		PROFILING_END(FlushSend_Process)
 		// 如果在经过上面的循环后Socket中还存在数据没有发送出去，那么在下面的代码中，就会触发写事件继续发送
 		// 下面的代码还是发送不完，那么就会在下一帧的写事件触发时发送
 
 		if (this->m_nSocketCount == 0)
 		{
+			PROFILING_BEGIN(Net_Sleep)
 			std::this_thread::sleep_for(std::chrono::milliseconds(nTime));
+			PROFILING_END(Net_Sleep)
 			return;
 		}
 
@@ -153,7 +160,7 @@ namespace base
 		FD_ZERO(&readfds);
 		FD_ZERO(&writefds);
 		FD_ZERO(&exceptfds);
-
+		PROFILING_BEGIN(FillFd_Process)
 		// 每次都监听写事件可能会导致busy loop，windows下随他吧，只保证正确性，不保证性能
 		for (int32_t i = 0; i < this->m_nSocketCount; ++i)
 		{
@@ -167,11 +174,15 @@ namespace base
 			if (pNetSocket->isDisableWrite())
 				FD_SET(pNetSocket->getSocketID(), &writefds);
 		}
+		PROFILING_END(FillFd_Process)
 
+		PROFILING_BEGIN(Select_Process)
 		struct timeval timeout;
 		timeout.tv_sec = (int32_t)(((int64_t)nTime * 1000) / 1000000);
 		timeout.tv_usec = (int32_t)(((int64_t)nTime * 1000) % 1000000);
 		int32_t nRet = ::select(0, &readfds, &writefds, &exceptfds, &timeout);
+		PROFILING_END(Select_Process)
+
 		if (SOCKET_ERROR == nRet)
 		{
 			PrintWarning("select error {} ", getLastError());
@@ -180,6 +191,7 @@ namespace base
 		if (0 == nRet)
 			return;
 
+		PROFILING_BEGIN(NetEvent_Process)
 		// 绝对不会在下面这个循环中去删除Socket的，但是有可能会增加
 		for (int32_t i = 0; i < this->m_nSocketCount; ++i)
 		{
@@ -198,14 +210,18 @@ namespace base
 			if (nEvent != 0)
 				pNetSocket->onEvent(nEvent);
 		}
+		PROFILING_END(NetEvent_Process)
 #else
 		do
 		{
 			this->m_pWakeup->wait(true);
+			PROFILING_BEGIN(Wait_Process)
 			int32_t nActiveCount = ::epoll_wait(this->m_nEpoll, &this->m_vecEpollEvent[0], this->m_vecEpollEvent.size(), nTime);
+			PROFILING_END(Wait_Process)
 			this->m_pWakeup->wait(false);
 			if (nActiveCount >= 0)
 			{
+				PROFILING_BEGIN(NetEvent_Process)
 				for (int32_t i = 0; i < nActiveCount; ++i)
 				{
 					INetBase* pNetBase = reinterpret_cast<INetBase*>(this->m_vecEpollEvent[i].data.ptr);
@@ -223,6 +239,7 @@ namespace base
 						pNetBase->onEvent(nEvent);
 					}
 				}
+				PROFILING_END(NetEvent_Process)
 				break;
 			}
 			else if (nActiveCount < 0)

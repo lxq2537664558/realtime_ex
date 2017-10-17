@@ -1,7 +1,6 @@
 #include "uc_service_message_handler.h"
 #include "uc_service.h"
 
-#include "libCoreCommon/actor_base.h"
 #include "libCoreCommon/service_base.h"
 #include "libCoreCommon/service_invoker.h"
 #include "libCoreCommon/register_message_util.h"

@@ -1,15 +1,10 @@
 #include "coroutine_impl.h"
 #include "coroutine_mgr.h"
-
-#include <algorithm>
-
-#include <string.h>
-#include <assert.h>
-#ifdef _WIN32
-#include <Windows.h>
-#endif
+#include "coroutine_thread.h"
 
 #include "libBaseCommon/debug_helper.h"
+
+#define _MIN_CO_STACK 64 * 1024
 
 #ifndef _WIN32
 extern "C" int32_t	save_context(void* reg);
@@ -28,41 +23,24 @@ namespace core
 	{
 		while (true)
 		{
-			CCoroutineMgr* pCoroutineMgr = getCoroutineMgr();
-			CCoroutineImpl* pCoroutineImpl = pCoroutineMgr->getCurrentCoroutine();
+			CCoroutineThread* pCoroutineThread = getCoroutineThread();
+			CCoroutineImpl* pCoroutineImpl = pCoroutineThread->getCurrentCoroutine();
 			pCoroutineImpl->m_callback(pCoroutineImpl->m_nContext);
-			pCoroutineMgr->addRecycleCoroutine(pCoroutineImpl);
+			// 一定要把callback设置成null，不然绑在这个function上的对象就不会释放
+			pCoroutineImpl->m_callback = nullptr;
+			// 这里需要重新获取，因为有可能线程切换了
+			pCoroutineThread = getCoroutineThread();
+			pCoroutineThread->setCurrentCoroutine(nullptr);
+			pCoroutineThread->addDeadCoroutine(pCoroutineImpl);
 
-			pCoroutineMgr->setCurrentCoroutine(nullptr);
-
-			pCoroutineImpl->m_eState = eCS_DEAD;
 #ifdef _WIN32
-			SwitchToFiber(pCoroutineMgr->getMainContext());
+			SwitchToFiber(pCoroutineThread->getMainContext());
 #else
-			if (!pCoroutineImpl->m_bOwnerStack)
-				pCoroutineImpl->m_nStackSize = 0;
 			if (save_context(pCoroutineImpl->m_pContext) == 0)
-				restore_context(pCoroutineMgr->getMainContext(), 1);
+				restore_context(pCoroutineThread->getMainContext(), 1);
 #endif
 		}
 	}
-	
-#ifndef _WIN32
-	void CCoroutineImpl::saveStack()
-	{
-		char* pStack = getCoroutineMgr()->getMainStack();
-		char nDummy = 0;
-
-		if (this->m_nStackCap < (uintptr_t)(pStack - &nDummy))
-		{
-			SAFE_DELETE_ARRAY(this->m_pStack);
-			this->m_nStackCap = pStack - &nDummy;
-			this->m_pStack= new char[this->m_nStackCap];
-		}
-		this->m_nStackSize = pStack - &nDummy;
-		memcpy(this->m_pStack, &nDummy, this->m_nStackSize);
-	}
-#endif
 
 	CCoroutineImpl::CCoroutineImpl()
 		: m_nID(0)
@@ -73,7 +51,6 @@ namespace core
 #ifndef _WIN32
 		, m_nStackCap(0)
 		, m_pStack(nullptr)
-		, m_bOwnerStack(false)
 		, m_nValgrindID(0)
 #endif
 	{
@@ -89,14 +66,9 @@ namespace core
 		context* pContext = reinterpret_cast<context*>(this->m_pContext);
 		SAFE_DELETE(pContext);
 		nValgrindID = this->m_nValgrindID;
-		if (this->m_bOwnerStack)
-		{
-			CCoroutineMgr::freeStack(this->m_pStack, (uint32_t)this->m_nStackSize, nValgrindID);
-		}
-		else
-		{
-			SAFE_DELETE_ARRAY(this->m_pStack);
-		}
+		
+		// 释放时需要考虑栈是倒长的
+		CCoroutineMgr::freeStack(this->m_pStack - this->m_nStackSize, (uint32_t)this->m_nStackSize, nValgrindID);
 #endif
 	}
 
@@ -105,7 +77,8 @@ namespace core
 		DebugAstEx(this->m_eState == eCS_NONE, false);
 		
 		DebugAstEx(callback != nullptr, false);
-		
+		DebugAstEx(nStackSize >= _MIN_CO_STACK, false);
+
 #ifdef _WIN32
 		DebugAstEx(nStackSize != 0, false);
 		this->m_nStackSize = nStackSize;
@@ -120,28 +93,16 @@ namespace core
 			// 不可能执行到这里的
 			DebugAstEx(!"", false);
 		}
-		if (nStackSize != 0)
-			this->m_bOwnerStack = true;
-		
-		CCoroutineMgr* pCoroutineMgr = getCoroutineMgr();
-		if (nStackSize != 0)
-		{
-			this->m_bOwnerStack = true;
-			uint32_t nValgrindID = 0;
-			char* pStack = CCoroutineMgr::allocStack(nStackSize, nValgrindID);
-			if (nullptr == pStack)
-				return false;
-			this->m_pStack = pStack + nStackSize;
-			this->m_nStackSize = nStackSize;
 
-			reinterpret_cast<context*>(this->m_pContext)->rsp = (uintptr_t)this->m_pStack;
-			this->m_nValgrindID = nValgrindID;
-		}
-		else
-		{
-			this->m_bOwnerStack = false;
-			reinterpret_cast<context*>(this->m_pContext)->rsp = (uintptr_t)pCoroutineMgr->getMainStack();
-		}
+		uint32_t nValgrindID = 0;
+		char* pStack = CCoroutineMgr::allocStack(nStackSize, nValgrindID);
+		if (nullptr == pStack)
+			return false;
+		this->m_pStack = pStack + nStackSize;
+		this->m_nStackSize = nStackSize;
+
+		reinterpret_cast<context*>(this->m_pContext)->rsp = (uintptr_t)this->m_pStack;
+		this->m_nValgrindID = nValgrindID;
 #endif
 
 		this->m_callback = callback;
@@ -156,19 +117,16 @@ namespace core
 	{
 		DebugAstEx(this->m_eState == eCS_RUNNING, false);
 		
-		CCoroutineMgr* pCoroutineMgr = getCoroutineMgr();
-		pCoroutineMgr->setCurrentCoroutine(nullptr);
+		CCoroutineThread* pCoroutineThread = getCoroutineThread();
+		pCoroutineThread->setCurrentCoroutine(nullptr);
 
 		this->m_eState = eCS_SUSPEND;
 
 #ifdef _WIN32
-		SwitchToFiber(pCoroutineMgr->getMainContext());
+		SwitchToFiber(pCoroutineThread->getMainContext());
 #else
-		if (!this->m_bOwnerStack)
-			this->saveStack();
-
 		if (save_context(this->m_pContext) == 0)
-			restore_context(pCoroutineMgr->getMainContext(), 1);
+			restore_context(pCoroutineThread->getMainContext(), 1);
 #endif	
 		return this->m_nContext;
 	}
@@ -179,17 +137,14 @@ namespace core
 
 		this->m_eState = eCS_RUNNING;
 
-		CCoroutineMgr* pCoroutineMgr = getCoroutineMgr();
-		pCoroutineMgr->setCurrentCoroutine(this);
+		CCoroutineThread* pCoroutineThread = getCoroutineThread();
+		pCoroutineThread->setCurrentCoroutine(this);
 		this->m_nContext = nContext;
 
 #ifdef _WIN32
 		SwitchToFiber(this->m_pContext);
 #else
-		if (!this->m_bOwnerStack)
-			memcpy(pCoroutineMgr->getMainStack() - this->m_nStackSize, this->m_pStack, this->m_nStackSize);
-
-		if (save_context(pCoroutineMgr->getMainContext()) == 0)
+		if (save_context(pCoroutineThread->getMainContext()) == 0)
 			restore_context(this->m_pContext, 1);
 #endif
 	}
@@ -246,11 +201,6 @@ namespace core
 
 	uint32_t CCoroutineImpl::getStackSize() const
 	{
-#ifndef _WIN32
-		if (!this->m_bOwnerStack)
-			return 0;
-#endif
-
 		return (uint32_t)this->m_nStackSize;
 	}
 

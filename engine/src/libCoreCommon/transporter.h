@@ -18,10 +18,10 @@ namespace core
 		CTransporter();
 		~CTransporter();
 
-		bool					invoke(CCoreService* pCoreService, uint64_t nSessionID, uint64_t nFromActorID, uint32_t nToServiceID, uint64_t nToActorID, const void* pMessage);
-		bool					response(CCoreService* pCoreService, uint32_t nToServiceID, uint64_t nToActorID, uint64_t nSessionID, uint8_t nResult, const void* pMessage);
+		bool					invoke(CCoreService* pCoreService, uint32_t nToServiceID, uint64_t nSessionID, const void* pMessage, uint8_t nMessageSerializerType);
+		bool					response(CCoreService* pCoreService, uint32_t nToServiceID, uint64_t nSessionID, uint32_t nResult, const void* pMessage, uint8_t nMessageSerializerType);
 		
-		bool					gate_forward(uint64_t nSessionID, uint32_t nFromServiceID, uint32_t nToServiceID, uint64_t nToActorID, const message_header* pData);
+		bool					gate_forward(uint64_t nSessionID, uint32_t nFromServiceID, uint32_t nToServiceID, const message_header* pData);
 
 		bool					send(CCoreService* pCoreService, uint64_t nSessionID, uint32_t nToServiceID, const void* pMessage);
 

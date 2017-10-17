@@ -69,10 +69,11 @@ namespace base
 
 	void CNetConnecter::release()
 	{
+		bool bConnecting = (this->m_eConnecterState == net::eNCS_Connecting);
 		this->m_eConnecterState = net::eNCS_Disconnected;
 		if (this->m_pHandler != nullptr)
 		{
-			if ((this->m_nFlag&eNCF_ConnectFail) == 0)
+			if ((this->m_nFlag&eNCF_ConnectFail) == 0 && !bConnecting)
 			{
 				PrintInfo("disconnect local addr: {} {} remote addr: {} {} socket_id: {} send_index: {} send_count: {}", this->getLocalAddr().szHost, this->getLocalAddr().nPort, this->getRemoteAddr().szHost, this->getRemoteAddr().nPort, this->getSocketID(), this->m_nSendConnecterIndex, this->m_pNetEventLoop->getSendConnecterCount());
 				this->m_pHandler->onDisconnect();
@@ -82,7 +83,7 @@ namespace base
 				PrintInfo("connect fail local addr: {} {} remote addr: {} {} socket_id: {} send_index: {} send_count: {}", this->getLocalAddr().szHost, this->getLocalAddr().nPort, this->getRemoteAddr().szHost, this->getRemoteAddr().nPort, this->getSocketID(), this->m_nSendConnecterIndex, this->m_pNetEventLoop->getSendConnecterCount());
 				this->m_pHandler->onConnectFail();
 			}
-			this->m_pHandler->setNetConnecter(nullptr);
+			// 这个时候this->m_pHandler的有效性是未知的，所以绝对不能动他
 			this->m_pHandler = nullptr;
 		}
 		this->m_pNetEventLoop->delSendConnecter(this);

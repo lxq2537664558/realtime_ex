@@ -19,11 +19,6 @@ CGameService::~CGameService()
 {
 }
 
-CActorFactory* CGameService::getActorFactory(const std::string& szType) const
-{
-	return this->m_pPlayerFactory.get();
-}
-
 void CGameService::release()
 {
 	delete this;
@@ -51,12 +46,12 @@ bool CGameService::onInit()
 
 	this->setServiceMessageSerializer(0, eMST_Protobuf);
 
-	this->m_pPlayerFactory = std::make_unique<CPlayerFactory>();
 	this->m_pPlayerMgr = std::make_unique<CPlayerMgr>(this);
 	this->m_pGMCommandMgr = std::make_unique<CGMCommandMgr>(this);
 	this->m_pGameServiceMessageHandler = std::make_unique<CGameServiceMessageHandler>(this);
 	this->m_pPlayerMessageHandler = std::make_unique<CPlayerMessageHandler>(this);
 	this->m_pPlayerHeroMessageHandler = std::make_unique<CPlayerHeroMessageHandler>(this);
+	
 	this->m_pPlayerItemMessageHandler = std::make_unique<CPlayerItemMessageHandler>(this);
 	this->m_pBaseStaticConfigMgr = std::make_unique<CBaseStaticConfigMgr>();
 	if (!this->m_pBaseStaticConfigMgr->init())

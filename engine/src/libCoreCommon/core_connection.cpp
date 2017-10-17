@@ -1,10 +1,9 @@
 #include "stdafx.h"
 #include "core_connection.h"
-#include "core_connection_mgr.h"
-#include "base_connection_mgr.h"
+#include "logic_message_queue.h"
 #include "core_common.h"
 #include "message_command.h"
-#include "logic_runnable.h"
+#include "net_runnable.h"
 #include "core_app.h"
 
 #include "libBaseCommon/debug_helper.h"
@@ -32,6 +31,7 @@ namespace core
 		: m_bHeartbeat(true)
 		, m_nSendHeartbeatCount(0)
 		, m_nID(0)
+		, m_pMessageQueue(nullptr)
 		, m_nState(eCCS_None)
 	{
 		this->m_heartbeat.setCallback(std::bind(&CCoreConnection::onHeartbeat, this, std::placeholders::_1));
@@ -42,8 +42,9 @@ namespace core
 		DebugAst(this->m_pNetConnecter == nullptr);
 	}
 
-	bool CCoreConnection::init(const std::string& szType, uint64_t nID, const std::string& szContext, const MessageParser& messageParser)
+	bool CCoreConnection::init(CLogicMessageQueue* pMessageQueue, const std::string& szType, uint64_t nID, const std::string& szContext, const MessageParser& messageParser)
 	{
+		this->m_pMessageQueue = pMessageQueue;
 		this->m_szType = szType;
 		this->m_nID = nID;
 		this->m_szContext = szContext;
@@ -54,6 +55,8 @@ namespace core
 
 	uint32_t CCoreConnection::onRecv(const char* pData, uint32_t nDataSize)
 	{
+		PROFILING_GUARD(CCoreConnection::onRecv)
+
 		this->m_nSendHeartbeatCount = 0;
 		uint32_t nRecvSize = 0;
 		try
@@ -132,13 +135,13 @@ namespace core
 
 		SMCT_NOTIFY_SOCKET_CONNECT* pContext = new SMCT_NOTIFY_SOCKET_CONNECT();
 		pContext->pCoreConnection = this;
-
+		
 		SMessagePacket sMessagePacket;
 		sMessagePacket.nType = eMCT_NOTIFY_SOCKET_CONNECT;
 		sMessagePacket.pData = pContext;
 		sMessagePacket.nDataSize = sizeof(SMCT_NOTIFY_SOCKET_CONNECT);
 
-		CCoreApp::Inst()->getLogicRunnable()->getMessageQueue()->send(sMessagePacket);
+		this->m_pMessageQueue->send(sMessagePacket);
 
 		this->m_nState = eCCS_Connectting;
 	}
@@ -149,13 +152,13 @@ namespace core
 
 		SMCT_NOTIFY_SOCKET_DISCONNECT* pContext = new SMCT_NOTIFY_SOCKET_DISCONNECT();
 		pContext->nSocketID = this->getID();
-
+		
 		SMessagePacket sMessagePacket;
 		sMessagePacket.nType = eMCT_NOTIFY_SOCKET_DISCONNECT;
 		sMessagePacket.pData = pContext;
 		sMessagePacket.nDataSize = sizeof(SMCT_NOTIFY_SOCKET_DISCONNECT);
 
-		CCoreApp::Inst()->getLogicRunnable()->getMessageQueue()->send(sMessagePacket);
+		this->m_pMessageQueue->send(sMessagePacket);
 
 		this->m_nState = eCCS_Disconnecting;
 		this->m_pNetConnecter = nullptr;
@@ -180,7 +183,7 @@ namespace core
 
 		this->m_nState = eCCS_Connected;
 
-		CCoreApp::Inst()->registerTicker(CTicker::eTT_Net, 0, 0, &this->m_heartbeat, CCoreApp::Inst()->getHeartbeatTime(), CCoreApp::Inst()->getHeartbeatTime(), 0);
+		CCoreApp::Inst()->registerTicker(CNetRunnable::Inst()->getMessageQueue(), &this->m_heartbeat,CCoreApp::Inst()->getHeartbeatTime(), CCoreApp::Inst()->getHeartbeatTime(), 0);
 	}
 
 	uint64_t CCoreConnection::getID() const
@@ -203,8 +206,6 @@ namespace core
 		if (nMessageType == eMT_HEARTBEAT)
 			return;
 
-		CCoreApp::Inst()->incQPS();
-
 		this->m_monitor.onRecv(nSize);
 
 		if (nMessageType == eMT_REQUEST)
@@ -212,8 +213,15 @@ namespace core
 			const request_cookice* pCookice = reinterpret_cast<const request_cookice*>(pData);
 
 			DebugAst(nSize > sizeof(request_cookice));
-			DebugAst(nSize > sizeof(request_cookice) + pCookice->nMessageNameLen);
+			DebugAst(nSize >= sizeof(request_cookice) + pCookice->nMessageNameLen);
 			DebugAst(pCookice->szMessageName[pCookice->nMessageNameLen] == 0);
+
+			CCoreService* pCoreService = CCoreApp::Inst()->getCoreServiceMgr()->getCoreService(pCookice->nToServiceID);
+			if (pCoreService == nullptr)
+				return;
+
+			CLogicMessageQueue* pMessageQueue = pCoreService->getMessageQueue();
+			DebugAst(pMessageQueue != nullptr);
 
 			const char* pMessageData = reinterpret_cast<const char*>(pCookice + 1) + pCookice->nMessageNameLen;
 			uint16_t nMessageDataLen = nSize - sizeof(request_cookice) - pCookice->nMessageNameLen;
@@ -222,10 +230,7 @@ namespace core
 			char* szBuf = new char[sizeof(SMCT_REQUEST) + pCookice->nMessageNameLen + nMessageDataLen];
 			SMCT_REQUEST* pContext = reinterpret_cast<SMCT_REQUEST*>(szBuf);
 			pContext->nSessionID = pCookice->nSessionID;
-			pContext->nFromActorID = pCookice->nFromActorID;
 			pContext->nFromServiceID = pCookice->nFromServiceID;
-			pContext->nToActorID = pCookice->nToActorID;
-			pContext->nToServiceID = pCookice->nToServiceID;
 			pContext->nMessageSerializerType = pCookice->nMessageSerializerType;
 			pContext->nMessageNameLen = pCookice->nMessageNameLen;
 			pContext->nMessageDataLen = nMessageDataLen;
@@ -237,7 +242,7 @@ namespace core
 			sMessagePacket.pData = pContext;
 			sMessagePacket.nDataSize = sizeof(SMCT_REQUEST);
 
-			CCoreApp::Inst()->getLogicRunnable()->getMessageQueue()->send(sMessagePacket);
+			pMessageQueue->send(sMessagePacket);
 		}
 		else if (nMessageType == eMT_RESPONSE)
 		{
@@ -247,6 +252,13 @@ namespace core
 			DebugAst(nSize >= sizeof(response_cookice) + pCookice->nMessageNameLen);
 			DebugAst(pCookice->szMessageName[pCookice->nMessageNameLen] == 0);
 
+			CCoreService* pCoreService = CCoreApp::Inst()->getCoreServiceMgr()->getCoreService(pCookice->nToServiceID);
+			if (pCoreService == nullptr)
+				return;
+
+			CLogicMessageQueue* pMessageQueue = pCoreService->getMessageQueue();
+			DebugAst(pMessageQueue != nullptr);
+
 			const char* pMessageData = reinterpret_cast<const char*>(pCookice + 1) + pCookice->nMessageNameLen;
 			uint16_t nMessageDataLen = nSize - sizeof(response_cookice) - pCookice->nMessageNameLen;
 			const char* szMessageName = pCookice->szMessageName;
@@ -255,8 +267,6 @@ namespace core
 			SMCT_RESPONSE* pContext = reinterpret_cast<SMCT_RESPONSE*>(szBuf);
 			pContext->nSessionID = pCookice->nSessionID;
 			pContext->nFromServiceID = pCookice->nFromServiceID;
-			pContext->nToActorID = pCookice->nToActorID;
-			pContext->nToServiceID = pCookice->nToServiceID;
 			pContext->nMessageSerializerType = pCookice->nMessageSerializerType;
 			pContext->nResult = pCookice->nResult;
 			pContext->nMessageNameLen = pCookice->nMessageNameLen;
@@ -269,13 +279,20 @@ namespace core
 			sMessagePacket.pData = pContext;
 			sMessagePacket.nDataSize = sizeof(SMCT_RESPONSE);
 
-			CCoreApp::Inst()->getLogicRunnable()->getMessageQueue()->send(sMessagePacket);
+			pMessageQueue->send(sMessagePacket);
 		}
 		else if (nMessageType == eMT_GATE_FORWARD)
 		{
 			const gate_forward_cookice* pCookice = reinterpret_cast<const gate_forward_cookice*>(pData);
 
 			DebugAst(nSize > sizeof(gate_forward_cookice));
+
+			CCoreService* pCoreService = CCoreApp::Inst()->getCoreServiceMgr()->getCoreService(pCookice->nToServiceID);
+			if (pCoreService == nullptr)
+				return;
+
+			CLogicMessageQueue* pMessageQueue = pCoreService->getMessageQueue();
+			DebugAst(pMessageQueue != nullptr);
 
 			const message_header* pHeader = reinterpret_cast<const message_header*>(pCookice + 1);
 			DebugAst(sizeof(gate_forward_cookice) + pHeader->nMessageSize == nSize);
@@ -284,9 +301,6 @@ namespace core
 			SMCT_GATE_FORWARD* pContext = reinterpret_cast<SMCT_GATE_FORWARD*>(szBuf);
 			pContext->nSessionID = pCookice->nSessionID;
 			pContext->nFromServiceID = pCookice->nFromServiceID;
-			pContext->nToActorID = pCookice->nToActorID;
-			pContext->nToServiceID = pCookice->nToServiceID;
-			pContext->nMessageDataLen = pHeader->nMessageSize;
 			memcpy(szBuf + sizeof(SMCT_GATE_FORWARD), pHeader, pHeader->nMessageSize);
 
 			SMessagePacket sMessagePacket;
@@ -294,7 +308,7 @@ namespace core
 			sMessagePacket.pData = pContext;
 			sMessagePacket.nDataSize = sizeof(SMCT_GATE_FORWARD);
 
-			CCoreApp::Inst()->getLogicRunnable()->getMessageQueue()->send(sMessagePacket);
+			pMessageQueue->send(sMessagePacket);
 		}
 		else if (nMessageType == eMT_TO_GATE)
 		{
@@ -302,10 +316,16 @@ namespace core
 
 			DebugAst(nSize > sizeof(gate_send_cookice));
 
+			CCoreService* pCoreService = CCoreApp::Inst()->getCoreServiceMgr()->getCoreService(pCookice->nToServiceID);
+			if (pCoreService == nullptr)
+				return;
+
+			CLogicMessageQueue* pMessageQueue = pCoreService->getMessageQueue();
+			DebugAst(pMessageQueue != nullptr);
+
 			char* szBuf = new char[sizeof(SMCT_TO_GATE) + nSize - sizeof(gate_send_cookice)];
 			SMCT_TO_GATE* pContext = reinterpret_cast<SMCT_TO_GATE*>(szBuf);
 			pContext->nSessionID = pCookice->nSessionID;
-			pContext->nToServiceID = pCookice->nToServiceID;
 			pContext->nDataSize = (uint16_t)(nSize - sizeof(gate_send_cookice));
 			pContext->pData = szBuf + sizeof(SMCT_TO_GATE);
 			memcpy(pContext->pData, pCookice + 1, pContext->nDataSize);
@@ -315,16 +335,22 @@ namespace core
 			sMessagePacket.pData = pContext;
 			sMessagePacket.nDataSize = sizeof(SMCT_TO_GATE);
 
-			CCoreApp::Inst()->getLogicRunnable()->getMessageQueue()->send(sMessagePacket);
+			pMessageQueue->send(sMessagePacket);
 		}
 		else if (nMessageType == eMT_TO_GATE_BROADCAST)
 		{
 			const gate_broadcast_cookice* pCookice = reinterpret_cast<const gate_broadcast_cookice*>(pData);
 
+			CCoreService* pCoreService = CCoreApp::Inst()->getCoreServiceMgr()->getCoreService(pCookice->nToServiceID);
+			if (pCoreService == nullptr)
+				return;
+
+			CLogicMessageQueue* pMessageQueue = pCoreService->getMessageQueue();
+			DebugAst(pMessageQueue != nullptr);
+
 			char* szBuf = new char[sizeof(SMCT_TO_GATE_BROADCAST) + nSize - sizeof(gate_broadcast_cookice)];
 			SMCT_TO_GATE_BROADCAST* pContext = reinterpret_cast<SMCT_TO_GATE_BROADCAST*>(szBuf);
 			pContext->nSessionCount = pCookice->nSessionCount;
-			pContext->nToServiceID = pCookice->nToServiceID;
 			pContext->nDataSize = (uint16_t)(nSize - sizeof(gate_broadcast_cookice));
 			pContext->pData = szBuf + sizeof(SMCT_TO_GATE_BROADCAST);
 			memcpy(pContext->pData, pCookice + 1, pContext->nDataSize);
@@ -334,7 +360,7 @@ namespace core
 			sMessagePacket.nDataSize = sizeof(SMCT_TO_GATE_BROADCAST);
 			sMessagePacket.pData = pContext;
 
-			CCoreApp::Inst()->getLogicRunnable()->getMessageQueue()->send(sMessagePacket);
+			pMessageQueue->send(sMessagePacket);
 		}
 		else
 		{
@@ -351,7 +377,7 @@ namespace core
 			sMessagePacket.pData = pContext;
 			sMessagePacket.nDataSize = sizeof(SMCT_RECV_SOCKET_DATA);
 
-			CCoreApp::Inst()->getLogicRunnable()->getMessageQueue()->send(sMessagePacket);
+			this->m_pMessageQueue->send(sMessagePacket);
 		}
 	}
 

@@ -2,10 +2,8 @@
 
 #include "core_service.h"
 
-#include <list>
+#include <vector>
 #include <map>
-
-#include "tinyxml2/tinyxml2.h"
 
 namespace core
 {

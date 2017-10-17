@@ -76,7 +76,7 @@ void CLoginClientMessageHandler::login(CLoginConnectionFromClient* pLoginConnect
 		pLoginConnectionFromClient->shutdown(false, "validate login error");
 	}
 	
-	pLoginConnectionFromClient = dynamic_cast<CLoginConnectionFromClient*>(CBaseApp::Inst()->getBaseConnectionMgr()->getBaseConnectionBySocketID(nSocketID));
+	pLoginConnectionFromClient = dynamic_cast<CLoginConnectionFromClient*>(this->m_pLoginService->getBaseConnectionMgr()->getBaseConnectionBySocketID(nSocketID));
 	if (nullptr == pLoginConnectionFromClient)
 	{
 		PrintInfo("CLoginClientMessageHandler::login nullptr == pLoginConnectionFromClient account_name: {} server_id: {} socket_id: {}", szAccountName, nServerID, nSocketID);

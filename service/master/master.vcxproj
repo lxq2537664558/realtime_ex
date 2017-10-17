@@ -101,6 +101,7 @@
   <ItemGroup>
     <ClCompile Include="connection_from_node.cpp" />
     <ClCompile Include="master_service.cpp" />
+    <ClCompile Include="memory_new.cpp" />
     <ClCompile Include="node_connection_factory.cpp" />
     <ClCompile Include="service_registry.cpp" />
     <ClCompile Include="stdafx.cpp">

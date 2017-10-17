@@ -85,7 +85,7 @@ void CGateClientSession::enterGas()
 	std::shared_ptr<const g2s_player_enter_response> pResponseMessage = nullptr;
 	if (this->sync_invoke(this->getGasID(), &request_msg, pResponseMessage) != eRRT_OK)
 	{
-		CBaseConnection* pBaseConnection = CBaseApp::Inst()->getBaseConnectionMgr()->getBaseConnectionBySocketID(this->m_nSocketID);
+		CBaseConnection* pBaseConnection = this->getGateService()->getBaseConnectionMgr()->getBaseConnectionBySocketID(this->m_nSocketID);
 		DebugAst(pBaseConnection != nullptr);
 
 		c2g_player_handshake_response response_msg;
@@ -100,7 +100,7 @@ void CGateClientSession::enterGas()
 		return;
 	}
 	
-	CBaseConnection* pBaseConnection = CBaseApp::Inst()->getBaseConnectionMgr()->getBaseConnectionBySocketID(this->m_nSocketID);
+	CBaseConnection* pBaseConnection = this->getGateService()->getBaseConnectionMgr()->getBaseConnectionBySocketID(this->m_nSocketID);
 	DebugAst(pBaseConnection != nullptr);
 
 	if (pResponseMessage == nullptr)

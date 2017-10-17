@@ -7,14 +7,8 @@
     <Filter Include="src">
       <UniqueIdentifier>{5c44a935-c5c1-4826-8d55-19478d97110b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="inc\actor">
-      <UniqueIdentifier>{8d7ba1a0-c726-48aa-b052-fac7d5e22d09}</UniqueIdentifier>
-    </Filter>
     <Filter Include="inc\service_base">
       <UniqueIdentifier>{5b3d8783-33ab-49f5-b0ca-2cb105340f44}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\actor">
-      <UniqueIdentifier>{f908d546-9805-4756-bd5f-8f5475c28581}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\service_base">
       <UniqueIdentifier>{11395801-8389-4db4-b185-3fd6e7f2f0c7}</UniqueIdentifier>
@@ -44,9 +38,6 @@
     </ClInclude>
     <ClInclude Include="stdafx.h">
       <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreCommon\actor_base.h">
-      <Filter>inc\actor</Filter>
     </ClInclude>
     <ClInclude Include="..\..\inc\libCoreCommon\coroutine.h">
       <Filter>inc</Filter>
@@ -92,9 +83,6 @@
     </ClInclude>
     <ClInclude Include="core_common_define.h">
       <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="actor_scheduler.h">
-      <Filter>src\actor</Filter>
     </ClInclude>
     <ClInclude Include="base_connection_other_node.h">
       <Filter>src\framework</Filter>
@@ -162,17 +150,11 @@
     <ClInclude Include="hash_service_selector.h">
       <Filter>src\service_base</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\inc\libCoreCommon\actor_factory.h">
-      <Filter>inc\actor</Filter>
-    </ClInclude>
     <ClInclude Include="core_service.h">
       <Filter>src\service_base</Filter>
     </ClInclude>
     <ClInclude Include="core_service_mgr.h">
       <Filter>src\service_base</Filter>
-    </ClInclude>
-    <ClInclude Include="core_actor.h">
-      <Filter>src\actor</Filter>
     </ClInclude>
     <ClInclude Include="..\..\inc\libCoreCommon\service_invoke_holder.h">
       <Filter>inc\service_base</Filter>
@@ -219,6 +201,21 @@
     <ClInclude Include="..\..\inc\libCoreCommon\register_message_util.h">
       <Filter>inc\service_base</Filter>
     </ClInclude>
+    <ClInclude Include="logic_service_lock.h">
+      <Filter>src\framework</Filter>
+    </ClInclude>
+    <ClInclude Include="logic_message_queue_mgr.h">
+      <Filter>src\framework</Filter>
+    </ClInclude>
+    <ClInclude Include="message_queue.h">
+      <Filter>src\framework</Filter>
+    </ClInclude>
+    <ClInclude Include="round_robin_service_selector.h">
+      <Filter>src\service_base</Filter>
+    </ClInclude>
+    <ClInclude Include="coroutine_thread.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="fix_memory_pool.cpp">
@@ -230,9 +227,6 @@
     <ClCompile Include="ticker.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="memory_new.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="coroutine.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -242,14 +236,8 @@
     <ClCompile Include="coroutine_mgr.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="actor_base.cpp">
-      <Filter>src\actor</Filter>
-    </ClCompile>
     <ClCompile Include="service_base.cpp">
       <Filter>src\service_base</Filter>
-    </ClCompile>
-    <ClCompile Include="actor_scheduler.cpp">
-      <Filter>src\actor</Filter>
     </ClCompile>
     <ClCompile Include="base_app.cpp">
       <Filter>src\framework</Filter>
@@ -329,9 +317,6 @@
     <ClCompile Include="core_service.cpp">
       <Filter>src\service_base</Filter>
     </ClCompile>
-    <ClCompile Include="core_actor.cpp">
-      <Filter>src\actor</Filter>
-    </ClCompile>
     <ClCompile Include="service_invoke_holder.cpp">
       <Filter>src\service_base</Filter>
     </ClCompile>
@@ -351,6 +336,24 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="native_serializer.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="memory_new.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="logic_service_lock.cpp">
+      <Filter>src\framework</Filter>
+    </ClCompile>
+    <ClCompile Include="logic_message_queue_mgr.cpp">
+      <Filter>src\framework</Filter>
+    </ClCompile>
+    <ClCompile Include="message_queue.cpp">
+      <Filter>src\framework</Filter>
+    </ClCompile>
+    <ClCompile Include="round_robin_service_selector.cpp">
+      <Filter>src\service_base</Filter>
+    </ClCompile>
+    <ClCompile Include="coroutine_thread.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

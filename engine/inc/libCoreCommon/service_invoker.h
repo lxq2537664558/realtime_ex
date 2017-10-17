@@ -24,28 +24,27 @@ namespace core
 		/**
 		@brief: 单向的给目标服务发消息
 		*/
-		bool			send(uint32_t nServiceID, const void* pMessage);
+		bool			send(uint32_t nServiceID, const void* pMessage, uint8_t nMessageSerializerType = 0);
 		/**
 		@brief: 给某个类型的服务广播消息
 		*/
-		void			broadcast(const std::string& szServiceType, const void* pMessage);
+		void			broadcast(const std::string& szServiceType, const void* pMessage, uint8_t nMessageSerializerType = 0);
 		/**
 		@brief: 通过callback的方式进行远程调用，调用的时候请用返回消息类型来实例化模板函数
 		*/
 		template<class T>
-		inline void		async_invoke(uint32_t nServiceID, const void* pMessage, const std::function<void(const T*, uint32_t)>& callback, CServiceInvokeHolder* pServiceInvokeHolder = nullptr);
+		inline void		async_invoke(uint32_t nServiceID, const void* pMessage, const std::function<void(const T*, uint32_t)>& callback, uint8_t nMessageSerializerType = 0, CServiceInvokeHolder* pServiceInvokeHolder = nullptr);
 		/**
 		@brief: 通过future的方式进行远程调用
 		*/
 		template<class T>
-		inline void		async_invoke(uint32_t nServiceID, const void* pMessage, CFuture<T>& sFuture, CServiceInvokeHolder* pServiceInvokeHolder = nullptr);
+		inline void		async_invoke(uint32_t nServiceID, const void* pMessage, CFuture<T>& sFuture, uint8_t nMessageSerializerType = 0, CServiceInvokeHolder* pServiceInvokeHolder = nullptr);
 		/**
 		@brief: 同步的调用远程的接口
 			通过pResponseMessage来拿到响应结果，这里用shared_ptr的原因是为了自动释放pResponseMessage
-			另外 同步调用只支持调用其他服务，不支持调用其他actor
 		*/
 		template<class T>
-		inline uint32_t	sync_invoke(uint32_t nServiceID, const void* pMessage, std::shared_ptr<T>& pResponseMessage, CServiceInvokeHolder* pServiceInvokeHolder = nullptr);
+		inline uint32_t	sync_invoke(uint32_t nServiceID, const void* pMessage, std::shared_ptr<T>& pResponseMessage, uint8_t nMessageSerializerType = 0, CServiceInvokeHolder* pServiceInvokeHolder = nullptr);
 		//==================================调用指定服务方法=======================================//
 
 
@@ -54,56 +53,36 @@ namespace core
 		/**
 		@brief: 单向的给目标服务发消息
 		*/
-		bool			send(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const void* pMessage);
+		bool			send(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const void* pMessage, uint8_t nMessageSerializerType = 0);
 		/**
 		@brief: 通过callback的方式进行远程调用，调用的时候请用返回消息类型来实例化模板函数
 		*/
 		template<class T>
-		inline void		async_invoke(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const void* pMessage, const std::function<void(const T*, uint32_t)>& callback, CServiceInvokeHolder* pServiceInvokeHolder = nullptr);
+		inline void		async_invoke(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const void* pMessage, const std::function<void(const T*, uint32_t)>& callback, uint8_t nMessageSerializerType = 0, CServiceInvokeHolder* pServiceInvokeHolder = nullptr);
 		/**
 		@brief: 通过future的方式进行远程调用
 		*/
 		template<class T>
-		inline void		async_invoke(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const void* pMessage, CFuture<T>& sFuture, CServiceInvokeHolder* pServiceInvokeHolder = nullptr);
+		inline void		async_invoke(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const void* pMessage, CFuture<T>& sFuture, uint8_t nMessageSerializerType = 0, CServiceInvokeHolder* pServiceInvokeHolder = nullptr);
 		/**
 		@brief: 同步的调用远程的接口
-		通过pResponseMessage来拿到响应结果，这里用shared_ptr的原因是为了自动释放pResponseMessage
-		另外 同步调用只支持调用其他服务，不支持调用其他actor
+			通过pResponseMessage来拿到响应结果，这里用shared_ptr的原因是为了自动释放pResponseMessage
 		*/
 		template<class T>
-		inline uint32_t	sync_invoke(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const void* pMessage, std::shared_ptr<T>& pResponseMessage, CServiceInvokeHolder* pServiceInvokeHolder = nullptr);
+		inline uint32_t	sync_invoke(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const void* pMessage, std::shared_ptr<T>& pResponseMessage, uint8_t nMessageSerializerType = 0, CServiceInvokeHolder* pServiceInvokeHolder = nullptr);
 		//==================================调用指定服务类型方法=======================================//
-
-
-
-		//==================================调用指定actor方法=======================================//
-		/**
-		@brief: 单向的给目标actor发消息
-		*/
-		bool			send_a(uint32_t nServiceID, uint64_t nActorID, const void* pMessage);
-		/**
-		@brief: 通过callback的方式进行远程调用，调用的时候请用返回消息类型来实例化模板函数
-		*/
-		template<class T>
-		inline void		async_invoke_a(uint32_t nServiceID, uint64_t nActorID, const void* pMessage, const std::function<void(const T*, uint32_t)>& callback, CServiceInvokeHolder* pServiceInvokeHolder = nullptr);
-		/**
-		@brief: 通过future的方式进行远程调用
-		*/
-		template<class T>
-		inline void		async_invoke_a(uint32_t nServiceID, uint64_t nActorID, const void* pMessage, CFuture<T>& sFuture, CServiceInvokeHolder* pServiceInvokeHolder = nullptr);
-		//==================================调用指定actor方法=======================================//
 
 
 		
 		/**
-		@brief: 单向的给目标（服务，actor）发消息，消息是原始消息，框架不负责序列化
+		@brief: 单向的给目标服务发消息，消息是原始消息，框架不负责序列化
 		*/
-		bool			gate_forward(uint64_t nSessionID, uint32_t nToServiceID, uint64_t nToActorID, const message_header* pData);
+		bool			gate_forward(uint64_t nSessionID, uint32_t nToServiceID, const message_header* pData);
 		
 		/**
 		@brief: 响应rpc请求
 		*/
-		void			response(const SSessionInfo& sSessionInfo, const void* pMessage, uint32_t nErrorCode = eRRT_OK);
+		void			response(const SSessionInfo& sSessionInfo, const void* pMessage, uint32_t nErrorCode = eRRT_OK, uint8_t nMessageSerializerType = 0);
 
 
 		//==================================发消息给客户端=======================================//
@@ -119,8 +98,19 @@ namespace core
 
 
 	private:
-		bool			invoke(uint32_t nServiceID, uint64_t nActorID, const void* pMessage, uint64_t nCoroutineID, const std::function<void(std::shared_ptr<void>, uint32_t)>& callback, CServiceInvokeHolder* pServiceInvokeHolder);
-	
+		bool			invoke(bool bCheckHealth, uint32_t nServiceID, const void* pMessage, uint64_t nCoroutineID, const std::function<void(std::shared_ptr<void>, uint32_t)>& callback, uint8_t nMessageSerializerType, CServiceInvokeHolder* pServiceInvokeHolder);
+
+		bool			send(bool bCheckHealth, uint32_t nServiceID, const void* pMessage, uint8_t nMessageSerializerType);
+
+		template<class T>
+		inline void		async_invoke(bool bCheckHealth, uint32_t nServiceID, const void* pMessage, const std::function<void(const T*, uint32_t)>& callback, uint8_t nMessageSerializerType, CServiceInvokeHolder* pServiceInvokeHolder);
+
+		template<class T>
+		inline void		async_invoke(bool bCheckHealth, uint32_t nServiceID, const void* pMessage, CFuture<T>& sFuture, uint8_t nMessageSerializerType, CServiceInvokeHolder* pServiceInvokeHolder);
+
+		template<class T>
+		inline uint32_t	sync_invoke(bool bCheckHealth, uint32_t nServiceID, const void* pMessage, std::shared_ptr<T>& pResponseMessage, uint8_t nMessageSerializerType, CServiceInvokeHolder* pServiceInvokeHolder);
+
 	private:
 		CServiceBase*	m_pServiceBase;
 	};

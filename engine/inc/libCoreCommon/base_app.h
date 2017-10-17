@@ -6,6 +6,8 @@
 
 #include "libBaseCommon/buf_file.h"
 
+#include <set>
+
 namespace core
 {
 	class CBaseConnectionMgr;
@@ -22,7 +24,7 @@ namespace core
 		
 	public:
 		CBaseApp();
-		virtual ~CBaseApp();
+		~CBaseApp();
 
 		static CBaseApp*& Inst();
 
@@ -35,15 +37,11 @@ namespace core
 		nStartTime 第一次触发定时器的时间
 		nIntervalTime 第一次触发定时器后接下来定时器触发的间隔时间，如果该值是0就表示这个定时器只触发一次
 		*/
-		void						registerTicker(uint8_t nType, uint32_t nFromServiceID, uint64_t nFromActorID, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
+		void						registerTicker(uint32_t nServiceID, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
 		/**
 		@brief: 反注册定时器
 		*/
 		void						unregisterTicker(CTicker* pTicker);
-		/*
-		@brief: 获取连接管理器
-		*/
-		CBaseConnectionMgr*			getBaseConnectionMgr() const;
 		/*
 		@brief: 根据服务ID获取服务
 		*/
@@ -67,11 +65,17 @@ namespace core
 		/**
 		@brief: 根据服务类型取到该类型服务的所有服务id
 		*/
-		const std::vector<uint32_t>&getServiceIDByTypeName(const std::string& szName) const;
+		const std::set<uint32_t>&	getServiceIDByType(const std::string& szName) const;
+		const std::vector<uint32_t>&
+									getActiveServiceIDByType(const std::string& szName) const;
 		/*
 		@brief: 获取配置文件名
 		*/
 		const std::string&			getConfigFileName() const;
+		/*
+		@brief: 获取协程调用栈大小
+		*/
+		uint32_t					getCoroutineStackSize() const;
 		/*
 		@brief: 获取QPS
 		*/
@@ -88,10 +92,5 @@ namespace core
 		@brief: 发起退出
 		*/
 		void						doQuit();
-
-	protected:
-		virtual bool				onInit() { return true; }
-		virtual void				onProcess() { }
-		virtual void				onDestroy() { }
 	};
 }

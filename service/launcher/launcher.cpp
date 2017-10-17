@@ -20,16 +20,55 @@
 #include "libBaseCommon/function_util.h"
 #include "libCoreCommon/service_base.h"
 #include "libCoreCommon/base_app.h"
+#include "libCoreCommon/coroutine.h"
+#include <thread>
 
 typedef core::CServiceBase*(*funcCreateServiceBase)(const core::SServiceBaseInfo&, const std::string&);
 
+uint64_t nCoID = 0;
+
+void co_fun(uint64_t nContext)
+{
+	while (1)
+	{
+		printf("co_fun AAAAAA\n");
+		core::coroutine::yield();
+		printf("co_fun BBBBBB\n");
+	}
+}
+
+void thread_fun()
+{
+	printf("thread_fun AAAAAA\n");
+	core::coroutine::init(1024*1024);
+	while (1)
+	{
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+		printf("thread_fun BBBBBB\n");
+		core::coroutine::resume(nCoID, 0);
+		printf("thread_fun CCCCCC\n");
+	}
+}
+
 int32_t main(int32_t argc, char* argv[])
 {
+// 	std::thread t = std::thread(std::bind(&thread_fun));
+// 
+// 	core::coroutine::init(1024 * 1024);
+// 	nCoID = core::coroutine::create(1024*64, std::bind(&co_fun, std::placeholders::_1));
+// 	core::coroutine::resume(nCoID, 0);
+// 
+// 	for (;;)
+// 	{
+// 		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+//  }
+
 	if (argc < 2)
 	{
 		fprintf(stderr, "argc error\n");
 		return 0;
 	}
+
 
 	core::CBaseApp* pBaseApp = new core::CBaseApp();
 
@@ -50,8 +89,8 @@ int32_t main(int32_t argc, char* argv[])
 	szConfig += "/etc/";
 	szConfig += argv[1];
 
-	tinyxml2::XMLDocument* pConfigXML = new tinyxml2::XMLDocument();
-	if (pConfigXML->LoadFile(szConfig.c_str()) != tinyxml2::XML_SUCCESS)
+	tinyxml2::XMLDocument sConfigXML;
+	if (sConfigXML.LoadFile(szConfig.c_str()) != tinyxml2::XML_SUCCESS)
 	{
 		fprintf(stderr, "load etc config error\n");
 		return 0;
@@ -59,7 +98,7 @@ int32_t main(int32_t argc, char* argv[])
 
 	_chdir(szOldCurPath);
 
-	tinyxml2::XMLElement* pRootXML = pConfigXML->RootElement();
+	tinyxml2::XMLElement* pRootXML = sConfigXML.RootElement();
 	if (pRootXML == nullptr)
 	{
 		fprintf(stderr, "pRootXML == nullptr\n");

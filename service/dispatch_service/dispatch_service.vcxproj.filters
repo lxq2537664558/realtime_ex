@@ -60,6 +60,9 @@
     <ClCompile Include="..\proto\server_proto_src\d2u_player_login_response.pb.cc">
       <Filter>server_proto</Filter>
     </ClCompile>
+    <ClCompile Include="memory_new.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dispatch_service.h">

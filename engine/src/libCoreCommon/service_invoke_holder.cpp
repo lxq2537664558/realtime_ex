@@ -45,39 +45,32 @@ namespace core
 			this->m_pServiceBase->m_pCoreService->delPendingResponseInfo(this->m_nID);
 	}
 
-	bool CServiceInvokeHolder::send(uint32_t nServiceID, const void* pMessage)
+	bool CServiceInvokeHolder::send(uint32_t nServiceID, const void* pMessage, uint8_t nMessageSerializerType /* = 0 */)
 	{
 		DebugAstEx(this->m_pServiceBase != nullptr, false);
 
-		return this->m_pServiceBase->getServiceInvoker()->send(nServiceID, pMessage);
+		return this->m_pServiceBase->getServiceInvoker()->send(nServiceID, pMessage, nMessageSerializerType);
 	}
 
-	bool CServiceInvokeHolder::send(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const void* pMessage)
+	bool CServiceInvokeHolder::send(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const void* pMessage, uint8_t nMessageSerializerType /* = 0 */)
 	{
 		DebugAstEx(this->m_pServiceBase != nullptr, false);
 
-		return this->m_pServiceBase->getServiceInvoker()->send(szServiceType, nServiceSelectorType, nServiceSelectorContext, pMessage);
+		return this->m_pServiceBase->getServiceInvoker()->send(szServiceType, nServiceSelectorType, nServiceSelectorContext, pMessage, nMessageSerializerType);
 	}
 
-	void CServiceInvokeHolder::broadcast(const std::string& szServiceType, const void* pMessage)
+	void CServiceInvokeHolder::broadcast(const std::string& szServiceType, const void* pMessage, uint8_t nMessageSerializerType /* = 0 */)
 	{
 		DebugAst(this->m_pServiceBase != nullptr);
 
-		return this->m_pServiceBase->getServiceInvoker()->broadcast(szServiceType, pMessage);
+		return this->m_pServiceBase->getServiceInvoker()->broadcast(szServiceType, pMessage, nMessageSerializerType);
 	}
 
-	bool CServiceInvokeHolder::send_a(uint32_t nServiceID, uint64_t nActorID, const void* pMessage)
-	{
-		DebugAstEx(this->m_pServiceBase != nullptr, false);
-
-		return this->m_pServiceBase->getServiceInvoker()->send_a(nServiceID, nActorID, pMessage);
-	}
-
-	void CServiceInvokeHolder::response(const SSessionInfo& sSessionInfo, const void* pMessage, uint32_t nErrorCode /*= eRRT_OK*/)
+	void CServiceInvokeHolder::response(const SSessionInfo& sSessionInfo, const void* pMessage, uint32_t nErrorCode /*= eRRT_OK*/, uint8_t nMessageSerializerType /* = 0 */)
 	{
 		DebugAst(this->m_pServiceBase != nullptr);
 
-		return this->m_pServiceBase->getServiceInvoker()->response(sSessionInfo, pMessage, nErrorCode);
+		return this->m_pServiceBase->getServiceInvoker()->response(sSessionInfo, pMessage, nErrorCode, nMessageSerializerType);
 	}
 
 	uint64_t CServiceInvokeHolder::getHolderID() const

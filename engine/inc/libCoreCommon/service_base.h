@@ -5,7 +5,6 @@
 #include "service_id_converter.h"
 #include "message_serializer.h"
 #include "service_selector.h"
-#include "actor_factory.h"
 
 #include "libBaseCommon/buf_file.h"
 
@@ -22,11 +21,11 @@ namespace core
 		eSRS_Quit		= 3,	// 最终退出
 	};
 
-	class CActorBase;
 	class CServiceInvoker;
 	class CServiceInvokeHolder;
 	class CCoreService;
 	class CCoreServiceMgr;
+	class CBaseConnectionMgr;
 	/**
 	@brief: 服务基础类
 	*/
@@ -59,6 +58,11 @@ namespace core
 		CServiceSelector*	getServiceSelector(uint32_t nType) const;
 
 		/**
+		@brief: 判断服务是否健康
+		*/
+		bool				isServiceHealth(uint32_t nServiceID) const;
+
+		/**
 		@brief: 注册定时器
 		nStartTime 第一次触发定时器的时间
 		nIntervalTime 第一次触发定时器后接下来定时器触发的间隔时间，如果该值是0就表示这个定时器只触发一次
@@ -68,7 +72,10 @@ namespace core
 		@brief: 反注册定时器
 		*/
 		void				unregisterTicker(CTicker* pTicker);
-
+		/*
+		@brief: 获取连接管理器
+		*/
+		CBaseConnectionMgr*	getBaseConnectionMgr() const;
 		/**
 		@brief: 注册普通服务消息
 		*/
@@ -78,15 +85,6 @@ namespace core
 		*/
 		void				registerServiceForwardHandler(const std::string& szMessageName, const std::function<void(CServiceBase*, SClientSessionInfo, const void*)>& callback);
 		
-		/**
-		@brief: 注册普通actor消息
-		*/
-		void				registerActorMessageHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SSessionInfo, const void*)>& callback);
-		/**
-		@brief: 注册经网关服务转发客户端的actor消息
-		*/
-		void				registerActorForwardHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SClientSessionInfo, const void*)>& callback);
-
 		/**
 		@brief: 获取客户端转发消息名字
 		*/
@@ -114,19 +112,6 @@ namespace core
 		@brief: 获取服务调用器
 		*/
 		CServiceInvoker*	getServiceInvoker() const;
-		/**
-		@brief: 创建actor
-		*/
-		CActorBase*			createActor(const std::string& szType, uint64_t nActorID, const void* pContext);
-		/**
-		@brief: 销毁actor
-		*/
-		void				destroyActor(CActorBase* pActorBase);
-
-		/**
-		@brief: 根据id获取actor
-		*/
-		CActorBase*			getActorBase(uint64_t nID) const;
 		/*
 		@brief: 获取运行状态
 		*/
@@ -170,11 +155,6 @@ namespace core
 		*/
 		virtual	CServiceIDConverter*
 							getServiceIDConverter() { return nullptr; }
-		/**
-		@brief: 获取actor工厂
-		*/
-		virtual CActorFactory*
-							getActorFactory(const std::string& szType) const { return nullptr; }
 
 		virtual void		release() = 0;
 

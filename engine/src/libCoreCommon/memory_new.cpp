@@ -1,7 +1,6 @@
-#include "stdafx.h"
 #include "libBaseCommon/memory_hook.h"
 
-#if defined __MEMORY_HOOK__ && defined _WIN32
+#ifdef __MEMORY_HOOK__
 
 void* operator new (size_t size)
 {

@@ -176,6 +176,7 @@
     <ClCompile Include="..\proto\client_proto_src\c2s_update_name_request.pb.cc" />
     <ClCompile Include="..\proto\client_proto_src\c2s_update_name_response.pb.cc" />
     <ClCompile Include="connection_to_login.cpp" />
+    <ClCompile Include="memory_new.cpp" />
     <ClCompile Include="message_handler.cpp" />
     <ClCompile Include="connection_to_gate.cpp" />
     <ClCompile Include="sample_client.cpp" />

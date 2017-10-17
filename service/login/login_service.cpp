@@ -25,7 +25,7 @@ bool CLoginService::onInit()
 	this->m_pLoginClientMessageHandler = std::make_unique<CLoginClientMessageHandler>(this);
 
 	this->m_pLoginClientConnectionFactory = std::make_unique<CLoginClientConnectionFactory>();
-	CBaseApp::Inst()->getBaseConnectionMgr()->setBaseConnectionFactory("CLoginConnectionFromClient", this->m_pLoginClientConnectionFactory.get());
+	this->getBaseConnectionMgr()->setBaseConnectionFactory("CLoginConnectionFromClient", this->m_pLoginClientConnectionFactory.get());
 	
 	this->m_pNormalProtobufSerializer = std::make_unique<CNormalProtobufSerializer>();
 	this->m_pJsonProtobufSerializer = std::make_unique<CJsonProtobufSerializer>();
@@ -35,13 +35,13 @@ bool CLoginService::onInit()
 
 	this->setServiceMessageSerializer(0, eMST_Protobuf);
 
-	tinyxml2::XMLDocument* pConfigXML = new tinyxml2::XMLDocument();
-	if (pConfigXML->LoadFile(this->getConfigFileName().c_str()) != tinyxml2::XML_SUCCESS)
+	tinyxml2::XMLDocument sConfigXML;
+	if (sConfigXML.LoadFile(this->getConfigFileName().c_str()) != tinyxml2::XML_SUCCESS)
 	{
 		PrintWarning("load {} config error", this->getConfigFileName());
 		return false;
 	}
-	tinyxml2::XMLElement* pRootXML = pConfigXML->RootElement();
+	tinyxml2::XMLElement* pRootXML = sConfigXML.RootElement();
 	if (pRootXML == nullptr)
 	{
 		PrintWarning("pRootXML == nullptr");
@@ -61,16 +61,15 @@ bool CLoginService::onInit()
 
 	// 启动客户端连接
 #ifdef _WEB_SOCKET_
-	if (!CBaseApp::Inst()->getBaseConnectionMgr()->listen(szHost, nPort, true, "CLoginConnectionFromClient", szBuf, nSendBufSize, nRecvBufSize, default_client_message_parser, eCCT_Websocket))
+	if (!this->getBaseConnectionMgr()->listen(szHost, nPort, true, "CLoginConnectionFromClient", szBuf, nSendBufSize, nRecvBufSize, default_client_message_parser, eCCT_Websocket))
 #else
-	if (!CBaseApp::Inst()->getBaseConnectionMgr()->listen(szHost, nPort, true, "CLoginConnectionFromClient", szBuf, nSendBufSize, nRecvBufSize, default_client_message_parser, eCCT_Normal))
+	if (!this->getBaseConnectionMgr()->listen(szHost, nPort, true, "CLoginConnectionFromClient", szBuf, nSendBufSize, nRecvBufSize, default_client_message_parser, eCCT_Normal))
 #endif
 	{
 		PrintWarning("gate listen error");
 		return false;
 	}
-	SAFE_DELETE(pConfigXML);
-
+	
 	PrintInfo("CGateService::onInit");
 
 	return true;

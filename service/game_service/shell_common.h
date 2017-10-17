@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include <map>
 
 struct SAttributeValue
 {
@@ -47,4 +48,47 @@ enum EBattleDamageType
 	eBDT_Dodge = 2,		// 闪避
 
 	eBDT_Dead = 1<<6,	// 死亡 
+};
+
+enum ESkillCampType
+{
+	eSCT_Enemy,
+};
+
+enum ESkillTargetType	//技能目标类型
+{	
+	
+};
+
+#define _PERCENT_VALUE 10000
+
+// 阵容位置
+enum EBattleArrayPosition
+{
+	eBAP_1 = 1,
+	eBAP_2 = 2,
+	eBAP_3 = 3,
+	eBAP_4 = 4,
+	eBAP_5 = 5,
+	eBAP_6 = 6,
+};
+
+//阵容
+struct SBattleArrayInfo
+{
+	std::map<uint32_t, uint32_t>	mapHeroPosition;	// 位置，英雄id
+};
+
+// 战斗类型
+enum EBattleType
+{
+	eBT_None	= 0,
+	eBT_PVE		= 1,
+	eBT_PVP		= 2,
+};
+
+enum EBattleArrayType
+{
+	eBAT_Normal = 0,	// 通用阵容
+
 };

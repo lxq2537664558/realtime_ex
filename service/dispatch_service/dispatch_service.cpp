@@ -40,13 +40,13 @@ uint32_t CDispatchService::getAccountTblCount() const
 
 bool CDispatchService::onInit()
 {
-	tinyxml2::XMLDocument* pConfigXML = new tinyxml2::XMLDocument();
-	if (pConfigXML->LoadFile(this->getConfigFileName().c_str()) != tinyxml2::XML_SUCCESS)
+	tinyxml2::XMLDocument sConfigXML;
+	if (sConfigXML.LoadFile(this->getConfigFileName().c_str()) != tinyxml2::XML_SUCCESS)
 	{
 		PrintWarning("load {} config error", this->getConfigFileName());
 		return false;
 	}
-	tinyxml2::XMLElement* pRootXML = pConfigXML->RootElement();
+	tinyxml2::XMLElement* pRootXML = sConfigXML.RootElement();
 	if (pRootXML == nullptr)
 	{
 		PrintWarning("pRootXML == nullptr");
@@ -61,9 +61,7 @@ bool CDispatchService::onInit()
 	
 	DebugAstEx(this->m_nAccountTblCount != 0, false);
 	DebugAstEx(this->m_nGlobalDbServiceID != 0, false);
-
-	SAFE_DELETE(pConfigXML);
-
+	
 	this->m_pNormalProtobufSerializer = std::make_unique<CNormalProtobufSerializer>();
 	
 	this->addServiceMessageSerializer(this->m_pNormalProtobufSerializer.get());

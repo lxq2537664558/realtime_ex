@@ -1,7 +1,5 @@
 #pragma once
-#include "player_battlearray_module_interface.h"
 #include "libCoreCommon/service_base.h"
-#include "libCoreCommon/actor_base.h"
 #include "libCoreCommon/ticker.h"
 #include "libCoreCommon/service_invoke_holder.h"
 #include "libCoreCommon/db_service_invoke_holder.h"
@@ -17,7 +15,6 @@ enum EPlayerModuleType
 	ePMT_Attribute		= 0,
 	ePMT_Item			= 1,
 	ePMT_Hero			= 2,
-	ePMT_BattleArray	= 3,
 	ePMT_Count,
 };
 
@@ -34,22 +31,24 @@ enum EPlayerStatusType
 
 struct SCreatePlayerContext
 {
+	uint64_t	nPlayerID;
 	uint32_t	nGateServiceID;
 };
 
 class CGameServiceMessageHandler;
+class CGameService;
 class CPlayerMgr;
 class CPlayer :
-	public core::CActorBase,
 	public CEventDispatcher
 {
 	friend class CGameServiceMessageHandler;
 	friend class CPlayerMgr;
 
 public:
-	CPlayer();
+	CPlayer(CGameService* pGameService);
 	virtual ~CPlayer();
 
+	uint64_t			getPlayerID() const;
 	EPlayerStatusType	getStatus() const;
 	void				setGateServiceID(uint32_t nGateServiceID);
 	uint32_t			getGateServiceID() const;
@@ -72,17 +71,14 @@ public:
 	IPlayerAttributeModule*		getAttributeModule() const;
 	IPlayerItemModule*			getItemModule() const;
 	IPlayerHeroModule*			getHeroModule() const;
-	IPlayerBattleArrayModule*	getBattleArrayModule() const;
-
+	
 	void					setModuleLoadDataError(uint32_t nModuleType);
 	bool					hasModuleLoadDataError() const;
 
 private:
-	virtual void	onInit(const void* pContext);
-	virtual void	onDestroy();
-
-	virtual void	release();
-
+	void			onInit(const void* pContext);
+	void			onDestroy();
+	
 	void			onLoadData();
 	void			onBackup(uint64_t nContext);
 	void			onPlayerLogin();
@@ -91,6 +87,8 @@ private:
 	void			onHeartbeat(uint64_t nContext);
 
 private:
+	CGameService*					m_pGameService;
+	uint64_t						m_nPlayerID;
 	core::CTicker					m_tickHeartbeat;
 	EPlayerStatusType				m_eStatus;
 	uint32_t						m_nGateServiceID;

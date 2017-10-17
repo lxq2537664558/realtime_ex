@@ -64,6 +64,6 @@ void CLoginClientMessageDispatcher::dispatch(CLoginConnectionFromClient* pLoginC
 	ClientCallback& callback = iter->second.callback;
 	DebugAst(callback != nullptr);
 
-	uint64_t nCoroutineID = core::coroutine::create(0, [&](uint64_t) { callback(pLoginConnectionFromClient, pMessage); });
+	uint64_t nCoroutineID = core::coroutine::create(core::CBaseApp::Inst()->getCoroutineStackSize(), [&](uint64_t) { callback(pLoginConnectionFromClient, pMessage); });
 	core::coroutine::resume(nCoroutineID, 0);
 }

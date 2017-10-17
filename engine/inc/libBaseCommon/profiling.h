@@ -18,7 +18,7 @@ namespace base
 	}
 }
 
-#define __PROFILING_OPEN
+//#define __PROFILING_OPEN
 
 #ifndef __PROFILING_OPEN
 #	define PROFILING_BEGIN(Label)
@@ -28,6 +28,8 @@ namespace base
 #	define PROFILING_BEGIN_EX(Label, Context)
 #	define PROFILING_END_EX(Label, Context)
 #	define PROFILING_GUARD_EX(Label, Context)
+
+#	define PROFILING_UPDATE(nTotalTime)
 #else
 #	define PROFILING_BEGIN(Label)					base::profiling::beginByLabel(#Label, -1);
 #	define PROFILING_END(Label)						base::profiling::endByLabel(#Label, -1);
@@ -36,4 +38,6 @@ namespace base
 #	define PROFILING_BEGIN_EX(Label, Context)		base::profiling::beginByLabel(#Label, Context);
 #	define PROFILING_END_EX(Label, Context)			base::profiling::endByLabel(#Label, Context);
 #	define PROFILING_GUARD_EX(Label, Context)		base::profiling::beginByLabel(#Label, Context); defer([](){ base::profiling::endByLabel(#Label, Context); });
+
+#	define PROFILING_UPDATE(nTotalTime)				base::profiling::update(nTotalTime);
 #endif

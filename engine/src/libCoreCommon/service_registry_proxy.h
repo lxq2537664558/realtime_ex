@@ -6,6 +6,7 @@
 
 #include "ticker.h"
 #include "core_common.h"
+#include "logic_service_lock.h"
 #include "base_connection_other_node.h"
 #include "base_connection_to_master.h"
 
@@ -13,6 +14,7 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <set>
 
 namespace core
 {
@@ -31,7 +33,9 @@ namespace core
 		uint32_t						getServiceID(const std::string& szName) const;
 		std::string						getServiceType(uint32_t nServiceID) const;
 		std::string						getServiceName(uint32_t nServiceID) const;
-		const std::vector<uint32_t>&	getServiceIDByTypeName(const std::string& szName) const;
+		const std::set<uint32_t>&		getServiceIDByType(const std::string& szName) const;
+		const std::vector<uint32_t>&	getActiveServiceIDByType(const std::string& szName) const;
+
 		bool							isValidService(uint32_t nServiceID) const;
 
 		uint32_t						getServiceInvokeTimeout(uint32_t nServiceID) const;
@@ -39,10 +43,9 @@ namespace core
 		const SServiceBaseInfo*			getServiceBaseInfoByServiceID(uint32_t nServiceID) const;
 		bool							getServiceBaseInfoByNodeID(uint32_t nNodeID, std::vector<SServiceBaseInfo>& vecServiceBaseInfo) const;
 		
-		CBaseConnectionOtherNode*		getBaseConnectionOtherNodeByServiceID(uint32_t nServiceID) const;
-		CBaseConnectionOtherNode*		getBaseConnectionOtherNodeByNodeID(uint32_t nNodeID) const;
-		bool							addBaseConnectionOtherNodeByNodeID(uint32_t nNodeID, CBaseConnectionOtherNode* pBaseConnectionOtherNode);
-		void							delBaseConnectionOtherNodeByNodeID(uint32_t nNodeID);
+		uint64_t						getOtherNodeSocketIDByServiceID(uint32_t nServiceID) const;
+		uint64_t						getOtherNodeSocketIDByNodeID(uint32_t nNodeID) const;
+		bool							setOtherNodeSocketIDByNodeID(uint32_t nNodeID, uint64_t nSocketID);
 		
 		bool							addBaseConnectionToMaster(CBaseConnectionToMaster* pBaseConnectionToMaster);
 		void							delBaseConnectionToMaster(uint32_t nMasterID);
@@ -50,20 +53,21 @@ namespace core
 	private:
 		void							onCheckConnectMaster(uint64_t nContext);
 		void							onConnectRefuse(const std::string& szContext);
-		
+		void							updateActiveServiceID(const std::set<std::string>& setType);
+
 	private:
 		struct SNodeProxyInfo
 		{
 			SNodeBaseInfo					sNodeBaseInfo;
 			std::vector<SServiceBaseInfo>	vecServiceBaseInfo;
-			CBaseConnectionOtherNode*		pBaseConnectionOtherNode;
+			uint64_t						nSocketID;
 			std::unique_ptr<CTicker>		pTicker;
 		};
 
 		struct SServiceProxyInfo
 		{
-			SServiceBaseInfo			sServiceBaseInfo;
-			CBaseConnectionOtherNode*	pBaseConnectionOtherNode;
+			SServiceBaseInfo	sServiceBaseInfo;
+			uint64_t			nSocketID;
 		};
 
 		struct SMasterInfo
@@ -76,12 +80,20 @@ namespace core
 						pBaseConnectionToMaster;
 		};
 
+		struct SServiceIDInfo
+		{
+			std::set<uint32_t>		setServiceID;
+			std::set<uint32_t>		setActiveServiceID;	// 没有剔除掉因为过载保护而踢除的服务
+			std::vector<uint32_t>	vecActiveServiceID;
+			CLogicServiceLock		lock;
+		};
+
+		CLogicServiceLock						m_sLock;
 		std::map<uint32_t, SNodeProxyInfo>		m_mapNodeProxyInfo;
 		std::map<uint32_t, SServiceProxyInfo>	m_mapServiceProxyInfo;
 		std::map<std::string, uint32_t>			m_mapServiceNameByID;
 		std::map<uint32_t, std::string>			m_mapServiceIDByName;
-		std::map<std::string, std::vector<uint32_t>>
-												m_mapServiceIDByServiceType;
+		std::map<std::string, SServiceIDInfo>	m_mapServiceIDInfoByType;
 
 		std::map<uint32_t, SMasterInfo>			m_mapMasterInfo;
 		CTicker									m_tickCheckConnectMaster;

@@ -1,12 +1,8 @@
 #include "stdafx.h"
 #include "transporter.h"
-#include "message_dispatcher.h"
-#include "coroutine.h"
 #include "base_connection_mgr.h"
 #include "base_connection_other_node.h"
-#include "logic_runnable.h"
 #include "message_command.h"
-#include "base_app.h"
 #include "core_app.h"
 
 #include "libBaseCommon/time_util.h"
@@ -24,7 +20,7 @@ namespace core
 
 	}
 
-	bool CTransporter::invoke(CCoreService* pCoreService, uint64_t nSessionID, uint64_t nFromActorID, uint32_t nToServiceID, uint64_t nToActorID, const void* pMessage)
+	bool CTransporter::invoke(CCoreService* pCoreService, uint32_t nToServiceID, uint64_t nSessionID, const void* pMessage, uint8_t nMessageSerializerType)
 	{
 		DebugAstEx(pMessage != nullptr && pCoreService != nullptr, false);
 
@@ -35,7 +31,12 @@ namespace core
 			DebugAstEx(nToServiceID != 0, false);
 		}
 
-		CMessageSerializer* pMessageSerializer = pCoreService->getServiceMessageSerializer(nToServiceID);
+		CMessageSerializer* pMessageSerializer = nullptr;
+		if (nMessageSerializerType == 0)
+			pMessageSerializer = pCoreService->getServiceMessageSerializer(nToServiceID);
+		else
+			pMessageSerializer = pCoreService->getServiceMessageSerializerByType(nMessageSerializerType);
+
 		DebugAstEx(pMessageSerializer != nullptr, false);
 
 		char szMessageName[_MAX_MESSAGE_NAME_LEN] = { 0 };
@@ -43,19 +44,17 @@ namespace core
 
 		uint16_t nMessageNameLen = (uint16_t)base::function_util::strnlen(szMessageName, _TRUNCATE);
 
-		if (!CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->isLocalService(nToServiceID))
+		if (!CCoreApp::Inst()->getCoreServiceMgr()->isLocalService(nToServiceID))
 		{
-			CBaseConnectionOtherNode* pBaseConnectionOtherNode = CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->getBaseConnectionOtherNodeByServiceID(nToServiceID);
-			if (nullptr == pBaseConnectionOtherNode)
+			uint64_t nSocketID = CCoreApp::Inst()->getServiceRegistryProxy()->getOtherNodeSocketIDByServiceID(nToServiceID);
+			if (nSocketID == 0)
 				return false;
 
 			// Ìî³äcookice
 			request_cookice* pCookice = reinterpret_cast<request_cookice*>(&this->m_szBuf[0]);
 			pCookice->nSessionID = nSessionID;
 			pCookice->nFromServiceID = pCoreService->getServiceID();
-			pCookice->nFromActorID = nFromActorID;
 			pCookice->nToServiceID = nToServiceID;
-			pCookice->nToActorID = nToActorID;
 			pCookice->nMessageSerializerType = pMessageSerializer->getType();
 			pCookice->nMessageNameLen = nMessageNameLen;
 			base::function_util::strcpy(pCookice->szMessageName, nMessageNameLen + 1, szMessageName);
@@ -69,10 +68,13 @@ namespace core
 
 			nDataSize += nCookiceLen;
 
-			pBaseConnectionOtherNode->send(eMT_REQUEST, &this->m_szBuf[0], (uint16_t)nDataSize);
+			CCoreApp::Inst()->getBaseConnectionMgr()->send(nSocketID, eMT_REQUEST, &this->m_szBuf[0], (uint16_t)nDataSize);
 		}
 		else
 		{
+			CCoreService* pToCoreService = CCoreApp::Inst()->getCoreServiceMgr()->getCoreService(nToServiceID);
+			DebugAstEx(pToCoreService != nullptr, false);
+
 			int32_t nDataSize = pMessageSerializer->serializeMessageToBuf(pMessage, &this->m_szBuf[0], (uint32_t)(this->m_szBuf.size()));
 			if (nDataSize < 0)
 				return false;
@@ -81,9 +83,6 @@ namespace core
 			SMCT_REQUEST* pContext = reinterpret_cast<SMCT_REQUEST*>(szBuf);
 			pContext->nSessionID = nSessionID;
 			pContext->nFromServiceID = pCoreService->getServiceID();
-			pContext->nFromActorID = nFromActorID;
-			pContext->nToServiceID = nToServiceID;
-			pContext->nToActorID = nToActorID;
 			pContext->nMessageSerializerType = pMessageSerializer->getType();
 			pContext->nMessageDataLen = (uint16_t)nDataSize;
 			pContext->nMessageNameLen = nMessageNameLen;
@@ -95,13 +94,13 @@ namespace core
 			sMessagePacket.nDataSize = sizeof(SMCT_REQUEST);
 			sMessagePacket.pData = pContext;
 
-			CCoreApp::Inst()->getLogicRunnable()->sendInsideMessage(sMessagePacket);
+			pToCoreService->getMessageQueue()->send(sMessagePacket);
 		}
 
 		return true;
 	}
 
-	bool CTransporter::response(CCoreService* pCoreService, uint32_t nToServiceID, uint64_t nToActorID, uint64_t nSessionID, uint8_t nResult, const void* pMessage)
+	bool CTransporter::response(CCoreService* pCoreService, uint32_t nToServiceID, uint64_t nSessionID, uint32_t nResult, const void* pMessage, uint8_t nMessageSerializerType)
 	{
 		DebugAstEx(pCoreService != nullptr, false);
 
@@ -112,8 +111,11 @@ namespace core
 			DebugAstEx(nToServiceID != 0, false);
 		}
 
-		CMessageSerializer* pMessageSerializer = pCoreService->getServiceMessageSerializer(nToServiceID);
-		DebugAstEx(pMessageSerializer != nullptr, false);
+		CMessageSerializer* pMessageSerializer = nullptr;
+		if (nMessageSerializerType == 0)
+			pMessageSerializer = pCoreService->getServiceMessageSerializer(nToServiceID);
+		else
+			pMessageSerializer = pCoreService->getServiceMessageSerializerByType(nMessageSerializerType);
 
 		char szMessageName[_MAX_MESSAGE_NAME_LEN] = { 0 };
 		if (pMessage != nullptr)
@@ -123,17 +125,16 @@ namespace core
 
 		uint16_t nMessageNameLen = (uint16_t)base::function_util::strnlen(szMessageName, _TRUNCATE);
 
-		if (!CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->isLocalService(nToServiceID))
+		if (!CCoreApp::Inst()->getCoreServiceMgr()->isLocalService(nToServiceID))
 		{
-			CBaseConnectionOtherNode* pBaseConnectionOtherNode = CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->getBaseConnectionOtherNodeByServiceID(nToServiceID);
-			if (nullptr == pBaseConnectionOtherNode)
+			uint64_t nSocketID = CCoreApp::Inst()->getServiceRegistryProxy()->getOtherNodeSocketIDByServiceID(nToServiceID);
+			if (nSocketID == 0)
 				return false;
 
 			response_cookice* pCookice = reinterpret_cast<response_cookice*>(&this->m_szBuf[0]);
 			pCookice->nSessionID = nSessionID;
 			pCookice->nFromServiceID = pCoreService->getServiceID();
 			pCookice->nToServiceID = nToServiceID;
-			pCookice->nToActorID = nToActorID;
 			pCookice->nMessageSerializerType = pMessageSerializer->getType();
 			pCookice->nResult = nResult;
 			pCookice->nMessageNameLen = nMessageNameLen;
@@ -151,10 +152,13 @@ namespace core
 			}
 			nDataSize += nCookiceLen;
 
-			pBaseConnectionOtherNode->send(eMT_RESPONSE, &this->m_szBuf[0], (uint16_t)nDataSize);
+			CCoreApp::Inst()->getBaseConnectionMgr()->send(nSocketID, eMT_RESPONSE, &this->m_szBuf[0], (uint16_t)nDataSize);
 		}
 		else
 		{
+			CCoreService* pToCoreService = CCoreApp::Inst()->getCoreServiceMgr()->getCoreService(nToServiceID);
+			DebugAstEx(pToCoreService != nullptr, false);
+
 			int32_t nDataSize = 0;
 			if (pMessage != nullptr)
 			{
@@ -167,8 +171,6 @@ namespace core
 			SMCT_RESPONSE* pContext = reinterpret_cast<SMCT_RESPONSE*>(szBuf);
 			pContext->nSessionID = nSessionID;
 			pContext->nFromServiceID = pCoreService->getServiceID();
-			pContext->nToServiceID = nToServiceID;
-			pContext->nToActorID = nToActorID;
 			pContext->nMessageSerializerType = pMessageSerializer->getType();
 			pContext->nResult = nResult;
 			pContext->nMessageDataLen = (uint16_t)nDataSize;
@@ -181,42 +183,38 @@ namespace core
 			sMessagePacket.nDataSize = sizeof(SMCT_RESPONSE);
 			sMessagePacket.pData = pContext;
 
-			CCoreApp::Inst()->getLogicRunnable()->sendInsideMessage(sMessagePacket);
+			pToCoreService->getMessageQueue()->send(sMessagePacket);
 		}
 
 		return true;
 	}
 
-	bool CTransporter::gate_forward(uint64_t nSessionID, uint32_t nFromServiceID, uint32_t nToServiceID, uint64_t nToActorID, const message_header* pData)
+	bool CTransporter::gate_forward(uint64_t nSessionID, uint32_t nFromServiceID, uint32_t nToServiceID, const message_header* pData)
 	{
 		DebugAstEx(pData != nullptr, false);
 
-		if (!CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->isLocalService(nToServiceID))
+		if (!CCoreApp::Inst()->getCoreServiceMgr()->isLocalService(nToServiceID))
 		{
-			CBaseConnection* pBaseConnection = CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->getBaseConnectionOtherNodeByServiceID(nToServiceID);
-			if (nullptr == pBaseConnection)
-			{
-				PrintWarning("CTransporter::gate_forward error service_id: {} actor_id: {}", nToServiceID, nToActorID);
+			uint64_t nSocketID = CCoreApp::Inst()->getServiceRegistryProxy()->getOtherNodeSocketIDByServiceID(nToServiceID);
+			if (nSocketID == 0)
 				return false;
-			}
 
 			gate_forward_cookice cookice;
 			cookice.nSessionID = nSessionID;
 			cookice.nFromServiceID = nFromServiceID;
-			cookice.nToActorID = nToActorID;
 			cookice.nToServiceID = nToServiceID;
 
-			pBaseConnection->send(eMT_GATE_FORWARD, &cookice, (uint16_t)sizeof(cookice), pData, pData->nMessageSize);
+			CCoreApp::Inst()->getBaseConnectionMgr()->send(nSocketID, eMT_GATE_FORWARD, &cookice, (uint16_t)sizeof(cookice), pData, pData->nMessageSize);
 		}
 		else
 		{
+			CCoreService* pToCoreService = CCoreApp::Inst()->getCoreServiceMgr()->getCoreService(nToServiceID);
+			DebugAstEx(pToCoreService != nullptr, false);
+
 			char* szBuf = new char[sizeof(SMCT_GATE_FORWARD) + pData->nMessageSize];
 			SMCT_GATE_FORWARD* pContext = reinterpret_cast<SMCT_GATE_FORWARD*>(szBuf);
 			pContext->nSessionID = nSessionID;
 			pContext->nFromServiceID = nFromServiceID;
-			pContext->nToServiceID = nToServiceID;
-			pContext->nToActorID = nToActorID;
-			pContext->nMessageDataLen = pData->nMessageSize;
 			memcpy(szBuf + sizeof(SMCT_GATE_FORWARD), pData, pData->nMessageSize);
 
 			SMessagePacket sMessagePacket;
@@ -224,7 +222,7 @@ namespace core
 			sMessagePacket.nDataSize = sizeof(SMCT_GATE_FORWARD);
 			sMessagePacket.pData = pContext;
 
-			CCoreApp::Inst()->getLogicRunnable()->sendInsideMessage(sMessagePacket);
+			pToCoreService->getMessageQueue()->send(sMessagePacket);
 		}
 
 		return true;
@@ -234,16 +232,16 @@ namespace core
 	{
 		DebugAstEx(pMessage != nullptr && pCoreService != nullptr, false);
 
-		if (!CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->isLocalService(nToServiceID))
+		if (!CCoreApp::Inst()->getCoreServiceMgr()->isLocalService(nToServiceID))
 		{
-			CMessageSerializer* pProtobufFactory = pCoreService->getForwardMessageSerializer();
-			DebugAstEx(pProtobufFactory != nullptr, false);
+			CMessageSerializer* pMessageSerializer = pCoreService->getForwardMessageSerializer();
+			DebugAstEx(pMessageSerializer != nullptr, false);
 
 			char szMessageName[_MAX_MESSAGE_NAME_LEN] = { 0 };
-			DebugAstEx(pProtobufFactory->getMessageName(pMessage, szMessageName, _countof(szMessageName)), false);
+			DebugAstEx(pMessageSerializer->getMessageName(pMessage, szMessageName, _countof(szMessageName)), false);
 
-			CBaseConnectionOtherNode* pBaseConnectionOtherNode = CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->getBaseConnectionOtherNodeByServiceID(nToServiceID);
-			if (nullptr == pBaseConnectionOtherNode)
+			uint64_t nSocketID = CCoreApp::Inst()->getServiceRegistryProxy()->getOtherNodeSocketIDByServiceID(nToServiceID);
+			if (nSocketID == 0)
 				return false;
 
 			gate_send_cookice* pCookice = reinterpret_cast<gate_send_cookice*>(&this->m_szBuf[0]);
@@ -256,7 +254,7 @@ namespace core
 
 			nCookiceLen += (int32_t)sizeof(message_header);
 
-			int32_t nDataSize = pProtobufFactory->serializeMessageToBuf(pMessage, &this->m_szBuf[0] + nCookiceLen, (uint32_t)(this->m_szBuf.size() - nCookiceLen));
+			int32_t nDataSize = pMessageSerializer->serializeMessageToBuf(pMessage, &this->m_szBuf[0] + nCookiceLen, (uint32_t)(this->m_szBuf.size() - nCookiceLen));
 			if (nDataSize < 0)
 				return false;
 
@@ -265,11 +263,11 @@ namespace core
 
 			nDataSize += nCookiceLen;
 
-			pBaseConnectionOtherNode->send(eMT_TO_GATE, &this->m_szBuf[0], (uint16_t)nDataSize);
+			CCoreApp::Inst()->getBaseConnectionMgr()->send(nSocketID, eMT_TO_GATE, &this->m_szBuf[0], (uint16_t)nDataSize);
 		}
 		else
 		{
-			CCoreService* pToCoreService = CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->getCoreService(nToServiceID);
+			CCoreService* pToCoreService = CCoreApp::Inst()->getCoreServiceMgr()->getCoreService(nToServiceID);
 			DebugAstEx(pToCoreService != nullptr, false);
 
 			CMessageSerializer* pMessageSerializer = pToCoreService->getForwardMessageSerializer();
@@ -290,7 +288,6 @@ namespace core
 			char* szBuf = new char[sizeof(SMCT_TO_GATE) + pHeader->nMessageSize];
 			SMCT_TO_GATE* pContext = reinterpret_cast<SMCT_TO_GATE*>(szBuf);
 			pContext->nSessionID = nSessionID;
-			pContext->nToServiceID = nToServiceID;
 			pContext->nDataSize = pHeader->nMessageSize;
 			pContext->pData = szBuf + sizeof(SMCT_TO_GATE);
 			memcpy(pContext->pData, &this->m_szBuf[0], pContext->nDataSize);
@@ -300,7 +297,7 @@ namespace core
 			sMessagePacket.nDataSize = sizeof(SMCT_TO_GATE);
 			sMessagePacket.pData = pContext;
 
-			CCoreApp::Inst()->getLogicRunnable()->sendInsideMessage(sMessagePacket);
+			pToCoreService->getMessageQueue()->send(sMessagePacket);
 		}
 
 		return true;
@@ -313,10 +310,10 @@ namespace core
 
 		DebugAstEx(pMessage != nullptr && pCoreService != nullptr, false);
 
-		if (!CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->isLocalService(nToServiceID))
+		if (!CCoreApp::Inst()->getCoreServiceMgr()->isLocalService(nToServiceID))
 		{
-			CBaseConnectionOtherNode* pBaseConnectionOtherNode = CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->getBaseConnectionOtherNodeByServiceID(nToServiceID);
-			if (nullptr == pBaseConnectionOtherNode)
+			uint64_t nSocketID = CCoreApp::Inst()->getServiceRegistryProxy()->getOtherNodeSocketIDByServiceID(nToServiceID);
+			if (nSocketID == 0)
 				return false;
 
 			CMessageSerializer* pMessageSerializer = pCoreService->getForwardMessageSerializer();
@@ -348,11 +345,11 @@ namespace core
 
 			nDataSize += nCookiceLen;
 
-			pBaseConnectionOtherNode->send(eMT_TO_GATE_BROADCAST, &this->m_szBuf[0], (uint16_t)nDataSize);
+			CCoreApp::Inst()->getBaseConnectionMgr()->send(nSocketID, eMT_TO_GATE_BROADCAST, &this->m_szBuf[0], (uint16_t)nDataSize);
 		}
 		else
 		{
-			CCoreService* pToCoreService = CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->getCoreService(nToServiceID);
+			CCoreService* pToCoreService = CCoreApp::Inst()->getCoreServiceMgr()->getCoreService(nToServiceID);
 			DebugAstEx(pToCoreService != nullptr, false);
 
 			CMessageSerializer* pMessageSerializer = pToCoreService->getForwardMessageSerializer();
@@ -370,7 +367,6 @@ namespace core
 			char* szBuf = new char[sizeof(SMCT_TO_GATE_BROADCAST) + nSessionLen + sizeof(message_header) + nDataSize];
 			SMCT_TO_GATE_BROADCAST* pContext = reinterpret_cast<SMCT_TO_GATE_BROADCAST*>(szBuf);
 			pContext->nSessionCount = (uint16_t)vecSessionID.size();
-			pContext->nToServiceID = nToServiceID;
 			pContext->nDataSize = (uint16_t)(sizeof(message_header) + nDataSize + nSessionLen);
 			pContext->pData = szBuf + sizeof(SMCT_TO_GATE_BROADCAST);
 			memcpy(pContext->pData, &vecSessionID[0], nSessionLen);
@@ -384,7 +380,7 @@ namespace core
 			sMessagePacket.nDataSize = sizeof(SMCT_TO_GATE);
 			sMessagePacket.pData = pContext;
 
-			CCoreApp::Inst()->getLogicRunnable()->sendInsideMessage(sMessagePacket);
+			pToCoreService->getMessageQueue()->send(sMessagePacket);
 		}
 
 		return true;

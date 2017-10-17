@@ -10,9 +10,6 @@ namespace core
 	CTicker::CTicker()
 		: m_pCoreContext(nullptr)
 		, m_nIntervalTime(0)
-		, m_nServiceID(0)
-		, m_nActorID(0)
-		, m_nType(eTT_None)
 	{
 		this->m_callback = new std::function<void(uint64_t)>();
 	}
@@ -29,9 +26,6 @@ namespace core
 
 	CTicker::CTicker(CTicker&& rhs)
 	{
-		this->m_nType = rhs.m_nType;
-		this->m_nServiceID = rhs.m_nServiceID;
-		this->m_nActorID = rhs.m_nActorID;
 		this->m_nIntervalTime = rhs.m_nIntervalTime;
 		this->m_nContext = rhs.m_nContext;
 		*this->m_callback = *rhs.m_callback;
@@ -47,9 +41,6 @@ namespace core
 		if (this == &rhs)
 			return *this;
 
-		this->m_nType = rhs.m_nType;
-		this->m_nServiceID = rhs.m_nServiceID;
-		this->m_nActorID = rhs.m_nActorID;
 		this->m_nIntervalTime = rhs.m_nIntervalTime;
 		this->m_nContext = rhs.m_nContext;
 		*this->m_callback = *rhs.m_callback;
@@ -88,20 +79,5 @@ namespace core
 	uint64_t CTicker::getContext() const
 	{
 		return this->m_nContext;
-	}
-
-	uint8_t CTicker::getType() const
-	{
-		return this->m_nType;
-	}
-
-	uint32_t CTicker::getServiceID() const
-	{
-		return this->m_nServiceID;
-	}
-
-	uint64_t CTicker::getActorID() const
-	{
-		return this->m_nActorID;
 	}
 }

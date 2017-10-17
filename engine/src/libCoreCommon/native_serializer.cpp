@@ -1,6 +1,7 @@
 #include "native_serializer.h"
-#include "libBaseCommon/function_util.h"
 #include "core_common.h"
+
+#include "libBaseCommon/function_util.h"
 
 namespace core
 {

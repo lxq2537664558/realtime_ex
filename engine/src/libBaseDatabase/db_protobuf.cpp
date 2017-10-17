@@ -402,7 +402,9 @@ namespace base
 				{
 					const google::protobuf::Message& subMessage = pReflection->GetMessage(*pMessage, pFieldDescriptor);
 
-					if (!google::protobuf::util::MessageToJsonString(subMessage, &szBuf).ok())
+					google::protobuf::util::JsonOptions sOptions;
+					sOptions.preserve_proto_field_names = true;
+					if (!google::protobuf::util::MessageToJsonString(subMessage, &szBuf, sOptions).ok())
 					{
 						PrintWarning("MessageToJsonString fail.[{}:{}]", pMessage->GetTypeName(), pFieldDescriptor->type_name());
 						return false;

@@ -2,9 +2,9 @@
 #include "core_service.h"
 #include "service_base.h"
 #include "core_app.h"
-#include "actor_base.h"
 #include "hash_service_selector.h"
 #include "random_service_selector.h"
+#include "round_robin_service_selector.h"
 #include "native_proto_system.h"
 #include "native_serializer.h"
 
@@ -26,27 +26,36 @@ namespace core
 		, m_szConfigFileName(szConfigFileName)
 		, m_sServiceBaseInfo(sServiceBaseInfo)
 		, m_pServiceBase(pServiceBase)
-		, m_nNextSessionID(0)
 		, m_pForwardMessageSerializer(nullptr)
+		, m_pBaseConnectionMgr(nullptr)
+		, m_pMessageQueue(nullptr)
+		, m_nNextSessionID(0)
 		, m_nDefaultServiceMessageSerializerType(0)
 	{
-		this->m_pActorScheduler = new CActorScheduler(this);
+		this->m_pMessageQueue = new CLogicMessageQueue(this, CCoreApp::Inst()->getLogicMessageQueueMgr());
+	
+		this->m_pBaseConnectionMgr = new CBaseConnectionMgr(this->m_pMessageQueue);
+
 		this->m_pServiceInvoker = new CServiceInvoker(pServiceBase);
 		this->m_pMessageDispatcher = new CMessageDispatcher(this);
 
-		this->m_mapServiceSelector[eSST_Random] = new CRandomServiceSelector();
-		this->m_mapServiceSelector[eSST_Hash] = new CHashServiceSelector();
+		this->m_mapServiceSelector[eSST_Random] = new CRandomServiceSelector(this->m_pServiceBase);
+		this->m_mapServiceSelector[eSST_Hash] = new CHashServiceSelector(this->m_pServiceBase);
+		this->m_mapServiceSelector[eSST_RoundRobin] = new CRoundRobinServiceSelector(this->m_pServiceBase);
+
 		this->m_tickerCheckHealth.setCallback(std::bind(&CCoreService::onCheckServiceHealth, this, std::placeholders::_1));
 	}
 
 	CCoreService::~CCoreService()
 	{
-		SAFE_DELETE(this->m_pActorScheduler);
 		SAFE_DELETE(this->m_pServiceInvoker);
 		SAFE_DELETE(this->m_pMessageDispatcher);
 
 		SAFE_DELETE(this->m_mapServiceSelector[eSST_Random]);
 		SAFE_DELETE(this->m_mapServiceSelector[eSST_Hash]);
+		SAFE_DELETE(this->m_mapServiceSelector[eSST_RoundRobin]);
+
+		SAFE_DELETE(this->m_pBaseConnectionMgr);
 	}
 
 	void CCoreService::quit()
@@ -68,10 +77,7 @@ namespace core
 		this->registerServiceMessageHandler("service_health_request", [this](CServiceBase* pServiceBase, SSessionInfo sSessionInfo, const void*)
 		{
 			service_health_response response_msg;
-			uint32_t nMessageSerializer = this->getServiceMessageSerializerType(sSessionInfo.nFromServiceID);
-			pServiceBase->setServiceMessageSerializer(sSessionInfo.nFromServiceID, eMST_Native);
-			pServiceBase->getServiceInvoker()->response(sSessionInfo, &response_msg, eRRT_OK);
-			pServiceBase->setServiceMessageSerializer(sSessionInfo.nFromServiceID, nMessageSerializer);
+			pServiceBase->getServiceInvoker()->response(sSessionInfo, &response_msg, eRRT_OK, eMST_Native);
 		});
 
 		this->m_pServiceBase->registerTicker(&this->m_tickerCheckHealth, _CHECK_SERVICE_HEALTH_TIME, _CHECK_SERVICE_HEALTH_TIME, 0);
@@ -115,28 +121,6 @@ namespace core
 		this->m_mapServiceForwardHandler[szMessageName] = callback;
 	}
 
-	void CCoreService::registerActorMessageHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SSessionInfo, const void*)>& callback)
-	{
-		this->m_mapActorMessageHandler[szMessageName] = callback;
-	}
-
-	void CCoreService::registerActorForwardHandler(const std::string& szMessageName, const std::function<void(CActorBase*, SClientSessionInfo, const void*)>& callback)
-	{
-		uint32_t nMessageID = _GET_MESSAGE_ID(szMessageName);
-
-		std::unique_lock<base::spin_lock> guard(this->m_lockForwardMessage);
-
-		auto iter = this->m_mapForwardMessageName.find(nMessageID);
-		if (iter != this->m_mapForwardMessageName.end() && szMessageName != iter->second)
-		{
-			PrintWarning("dup forward message id message_id: {} old_message_name: {} new_message_name: {}", nMessageID, iter->second, szMessageName);
-			return;
-		}
-
-		this->m_mapForwardMessageName[nMessageID] = szMessageName;
-		this->m_mapActorForwardHandler[szMessageName] = callback;
-	}
-
 	std::function<void(CServiceBase*, SSessionInfo, const void*)>& CCoreService::getServiceMessageHandler(const std::string& szMessageName)
 	{
 		auto iter = this->m_mapServiceMessageHandler.find(szMessageName);
@@ -155,30 +139,6 @@ namespace core
 		if (iter == this->m_mapServiceForwardHandler.end())
 		{
 			static std::function<void(CServiceBase*, SClientSessionInfo, const void*)> callback;
-			return callback;
-		}
-
-		return iter->second;
-	}
-
-	std::function<void(CActorBase*, SSessionInfo, const void*)>& CCoreService::getActorMessageHandler(const std::string& szMessageName)
-	{
-		auto iter = this->m_mapActorMessageHandler.find(szMessageName);
-		if (iter == this->m_mapActorMessageHandler.end())
-		{
-			static std::function<void(CActorBase*, SSessionInfo, const void*)> callback;
-			return callback;
-		}
-
-		return iter->second;
-	}
-
-	std::function<void(CActorBase*, SClientSessionInfo, const void*)>& CCoreService::getActorForwardHandler(const std::string& szMessageName)
-	{
-		auto iter = this->m_mapActorForwardHandler.find(szMessageName);
-		if (iter == this->m_mapActorForwardHandler.end())
-		{
-			static std::function<void(CActorBase*, SClientSessionInfo, const void*)> callback;
 			return callback;
 		}
 
@@ -224,14 +184,14 @@ namespace core
 		return this->m_pServiceInvoker;
 	}
 
-	CActorScheduler* CCoreService::getActorScheduler() const
-	{
-		return this->m_pActorScheduler;
-	}
-
 	CMessageDispatcher* CCoreService::getMessageDispatcher() const
 	{
 		return this->m_pMessageDispatcher;
+	}
+	
+	CLogicMessageQueue* CCoreService::getMessageQueue() const
+	{
+		return this->m_pMessageQueue;
 	}
 
 	EServiceRunState CCoreService::getRunState() const
@@ -259,6 +219,11 @@ namespace core
 			return nullptr;
 
 		return iter->second;
+	}
+
+	CBaseConnectionMgr* CCoreService::getBaseConnectionMgr() const
+	{
+		return this->m_pBaseConnectionMgr;
 	}
 
 	const std::string& CCoreService::getForwardMessageName(uint32_t nMessageID)
@@ -297,7 +262,7 @@ namespace core
 
 	bool CCoreService::isServiceHealth(uint32_t nServiceID) const
 	{
-		if (!CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->isValidService(nServiceID))
+		if (!CCoreApp::Inst()->getServiceRegistryProxy()->isValidService(nServiceID))
 			return false;
 
 		auto iter = this->m_mapServiceHealth.find(nServiceID);
@@ -324,9 +289,15 @@ namespace core
 
 		int32_t& nHealth = iter->second;
 		if (bTimeout)
+		{
 			nHealth = std::max<int32_t>(nHealth - _TIMEOUT_HEALTH, 0);
+		}
 		else
+		{
 			nHealth = std::min<int32_t>(nHealth + _SUCCESS_HEALTH, _MAX_SERVICE_HEALTH);
+		}
+
+		//PrintInfo("CCoreService::updateServiceHealth: {} health {}", bTimeout ? "timeout" : "normal", nHealth);
 	}
 
 	uint64_t CCoreService::genSessionID()
@@ -348,35 +319,28 @@ namespace core
 		}
 
 		SPendingResponseInfo* pPendingResponseInfo = iter->second;
-		this->m_mapPendingResponseInfo.erase(iter);
 		if (nullptr == pPendingResponseInfo)
 		{
 			PrintWarning("nullptr == pPendingResponseInfo session_id: {}", nContext);
 			return;
 		}
 
-		defer([&]()
-		{
-			SAFE_DELETE(pPendingResponseInfo);
-		});
+		char* szBuf = new char[sizeof(SMCT_RESPONSE)];
+		SMCT_RESPONSE* pContext = reinterpret_cast<SMCT_RESPONSE*>(szBuf);
+		pContext->nSessionID = pPendingResponseInfo->nSessionID;
+		pContext->nFromServiceID = pPendingResponseInfo->nToServiceID;
+		pContext->nMessageSerializerType = 0;
+		pContext->nResult = eRRT_TIME_OUT;
+		pContext->nMessageDataLen = 0;
+		pContext->nMessageNameLen = 0;
+		pContext->szMessageName[0] = 0;
+		
+		SMessagePacket sMessagePacket;
+		sMessagePacket.nType = eMCT_RESPONSE;
+		sMessagePacket.nDataSize = sizeof(SMCT_RESPONSE);
+		sMessagePacket.pData = pContext;
 
-		this->updateServiceHealth(pPendingResponseInfo->nToServiceID, true);
-
-		if (pPendingResponseInfo->nCoroutineID != 0)
-		{
-			SSyncCallResultInfo* pSyncCallResultInfo = new SSyncCallResultInfo();
-			pSyncCallResultInfo->nResult = eRRT_TIME_OUT;
-			pSyncCallResultInfo->pMessage = nullptr;
-			coroutine::setLocalData(pPendingResponseInfo->nCoroutineID, "response", reinterpret_cast<uint64_t>(pSyncCallResultInfo));
-
-			coroutine::resume(pPendingResponseInfo->nCoroutineID, 0);
-		}
-		else
-		{
-			DebugAst(pPendingResponseInfo->callback != nullptr);
-
-			pPendingResponseInfo->callback(nullptr, eRRT_TIME_OUT);
-		}
+		this->m_pMessageQueue->send(sMessagePacket);
 	}
 
 	SPendingResponseInfo* CCoreService::getPendingResponseInfo(uint64_t nSessionID)
@@ -396,6 +360,7 @@ namespace core
 				listSessionID.erase(pPendingResponseInfo->iterHolder);
 			}
 		}
+
 		return pPendingResponseInfo;
 	}
 
@@ -412,7 +377,7 @@ namespace core
 		pPendingResponseInfo->nBeginTime = base::time_util::getGmtTime();
 		pPendingResponseInfo->nToServiceID = nToServiceID;
 		pPendingResponseInfo->tickTimeout.setCallback(std::bind(&CCoreService::onRequestMessageTimeout, this, std::placeholders::_1));
-		CBaseApp::Inst()->registerTicker(CTicker::eTT_Service, 0, 0, &pPendingResponseInfo->tickTimeout, CCoreApp::Inst()->getInvokeTimeout(pPendingResponseInfo->nToServiceID), 0, nSessionID);
+		this->getServiceBase()->registerTicker(&pPendingResponseInfo->tickTimeout, CCoreApp::Inst()->getInvokeTimeout(pPendingResponseInfo->nToServiceID), 0, nSessionID);
 
 		this->m_mapPendingResponseInfo[pPendingResponseInfo->nSessionID] = pPendingResponseInfo;
 
@@ -459,24 +424,13 @@ namespace core
 			if (nHealth > _LOW_SERVICE_HEALTH)
 				continue;
 
-			uint32_t nMessageSerializer = this->getServiceMessageSerializerType(nToServiceID);
-			this->setServiceMessageSerializer(nToServiceID, eMST_Native);
-			defer([&, nMessageSerializer]()
-			{
-				this->setServiceMessageSerializer(nToServiceID, nMessageSerializer);
-			});
-
 			service_health_request request_msg;
 			uint64_t nSessionID = this->genSessionID();
-			if (!CCoreApp::Inst()->getLogicRunnable()->getTransporter()->invoke(this, nSessionID, 0, nToServiceID, 0, &request_msg))
+			if (!CCoreApp::Inst()->getTransporter()->invoke(this, nToServiceID, nSessionID, &request_msg, eMST_Native))
 				continue;
 
 			auto callback = [this, nToServiceID](std::shared_ptr<void>, uint32_t nErrorCode)
 			{
-				if (nErrorCode != eRRT_OK)
-					return;
-
-				this->updateServiceHealth(nToServiceID, false);
 			};
 
 			this->addPendingResponseInfo(nToServiceID, nSessionID, 0, callback, 0);
@@ -545,5 +499,4 @@ namespace core
 
 		return nMessageSerializerType;
 	}
-
 }

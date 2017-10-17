@@ -4,7 +4,6 @@
 
 #include "libBaseCommon/base_common.h"
 #include "libBaseCommon/string_util.h"
-#include "libBaseCommon/defer.h"
 
 #include "libBaseDatabase/database.h"
 

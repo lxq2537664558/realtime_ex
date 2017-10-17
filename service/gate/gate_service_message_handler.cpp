@@ -34,7 +34,7 @@ void CGateServiceMessageHandler::d2g_player_token_notify_handler(core::CServiceB
 			{
 				PrintWarning("CGateServiceMessageHandler::d2g_player_token_notify_handler token error player_id: {}", pRequest->player_id());
 
-				CBaseConnection* pBaseConnection = CBaseApp::Inst()->getBaseConnectionMgr()->getBaseConnectionBySocketID(pGateClientSession->getSocketID());
+				CBaseConnection* pBaseConnection = pGateService->getBaseConnectionMgr()->getBaseConnectionBySocketID(pGateClientSession->getSocketID());
 				if (nullptr == pBaseConnection)
 				{
 					PrintWarning("CGateServiceMessageHandler::d2g_player_token_notify_handler nullptr == pBaseConnection player_id: {}", pGateClientSession->getPlayerID());
@@ -57,7 +57,7 @@ void CGateServiceMessageHandler::d2g_player_token_notify_handler(core::CServiceB
 		// 重复的dispatch发来的token，直接踢掉
 		if (pGateClientSession->getState() != eCSS_Normal)
 		{
-			CBaseConnection* pBaseConnection = CBaseApp::Inst()->getBaseConnectionMgr()->getBaseConnectionBySocketID(pGateClientSession->getSocketID());
+			CBaseConnection* pBaseConnection = pGateService->getBaseConnectionMgr()->getBaseConnectionBySocketID(pGateClientSession->getSocketID());
 			if (nullptr == pBaseConnection)
 			{
 				PrintWarning("CGateServiceMessageHandler::d2g_player_token_notify_handler nullptr == pBaseConnection player_id: {}", pGateClientSession->getPlayerID());
@@ -78,7 +78,7 @@ void CGateServiceMessageHandler::d2g_player_token_notify_handler(core::CServiceB
 		pGateService->getGateClientSessionMgr()->unbindSocketID(pGateClientSession->getPlayerID());
 
 		// 把老的链接踢掉
-		CBaseConnection* pBaseConnection = CBaseApp::Inst()->getBaseConnectionMgr()->getBaseConnectionBySocketID(nOldSocketID);
+		CBaseConnection* pBaseConnection = pGateService->getBaseConnectionMgr()->getBaseConnectionBySocketID(nOldSocketID);
 		if (nullptr != pBaseConnection)
 			pBaseConnection->shutdown(true, "dup");
 

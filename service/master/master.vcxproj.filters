@@ -53,5 +53,8 @@
     <ClCompile Include="master_service.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="memory_new.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

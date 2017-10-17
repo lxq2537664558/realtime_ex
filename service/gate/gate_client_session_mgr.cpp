@@ -73,7 +73,7 @@ void CGateClientSessionMgr::destroySession(uint64_t nPlayerID, const std::string
 	uint64_t nSocketID = pGateClientSession->getSocketID();
 	if (nSocketID != 0)
 	{
-		CBaseConnection* pBaseConnection = CBaseApp::Inst()->getBaseConnectionMgr()->getBaseConnectionBySocketID(nSocketID);
+		CBaseConnection* pBaseConnection = this->m_pGateService->getBaseConnectionMgr()->getBaseConnectionBySocketID(nSocketID);
 		if (nullptr != pBaseConnection)
 			pBaseConnection->shutdown(true, "kick");
 	}

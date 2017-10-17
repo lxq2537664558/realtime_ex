@@ -13,6 +13,6 @@ public:
 	~CPlayerMessageHandler();
 
 private:
-	void c2s_update_name_request_handler(CActorBase* pActorBase, SClientSessionInfo sClientSessionInfo, const c2s_update_name_request* pRequest);
-	void c2s_gm_command_request_handler(CActorBase* pActorBase, SClientSessionInfo sClientSessionInfo, const c2s_gm_command_request* pRequest);
+	void c2s_update_name_request_handler(CServiceBase* pServiceBase, SClientSessionInfo sClientSessionInfo, const c2s_update_name_request* pRequest);
+	void c2s_gm_command_request_handler(CServiceBase* pServiceBase, SClientSessionInfo sClientSessionInfo, const c2s_gm_command_request* pRequest);
 };

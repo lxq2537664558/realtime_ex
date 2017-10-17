@@ -1,28 +1,35 @@
 #pragma once
 #include <condition_variable>
-#include <mutex>
-#include <vector>
 
-#include "libBaseCommon/circle_queue.h"
-#include "core_common.h"
+#include "message_queue.h"
 
 namespace core
 {
-
-	class CLogicMessageQueue
+	class CLogicMessageQueueMgr;
+	class CCoreService;
+	class CLogicMessageQueue :
+		public CMessageQueue
 	{
 	public:
-		CLogicMessageQueue();
+		CLogicMessageQueue(CCoreService* pCoreService, CLogicMessageQueueMgr* pMessageQueueMgr);
 		virtual ~CLogicMessageQueue();
 
-		void	send(const SMessagePacket& sMessagePacket);
-		void	recv(std::vector<SMessagePacket>& vecMessagePacket);
+		CCoreService*	getCoreService() const;
 
-		bool	empty();
+		void			send(const SMessagePacket& sMessagePacket);
+		void			recv(std::vector<SMessagePacket>& vecMessagePacket);
+		void			dispatchEnd();
 
 	private:
-		base::CCircleQueue<SMessagePacket, false>	m_queue;
-		std::mutex									m_lock;
-		std::condition_variable						m_cond;
+		enum
+		{
+			eInList,
+			eNotInList,
+			eDispatch,
+		};
+
+		CLogicMessageQueueMgr*	m_pMessageQueueMgr;
+		CCoreService*			m_pCoreService;
+		uint32_t				m_nFlag;
 	};
 }

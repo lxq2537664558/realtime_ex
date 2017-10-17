@@ -278,7 +278,7 @@ namespace
 		std::list<SLogInfo*> listLogInfo;
 
 		this->m_lock.lock();
-		listLogInfo.splice(listLogInfo.end(), this->m_listLogInfo);
+		std::swap(listLogInfo, this->m_listLogInfo);
 		this->m_lock.unlock();
 
 		for (auto iter = listLogInfo.begin(); iter != listLogInfo.end(); ++iter)
@@ -520,7 +520,7 @@ namespace base
 			if (g_pLogger == nullptr)
 				return;
 
-			SLogInfo* pLogInfo = new SLogInfo();
+			SLogInfo* pLogInfo = reinterpret_cast<SLogInfo*>(new char[sizeof(SLogInfo)]);
 			pLogInfo->nBufSize = 0;
 			g_pLogger->pushLog(pLogInfo);
 		}

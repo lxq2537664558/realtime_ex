@@ -183,10 +183,10 @@ namespace
 		size_t nLen = 0;
 		for (uint32_t i = 0; i < nDepth && nLen < nBufSize; ++i)
 		{
-			char szSymbolBuf[sizeof(PIMAGEHLP_SYMBOL64) + 1024] = { 0 };
+			char szSymbolBuf[sizeof(IMAGEHLP_SYMBOL64) + 2048] = { 0 };
 			PIMAGEHLP_SYMBOL64 pSymbol = (PIMAGEHLP_SYMBOL64)szSymbolBuf;
-			pSymbol->SizeOfStruct = sizeof(szSymbolBuf);
-			pSymbol->MaxNameLength = 1024;
+			pSymbol->SizeOfStruct = sizeof(IMAGEHLP_SYMBOL64);
+			pSymbol->MaxNameLength = 2048;
 			DWORD64 pAddr = reinterpret_cast<DWORD64>(pStack[i]);
 			HMODULE hModule = (HMODULE)::SymGetModuleBase64(::GetCurrentProcess(), pAddr);
 			char szFileName[MAX_PATH] = { '?' };
@@ -202,7 +202,7 @@ namespace
 			}
 
 			nLen += _snprintf(szBuf + nLen, nBufSize - nLen, "\t%s ", szFileName);
-			char szSymbolName[MAX_PATH] = { '?' };
+			char szSymbolName[1024] = { '?' };
 			DWORD64 nAddress = pAddr;
 			if (!::SymGetSymFromAddr64(GetCurrentProcess(), pAddr, 0, pSymbol))
 			{
@@ -211,14 +211,14 @@ namespace
 					if (::SymGetSymFromAddr64(GetCurrentProcess(), pAddr, 0, pSymbol))
 					{
 						nAddress = pSymbol->Address;
-						strncpy(szSymbolName, pSymbol->Name, MAX_PATH);
+						strncpy(szSymbolName, pSymbol->Name, _countof(szSymbolName));
 					}
 				}
 			}
 			else
 			{
 				nAddress = pSymbol->Address;
-				strncpy(szSymbolName, pSymbol->Name, MAX_PATH);
+				strncpy(szSymbolName, pSymbol->Name, _countof(szSymbolName));
 			}
 			nLen += _snprintf(szBuf + nLen, nBufSize - nLen, "%s[0x%I64x]()\r\n", szSymbolName, nAddress);
 		}

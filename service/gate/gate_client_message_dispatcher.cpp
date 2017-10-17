@@ -75,7 +75,7 @@ void CGateClientMessageDispatcher::dispatch(CGateConnectionFromClient* pGateConn
 	ClientCallback& callback = iter->second.callback;
 	DebugAst(callback != nullptr);
 
-	uint64_t nCoroutineID = core::coroutine::create(0, [&](uint64_t) { callback(pGateConnectionFromClient, pMessage); });
+	uint64_t nCoroutineID = core::coroutine::create(core::CBaseApp::Inst()->getCoroutineStackSize(), [&](uint64_t) { callback(pGateConnectionFromClient, pMessage); });
 	core::coroutine::resume(nCoroutineID, 0);
 }
 
@@ -83,7 +83,7 @@ void CGateClientMessageDispatcher::forward(CGateClientSession* pGateClientSessio
 {
 	DebugAst(pGateClientSession != nullptr && pHeader != nullptr);
 
-	this->m_pGateService->getServiceInvoker()->gate_forward(pGateClientSession->getPlayerID(), pGateClientSession->getGasID(), pGateClientSession->getPlayerID(), pHeader);
+	this->m_pGateService->getServiceInvoker()->gate_forward(pGateClientSession->getPlayerID(), pGateClientSession->getGasID(), pHeader);
 }
 
 void CGateClientMessageDispatcher::onToGateMessage(uint64_t nSessionID, const void* pData, uint16_t nDataSize)
@@ -95,7 +95,7 @@ void CGateClientMessageDispatcher::onToGateMessage(uint64_t nSessionID, const vo
 	if (pGateClientSession->getState() != eCSS_Normal)
 		return;
 
-	CBaseConnection* pBaseConnection = CBaseApp::Inst()->getBaseConnectionMgr()->getBaseConnectionBySocketID(pGateClientSession->getSocketID());
+	CBaseConnection* pBaseConnection = this->m_pGateService->getBaseConnectionMgr()->getBaseConnectionBySocketID(pGateClientSession->getSocketID());
 	if (nullptr == pBaseConnection)
 		return;
 
@@ -113,7 +113,7 @@ void CGateClientMessageDispatcher::onToGateBroadcastMessage(const uint64_t* pSes
 		if (pGateClientSession->getState() != eCSS_Normal)
 			return;
 
-		CBaseConnection* pBaseConnection = CBaseApp::Inst()->getBaseConnectionMgr()->getBaseConnectionBySocketID(pGateClientSession->getSocketID());
+		CBaseConnection* pBaseConnection = this->m_pGateService->getBaseConnectionMgr()->getBaseConnectionBySocketID(pGateClientSession->getSocketID());
 		if (nullptr == pBaseConnection)
 			return;
 

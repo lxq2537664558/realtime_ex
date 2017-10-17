@@ -12,6 +12,7 @@ namespace core
 	class CCoreConnectionMgr;
 	class CBaseConnection;
 	class CBaseConnectionMgr;
+	class CLogicMessageQueue;
 	class CCoreConnection :
 		public base::net::INetConnecterHandler
 	{
@@ -31,7 +32,7 @@ namespace core
 		CCoreConnection();
 		virtual ~CCoreConnection();
 
-		bool				init(const std::string& szType, uint64_t nID, const std::string& szContext, const MessageParser& messageParser);
+		bool				init(CLogicMessageQueue* pMessageQueue, const std::string& szType, uint64_t nID, const std::string& szContext, const MessageParser& messageParser);
 		virtual void		send(uint8_t nMessageType, const void* pData, uint16_t nSize);
 		virtual void		send(uint8_t nMessageType, const void* pData, uint16_t nSize, const void* pExtraBuf, uint16_t nExtraSize);
 		
@@ -77,6 +78,7 @@ namespace core
 		uint32_t				m_nSendHeartbeatCount;
 
 		uint64_t				m_nID;
+		CLogicMessageQueue*		m_pMessageQueue;
 		std::string				m_szType;
 		uint32_t				m_nState;
 		std::string				m_szContext;

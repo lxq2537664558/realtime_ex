@@ -14,8 +14,8 @@
 
 CPlayerHeroMessageHandler::CPlayerHeroMessageHandler(CServiceBase* pServiceBase)
 {
-	register_pb_actor_forward_handler(pServiceBase, this, &CPlayerHeroMessageHandler::c2s_active_hero_request_handler);
-	register_pb_actor_forward_handler(pServiceBase, this, &CPlayerHeroMessageHandler::c2s_active_hero_patch_request_handler);
+	register_pb_forward_message_handler(pServiceBase, this, &CPlayerHeroMessageHandler::c2s_active_hero_request_handler);
+	register_pb_forward_message_handler(pServiceBase, this, &CPlayerHeroMessageHandler::c2s_active_hero_patch_request_handler);
 }
 
 CPlayerHeroMessageHandler::~CPlayerHeroMessageHandler()
@@ -23,10 +23,14 @@ CPlayerHeroMessageHandler::~CPlayerHeroMessageHandler()
 
 }
 
-void CPlayerHeroMessageHandler::c2s_active_hero_request_handler(CActorBase* pActorBase, SClientSessionInfo sClientSessionInfo, const c2s_active_hero_request* pRequest)
+void CPlayerHeroMessageHandler::c2s_active_hero_request_handler(CServiceBase* pServiceBase, SClientSessionInfo sClientSessionInfo, const c2s_active_hero_request* pRequest)
 {
-	CPlayer* pPlayer = dynamic_cast<CPlayer*>(pActorBase);
-	DebugAst(pPlayer != nullptr);
+	CGameService* pGameService = dynamic_cast<CGameService*>(pServiceBase);
+	DebugAst(pGameService != nullptr);
+
+	CPlayer* pPlayer = pGameService->getPlayerMgr()->getPlayer(sClientSessionInfo.nSessionID);
+	if (pPlayer == nullptr)
+		return;
 
 	c2s_active_hero_response response_msg;
 	response_msg.set_id(pRequest->id());
@@ -80,7 +84,8 @@ void CPlayerHeroMessageHandler::c2s_active_hero_request_handler(CActorBase* pAct
 	for (size_t i = 0; i < pHeroConfigInfo->vecActiveCost.size(); ++i)
 	{
 		const SAttributeValue& sAttributeValue = pHeroConfigInfo->vecActiveCost[i];
-		pPlayer->getAttributeModule()->addAttribute(sAttributeValue.nType, sAttributeValue.nValue);
+		int32_t nValue = sAttributeValue.nValue;
+		pPlayer->getAttributeModule()->addAttribute(sAttributeValue.nType, -nValue);
 	}
 
 	pPlayer->getHeroModule()->activeHero(pHeroConfigInfo->nID);
@@ -90,10 +95,14 @@ void CPlayerHeroMessageHandler::c2s_active_hero_request_handler(CActorBase* pAct
 	return;
 }
 
-void CPlayerHeroMessageHandler::c2s_active_hero_patch_request_handler(CActorBase* pActorBase, SClientSessionInfo sClientSessionInfo, const c2s_active_hero_patch_request* pRequest)
+void CPlayerHeroMessageHandler::c2s_active_hero_patch_request_handler(CServiceBase* pServiceBase, SClientSessionInfo sClientSessionInfo, const c2s_active_hero_patch_request* pRequest)
 {
-	CPlayer* pPlayer = dynamic_cast<CPlayer*>(pActorBase);
-	DebugAst(pPlayer != nullptr);
+	CGameService* pGameService = dynamic_cast<CGameService*>(pServiceBase);
+	DebugAst(pGameService != nullptr);
+
+	CPlayer* pPlayer = pGameService->getPlayerMgr()->getPlayer(sClientSessionInfo.nSessionID);
+	if (pPlayer == nullptr)
+		return;
 
 	c2s_active_hero_patch_response response_msg;
 	response_msg.set_id(pRequest->id());

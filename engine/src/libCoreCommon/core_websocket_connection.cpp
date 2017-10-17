@@ -76,13 +76,13 @@ namespace core
 
 				SMCT_NOTIFY_SOCKET_CONNECT* pContext = new SMCT_NOTIFY_SOCKET_CONNECT();
 				pContext->pCoreConnection = this;
-
+				
 				SMessagePacket sMessagePacket;
 				sMessagePacket.nType = eMCT_NOTIFY_SOCKET_CONNECT;
 				sMessagePacket.pData = pContext;
 				sMessagePacket.nDataSize = sizeof(SMCT_NOTIFY_SOCKET_CONNECT);
 
-				CCoreApp::Inst()->getLogicRunnable()->getMessageQueue()->send(sMessagePacket);
+				this->m_pMessageQueue->send(sMessagePacket);
 
 				this->m_pHttpRequestParser->reset();
 			}
@@ -136,7 +136,7 @@ namespace core
 					sMessagePacket.pData = pContext;
 					sMessagePacket.nDataSize = sizeof(SMCT_RECV_SOCKET_DATA);
 
-					CCoreApp::Inst()->getLogicRunnable()->getMessageQueue()->send(sMessagePacket);
+					this->m_pMessageQueue->send(sMessagePacket);
 				}
 			}
 

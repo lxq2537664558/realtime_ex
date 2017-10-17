@@ -146,9 +146,6 @@
     <ClCompile Include="memory_hook.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="memory_new.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="token_parser.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -177,6 +174,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="csv_parser.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="memory_new.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

@@ -1,17 +1,25 @@
 #include "stdafx.h"
 #include "hash_service_selector.h"
-#include "core_app.h"
-
-#include "libBaseCommon/rand_gen.h"
+#include "service_base.h"
+#include "base_app.h"
 
 namespace core
 {
+
+	CHashServiceSelector::CHashServiceSelector(CServiceBase* pServiceBase)
+		: CServiceSelector(pServiceBase)
+	{
+
+	}
+
+	CHashServiceSelector::~CHashServiceSelector()
+	{
+
+	}
+
 	uint32_t CHashServiceSelector::select(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nContext)
 	{
-		if (nContext == 0)
-			return 0;
-
-		const std::vector<uint32_t>& vecServiceID = CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->getServiceIDByTypeName(szServiceType);
+		const std::vector<uint32_t>& vecServiceID = core::CBaseApp::Inst()->getActiveServiceIDByType(szServiceType);
 		if (vecServiceID.empty())
 			return 0;
 

@@ -9,5 +9,5 @@ IEventHandler::IEventHandler()
 IEventHandler::~IEventHandler()
 {
 	if( this->m_pEventDispatcher != nullptr)
-		this->m_pEventDispatcher->unregisterHandler(this);
+		this->m_pEventDispatcher->unregisterEventHandler(this);
 }

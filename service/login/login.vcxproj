@@ -110,6 +110,7 @@
     <ClCompile Include="login_client_message_dispatcher.cpp" />
     <ClCompile Include="login_service.cpp" />
     <ClCompile Include="login_client_connection_factory.cpp" />
+    <ClCompile Include="memory_new.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\engine\src\libCoreCommon\libCoreCommon.vcxproj">

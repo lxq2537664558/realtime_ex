@@ -1,20 +1,18 @@
 #pragma once
 
-#include <list>
 #include <map>
-#include <vector>
 #include <functional>
 
 #include "core_common.h"
 
 #include "libBaseCommon/noncopyable.h"
-#include "libBaseNetwork/network.h"
 
 namespace core
 {
 	class CBaseConnection;
 	class CCoreConnection;
 	class CLogicRunnable;
+	class CLogicMessageQueue;
 	class CBaseConnectionFactory;
 	
 	class CBaseConnectionMgrImpl :
@@ -24,9 +22,11 @@ namespace core
 		friend class CLogicRunnable;
 
 	public:
-		CBaseConnectionMgrImpl();
+		CBaseConnectionMgrImpl(CLogicMessageQueue* pMessageQueue);
 		~CBaseConnectionMgrImpl();
 		
+		CLogicMessageQueue*		getMessageQueue() const;
+
 		void					setBaseConnectionFactory(const std::string& szType, CBaseConnectionFactory* pBaseConnectionFactory);
 		CBaseConnectionFactory*	getBaseConnectionFactory(const std::string& szType) const;
 
@@ -49,6 +49,7 @@ namespace core
 		void					onConnectFail(const std::string& szContext);
 		
 	private:
+		CLogicMessageQueue*												m_pMessageQueue;
 		std::map<uint64_t, CBaseConnection*>							m_mapBaseConnectionByID;
 		std::map<std::string, std::map<uint64_t, CBaseConnection*>>		m_mapBaseConnectionByType;
 		std::map<std::string, CBaseConnectionFactory*>					m_mapBaseConnectionFactory;

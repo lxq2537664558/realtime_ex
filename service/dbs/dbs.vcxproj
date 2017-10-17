@@ -104,6 +104,7 @@
   <ItemGroup>
     <ClCompile Include="db_service_message_handler.cpp" />
     <ClCompile Include="db_service.cpp" />
+    <ClCompile Include="memory_new.cpp" />
     <ClCompile Include="proto_src\call_command.pb.cc" />
     <ClCompile Include="proto_src\delete_command.pb.cc" />
     <ClCompile Include="proto_src\flush_command.pb.cc" />

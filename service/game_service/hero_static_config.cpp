@@ -28,6 +28,7 @@ bool CHeroStaticConfig::init()
 		sCSVParser.getValue(i, "quality", sHeroConfigInfo.nQuality);
 		sCSVParser.getValue(i, "occupation", sHeroConfigInfo.nOccupation);
 		sCSVParser.getValue(i, "sex", sHeroConfigInfo.nSex);
+		sCSVParser.getValue(i, "level", sHeroConfigInfo.nLevel);
 		sCSVParser.getValue(i, "req_lv", sHeroConfigInfo.nActiveReqLv);
 		sCSVParser.getValue(i, "req_patch_id", sHeroConfigInfo.nActiveReqPatchID);
 
@@ -41,6 +42,7 @@ bool CHeroStaticConfig::init()
 		sCSVParser.getValue(i, "crit", sHeroConfigInfo.nCrit);
 		sCSVParser.getValue(i, "dodge", sHeroConfigInfo.nDodge);
 		sCSVParser.getValue(i, "avoid_injury", sHeroConfigInfo.nAvoidInjury);
+		sCSVParser.getValue(i, "normal_skill", sHeroConfigInfo.nNormalSkillID);
 
 		std::string szCost;
 		sCSVParser.getValue(i, "cost", szCost);

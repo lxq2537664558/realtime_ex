@@ -216,10 +216,9 @@
     <ClCompile Include="hero_static_config.cpp" />
     <ClCompile Include="item_static_config.cpp" />
     <ClCompile Include="lv_static_config.cpp" />
+    <ClCompile Include="memory_new.cpp" />
     <ClCompile Include="player.cpp" />
     <ClCompile Include="player_attribute_module.cpp" />
-    <ClCompile Include="player_battlearray_module.cpp" />
-    <ClCompile Include="player_factory.cpp" />
     <ClCompile Include="player_hero_message_handler.cpp" />
     <ClCompile Include="player_hero_module.cpp" />
     <ClCompile Include="player_item_message_handler.cpp" />
@@ -276,7 +275,6 @@
     <ClInclude Include="..\proto\server_proto_src\u2s_kick_player_notify.pb.h" />
     <ClInclude Include="base_static_config.h" />
     <ClInclude Include="base_static_config_mgr.h" />
-    <ClInclude Include="battle.h" />
     <ClInclude Include="event.h" />
     <ClInclude Include="event_dispatcher.h" />
     <ClInclude Include="event_handler.h" />
@@ -288,9 +286,6 @@
     <ClInclude Include="player_attribute_module.h" />
     <ClInclude Include="player_attribute_module_interface.h" />
     <ClInclude Include="player.h" />
-    <ClInclude Include="player_battlearray_module.h" />
-    <ClInclude Include="player_battlearray_module_interface.h" />
-    <ClInclude Include="player_factory.h" />
     <ClInclude Include="player_hero_message_handler.h" />
     <ClInclude Include="player_hero_module.h" />
     <ClInclude Include="player_hero_module_interface.h" />
@@ -304,7 +299,6 @@
     <ClInclude Include="game_service_message_handler.h" />
     <ClInclude Include="game_service.h" />
     <ClInclude Include="shell_common.h" />
-    <ClInclude Include="skill.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

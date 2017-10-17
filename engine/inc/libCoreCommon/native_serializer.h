@@ -19,7 +19,7 @@ namespace core
 		virtual void*		unserializeMessageFromBuf(const std::string& szMessageName, const void* pData, uint32_t nSize);
 		virtual int32_t		serializeMessageToBuf(const void* pMessage, void* pBuf, uint32_t nSize);
 		virtual bool		getMessageName(const void* pMessage, char* szBuf, size_t nBufSize);
-	
+
 	private:
 		base::CWriteBuf m_writeBuf;
 	};

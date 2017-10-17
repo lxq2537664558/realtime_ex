@@ -2,6 +2,7 @@
 #include "core_connection_monitor.h"
 #include "core_connection.h"
 #include "core_app.h"
+#include "net_runnable.h"
 
 #define _CONNECTION_MONITOR_LOG "ConnectionMonitor"
 
@@ -54,7 +55,7 @@ namespace core
 		if (this->m_tickerMonitor.isRegister())
 			CCoreApp::Inst()->unregisterTicker(&this->m_tickerMonitor);
 
-		CCoreApp::Inst()->registerTicker(CTicker::eTT_Service, 0, 0, &this->m_tickerMonitor, 60000, 60000, 0);
+		CCoreApp::Inst()->registerTicker(CNetRunnable::Inst()->getMessageQueue(), &this->m_tickerMonitor, 60000, 60000, 0);
 	}
 
 	void CCoreConnectionMonitor::onDisconnect()

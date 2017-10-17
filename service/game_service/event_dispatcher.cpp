@@ -15,7 +15,7 @@ CEventDispatcher::~CEventDispatcher()
 
 }
 
-void CEventDispatcher::registerHandler(uint32_t nType, IEventHandler* pHander)
+void CEventDispatcher::registerEventHandler(uint32_t nType, IEventHandler* pHander)
 {
 	DebugAst(nullptr != pHander);
 
@@ -36,7 +36,7 @@ void CEventDispatcher::registerHandler(uint32_t nType, IEventHandler* pHander)
 	vecHandler.push_back(pHander);
 }
 
-void CEventDispatcher::unregisterHandler(IEventHandler* pHander)
+void CEventDispatcher::unregisterEventHandler(IEventHandler* pHander)
 {
 	DebugAst(pHander != nullptr);
 

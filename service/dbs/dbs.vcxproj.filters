@@ -83,5 +83,8 @@
     <ClCompile Include="proto_src\update_command.pb.cc">
       <Filter>server_proto</Filter>
     </ClCompile>
+    <ClCompile Include="memory_new.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -34,21 +34,12 @@
     <Filter Include="server_proto">
       <UniqueIdentifier>{62e028b8-2f0a-4b2c-ac0b-276ca5e0314b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="功能模块\战斗">
-      <UniqueIdentifier>{f83c65a6-0a82-4e9c-ab72-073b09bb04d7}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="功能模块\阵容模块">
-      <UniqueIdentifier>{c1f518e1-c093-45d5-a4a5-99b211b64e59}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="player.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="player_message_handler.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="player_factory.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\proto\client_proto_src\c2s_update_name_request.pb.cc">
@@ -198,8 +189,8 @@
     <ClCompile Include="..\proto\server_proto_src\u2s_kick_player_notify.pb.cc">
       <Filter>server_proto</Filter>
     </ClCompile>
-    <ClCompile Include="player_battlearray_module.cpp">
-      <Filter>功能模块\阵容模块</Filter>
+    <ClCompile Include="memory_new.cpp">
+      <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -207,9 +198,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="player_message_handler.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="player_factory.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\proto\client_proto_src\c2s_update_name_request.pb.h">
@@ -379,18 +367,6 @@
     </ClInclude>
     <ClInclude Include="..\proto\server_proto_src\u2s_kick_player_notify.pb.h">
       <Filter>server_proto</Filter>
-    </ClInclude>
-    <ClInclude Include="battle.h">
-      <Filter>功能模块\战斗</Filter>
-    </ClInclude>
-    <ClInclude Include="skill.h">
-      <Filter>功能模块\战斗</Filter>
-    </ClInclude>
-    <ClInclude Include="player_battlearray_module_interface.h">
-      <Filter>功能模块\阵容模块</Filter>
-    </ClInclude>
-    <ClInclude Include="player_battlearray_module.h">
-      <Filter>功能模块\阵容模块</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

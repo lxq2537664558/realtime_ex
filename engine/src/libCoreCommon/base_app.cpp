@@ -12,12 +12,7 @@
 #include <string>
 #include <memory>
 
-#include "libBaseCommon/function_util.h"
-#include "libBaseCommon/exception_handler.h"
-#include "libBaseCommon/time_util.h"
 #include "libBaseCommon/profiling.h"
-#include "libBaseCommon/thread_base.h"
-#include "libBaseCommon/logger.h"
 
 #include "base_app.h"
 #include "core_app.h"
@@ -38,7 +33,7 @@ namespace core
 
 	CBaseApp::~CBaseApp()
 	{
-		
+
 	}
 
 	CBaseApp*& CBaseApp::Inst()
@@ -55,19 +50,18 @@ namespace core
 		return true;
 	}
 
-	void CBaseApp::registerTicker(uint8_t nType, uint32_t nFromServiceID, uint64_t nFromActorID, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
+	void CBaseApp::registerTicker(uint32_t nServiceID, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
 	{
-		CCoreApp::Inst()->registerTicker(nType, nFromServiceID, nFromActorID, pTicker, nStartTime, nIntervalTime, nContext);
+		CCoreService* pCoreService = CCoreApp::Inst()->getCoreServiceMgr()->getCoreService(nServiceID);
+		if (nullptr == pCoreService)
+			return;
+
+		CCoreApp::Inst()->registerTicker(pCoreService->getMessageQueue(), pTicker, nStartTime, nIntervalTime, nContext);
 	}
 
 	void CBaseApp::unregisterTicker(CTicker* pTicker)
 	{
 		CCoreApp::Inst()->unregisterTicker(pTicker);
-	}
-
-	CBaseConnectionMgr*	CBaseApp::getBaseConnectionMgr() const
-	{
-		return CCoreApp::Inst()->getLogicRunnable()->getBaseConnectionMgr();
 	}
 
 	const SNodeBaseInfo& CBaseApp::getNodeBaseInfo() const
@@ -82,7 +76,7 @@ namespace core
 
 	CServiceBase* CBaseApp::getServiceBase(uint32_t nServiceID) const
 	{
-		CCoreService* pCoreService = CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->getCoreService(nServiceID);
+		CCoreService* pCoreService = CCoreApp::Inst()->getCoreServiceMgr()->getCoreService(nServiceID);
 		if (pCoreService == nullptr)
 			return nullptr;
 
@@ -91,7 +85,7 @@ namespace core
 
 	uint32_t CBaseApp::getServiceID(const std::string& szName) const
 	{
-		return CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->getServiceID(szName);
+		return CCoreApp::Inst()->getServiceRegistryProxy()->getServiceID(szName);
 	}
 
 	const std::string& CBaseApp::getConfigFileName() const
@@ -102,7 +96,7 @@ namespace core
 	void CBaseApp::doQuit()
 	{
 		PrintInfo("CBaseApp::doQuit");
-		
+
 		CCoreApp::Inst()->doQuit();
 	}
 
@@ -123,11 +117,21 @@ namespace core
 
 	bool CBaseApp::isLocalService(uint32_t nServiceID) const
 	{
-		return CCoreApp::Inst()->getLogicRunnable()->getCoreServiceMgr()->isLocalService(nServiceID);
+		return CCoreApp::Inst()->getCoreServiceMgr()->isLocalService(nServiceID);
 	}
 
-	const std::vector<uint32_t>& CBaseApp::getServiceIDByTypeName(const std::string& szName) const
+	const std::set<uint32_t>& CBaseApp::getServiceIDByType(const std::string& szName) const
 	{
-		return CCoreApp::Inst()->getLogicRunnable()->getServiceRegistryProxy()->getServiceIDByTypeName(szName);
+		return CCoreApp::Inst()->getServiceRegistryProxy()->getServiceIDByType(szName);
+	}
+
+	const std::vector<uint32_t>& CBaseApp::getActiveServiceIDByType(const std::string& szName) const
+	{
+		return CCoreApp::Inst()->getServiceRegistryProxy()->getActiveServiceIDByType(szName);
+	}
+
+	uint32_t CBaseApp::getCoroutineStackSize() const
+	{
+		return CCoreApp::Inst()->getCoroutineStackSize();
 	}
 }

@@ -13,8 +13,8 @@ public:
 	CEventDispatcher();
 	~CEventDispatcher();
 
-	void	registerHandler(uint32_t nType, IEventHandler* pHander);
-	void	unregisterHandler(IEventHandler* pHander);
+	void	registerEventHandler(uint32_t nType, IEventHandler* pHander);
+	void	unregisterEventHandler(IEventHandler* pHander);
 	void	raiseEvent(IEvent* pEvent);
 
 private:

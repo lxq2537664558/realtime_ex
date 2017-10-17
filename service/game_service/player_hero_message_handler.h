@@ -13,6 +13,6 @@ public:
 	~CPlayerHeroMessageHandler();
 
 private:
-	void c2s_active_hero_request_handler(CActorBase* pActorBase, SClientSessionInfo sClientSessionInfo, const c2s_active_hero_request* pRequest);
-	void c2s_active_hero_patch_request_handler(CActorBase* pActorBase, SClientSessionInfo sClientSessionInfo, const c2s_active_hero_patch_request* pRequest);
+	void c2s_active_hero_request_handler(CServiceBase* pServiceBase, SClientSessionInfo sClientSessionInfo, const c2s_active_hero_request* pRequest);
+	void c2s_active_hero_patch_request_handler(CServiceBase* pServiceBase, SClientSessionInfo sClientSessionInfo, const c2s_active_hero_patch_request* pRequest);
 };

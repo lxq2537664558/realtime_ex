@@ -37,8 +37,10 @@ namespace core
 
 		const google::protobuf::Message* pPBMessage = static_cast<const google::protobuf::Message*>(pMessage);
 
+		google::protobuf::util::JsonOptions sOptions;
+		sOptions.preserve_proto_field_names = true;
 		std::string szJson;
-		if (!google::protobuf::util::MessageToJsonString(*pPBMessage, &szJson).ok())
+		if (!google::protobuf::util::MessageToJsonString(*pPBMessage, &szJson, sOptions).ok())
 			return -1;
 		
 		if (szJson.size() > nSize)

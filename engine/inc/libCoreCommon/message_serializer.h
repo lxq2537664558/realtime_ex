@@ -6,6 +6,14 @@
 
 namespace core
 {
+
+	enum EMessageSerializerType
+	{
+		eMST_Protobuf = 1,
+		eMST_JsonProtobuf = 2,
+		eMST_Native = 3,
+	};
+
 	/**
 	@brief: 消息系列化器，所有接口需要线程安全，这里必须要虚函数才能保证最终调用的才是具体模块的
 	*/

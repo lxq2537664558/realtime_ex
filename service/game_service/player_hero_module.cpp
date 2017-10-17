@@ -140,8 +140,8 @@ void CPlayerHeroModule::activePatch(uint32_t nID)
 	notify_msg.set_id(nID);
 	this->m_pPlayer->sendClientMessage(&notify_msg);
 
-	CPlayerActiveHeroEvent event;
-	event.nHeroID = nID;
+	CPlayerActiveHeroPatchEvent event;
+	event.nHeroPatchID = nID;
 	this->m_pPlayer->raiseEvent(&event);
 }
 
@@ -158,7 +158,7 @@ void CPlayerHeroModule::activeHero(uint32_t nID)
 	notify_msg.set_id(nID);
 	this->m_pPlayer->sendClientMessage(&notify_msg);
 
-	CPlayerActiveHeroPatchEvent event;
-	event.nHeroPatchID = nID;
+	CPlayerActiveHeroEvent event;
+	event.nHeroID = nID;
 	this->m_pPlayer->raiseEvent(&event);
 }

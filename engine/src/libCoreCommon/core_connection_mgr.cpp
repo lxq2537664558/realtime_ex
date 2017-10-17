@@ -3,11 +3,8 @@
 #include "base_connection_mgr.h"
 #include "core_connection.h"
 #include "core_websocket_connection.h"
-#include "base_connection.h"
 #include "base_connection_factory.h"
-#include "base_app.h"
 #include "message_command.h"
-#include "logic_runnable.h"
 #include "core_app.h"
 
 #include "libBaseCommon/time_util.h"
@@ -44,7 +41,7 @@ namespace core
 		sMessagePacket.pData = pContext;
 		sMessagePacket.nDataSize = sizeof(SMCT_NOTIFY_SOCKET_CONNECT_FAIL);
 
-		CCoreApp::Inst()->getLogicRunnable()->getMessageQueue()->send(sMessagePacket);
+		this->pMessageQueue->send(sMessagePacket);
 
 		pCoreConnectionMgr->delActiveWaitConnecterHandler(this);
 	}
@@ -77,7 +74,7 @@ namespace core
 	{
 		DebugAstEx(pNetConnecter != nullptr && pNetAccepterHandler != nullptr, nullptr);
 
-		CCoreConnection* pCoreConnection = this->createCoreConnection(pNetAccepterHandler->szType, pNetAccepterHandler->szContext, pNetAccepterHandler->messageParser, pNetAccepterHandler->nCoreConnectionType);
+		CCoreConnection* pCoreConnection = this->createCoreConnection(pNetAccepterHandler->pMessageQueue, pNetAccepterHandler->szType, pNetAccepterHandler->szContext, pNetAccepterHandler->messageParser, pNetAccepterHandler->nCoreConnectionType);
 		DebugAstEx(nullptr != pCoreConnection, nullptr);
 
 		return pCoreConnection;
@@ -87,7 +84,7 @@ namespace core
 	{
 		DebugAst(pNetActiveWaitConnecterHandler != nullptr && pNetActiveWaitConnecterHandler->getNetConnecter() != nullptr);
 
-		CCoreConnection* pCoreConnection = this->createCoreConnection(pNetActiveWaitConnecterHandler->szType, pNetActiveWaitConnecterHandler->szContext, pNetActiveWaitConnecterHandler->messageParser, eCCT_Normal);
+		CCoreConnection* pCoreConnection = this->createCoreConnection(pNetActiveWaitConnecterHandler->pMessageQueue, pNetActiveWaitConnecterHandler->szType, pNetActiveWaitConnecterHandler->szContext, pNetActiveWaitConnecterHandler->messageParser, eCCT_Normal);
 		if (nullptr == pCoreConnection)
 			return;
 
@@ -105,10 +102,12 @@ namespace core
 		SAFE_DELETE(pWaitActiveConnecterHandler);
 	}
 
-	bool CCoreConnectionMgr::connect(const std::string& szHost, uint16_t nPort, const std::string& szType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser)
+	bool CCoreConnectionMgr::connect(CLogicMessageQueue* pMessageQueue, const std::string& szHost, uint16_t nPort, const std::string& szType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser)
 	{
 		PrintInfo("start connect host: {}  port: {} type: {} context: {}", szHost, nPort, szType, szContext);
+		
 		SNetActiveWaitConnecterHandler* pWaitActiveConnecterHandler = new SNetActiveWaitConnecterHandler();
+		pWaitActiveConnecterHandler->pMessageQueue = pMessageQueue;
 		pWaitActiveConnecterHandler->szContext = szContext;
 		pWaitActiveConnecterHandler->szType = szType;
 		pWaitActiveConnecterHandler->pCoreConnectionMgr = this;
@@ -127,9 +126,10 @@ namespace core
 		return true;
 	}
 
-	bool CCoreConnectionMgr::listen(const std::string& szHost, uint16_t nPort, bool bReusePort, const std::string& szType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser, uint8_t nCoreConnectionType)
+	bool CCoreConnectionMgr::listen(CLogicMessageQueue* pMessageQueue, const std::string& szHost, uint16_t nPort, bool bReusePort, const std::string& szType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser, uint8_t nCoreConnectionType)
 	{
 		SNetAccepterHandler* pNetAccepterHandler = new SNetAccepterHandler();
+		pNetAccepterHandler->pMessageQueue = pMessageQueue;
 		pNetAccepterHandler->szContext = szContext;
 		pNetAccepterHandler->szType = szType;
 		pNetAccepterHandler->nCoreConnectionType = nCoreConnectionType;
@@ -204,7 +204,7 @@ namespace core
 		}
 	}
 
-	CCoreConnection* CCoreConnectionMgr::createCoreConnection(const std::string& szType, const std::string& szContext, const MessageParser& messageParser, uint8_t nCoreConnectionType)
+	CCoreConnection* CCoreConnectionMgr::createCoreConnection(CLogicMessageQueue* pMessageQueue, std::string& szType, const std::string& szContext, const MessageParser& messageParser, uint8_t nCoreConnectionType)
 	{
 		CCoreConnection* pCoreConnection = nullptr;
 		if (nCoreConnectionType == eCCT_Normal)
@@ -220,7 +220,7 @@ namespace core
 			DebugAstEx(!"core connection type error", nullptr);
 		}
 
-		if (!pCoreConnection->init(szType, this->m_nNextCoreConnectionID++, szContext, messageParser))
+		if (!pCoreConnection->init(pMessageQueue, szType, this->m_nNextCoreConnectionID++, szContext, messageParser))
 		{
 			SAFE_DELETE(pCoreConnection);
 			PrintWarning("init core connection error type: {} context: {}", szType, szContext);

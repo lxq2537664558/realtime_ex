@@ -176,5 +176,8 @@
     <ClCompile Include="proto_src\insert_command.pb.cc">
       <Filter>src\proto</Filter>
     </ClCompile>
+    <ClCompile Include="memory_new.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

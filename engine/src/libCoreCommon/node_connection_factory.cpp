@@ -1,9 +1,10 @@
 #include "stdafx.h"
 #include "node_connection_factory.h"
-#include "service_base.h"
 #include "base_connection_to_master.h"
 #include "base_connection_other_node.h"
 #include "core_common_define.h"
+
+#include "libBaseCommon/logger.h"
 
 namespace core
 {

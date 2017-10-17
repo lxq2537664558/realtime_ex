@@ -2,6 +2,7 @@
 #include "coroutine.h"
 #include "coroutine_impl.h"
 #include "coroutine_mgr.h"
+#include "coroutine_thread.h"
 
 #include "libBaseCommon/debug_helper.h"
 
@@ -11,7 +12,7 @@ namespace core
 	{
 		void resume(uint64_t nID, uint64_t nContext)
 		{
-			CCoroutineImpl* pCoroutineImpl = getCoroutineMgr()->getCoroutine(nID);
+			CCoroutineImpl* pCoroutineImpl = CCoroutineMgr::Inst()->getCoroutine(nID);
 			if (nullptr == pCoroutineImpl)
 			{
 				PrintWarning("resume error invalid coroutine id: {}", nID);
@@ -23,7 +24,7 @@ namespace core
 
 		uint64_t yield()
 		{
-			CCoroutineImpl* pCoroutineImpl = getCoroutineMgr()->getCurrentCoroutine();
+			CCoroutineImpl* pCoroutineImpl = getCoroutineThread()->getCurrentCoroutine();
 			if (pCoroutineImpl == nullptr)
 			{
 				PrintWarning("yield error invalid current coroutine");
@@ -33,9 +34,16 @@ namespace core
 			return pCoroutineImpl->yield();
 		}
 
+		void update()
+		{
+			CCoroutineThread* pCoroutineThread = getCoroutineThread();
+
+			pCoroutineThread->update();
+		}
+
 		uint32_t getState(uint64_t nID)
 		{
-			CCoroutineImpl* pCoroutineImpl = getCoroutineMgr()->getCoroutine(nID);
+			CCoroutineImpl* pCoroutineImpl = CCoroutineMgr::Inst()->getCoroutine(nID);
 			if (nullptr == pCoroutineImpl)
 				return eCS_DEAD;
 
@@ -44,7 +52,7 @@ namespace core
 
 		uint64_t getCurrentID()
 		{
-			CCoroutineImpl* pCoroutineImpl = getCoroutineMgr()->getCurrentCoroutine();
+			CCoroutineImpl* pCoroutineImpl = getCoroutineThread()->getCurrentCoroutine();
 			if (nullptr == pCoroutineImpl)
 				return 0;
 
@@ -53,7 +61,7 @@ namespace core
 
 		uint64_t create(uint32_t nStackSize, const std::function<void(uint64_t)>& fn)
 		{
-			CCoroutineImpl* pCoroutineImpl = getCoroutineMgr()->createCoroutine(nStackSize, fn);
+			CCoroutineImpl* pCoroutineImpl = CCoroutineMgr::Inst()->createCoroutine(nStackSize, fn);
 			if (nullptr == pCoroutineImpl)
 				return 0;
 
@@ -62,20 +70,17 @@ namespace core
 
 		void close(uint64_t nID)
 		{
-			CCoroutineMgr* pCoroutineMgr = getCoroutineMgr();
-			CCoroutineImpl* pCoroutineImpl = pCoroutineMgr->getCurrentCoroutine();
-			DebugAst(pCoroutineImpl != nullptr);
-
-			DebugAst(pCoroutineImpl->getCoroutineID() != nID);
-
-			pCoroutineImpl = pCoroutineMgr->getCoroutine(nID);
+			CCoroutineImpl* pCoroutineImpl = CCoroutineMgr::Inst()->getCoroutine(nID);
 			if (nullptr == pCoroutineImpl)
 				return;
+
+			DebugAst(pCoroutineImpl->getState() == eCS_DEAD);
+			// ипн╢й╣ож
 		}
 
 		void setLocalData(uint64_t nID, const char* szName, uint64_t nData)
 		{
-			CCoroutineImpl* pCoroutineImpl = getCoroutineMgr()->getCoroutine(nID);
+			CCoroutineImpl* pCoroutineImpl = CCoroutineMgr::Inst()->getCoroutine(nID);
 			if (nullptr == pCoroutineImpl)
 				return;
 
@@ -84,7 +89,7 @@ namespace core
 
 		bool getLocalData(uint64_t nID, const char* szName, uint64_t& nData)
 		{
-			CCoroutineImpl* pCoroutineImpl = getCoroutineMgr()->getCoroutine(nID);
+			CCoroutineImpl* pCoroutineImpl = CCoroutineMgr::Inst()->getCoroutine(nID);
 			if (nullptr == pCoroutineImpl)
 				return false;
 
@@ -93,7 +98,7 @@ namespace core
 
 		void delLocalData(uint64_t nID, const char* szName)
 		{
-			CCoroutineImpl* pCoroutineImpl = getCoroutineMgr()->getCoroutine(nID);
+			CCoroutineImpl* pCoroutineImpl = CCoroutineMgr::Inst()->getCoroutine(nID);
 			if (nullptr == pCoroutineImpl)
 				return;
 
@@ -102,17 +107,17 @@ namespace core
 
 		void init(uint32_t nStackSize)
 		{
-			getCoroutineMgr()->init(nStackSize);
+			getCoroutineThread()->init(nStackSize);
 		}
 
 		uint32_t getCoroutineCount()
 		{
-			return getCoroutineMgr()->getCoroutineCount();
+			return CCoroutineMgr::Inst()->getCoroutineCount();
 		}
 
 		uint64_t getTotalStackSize()
 		{
-			return getCoroutineMgr()->getTotalStackSize();
+			return CCoroutineMgr::Inst()->getTotalStackSize();
 		}
 	}
 }

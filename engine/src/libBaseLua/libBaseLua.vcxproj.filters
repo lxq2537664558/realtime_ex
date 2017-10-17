@@ -35,13 +35,13 @@
     <ClCompile Include="lua_debug.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="memory_new.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="namespace_binder.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="lua_function.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="memory_new.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

@@ -8,7 +8,6 @@
 #include "player_attribute_module.h"
 #include "player_hero_module.h"
 #include "player_item_module.h"
-#include "player_battlearray_module.h"
 #include "game_service.h"
 
 #include "../common/common.h"
@@ -21,9 +20,10 @@ using namespace core;
 
 #define _PLAYER_BACKUP_TIME 10*1000
 
-CPlayer::CPlayer()
+CPlayer::CPlayer(CGameService* pGameService)
 	: m_eStatus(ePST_None)
 	, m_nGateServiceID(0)
+	, m_pGameService(pGameService)
 	, m_pServiceInvokeHolder(nullptr)
 	, m_pDbServiceInvokeHolder(nullptr)
 {
@@ -47,21 +47,25 @@ void CPlayer::onInit(const void* pContext)
 	DebugAst(pContext != nullptr);
 
 	const SCreatePlayerContext* pCreatePlayerContext = reinterpret_cast<const SCreatePlayerContext*>(pContext);
+	this->m_nGateServiceID = pCreatePlayerContext->nGateServiceID;
+	this->m_nPlayerID = pCreatePlayerContext->nPlayerID;
 
 	this->m_eStatus = ePST_Init;
 	
-	this->m_pServiceInvokeHolder = new CServiceInvokeHolder(this->getServiceBase());
-	this->m_pDbServiceInvokeHolder = new CDbServiceInvokeHolder(this->getServiceBase(), this->getDbServiceID());
-
-	this->m_nGateServiceID = pCreatePlayerContext->nGateServiceID;
+	this->m_pServiceInvokeHolder = new CServiceInvokeHolder(this->m_pGameService);
+	this->m_pDbServiceInvokeHolder = new CDbServiceInvokeHolder(this->m_pGameService, this->getDbServiceID());
 
 	this->onHeartbeat(0);
-	this->getServiceBase()->registerTicker(&this->m_tickHeartbeat, 5000, 5000, 0);
+	this->m_pGameService->registerTicker(&this->m_tickHeartbeat, 5000, 5000, 0);
 
 	this->m_zPlayerModule[ePMT_Attribute] = new CPlayerAttributeModule(this);
 	this->m_zPlayerModule[ePMT_Item] = new CPlayerItemModule(this);
 	this->m_zPlayerModule[ePMT_Hero] = new CPlayerHeroModule(this);
-	this->m_zPlayerModule[ePMT_BattleArray] = new CPlayerBattleArrayModule(this);
+	
+	for (size_t i = 0; i < _countof(this->m_zPlayerModule); ++i)
+	{
+		this->m_zPlayerModule[i]->onInit();
+	}
 }
 
 void CPlayer::onDestroy()
@@ -83,15 +87,10 @@ void CPlayer::onDestroy()
 	PrintInfo("CPlayer::onDestroy");
 }
 
-void CPlayer::release()
-{
-	delete this;
-}
-
 void CPlayer::onHeartbeat(uint64_t nContext)
 {
 	s2u_player_heartbeat_request request_msg;
-	request_msg.set_player_id(this->getActorID());
+	request_msg.set_player_id(this->getPlayerID());
 
 	this->getServiceInvokeHolder()->async_invoke<s2u_player_heartbeat_response>(this->getUCServiceID(), &request_msg, [this](const s2u_player_heartbeat_response* pMessage, uint32_t nErrorType)
 	{
@@ -99,10 +98,8 @@ void CPlayer::onHeartbeat(uint64_t nContext)
 			return;
 
 		PrintInfo("CPlayer::onHeartbeat timeout player_id: {}", this->getDbID());
-		CGameService* pGameService = dynamic_cast<CGameService*>(this->getServiceBase());
-		DebugAst(pGameService != nullptr);
 
-		pGameService->getPlayerMgr()->destroyPlayer(this->getActorID(), "heartbeat timeout");
+		this->m_pGameService->getPlayerMgr()->destroyPlayer(this->getPlayerID(), "heartbeat timeout");
 	});
 }
 
@@ -144,9 +141,9 @@ void CPlayer::onPlayerLogin()
 	this->m_eStatus = ePST_Normal;
 
 	if (this->m_tickerBackup.isRegister())
-		this->getServiceBase()->unregisterTicker(&this->m_tickerBackup);
+		this->m_pGameService->unregisterTicker(&this->m_tickerBackup);
 
-	this->registerTicker(&this->m_tickerBackup, _PLAYER_BACKUP_TIME, _PLAYER_BACKUP_TIME, 0);
+	this->m_pGameService->registerTicker(&this->m_tickerBackup, _PLAYER_BACKUP_TIME, _PLAYER_BACKUP_TIME, 0);
 }
 
 void CPlayer::onPlayerLogout()
@@ -158,9 +155,14 @@ void CPlayer::onPlayerLogout()
 	}
 
 	if (this->m_tickerBackup.isRegister())
-		this->getServiceBase()->unregisterTicker(&this->m_tickerBackup);
+		this->m_pGameService->unregisterTicker(&this->m_tickerBackup);
 
 	this->onBackup(0);
+}
+
+uint64_t CPlayer::getPlayerID() const
+{
+	return this->m_nPlayerID;
 }
 
 EPlayerStatusType CPlayer::getStatus() const
@@ -182,14 +184,14 @@ void CPlayer::sendClientMessage(const google::protobuf::Message* pMessage)
 {
 	if (this->m_eStatus < ePST_Login)
 	{
-		PrintWarning("player not load data can't send msg to client player_id: {}", this->getActorID());
+		PrintWarning("player not load data can't send msg to client player_id: {}", this->getPlayerID());
 		return;
 	}
 
 	SClientSessionInfo sClientSessionInfo;
 	sClientSessionInfo.nGateServiceID = this->m_nGateServiceID;
-	sClientSessionInfo.nSessionID = this->getActorID();
-	this->getServiceBase()->getServiceInvoker()->send(sClientSessionInfo, pMessage);
+	sClientSessionInfo.nSessionID = this->getPlayerID();
+	this->m_pGameService->getServiceInvoker()->send(sClientSessionInfo, pMessage);
 }
 
 IPlayerAttributeModule* CPlayer::getAttributeModule() const
@@ -200,11 +202,6 @@ IPlayerAttributeModule* CPlayer::getAttributeModule() const
 IPlayerHeroModule* CPlayer::getHeroModule() const
 {
 	return dynamic_cast<IPlayerHeroModule*>(this->m_zPlayerModule[ePMT_Hero]);
-}
-
-IPlayerBattleArrayModule* CPlayer::getBattleArrayModule() const
-{
-	return dynamic_cast<IPlayerBattleArrayModule*>(this->m_zPlayerModule[ePMT_BattleArray]);
 }
 
 IPlayerItemModule* CPlayer::getItemModule() const
@@ -239,7 +236,7 @@ int64_t CPlayer::getLastLogoutTime() const
 
 uint32_t CPlayer::getDbID() const
 {
-	return _GET_PLAYER_DB_ID(this->getActorID());
+	return _GET_PLAYER_DB_ID(this->getPlayerID());
 }
 
 uint32_t CPlayer::getUCServiceID() const

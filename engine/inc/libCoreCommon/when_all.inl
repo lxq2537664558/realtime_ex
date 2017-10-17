@@ -8,11 +8,12 @@ namespace core
 		int32_t					pendingCount;
 
 		template<class T>
-		void onFuture(const T* val, uint32_t)
+		void onFuture(const T* val, uint32_t nErrorCode)
 		{
 			if (--pendingCount == 0)
 			{
-				promise.setValue(allFuture);
+				// when形式的future回调全部为eRRT_OK，业务自己去判断各个子项的错误码
+				promise.setValue(allFuture, eRRT_OK);
 			}
 		}
 	};

@@ -1,12 +1,8 @@
 #include "stdafx.h"
 #include "ticker_runnable.h"
 #include "core_common.h"
-#include "core_connection.h"
-#include "core_connection_mgr.h"
 #include "core_app.h"
 #include "message_command.h"
-#include "net_runnable.h"
-#include "logic_runnable.h"
 
 #include "libBaseCommon/debug_helper.h"
 #include "libBaseCommon/time_util.h"
@@ -38,7 +34,6 @@ namespace core
 
 	bool CTickerRunnable::onInit()
 	{
-		
 		return true;
 	}
 
@@ -57,7 +52,11 @@ namespace core
 		sMessagePacket.pData = nullptr;
 		sMessagePacket.nDataSize = 0;
 
-		CCoreApp::Inst()->getLogicRunnable()->getMessageQueue()->send(sMessagePacket);
+		const std::vector<CCoreService*>& vecCoreService = CCoreApp::Inst()->getCoreServiceMgr()->getCoreService();
+		for (size_t i = 0; i < vecCoreService.size(); ++i)
+		{
+			vecCoreService[i]->getMessageQueue()->send(sMessagePacket);
+		}
 
 		int64_t nEndTime = base::time_util::getGmtTime();
 		int64_t nDeltaTime = nEndTime - nCurTime;
@@ -67,33 +66,29 @@ namespace core
 		return true;
 	}
 
-	bool CTickerRunnable::registerTicker(uint8_t nType, uint32_t nFromServiceID, uint64_t nFromActorID, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
+	bool CTickerRunnable::registerTicker(CMessageQueue* pMessageQueue, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
 	{
 		DebugAstEx(pTicker != nullptr, false);
 		DebugAstEx(!pTicker->isRegister(), false);
 		DebugAstEx(pTicker->getCallback() != nullptr, false);
-
-		DebugAstEx(nType == CTicker::eTT_Service || nType == CTicker::eTT_Net || nType == CTicker::eTT_Actor, false);
+		DebugAstEx(pMessageQueue != nullptr, false);
 
 		CCoreTickerNode* pCoreTickerNode = new CCoreTickerNode();
 		pCoreTickerNode->Value.m_pTicker = pTicker;
 		pCoreTickerNode->Value.m_nNextTime = this->m_nLogicTime + nStartTime;
 		pCoreTickerNode->Value.m_nIntervalTime = nIntervalTime;
 		pCoreTickerNode->Value.m_pMemory = pCoreTickerNode;
-		pCoreTickerNode->Value.m_nType = nType;
+		pCoreTickerNode->Value.m_pMessageQueue = pMessageQueue;
 		pCoreTickerNode->Value.m_nState = eRegister;
 		pCoreTickerNode->Value.m_nRef = 1;
 
 		pTicker->m_nIntervalTime = nIntervalTime;
 		pTicker->m_nContext = nContext;
 		pTicker->m_pCoreContext = pCoreTickerNode;
-		pTicker->m_nType = nType;
-		pTicker->m_nServiceID = nFromServiceID;
-		pTicker->m_nActorID = nFromActorID;
 
-		std::unique_lock<base::spin_lock> lock(this->m_lock);
-		this->m_vecSwapTicker.push_back(pCoreTickerNode);
-		
+		std::unique_lock<base::spin_lock> lock(this->m_lockRegister);
+		this->m_vecRegisterTicker.push_back(pCoreTickerNode);
+
 		return true;
 	}
 
@@ -109,13 +104,19 @@ namespace core
 
 		pCoreTickerNode->Value.m_pTicker = nullptr;
 		pTicker->m_pCoreContext = nullptr;
+		pCoreTickerNode->Value.addRef();
+
+		std::unique_lock<base::spin_lock> lock(this->m_lockUnRegister);
+		this->m_vecUnRegisterTicker.push_back(pCoreTickerNode);
 	}
 
 	void CTickerRunnable::insertTicker(CCoreTickerNode* pTickerNode)
 	{
 		DebugAst(pTickerNode->Value.m_nNextTime >= this->m_nLogicTime);
 
-		if ((pTickerNode->Value.m_nNextTime | __TIME_NEAR_MASK) == (this->m_nLogicTime | __TIME_NEAR_MASK))
+		int64_t nDeltaTime = pTickerNode->Value.m_nNextTime - this->m_nLogicTime;
+
+		if (nDeltaTime < __TIME_NEAR_SIZE)
 		{
 			// 最近的定时器
 			uint32_t nPos = (uint32_t)(pTickerNode->Value.m_nNextTime&__TIME_NEAR_MASK);
@@ -128,7 +129,7 @@ namespace core
 			int64_t nMask = __TIME_NEAR_SIZE << __TIME_CASCADE_BITS;
 			for (; nLevel < _countof(this->m_listCascadeTicker); ++nLevel)
 			{
-				if ((pTickerNode->Value.m_nNextTime | (nMask - 1)) == (this->m_nLogicTime | (nMask - 1)))
+				if (nDeltaTime < nMask)
 					break;
 
 				nMask <<= __TIME_CASCADE_BITS;
@@ -153,9 +154,9 @@ namespace core
 	void CTickerRunnable::update(int64_t nTime)
 	{
 		std::vector<CCoreTickerNode*> vecSwapTicker;
-		this->m_lock.lock();
-		std::swap(vecSwapTicker, this->m_vecSwapTicker);
-		this->m_lock.unlock();
+		this->m_lockRegister.lock();
+		std::swap(vecSwapTicker, this->m_vecRegisterTicker);
+		this->m_lockRegister.unlock();
 		size_t nSwapCount = vecSwapTicker.size();
 		for (size_t i = 0; i < nSwapCount; ++i)
 		{
@@ -164,11 +165,34 @@ namespace core
 				pCoreTickerNode->Value.m_nNextTime = this->m_nLogicTime;
 			this->insertTicker(pCoreTickerNode);
 		}
-		
+
+		vecSwapTicker.clear();
+
+		this->m_lockUnRegister.lock();
+		std::swap(vecSwapTicker, this->m_vecUnRegisterTicker);
+		this->m_lockUnRegister.unlock();
+		nSwapCount = vecSwapTicker.size();
+		for (size_t i = 0; i < nSwapCount; ++i)
+		{
+			CCoreTickerNode* pCoreTickerNode = vecSwapTicker[i];
+
+			if (pCoreTickerNode->isLink())
+			{
+				pCoreTickerNode->remove();
+				pCoreTickerNode->Value.release();
+			}
+
+			// 需要后释放，不然pCoreTickerNode可能已经释放了，pCoreTickerNode->isLink()也就未知了
+			pCoreTickerNode->Value.release();
+		}
+
 		// 每一次更新都将刻度时间慢慢推进到与当前时间一样
 		// 处理时间定时器
 		for (; this->m_nLogicTime < nTime; ++this->m_nLogicTime)
 		{
+			// 先执行，如果此时正好有需要执行的定时器，也就能执行了，不然需要在cascadeTicker特殊处理以避免当前执行不到的bug
+			this->cascadeTicker();
+
 			uint32_t nPos = (uint32_t)(this->m_nLogicTime&__TIME_NEAR_MASK);
 			auto& listTicker = this->m_listNearTicker[nPos];
 			this->m_vecTempTickerNode.clear();
@@ -177,18 +201,12 @@ namespace core
 			{
 				CCoreTickerNode* pCoreTickerNode = listTicker.getHead();
 				pCoreTickerNode->remove();
-				
-				if (pCoreTickerNode->Value.m_nState != eRegister)
-				{
-					pCoreTickerNode->Value.release();
-					continue;
-				}
-				
+
 				this->onTicker(pCoreTickerNode);
 
 				if (pCoreTickerNode->Value.m_nIntervalTime == 0)
 					continue;
-				
+
 				pCoreTickerNode->Value.m_nNextTime += pCoreTickerNode->Value.m_nIntervalTime;
 				this->m_vecTempTickerNode.push_back(pCoreTickerNode);
 			}
@@ -196,16 +214,15 @@ namespace core
 			for (size_t i = 0; i < nCount; ++i)
 			{
 				CCoreTickerNode* pCoreTickerNode = this->m_vecTempTickerNode[i];
-				if (pCoreTickerNode->Value.m_nState == eUnRegister)
-				{
-					pCoreTickerNode->Value.release();
-					continue;
-				}
+				// 这段时间如果该定时器被反注册了，正常的反注册逻辑能够处理这种情况，这里不需要特殊处理，如果处理了会引起内存问题
+// 				if (pCoreTickerNode->Value.m_nState == eUnRegister)
+// 				{
+// 					pCoreTickerNode->Value.release();
+// 					continue;
+// 				}
 
 				this->insertTicker(pCoreTickerNode);
 			}
-
-			this->cascadeTicker();
 		}
 	}
 
@@ -231,8 +248,8 @@ namespace core
 					pTickerNode->remove();
 
 					// 有可能正好一样，如果不加1就会执行不到了
-					if (pTickerNode->Value.m_nNextTime == this->m_nLogicTime)
-						pTickerNode->Value.m_nNextTime += 1;
+// 					if (pTickerNode->Value.m_nNextTime == this->m_nLogicTime)
+// 						pTickerNode->Value.m_nNextTime += 1;
 
 					this->insertTicker(pTickerNode);
 				}
@@ -261,8 +278,8 @@ namespace core
 				CCoreTickerNode* pTickerNode = this->m_vecTempTickerNode[i];
 
 				// 有可能正好一样，如果不加1就会执行不到了
-				if (pTickerNode->Value.m_nNextTime == this->m_nLogicTime)
-					pTickerNode->Value.m_nNextTime += 1;
+// 				if (pTickerNode->Value.m_nNextTime == this->m_nLogicTime)
+// 					pTickerNode->Value.m_nNextTime += 1;
 
 				this->insertTicker(pTickerNode);
 			}
@@ -272,7 +289,7 @@ namespace core
 	void CTickerRunnable::onTicker(CCoreTickerNode* pCoreTickerNode)
 	{
 		DebugAst(pCoreTickerNode != nullptr);
-		
+
 		if (pCoreTickerNode->Value.m_nIntervalTime != 0)
 			pCoreTickerNode->Value.addRef();
 
@@ -282,10 +299,7 @@ namespace core
 		sMessagePacket.nDataSize = 0;
 
 		// 发送到消息队列，另外消息队列取出定时器对象的时候如果发现是一次性定时器，需要反注册
-		if (pCoreTickerNode->Value.m_nType == CTicker::eTT_Service || pCoreTickerNode->Value.m_nType == CTicker::eTT_Actor)
-			CCoreApp::Inst()->getLogicRunnable()->getMessageQueue()->send(sMessagePacket);
-		else
-			CCoreApp::Inst()->getNetRunnable()->getMessageQueue()->send(sMessagePacket);
+		pCoreTickerNode->Value.m_pMessageQueue->send(sMessagePacket);
 	}
 
 	CCoreTickerInfo::CCoreTickerInfo()
@@ -294,24 +308,24 @@ namespace core
 		this->m_pMemory = nullptr;
 		this->m_nNextTime = 0;
 		this->m_nIntervalTime = 0;
-		this->m_nType = CTicker::eTT_None;
-		this->m_nRef = 0;
+		this->m_pMessageQueue = nullptr;
+		this->m_nRef.store(0, std::memory_order_relaxed);
 		this->m_nState = eRegister;
 	}
 
 	CCoreTickerInfo::~CCoreTickerInfo()
 	{
-		DebugAst(this->m_nRef == 0);
+		DebugAst(this->getRef() == 0);
 	}
 
 	void CCoreTickerInfo::addRef()
 	{
-		++this->m_nRef;
+		this->m_nRef.fetch_add(1, std::memory_order_relaxed);
 	}
 
 	void CCoreTickerInfo::release()
 	{
-		if ((--this->m_nRef) == 0)
+		if ((this->m_nRef.fetch_sub(1, std::memory_order_acq_rel)) == 0)
 		{
 			CCoreTickerNode* pCoreTickerNode = reinterpret_cast<CCoreTickerNode*>(this->m_pMemory);
 			SAFE_DELETE(pCoreTickerNode);
@@ -320,6 +334,6 @@ namespace core
 
 	int32_t CCoreTickerInfo::getRef() const
 	{
-		return this->m_nRef.load();
+		return this->m_nRef.load(std::memory_order_acquire);
 	}
 }

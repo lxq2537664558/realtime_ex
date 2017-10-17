@@ -26,13 +26,13 @@ bool CDbService::onInit()
 
 	this->setServiceMessageSerializer(0, eMST_Protobuf);
 
-	tinyxml2::XMLDocument* pConfigXML = new tinyxml2::XMLDocument();
-	if (pConfigXML->LoadFile(this->getConfigFileName().c_str()) != tinyxml2::XML_SUCCESS)
+	tinyxml2::XMLDocument sConfigXML;
+	if (sConfigXML.LoadFile(this->getConfigFileName().c_str()) != tinyxml2::XML_SUCCESS)
 	{
 		PrintWarning("load {} config error", this->getConfigFileName());
 		return false;
 	}
-	tinyxml2::XMLElement* pRootXML = pConfigXML->RootElement();
+	tinyxml2::XMLElement* pRootXML = sConfigXML.RootElement();
 	if (pRootXML == nullptr)
 	{
 		PrintWarning("pRootXML == nullptr");
@@ -77,8 +77,6 @@ bool CDbService::onInit()
 		PrintWarning("0 == this->m_nDbID");
 		return false;
 	}
-
-	SAFE_DELETE(pConfigXML);
 
 	PrintInfo("connect db successful addr: {}:{} db_name: {} charset: {}", szHost, nPort, szName, szCharset);
 	PrintInfo("CDbService::onInit");

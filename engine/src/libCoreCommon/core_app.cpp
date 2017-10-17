@@ -22,6 +22,8 @@
 #include "libBaseCommon/process_util.h"
 #include "libBaseCommon/logger.h"
 
+#include "tinyxml2/tinyxml2.h"
+
 #include "core_app.h"
 #include "base_app.h"
 #include "base_object.h"
@@ -29,15 +31,17 @@
 #include "base_connection.h"
 #include "message_command.h"
 #include "class_info_mgr.h"
-
-#include "tinyxml2/tinyxml2.h"
+#include "ticker_runnable.h"
+#include "net_runnable.h"
+#include "logic_runnable.h"
+#include "coroutine_mgr.h"
 
 #define _DEFAULT_HEARTBEAT_LIMIT	3
 #define _DEFAULT_HEARTBEAT_TIME		10
 #define _DEFAULT_SAMPLING_TIME		1000
 #define _DEFAULT_INVOKE_TIMEOUT	30*1000
 #define _MAX_NOFILE_SIZE 1024*10
-#define _DEFAULT_COROUTINE_STACK_SIZE 64 * 1024
+#define _DEFAULT_COROUTINE_STACK_SIZE 1024 * 1024
 
 #ifndef _WIN32
 // 环境变量
@@ -96,7 +100,6 @@ namespace
 }
 #endif
 
-
 namespace core
 {
 	CCoreApp::CCoreApp()
@@ -104,19 +107,24 @@ namespace core
 		, m_nQuiting(0)
 		, m_nTotalSamplingTime(0)
 		, m_nCycleCount(0)
+		, m_nLogicThreadCount(0)
 		, m_nHeartbeatLimit(_DEFAULT_HEARTBEAT_LIMIT)
 		, m_nHeartbeatTime(_DEFAULT_HEARTBEAT_TIME)
 		, m_nSamplingTime(_DEFAULT_SAMPLING_TIME)
 		, m_nCoroutineStackSize(_DEFAULT_COROUTINE_STACK_SIZE)
 		, m_nQPS(0)
 		, m_nLocalServiceInvokeTimeout(_DEFAULT_INVOKE_TIMEOUT)
-		, m_pLogicMessageQueue(nullptr)
-		, m_pNetMessageQueue(nullptr)
-		, m_pNetRunnable(nullptr)
-		, m_pLogicRunnable(nullptr)
-		, m_pTickerRunnable(nullptr)
+		, m_pBaseConnectionMgr(nullptr)
+		, m_pLogicMessageQueueMgr(nullptr)
+		, m_pGlobalLogicMessageQueue(nullptr)
+		, m_pCoreServiceMgr(nullptr)
+		, m_pTransporter(nullptr)
+		, m_pServiceRegistryProxy(nullptr)
+		, m_pNodeConnectionFactory(nullptr)
 	{
 		this->m_vecWebsocketBuf.reserve(UINT16_MAX);
+		this->m_pLogicMessageQueueMgr = new CLogicMessageQueueMgr();
+		this->m_pGlobalLogicMessageQueue = new CLogicMessageQueue(nullptr, this->m_pLogicMessageQueueMgr);
 	}
 
 	CCoreApp::~CCoreApp()
@@ -137,13 +145,10 @@ namespace core
 		if (!this->init(argc, argv, vecServiceBase))
 			return false;
 
-		this->m_pLogicRunnable->join();
-
-		this->m_pTickerRunnable->quit();
-		this->m_pNetRunnable->quit();
-		
-		this->m_pTickerRunnable->join();
-		this->m_pNetRunnable->join();
+		for (size_t i = 0; i < this->m_vecLogicRunnable.size(); ++i)
+		{
+			this->m_vecLogicRunnable[i]->join();
+		}
 
 		this->destroy();
 
@@ -152,14 +157,14 @@ namespace core
 		return true;
 	}
 
-	void CCoreApp::registerTicker(uint8_t nType, uint32_t nFromServiceID, uint64_t nFromActorID, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
+	void CCoreApp::registerTicker(CMessageQueue* pMessageQueue, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
 	{
-		this->m_pTickerRunnable->registerTicker(nType, nFromServiceID, nFromActorID, pTicker, nStartTime, nIntervalTime, nContext);
+		CTickerRunnable::Inst()->registerTicker(pMessageQueue, pTicker, nStartTime, nIntervalTime, nContext);
 	}
 
 	void CCoreApp::unregisterTicker(CTicker* pTicker)
 	{
-		this->m_pTickerRunnable->unregisterTicker(pTicker);
+		CTickerRunnable::Inst()->unregisterTicker(pTicker);
 	}
 
 	const std::string& CCoreApp::getConfigFileName() const
@@ -225,13 +230,13 @@ namespace core
 
 		this->m_szConfig = szConfig;
 
-		tinyxml2::XMLDocument* pConfigXML = new tinyxml2::XMLDocument();
-		if (pConfigXML->LoadFile(this->m_szConfig.c_str()) != tinyxml2::XML_SUCCESS)
+		tinyxml2::XMLDocument sConfigXML;
+		if (sConfigXML.LoadFile(this->m_szConfig.c_str()) != tinyxml2::XML_SUCCESS)
 		{
 			fprintf(stderr, "load etc config error\n");
 			return false;
 		}
-		tinyxml2::XMLElement* pRootXML = pConfigXML->RootElement();
+		tinyxml2::XMLElement* pRootXML = sConfigXML.RootElement();
 		if (pRootXML == nullptr)
 		{
 			fprintf(stderr, "pRootXML == nullptr\n");
@@ -368,13 +373,6 @@ namespace core
 
 		base::log::debug(pLogXML->IntAttribute("debug") != 0);
 
-		this->m_pLogicMessageQueue = new CLogicMessageQueue();
-		this->m_pNetMessageQueue = new CNetMessageQueue();
-
-		this->m_pTickerRunnable = new CTickerRunnable();
-		this->m_pNetRunnable = new CNetRunnable();
-		this->m_pLogicRunnable = new CLogicRunnable();
-
 		bool bProfiling = false;
 		tinyxml2::XMLElement* pProfilingXML = pBaseInfoXML->FirstChildElement("profiling");
 		if (pProfilingXML != nullptr)
@@ -390,6 +388,7 @@ namespace core
 		}
 
 		uint32_t nMaxConnectionCount = (uint32_t)pBaseInfoXML->IntAttribute("connections");
+		this->m_nLogicThreadCount = std::max<uint32_t>(1, (uint32_t)pBaseInfoXML->IntAttribute("logic_threads"));
 		
 		// 加载服务连接心跳信息
 		tinyxml2::XMLElement* pHeartbeatXML = pBaseInfoXML->FirstChildElement("heartbeat");
@@ -399,28 +398,74 @@ namespace core
 			this->m_nHeartbeatTime = pHeartbeatXML->UnsignedAttribute("heartbeat_time");
 		}
 
+		if (!CCoroutineMgr::Inst()->init())
+		{
+			PrintWarning("CCoroutineMgr::Inst()->init()");
+			return false;
+		}
+
 		this->m_tickerQPS.setCallback(std::bind(&CCoreApp::onQPS, this, std::placeholders::_1));
-		this->registerTicker(CTicker::eTT_Service, 0, 0, &this->m_tickerQPS, 1000, 1000, 0);
+		this->registerTicker(this->m_pGlobalLogicMessageQueue, &this->m_tickerQPS, 1000, 1000, 0);
 
-		if (!this->m_pNetRunnable->init(this->m_pNetMessageQueue, nMaxConnectionCount))
+		this->m_pBaseConnectionMgr = new CBaseConnectionMgr(this->m_pGlobalLogicMessageQueue);
+		
+		this->m_pNodeConnectionFactory = new CNodeConnectionFactory();
+		this->m_pBaseConnectionMgr->setBaseConnectionFactory("CBaseConnectionToMaster", this->m_pNodeConnectionFactory);
+		this->m_pBaseConnectionMgr->setBaseConnectionFactory("CBaseConnectionOtherNode", this->m_pNodeConnectionFactory);
+
+		this->m_pTransporter = new CTransporter();
+
+		this->m_pCoreServiceMgr = new CCoreServiceMgr();
+		if (!this->m_pCoreServiceMgr->init(vecServiceBase))
 		{
-			PrintWarning("this->m_pNetRunnable->init(nMaxConnectionCount)");
+			PrintWarning("this->m_pCoreServiceMgr->init(vecServiceBase)");
 			return false;
 		}
 
-		if (!this->m_pLogicRunnable->init(this->m_pLogicMessageQueue, vecServiceBase, pRootXML))
+		this->m_pServiceRegistryProxy = new CServiceRegistryProxy();
+		if (!this->m_pServiceRegistryProxy->init(pRootXML))
 		{
-			PrintWarning("this->m_pLogicRunnable->init(pRootXML)");
+			PrintWarning("this->m_pServiceRegistryProxy->init(pRootXML)");
 			return false;
 		}
 
-		if (!this->m_pTickerRunnable->init())
+		if (!CNetRunnable::Inst()->init(nMaxConnectionCount))
 		{
-			PrintWarning("this->m_pTickerRunnable->init()");
+			PrintWarning("CNetRunnable::Inst()->init(nMaxConnectionCount)");
 			return false;
 		}
 
-		SAFE_DELETE(pConfigXML);
+		if (!CTickerRunnable::Inst()->init())
+		{
+			PrintWarning("CTickerRunnable::Inst()->init()");
+			return false;
+		}
+
+		if (!this->m_sNodeBaseInfo.szHost.empty())
+		{
+			if (!this->m_pBaseConnectionMgr->listen(this->m_sNodeBaseInfo.szHost, this->m_sNodeBaseInfo.nPort, false, "CBaseConnectionOtherNode", "", this->m_sNodeBaseInfo.nSendBufSize, this->m_sNodeBaseInfo.nRecvBufSize, nullptr))
+			{
+				PrintWarning("node listen error");
+				return false;
+			}
+		}
+
+		for (uint32_t i = 0; i < this->m_nLogicThreadCount; ++i)
+		{
+			CLogicRunnable* pLogicRunnable = new CLogicRunnable();
+			if (!pLogicRunnable->init())
+			{
+				PrintWarning("pLogicRunnable->init()");
+				return false;
+			}
+
+			this->m_vecLogicRunnable.push_back(pLogicRunnable);
+		}
+
+		if (!this->m_pCoreServiceMgr->onInit())
+			return false;
+
+		this->printNodeInfo();
 
 		PrintInfo("CCoreApp::init");
 
@@ -436,13 +481,6 @@ namespace core
 		CClassInfoMgr::Inst()->release();
 
 		base::profiling::uninit();
-
-		SAFE_DELETE(this->m_pLogicRunnable);
-		SAFE_DELETE(this->m_pNetRunnable);
-		SAFE_DELETE(this->m_pTickerRunnable);
-
-		SAFE_DELETE(this->m_pNetMessageQueue);
-		SAFE_DELETE(this->m_pLogicMessageQueue);
 
 		base::log::uninit();
 #ifndef _WIN32
@@ -463,7 +501,41 @@ namespace core
 		sMessagePacket.pData = nullptr;
 		sMessagePacket.nDataSize = 0;
 
-		this->m_pLogicRunnable->getMessageQueue()->send(sMessagePacket);
+		const std::vector<CCoreService*>& vecCoreService = this->m_pCoreServiceMgr->getCoreService();
+		for (size_t i = 0; i < vecCoreService.size(); ++i)
+		{
+			vecCoreService[i]->getMessageQueue()->send(sMessagePacket);
+		}
+	}
+
+	CBaseConnectionMgr* CCoreApp::getBaseConnectionMgr() const
+	{
+		return this->m_pBaseConnectionMgr;
+	}
+
+	CLogicMessageQueueMgr* CCoreApp::getLogicMessageQueueMgr() const
+	{
+		return this->m_pLogicMessageQueueMgr;
+	}
+
+	CLogicMessageQueue* CCoreApp::getGlobalLogicMessageQueue() const
+	{
+		return this->m_pGlobalLogicMessageQueue;
+	}
+
+	CCoreServiceMgr* CCoreApp::getCoreServiceMgr() const
+	{
+		return this->m_pCoreServiceMgr;
+	}
+
+	CTransporter* CCoreApp::getTransporter() const
+	{
+		return this->m_pTransporter;
+	}
+
+	CServiceRegistryProxy* CCoreApp::getServiceRegistryProxy() const
+	{
+		return this->m_pServiceRegistryProxy;
 	}
 
 	uint32_t CCoreApp::getHeartbeatLimit() const
@@ -483,6 +555,7 @@ namespace core
 
 	void CCoreApp::onQPS(uint64_t nContext)
 	{
+		//PrintInfo("qps: {} net_queue_size: {} logic_queue_size: {}", this->m_nQPS, this->m_pNetMessageQueue->size(), this->m_pLogicMessageQueue->size());
 		this->m_nQPS = 0;
 	}
 
@@ -506,27 +579,12 @@ namespace core
 		return this->m_sNodeBaseInfo.nID;
 	}
 
-	CNetRunnable* CCoreApp::getNetRunnable() const
-	{
-		return this->m_pNetRunnable;
-	}
-
-	CTickerRunnable* CCoreApp::getTickerRunnable() const
-	{
-		return this->m_pTickerRunnable;
-	}
-
-	CLogicRunnable* CCoreApp::getLogicRunnable() const
-	{
-		return this->m_pLogicRunnable;
-	}
-
 	uint32_t CCoreApp::getInvokeTimeout(uint32_t nServiceID) const
 	{
-		if (this->m_pLogicRunnable->getCoreServiceMgr()->isLocalService(nServiceID))
+		if (this->m_pCoreServiceMgr->isLocalService(nServiceID))
 			return this->m_nLocalServiceInvokeTimeout;
 
-		uint32_t nInvokeTimeout = this->m_pLogicRunnable->getServiceRegistryProxy()->getServiceInvokeTimeout(nServiceID);
+		uint32_t nInvokeTimeout = this->m_pServiceRegistryProxy->getServiceInvokeTimeout(nServiceID);
 		if (nInvokeTimeout != 0)
 			return nInvokeTimeout;
 
@@ -546,5 +604,40 @@ namespace core
 	uint32_t CCoreApp::getCoroutineStackSize() const
 	{
 		return this->m_nCoroutineStackSize;
+	}
+
+	uint32_t CCoreApp::getLogicThreadCount() const
+	{
+		return this->m_nLogicThreadCount;
+	}
+
+	void CCoreApp::printNodeInfo()
+	{
+		const SNodeBaseInfo& sNodeBaseInfo = CCoreApp::Inst()->getNodeBaseInfo();
+		const std::vector<SServiceBaseInfo>& vecServiceBaseInfo = this->m_pCoreServiceMgr->getServiceBaseInfo();
+
+		std::stringstream ss;
+		ss << std::endl;
+		ss << "############################################################" << std::endl;
+		ss << "\tnode_name: " << sNodeBaseInfo.szName << " node_id: " << sNodeBaseInfo.nID << std::endl;
+		ss << std::endl;
+		for (size_t i = 0; i < vecServiceBaseInfo.size(); ++i)
+		{
+			const SServiceBaseInfo& sServiceBaseInfo = vecServiceBaseInfo[i];
+			ss << "\tservice_name: " << sServiceBaseInfo.szName << "\tservice_type: " << sServiceBaseInfo.szType << " \tservice_id: " << sServiceBaseInfo.nID << std::endl;
+		}
+		ss << std::endl;
+		ss << "\twork_path: " << base::process_util::getCurrentWorkPath() << std::endl;
+		ss << std::endl;
+		ss << "\tlog_path: " << base::log::getPath() << std::endl;
+		ss << std::endl;
+		ss << "\tlog_async: " << base::log::isAsync() << std::endl;
+		ss << std::endl;
+		ss << "\tlog_debug: " << base::log::isDebug() << std::endl;
+		ss << std::endl;
+		ss << "\tprofiling: " << CCoreApp::Inst()->getSamplingTime() << std::endl;
+		ss << "############################################################";
+
+		base::log::save("INFO", true, "%s", ss.str().c_str());
 	}
 }

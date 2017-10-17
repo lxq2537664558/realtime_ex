@@ -3,8 +3,6 @@
 
 #include "libBaseCommon/string_util.h"
 
-
-#include "libCoreCommon/actor_base.h"
 #include "libCoreCommon/service_base.h"
 #include "libCoreCommon/service_invoker.h"
 #include "libCoreCommon/register_message_util.h"
@@ -42,6 +40,7 @@ void CGameServiceMessageHandler::g2s_player_enter_request_handler(CServiceBase* 
 	{
 		SCreatePlayerContext sCreatePlayerContext;
 		sCreatePlayerContext.nGateServiceID = sSessionInfo.nFromServiceID;
+		sCreatePlayerContext.nPlayerID = pRequest->player_id();
 		pPlayer = pGameService->getPlayerMgr()->createPlayer(pRequest->player_id(), &sCreatePlayerContext);
 		
 		if (nullptr == pPlayer)
@@ -61,12 +60,12 @@ void CGameServiceMessageHandler::g2s_player_enter_request_handler(CServiceBase* 
 		uint32_t nGateID = pPlayer->getGateServiceID();
 		// 先退出
 		pPlayer->onPlayerLogout();
-
+		
 		// 来自不一样的gate，踢掉旧的，如果来自同一个gate，gate那边能自己处理掉
 		if (nGateID != sSessionInfo.nFromServiceID)
 		{
 			s2g_kick_player_notify notify_msg;
-			notify_msg.set_player_id(pPlayer->getActorID());
+			notify_msg.set_player_id(pPlayer->getPlayerID());
 			pGameService->getServiceInvoker()->send(nGateID, &notify_msg);
 		}
 
@@ -92,6 +91,7 @@ void CGameServiceMessageHandler::g2s_player_leave_notify_handler(CServiceBase* p
 	uint32_t nUCServiceID = pPlayer->getUCServiceID();
 
 	pPlayer->onPlayerLogout();
+
 	pGameService->getPlayerMgr()->destroyPlayer(pMessage->player_id(), "gate notify leave");
 
 	s2u_player_leave_notify notify_msg;
@@ -109,6 +109,7 @@ void CGameServiceMessageHandler::u2s_kick_player_notify_handler(CServiceBase* pS
 		return;
 
 	pPlayer->onPlayerLogout();
+
 	uint32_t nGateID = pPlayer->getGateServiceID();
 	pGameService->getPlayerMgr()->destroyPlayer(pMessage->player_id(), "uc kick");
 

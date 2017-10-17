@@ -1,6 +1,5 @@
 #pragma once
 
-#include "libBaseNetwork/network.h"
 #include "core_common.h"
 
 namespace core
@@ -16,7 +15,8 @@ namespace core
 		eMCT_NOTIFY_SOCKET_DISCONNECT,
 		eMCT_NOTIFY_SOCKET_DISCONNECT_ACK,
 		eMCT_NOTIFY_SOCKET_CONNECT_FAIL,
-		eMCT_SEND_SOCKET_DATA,
+		eMCT_SEND_SOCKET_DATA1,
+		eMCT_SEND_SOCKET_DATA2,
 		eMCT_RECV_SOCKET_DATA,
 		eMCT_REQUEST,
 		eMCT_RESPONSE,
@@ -29,10 +29,12 @@ namespace core
 		eMCT_SYSTEM,
 	};
 
+	class CLogicMessageQueue;
 	struct SMCT_REQUEST_SOCKET_CONNECT
 	{
 		std::string			szHost;
 		uint16_t			nPort;
+		CLogicMessageQueue* pMessageQueue;
 		std::string			szContext;
 		std::string			szType;
 		uint32_t			nSendBufferSize;
@@ -61,7 +63,7 @@ namespace core
 
 	struct SMCT_NOTIFY_SOCKET_DISCONNECT
 	{
-		uint64_t nSocketID;
+		uint64_t	nSocketID;
 	};
 
 	struct SMCT_NOTIFY_SOCKET_DISCONNECT_ACK
@@ -85,10 +87,7 @@ namespace core
 	struct SMCT_REQUEST
 	{
 		uint64_t	nSessionID;
-		uint64_t	nFromActorID;
 		uint32_t	nFromServiceID;
-		uint64_t	nToActorID;
-		uint32_t	nToServiceID;
 		uint8_t		nMessageSerializerType;
 		uint16_t	nMessageDataLen;
 		uint16_t	nMessageNameLen;
@@ -99,9 +98,7 @@ namespace core
 	{
 		uint64_t	nSessionID;
 		uint32_t	nFromServiceID;
-		uint64_t	nToActorID;
-		uint32_t	nToServiceID;
-		uint8_t		nResult;
+		uint32_t	nResult;
 		uint8_t		nMessageSerializerType;
 		uint16_t	nMessageDataLen;
 		uint16_t	nMessageNameLen;
@@ -111,14 +108,12 @@ namespace core
 	struct SMCT_TO_GATE
 	{
 		uint64_t	nSessionID;
-		uint32_t	nToServiceID;
 		uint16_t	nDataSize;
 		char*		pData;
 	};
 
 	struct SMCT_TO_GATE_BROADCAST
 	{
-		uint32_t	nToServiceID;
 		uint16_t	nSessionCount;
 		uint16_t	nDataSize;
 		char*		pData;
@@ -128,15 +123,18 @@ namespace core
 	{
 		uint64_t	nSessionID;
 		uint32_t	nFromServiceID;
-		uint64_t	nToActorID;
-		uint32_t	nToServiceID;
-		uint16_t	nMessageDataLen;
 	};
 
-	struct SMCT_SEND_SOCKET_DATA
+	struct SMCT_SEND_SOCKET_DATA1
 	{
 		uint8_t				nMessageType;
 		CCoreConnection*	pCoreConnection;
+	};
+
+	struct SMCT_SEND_SOCKET_DATA2
+	{
+		uint8_t		nMessageType;
+		uint64_t	nSocketID;
 	};
 
 	struct SMCT_BROADCAST_SOCKET_DATA1

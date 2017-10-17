@@ -64,6 +64,7 @@
     <ClCompile Include="database.cpp" />
     <ClCompile Include="db_thread.cpp" />
     <ClCompile Include="db_thread_mgr.cpp" />
+    <ClCompile Include="memory_new.cpp" />
     <ClCompile Include="proto_src\call_command.pb.cc" />
     <ClCompile Include="proto_src\db_option.pb.cc" />
     <ClCompile Include="proto_src\delete_command.pb.cc" />
@@ -200,6 +201,7 @@ del /a $(OutDir)libmysql.pdb</Command>
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;__BUILD_BASE_DATABASE_DLL__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>../../inc;../../inc/libBaseDatabase;../../inc/libBaseDatabase/proto_src;../../../3rd/mysql/include;../../../3rd/protobuf/include;</AdditionalIncludeDirectories>
+      <StringPooling>true</StringPooling>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

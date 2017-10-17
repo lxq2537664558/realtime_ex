@@ -4,7 +4,6 @@
 #include <vector>
 #include <string>
 #include <list>
-#include <memory>
 
 #include "ticker.h"
 #include "core_common.h"
@@ -25,4 +24,54 @@ namespace core
 		std::function<void(std::shared_ptr<void>, uint32_t)>
 					callback;
 	};
+
+	struct	SMessagePacket
+	{
+		uint8_t		nType;
+		uint32_t	nDataSize;
+		void*		pData;
+	};
+
+#pragma pack(push,1)
+	struct gate_forward_cookice
+	{
+		uint64_t	nSessionID;
+		uint32_t	nFromServiceID;
+		uint32_t	nToServiceID;
+	};
+
+	struct gate_send_cookice
+	{
+		uint64_t	nSessionID;
+		uint32_t	nToServiceID;
+	};
+
+	struct gate_broadcast_cookice
+	{
+		uint32_t	nToServiceID;
+		uint16_t	nSessionCount;
+	};
+
+	struct request_cookice
+	{
+		uint64_t	nSessionID;
+		uint32_t	nFromServiceID;
+		uint32_t	nToServiceID;
+		uint8_t		nMessageSerializerType;
+		uint16_t	nMessageNameLen;
+		char		szMessageName[1];
+	};
+
+	struct response_cookice
+	{
+		uint64_t	nSessionID;
+		uint32_t	nFromServiceID;
+		uint32_t	nToServiceID;
+		uint32_t	nResult;
+		uint8_t		nMessageSerializerType;
+		uint16_t	nMessageNameLen;
+		char		szMessageName[1];
+	};
+
+#pragma pack(pop)
 }

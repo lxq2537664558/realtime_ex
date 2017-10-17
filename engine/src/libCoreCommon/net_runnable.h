@@ -1,6 +1,8 @@
 #pragma once
 
 #include "libBaseCommon/thread_base.h"
+#include "libBaseCommon/singleton.h"
+
 #include "net_message_queue.h"
 
 namespace core
@@ -8,7 +10,8 @@ namespace core
 	class CCoreConnectionMgr;
 	class CCoreApp;
 	class CNetRunnable :
-		public base::IRunnable
+		public base::IRunnable,
+		public base::CSingleton<CNetRunnable>
 	{
 		friend class CCoreApp;
 
@@ -16,7 +19,7 @@ namespace core
 		CNetRunnable();
 		virtual ~CNetRunnable();
 
-		bool				init(CNetMessageQueue*	pMessageQueue, uint32_t nMaxSocketCount);
+		bool				init(uint32_t nMaxSocketCount);
 		CCoreConnectionMgr*	getCoreConnectionMgr() const;
 		CNetMessageQueue*	getMessageQueue() const;
 

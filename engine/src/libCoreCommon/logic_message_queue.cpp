@@ -1,20 +1,26 @@
 #include "stdafx.h"
 #include "logic_message_queue.h"
+#include "logic_message_queue_mgr.h"
 
 #include "libBaseCommon/debug_helper.h"
 #include "libBaseCommon/profiling.h"
 
-#define _DEFAULT_MESSAGE_QUEUE 1024
-
 namespace core
 {
-	CLogicMessageQueue::CLogicMessageQueue()
-		: m_queue(_DEFAULT_MESSAGE_QUEUE)
+	CLogicMessageQueue::CLogicMessageQueue(CCoreService* pCoreService, CLogicMessageQueueMgr* pMessageQueueMgr)
+		: m_pMessageQueueMgr(pMessageQueueMgr)
+		, m_pCoreService(pCoreService)
+		, m_nFlag(eNotInList)
 	{
 	}
 
 	CLogicMessageQueue::~CLogicMessageQueue()
 	{
+	}
+
+	CCoreService* CLogicMessageQueue::getCoreService() const
+	{
+		return this->m_pCoreService;
 	}
 
 	void CLogicMessageQueue::send(const SMessagePacket& sMessagePacket)
@@ -23,9 +29,11 @@ namespace core
 		std::unique_lock<std::mutex> guard(this->m_lock);
 
 		this->m_queue.send(sMessagePacket);
-
-		if (this->m_queue.size() == 1)
-			this->m_cond.notify_one();
+		if (this->m_nFlag == eNotInList)
+		{
+			this->m_nFlag = eInList;
+			this->m_pMessageQueueMgr->putMessageQueue(this);
+		}
 	}
 
 	void CLogicMessageQueue::recv(std::vector<SMessagePacket>& vecMessagePacket)
@@ -34,23 +42,32 @@ namespace core
 		vecMessagePacket.clear();
 
 		std::unique_lock<std::mutex> guard(this->m_lock);
-		
-		while (this->m_queue.empty())
-		{
-			this->m_cond.wait(guard);
-		}
+
+		DebugAst(this->m_nFlag == eInList);
 
 		SMessagePacket sMessagePacket;
 		while (this->m_queue.recv(sMessagePacket))
 		{
 			vecMessagePacket.push_back(sMessagePacket);
 		}
+
+		this->m_nFlag = eDispatch;
 	}
 
-	bool CLogicMessageQueue::empty()
+	void CLogicMessageQueue::dispatchEnd()
 	{
 		std::unique_lock<std::mutex> guard(this->m_lock);
 
-		return this->m_queue.size() == 0;
+		DebugAst(this->m_nFlag == eDispatch);
+
+		if (this->m_queue.size() != 0)
+		{
+			this->m_nFlag = eInList;
+			this->m_pMessageQueueMgr->putMessageQueue(this);
+		}
+		else
+		{
+			this->m_nFlag = eNotInList;
+		}
 	}
 }

@@ -1,6 +1,0 @@
-syntax = "proto2";
-
-message s2c_update_player_battlearray_notify {
-	required uint32 type = 1;	// ¿‡–Õ
-	optional map<uint32, uint32> heros = 2;
-}

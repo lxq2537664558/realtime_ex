@@ -8,7 +8,7 @@ cd cmake
 mkdir -p build
 cd build
 
-cmake -DCMAKE_C_FLAGS="${CMAKE_C_FLAGS} -fPIC"  -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS} -fPIC" -DCMAKE_BUILD_TYPE=Debug -Dprotobuf_BUILD_TESTS=OFF -Dprotobuf_BUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=../../install ../
+cmake -DCMAKE_C_FLAGS="${CMAKE_C_FLAGS} -fPIC"  -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS} -fPIC" -DCMAKE_BUILD_TYPE=Release -Dprotobuf_BUILD_TESTS=OFF -Dprotobuf_BUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=../../install ../
 make
 make install
 

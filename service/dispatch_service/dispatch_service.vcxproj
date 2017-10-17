@@ -183,6 +183,7 @@
     <ClCompile Include="..\proto\server_proto_src\s2d_online_count_notify.pb.cc" />
     <ClCompile Include="..\proto\server_proto_src\u2d_active_count_notify.pb.cc" />
     <ClCompile Include="dispatch_service.cpp" />
+    <ClCompile Include="memory_new.cpp" />
     <ClCompile Include="online_count_mgr.cpp" />
     <ClCompile Include="dispatch_service_message_handler.cpp" />
   </ItemGroup>

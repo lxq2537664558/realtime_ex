@@ -143,6 +143,7 @@
     <ClCompile Include="crc32.cpp" />
     <ClCompile Include="csv_parser.cpp" />
     <ClCompile Include="function_util.cpp" />
+    <ClCompile Include="memory_new.cpp" />
     <ClCompile Include="time_util.cpp" />
     <ClCompile Include="buf_file.cpp" />
     <ClCompile Include="encryptor.cpp" />
@@ -151,7 +152,6 @@
     <ClCompile Include="logger.cpp" />
     <ClCompile Include="md5.cpp" />
     <ClCompile Include="memory_hook.cpp" />
-    <ClCompile Include="memory_new.cpp" />
     <ClCompile Include="process_util.cpp" />
     <ClCompile Include="profiling.cpp" />
     <ClCompile Include="rand_gen.cpp" />

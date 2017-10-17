@@ -8,12 +8,9 @@
 #include "libBaseCommon/profiling.h"
 
 
-#define _DEFAULT_MESSAGE_QUEUE 1024
-
 namespace core
 {
 	CNetMessageQueue::CNetMessageQueue()
-		: m_queue(_DEFAULT_MESSAGE_QUEUE)
 	{
 	}
 
@@ -27,7 +24,7 @@ namespace core
 		std::unique_lock<std::mutex> guard(this->m_lock);
 
 		this->m_queue.send(sMessagePacket);
-		CCoreApp::Inst()->getNetRunnable()->getCoreConnectionMgr()->wakeup();
+		CNetRunnable::Inst()->getCoreConnectionMgr()->wakeup();
 	}
 
 	void CNetMessageQueue::recv(std::vector<SMessagePacket>& vecMessagePacket)

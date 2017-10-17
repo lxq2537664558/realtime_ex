@@ -51,6 +51,9 @@
     <ClCompile Include="..\proto\server_proto_src\s2u_player_heartbeat_response.pb.cc">
       <Filter>server_proto</Filter>
     </ClCompile>
+    <ClCompile Include="memory_new.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="uc_service.h">
