@@ -150,7 +150,7 @@ void CDispatchServiceMessageHandler::l2d_validate_login_request_handler(CService
 		vecArgs.push_back(szAccountName);
 
 		std::shared_ptr<const google::protobuf::Message> pResponseMessage;
-		if (this->sync_call(nDbsID, nTblIndex, szSPSQL, &vecArgs, pResponseMessage) != eRRT_OK)
+		if (this->service_sync_call(nDbsID, nTblIndex, szSPSQL, &vecArgs, pResponseMessage) != eRRT_OK)
 		{
 			l2d_validate_login_response login_response_msg;
 			login_response_msg.set_key("");

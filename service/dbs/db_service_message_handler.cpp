@@ -17,13 +17,14 @@
 
 CDbServiceMessageHandler::CDbServiceMessageHandler(CServiceBase* pServiceBase)
 {
-	register_native_service_message_handler(pServiceBase, this, &CDbServiceMessageHandler::call_command_handler);
-	register_native_service_message_handler(pServiceBase, this, &CDbServiceMessageHandler::flush_command_handler);
-	register_native_service_message_handler(pServiceBase, this, &CDbServiceMessageHandler::insert_command_handler);
-	register_native_service_message_handler(pServiceBase, this, &CDbServiceMessageHandler::nop_command_handler);
-	register_native_service_message_handler(pServiceBase, this, &CDbServiceMessageHandler::query_command_handler);
 	register_native_service_message_handler(pServiceBase, this, &CDbServiceMessageHandler::select_command_handler);
 	register_native_service_message_handler(pServiceBase, this, &CDbServiceMessageHandler::update_command_handler);
+	register_native_service_message_handler(pServiceBase, this, &CDbServiceMessageHandler::delete_command_handler);
+	register_native_service_message_handler(pServiceBase, this, &CDbServiceMessageHandler::insert_command_handler);
+	register_native_service_message_handler(pServiceBase, this, &CDbServiceMessageHandler::call_command_handler);
+	register_native_service_message_handler(pServiceBase, this, &CDbServiceMessageHandler::query_command_handler);
+	register_native_service_message_handler(pServiceBase, this, &CDbServiceMessageHandler::flush_command_handler);
+	register_native_service_message_handler(pServiceBase, this, &CDbServiceMessageHandler::nop_command_handler);
 }
 
 CDbServiceMessageHandler::~CDbServiceMessageHandler()
@@ -47,7 +48,7 @@ void CDbServiceMessageHandler::call_command_handler(CServiceBase* pServiceBase, 
 void CDbServiceMessageHandler::delete_command_handler(CServiceBase* pServiceBase, SSessionInfo sSessionInfo, const delete_command* pCommand)
 {
 	proto::db::delete_command pb_command;
-	pb_command.set_id(pCommand->id);
+	pb_command.set_id(pCommand->primary_id);
 	pb_command.set_table_name(pCommand->table_name);
 
 	this->normal_command_handler(pServiceBase, sSessionInfo, &pb_command);
@@ -56,7 +57,7 @@ void CDbServiceMessageHandler::delete_command_handler(CServiceBase* pServiceBase
 void CDbServiceMessageHandler::flush_command_handler(CServiceBase* pServiceBase, SSessionInfo sSessionInfo, const flush_command* pCommand)
 {
 	proto::db::flush_command pb_command;
-	pb_command.set_id(pCommand->id);
+	pb_command.set_id(pCommand->primary_id);
 	pb_command.set_type(pCommand->type);
 
 	this->normal_command_handler(pServiceBase, sSessionInfo, &pb_command);
@@ -96,7 +97,7 @@ void CDbServiceMessageHandler::query_command_handler(CServiceBase* pServiceBase,
 void CDbServiceMessageHandler::select_command_handler(CServiceBase* pServiceBase, SSessionInfo sSessionInfo, const select_command* pCommand)
 {
 	proto::db::select_command pb_command;
-	pb_command.set_id(pCommand->id);
+	pb_command.set_id(pCommand->primary_id);
 	pb_command.set_table_name(pCommand->table_name);
 
 	this->normal_command_handler(pServiceBase, sSessionInfo, &pb_command);

@@ -40,7 +40,7 @@ CPlayer* CPlayerMgr::createPlayer(uint64_t nPlayerID, const void* pContext)
 	
 	uint32_t nDBID = _GET_PLAYER_DB_ID(nPlayerID);
 	uint32_t nDbServiceID = nDBID + _GAME_DB_SERVICE_DELTA;
-	uint32_t nErrorCode = this->sync_nop(nDbServiceID, (uint32_t)nPlayerID);
+	uint32_t nErrorCode = this->service_sync_nop(nDbServiceID, (uint32_t)nPlayerID, 0);
 	
 	pPlayer = this->getPlayer(nPlayerID);
 	if (nullptr == pPlayer)

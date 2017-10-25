@@ -15,20 +15,28 @@ public:
 	CServiceRegistry(CMasterService* pMasterService);
 	~CServiceRegistry();
 
-	bool	addNode(CConnectionFromNode* pConnectionFromNode, const core::SNodeBaseInfo& sNodeBaseInfo, const std::vector<core::SServiceBaseInfo>& vecServiceBaseInfo);
+	bool	addNode(CConnectionFromNode* pConnectionFromNode, const core::SNodeBaseInfo& sNodeBaseInfo, const std::vector<core::SServiceBaseInfo>& vecServiceBaseInfo, const std::set<std::string>& setConnectServiceName, const std::set<std::string>& setConnectServiceType);
 	void	delNode(uint32_t nNodeID);
 	
-private:
-	struct SNodeInfo
+public:
+	struct SNodeProxyInfo
 	{
-		core::SNodeBaseInfo					sNodeBaseInfo;
-		std::vector<core::SServiceBaseInfo>	vecServiceBaseInfo;
-		CConnectionFromNode*				pConnectionFromNode;
+		core::SNodeBaseInfo		sNodeBaseInfo;
+		std::map<uint32_t, core::SServiceBaseInfo>	
+								mapServiceBaseInfo;
+		std::vector<core::SServiceBaseInfo>
+								vecServiceBaseInfo;
+		std::set<std::string>	setConnectServiceName;
+		std::set<std::string>	setConnectServiceType;
+		CConnectionFromNode*	pConnectionFromNode;
 	};
 
-	std::map<uint32_t, SNodeInfo>	m_mapNodeInfo;
-	std::set<std::string>			m_setServiceName;
-	std::set<uint32_t>				m_setServiceID;
+private:
+	std::map<uint32_t, SNodeProxyInfo>	m_mapNodeProxyInfo;
+	std::map<std::string, uint32_t>		m_mapServiceName;	// 服务名字到节点id的映射
+	std::map<std::string, std::set<uint32_t>>
+										m_mapServiceType;	// 服务类型到节点id的映射
+	std::set<uint32_t>					m_setServiceID;
 
-	CMasterService*					m_pMasterService;
+	CMasterService*						m_pMasterService;
 };

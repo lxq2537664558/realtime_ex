@@ -21,6 +21,6 @@
 	
 	<!--连接master地址-->
 	<monster_info>
-		<master id = "30001" host = "127.0.0.1" port = "10001"/>
+		<master id = "30001" host = "127.0.0.1" port = "10002"/>
 	</monster_info>
 </root>

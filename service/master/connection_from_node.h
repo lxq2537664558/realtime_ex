@@ -7,7 +7,7 @@ class CConnectionFromNode
 	: public core::CBaseConnection
 {
 public:
-	CConnectionFromNode();
+	CConnectionFromNode(CMasterService*	pMasterService);
 	virtual ~CConnectionFromNode();
 
 	virtual void		release();

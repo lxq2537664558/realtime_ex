@@ -9,9 +9,9 @@
 
 using namespace core;
 
-CConnectionFromNode::CConnectionFromNode()
+CConnectionFromNode::CConnectionFromNode(CMasterService* pMasterService)
 	: m_nNodeID(0)
-	, m_pMasterService(nullptr)
+	, m_pMasterService(pMasterService)
 {
 }
 
@@ -32,16 +32,6 @@ uint32_t CConnectionFromNode::getNodeID() const
 
 void CConnectionFromNode::onConnect()
 {
-	uint32_t nServiceID = 0;
-	base::string_util::convert_to_value(this->getContext(), nServiceID);
-	this->m_pMasterService = dynamic_cast<CMasterService*>(CBaseApp::Inst()->getServiceBase(nServiceID));
-	if (nullptr == this->m_pMasterService)
-	{
-		PrintWarning("master service id error service_id: {}", nServiceID);
-		this->shutdown(true, "nullptr == this->m_pMasterService");
-		return;
-	}
-
 	smt_sync_master_info netMsg;
 	netMsg.nMasterID = this->m_pMasterService->getMasterID();
 	base::CWriteBuf& writeBuf = this->m_pMasterService->getWriteBuf();
@@ -67,13 +57,13 @@ void CConnectionFromNode::onDispatch(uint8_t nMessageType, const void* pData, ui
 		smt_register_node_base_info netMsg;
 		netMsg.unpack(pData, nSize);
 		
-		this->m_nNodeID = netMsg.sNodeBaseInfo.nID;
-		if (!this->m_pMasterService->getServiceRegistry()->addNode(this, netMsg.sNodeBaseInfo, netMsg.vecServiceBaseInfo))
+		if (!this->m_pMasterService->getServiceRegistry()->addNode(this, netMsg.sNodeBaseInfo, netMsg.vecServiceBaseInfo, netMsg.setConnectServiceName, netMsg.setConnectServiceType))
 		{
-			this->m_nNodeID = 0;
 			this->shutdown(true, "dup node connection");
 			return;
 		}
+
+		this->m_nNodeID = netMsg.sNodeBaseInfo.nID;
 	}
 	else if (pHeader->nMessageID == eSMT_unregister_node_base_info)
 	{

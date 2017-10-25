@@ -50,16 +50,13 @@ bool CMasterService::onInit()
 		return false;
 	}
 
-	this->m_pNodeConnectionFactory = new CNodeConnectionFactory();
+	this->m_pNodeConnectionFactory = new CNodeConnectionFactory(this);
 	this->getBaseConnectionMgr()->setBaseConnectionFactory("CConnectionFromNode", this->m_pNodeConnectionFactory);
 
 	const std::string szHost = pMasterXML->Attribute("host") != nullptr ? pMasterXML->Attribute("host") : "0.0.0.0";
 	uint16_t nPort = (uint16_t)pMasterXML->UnsignedAttribute("port");
 
-	char szBuf[256] = { 0 };
-	base::function_util::snprintf(szBuf, _countof(szBuf), "%d", this->getServiceID());
-
-	if (!this->getBaseConnectionMgr()->listen(szHost, nPort, false, "CConnectionFromNode", szBuf, 10 * 1024, 10 * 1024, nullptr))
+	if (!this->getBaseConnectionMgr()->listen(szHost, nPort, false, "CConnectionFromNode", "", 10 * 1024, 10 * 1024, nullptr))
 	{
 		PrintWarning("master listen error");
 		return false;
