@@ -262,7 +262,7 @@ namespace
 		if (this->m_nDebugSocketID != _Invalid_SocketID)
 			FD_SET(this->m_nDebugSocketID, &read_fd);
 
-		int32_t nRet = select(FD_SETSIZE, &read_fd, NULL, NULL, &tv);
+		int32_t nRet = select(FD_SETSIZE, &read_fd, nullptr, nullptr, &tv);
 		if (SOCKET_ERROR == nRet)
 		{
 			PrintWarning("ldbg select error: %d", base::getLastError());
@@ -326,7 +326,7 @@ namespace
 		// 接收新连接
 		if (FD_ISSET(this->m_nAcceptSocketID, &read_fd))
 		{
-			int32_t nSocketID = (int32_t)accept(this->m_nAcceptSocketID, NULL, NULL);
+			int32_t nSocketID = (int32_t)accept(this->m_nAcceptSocketID, nullptr, nullptr);
 			if (_Invalid_SocketID == nSocketID)
 			{
 				if (base::getLastError() != NW_EWOULDBLOCK

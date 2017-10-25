@@ -12,6 +12,6 @@ namespace core
 		virtual ~CNetMessageQueue();
 
 		virtual void	send(const SMessagePacket& sMessagePacket);
-		virtual void	recv(std::vector<SMessagePacket>& vecMessagePacket);
+		virtual void	recv(std::list<SMessagePacket>& listMessagePacket);
 	};
 }

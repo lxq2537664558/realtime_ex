@@ -75,7 +75,8 @@ namespace base
 
 		std::string szMessageName = getMessageNameByTableName(pCommand->table_name());
 		*pResponseMessage = std::shared_ptr<google::protobuf::Message>(createRepeatMessage(pDbRecordset, szMessageName));
-		DebugAstEx(*pResponseMessage != nullptr, db::eDBRC_ProtobufError);
+		if (*pResponseMessage == nullptr)
+			return db::eDBRC_ProtobufError;
 
 		return db::eDBRC_OK;
 	}

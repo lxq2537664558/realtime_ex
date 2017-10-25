@@ -1,7 +1,7 @@
 namespace core
 {
 	template<class T>
-	void CServiceInvoker::async_invoke(bool bCheckHealth, uint32_t nServiceID, const void* pMessage, CFuture<T>& sFuture, uint8_t nMessageSerializerType, CServiceInvokeHolder* pServiceInvokeHolder)
+	void CServiceInvoker::async_invoke(bool bCheckHealth, uint32_t nServiceID, const void* pMessage, CFuture<T>& sFuture, const SInvokeOption* pInvokeOption, CServiceInvokeHolder* pServiceInvokeHolder)
 	{
 		DebugAst(pMessage != nullptr);
 
@@ -12,14 +12,14 @@ namespace core
 			pPromise->setValue(std::static_pointer_cast<T>(pResponseMessage), nErrorCode);
 		};
 
-		if (!this->invoke(bCheckHealth, nServiceID, pMessage, 0, callback, nMessageSerializerType, pServiceInvokeHolder))
+		if (!this->invoke(bCheckHealth, nServiceID, pMessage, 0, callback, pInvokeOption, pServiceInvokeHolder))
 			pPromise->setValue(nullptr, eRRT_ERROR);
 
 		sFuture = pPromise->getFuture();
 	}
 
 	template<class T>
-	void CServiceInvoker::async_invoke(bool bCheckHealth, uint32_t nServiceID, const void* pMessage, const std::function<void(const T*, uint32_t)>& callback, uint8_t nMessageSerializerType, CServiceInvokeHolder* pServiceInvokeHolder)
+	void CServiceInvoker::async_invoke(bool bCheckHealth, uint32_t nServiceID, const void* pMessage, const std::function<void(const T*, uint32_t)>& callback, const SInvokeOption* pInvokeOption, CServiceInvokeHolder* pServiceInvokeHolder)
 	{
 		DebugAst(pMessage != nullptr);
 		DebugAst(callback != nullptr);
@@ -29,18 +29,18 @@ namespace core
 			callback(static_cast<T*>(pResponseMessage.get()), nErrorCode);
 		};
 
-		if (!this->invoke(bCheckHealth, nServiceID, pMessage, 0, callback_, nMessageSerializerType, pServiceInvokeHolder))
+		if (!this->invoke(bCheckHealth, nServiceID, pMessage, 0, callback_, pInvokeOption, pServiceInvokeHolder))
 			callback(nullptr, eRRT_ERROR);
 	}
 
 	template<class T>
-	uint32_t CServiceInvoker::sync_invoke(bool bCheckHealth, uint32_t nServiceID, const void* pMessage, std::shared_ptr<T>& pResponseMessage, uint8_t nMessageSerializerType, CServiceInvokeHolder* pServiceInvokeHolder)
+	uint32_t CServiceInvoker::sync_invoke(bool bCheckHealth, uint32_t nServiceID, const void* pMessage, std::shared_ptr<T>& pResponseMessage, const SInvokeOption* pInvokeOption, CServiceInvokeHolder* pServiceInvokeHolder)
 	{
 		struct SSyncCallResultInfo
 		{
 			uint32_t	nResult;
 			std::shared_ptr<void>
-				pMessage;
+						pMessage;
 		};
 
 		DebugAstEx(pMessage != nullptr, eRRT_ERROR);
@@ -55,7 +55,7 @@ namespace core
 			coroutine::resume(nCoroutineID, 0);
 		};
 
-		if (!this->invoke(bCheckHealth, nServiceID, pMessage, nCoroutineID, callback_, nMessageSerializerType, pServiceInvokeHolder))
+		if (!this->invoke(bCheckHealth, nServiceID, pMessage, nCoroutineID, callback_, pInvokeOption, pServiceInvokeHolder))
 			return eRRT_ERROR;
 
 		coroutine::yield();
@@ -76,53 +76,53 @@ namespace core
 	}
 
 	template<class T>
-	void CServiceInvoker::async_invoke(uint32_t nServiceID, const void* pMessage, CFuture<T>& sFuture, uint8_t nMessageSerializerType /* = 0 */, CServiceInvokeHolder* pServiceInvokeHolder/* = nullptr*/)
+	void CServiceInvoker::async_invoke(uint32_t nServiceID, const void* pMessage, CFuture<T>& sFuture, const SInvokeOption* pInvokeOption/* = nullptr */, CServiceInvokeHolder* pServiceInvokeHolder/* = nullptr*/)
 	{
-		this->async_invoke(true, nServiceID, pMessage, sFuture, nMessageSerializerType, pServiceInvokeHolder);
+		this->async_invoke(true, nServiceID, pMessage, sFuture, pInvokeOption, pServiceInvokeHolder);
 	}
 
 	template<class T>
-	void CServiceInvoker::async_invoke(uint32_t nServiceID, const void* pMessage, const std::function<void(const T*, uint32_t)>& callback, uint8_t nMessageSerializerType /* = 0 */, CServiceInvokeHolder* pServiceInvokeHolder/* = nullptr*/)
+	void CServiceInvoker::async_invoke(uint32_t nServiceID, const void* pMessage, const std::function<void(const T*, uint32_t)>& callback, const SInvokeOption* pInvokeOption/* = nullptr */, CServiceInvokeHolder* pServiceInvokeHolder/* = nullptr*/)
 	{
-		this->async_invoke(true, nServiceID, pMessage, callback, nMessageSerializerType, pServiceInvokeHolder);
+		this->async_invoke(true, nServiceID, pMessage, callback, pInvokeOption, pServiceInvokeHolder);
 	}
 
 	template<class T>
-	uint32_t CServiceInvoker::sync_invoke(uint32_t nServiceID, const void* pMessage, std::shared_ptr<T>& pResponseMessage, uint8_t nMessageSerializerType /* = 0 */, CServiceInvokeHolder* pServiceInvokeHolder/* = nullptr*/)
+	uint32_t CServiceInvoker::sync_invoke(uint32_t nServiceID, const void* pMessage, std::shared_ptr<T>& pResponseMessage, const SInvokeOption* pInvokeOption/* = nullptr */, CServiceInvokeHolder* pServiceInvokeHolder/* = nullptr*/)
 	{
-		return this->sync_invoke(true, nServiceID, pMessage, pResponseMessage, nMessageSerializerType, pServiceInvokeHolder);
+		return this->sync_invoke(true, nServiceID, pMessage, pResponseMessage, pInvokeOption, pServiceInvokeHolder);
 	}
 
 	template<class T>
-	void CServiceInvoker::async_invoke(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const void* pMessage, const std::function<void(const T*, uint32_t)>& callback, uint8_t nMessageSerializerType /* = 0 */, CServiceInvokeHolder* pServiceInvokeHolder/* = nullptr*/)
-	{
-		CServiceSelector* pServiceSelector = this->m_pServiceBase->getServiceSelector(nServiceSelectorType);
-		DebugAst(pServiceSelector != nullptr);
-
-		uint32_t nServiceID = pServiceSelector->select(szServiceType, nServiceSelectorType, nServiceSelectorContext);
-
-		this->async_invoke(pServiceSelector->isCheckHealth(), nServiceID, pMessage, callback, nMessageSerializerType, pServiceInvokeHolder);
-	}
-
-	template<class T>
-	void CServiceInvoker::async_invoke(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const void* pMessage, CFuture<T>& sFuture, uint8_t nMessageSerializerType /* = 0 */, CServiceInvokeHolder* pServiceInvokeHolder/* = nullptr*/)
+	void CServiceInvoker::async_invoke(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const void* pMessage, const std::function<void(const T*, uint32_t)>& callback, const SInvokeOption* pInvokeOption/* = nullptr */, CServiceInvokeHolder* pServiceInvokeHolder/* = nullptr*/)
 	{
 		CServiceSelector* pServiceSelector = this->m_pServiceBase->getServiceSelector(nServiceSelectorType);
 		DebugAst(pServiceSelector != nullptr);
 
 		uint32_t nServiceID = pServiceSelector->select(szServiceType, nServiceSelectorType, nServiceSelectorContext);
 
-		this->async_invoke(pServiceSelector->isCheckHealth(), nServiceID, pMessage, sFuture, nMessageSerializerType, pServiceInvokeHolder);
+		this->async_invoke(pServiceSelector->isCheckHealth(), nServiceID, pMessage, callback, pInvokeOption, pServiceInvokeHolder);
 	}
 
 	template<class T>
-	uint32_t CServiceInvoker::sync_invoke(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const void* pMessage, std::shared_ptr<T>& pResponseMessage, uint8_t nMessageSerializerType /* = 0 */, CServiceInvokeHolder* pServiceInvokeHolder /*= nullptr*/)
+	void CServiceInvoker::async_invoke(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const void* pMessage, CFuture<T>& sFuture, const SInvokeOption* pInvokeOption/* = nullptr */, CServiceInvokeHolder* pServiceInvokeHolder/* = nullptr*/)
+	{
+		CServiceSelector* pServiceSelector = this->m_pServiceBase->getServiceSelector(nServiceSelectorType);
+		DebugAst(pServiceSelector != nullptr);
+
+		uint32_t nServiceID = pServiceSelector->select(szServiceType, nServiceSelectorType, nServiceSelectorContext);
+
+		this->async_invoke(pServiceSelector->isCheckHealth(), nServiceID, pMessage, sFuture, pInvokeOption, pServiceInvokeHolder);
+	}
+
+	template<class T>
+	uint32_t CServiceInvoker::sync_invoke(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const void* pMessage, std::shared_ptr<T>& pResponseMessage, const SInvokeOption* pInvokeOption/* = nullptr */, CServiceInvokeHolder* pServiceInvokeHolder /*= nullptr*/)
 	{
 		CServiceSelector* pServiceSelector = this->m_pServiceBase->getServiceSelector(nServiceSelectorType);
 		DebugAstEx(pServiceSelector != nullptr, eRRT_ERROR);
 
 		uint32_t nServiceID = pServiceSelector->select(szServiceType, nServiceSelectorType, nServiceSelectorContext);
 
-		return this->sync_invoke(pServiceSelector->isCheckHealth(), nServiceID, pMessage, pResponseMessage, nMessageSerializerType, pServiceInvokeHolder);
+		return this->sync_invoke(pServiceSelector->isCheckHealth(), nServiceID, pMessage, pResponseMessage, pInvokeOption, pServiceInvokeHolder);
 	}
 }

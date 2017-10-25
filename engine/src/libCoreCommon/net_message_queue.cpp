@@ -23,21 +23,16 @@ namespace core
 		PROFILING_GUARD(CNetMessageQueue::send)
 		std::unique_lock<std::mutex> guard(this->m_lock);
 
-		this->m_queue.send(sMessagePacket);
+		this->m_listMessagePacket.push_back(sMessagePacket);
 		CNetRunnable::Inst()->getCoreConnectionMgr()->wakeup();
 	}
 
-	void CNetMessageQueue::recv(std::vector<SMessagePacket>& vecMessagePacket)
+	void CNetMessageQueue::recv(std::list<SMessagePacket>& listMessagePacket)
 	{
 		PROFILING_GUARD(CNetMessageQueue::recv)
-		vecMessagePacket.clear();
-
+		
 		std::unique_lock<std::mutex> guard(this->m_lock);
 		
-		SMessagePacket sMessagePacket;
-		while (this->m_queue.recv(sMessagePacket))
-		{
-			vecMessagePacket.push_back(sMessagePacket);
-		}
+		listMessagePacket = std::move(this->m_listMessagePacket);
 	}
 }

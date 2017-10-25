@@ -36,6 +36,7 @@ namespace core
 	
 		this->m_pBaseConnectionMgr = new CBaseConnectionMgr(this->m_pMessageQueue);
 
+		this->m_pTransporter = new CTransporter(this);
 		this->m_pServiceInvoker = new CServiceInvoker(pServiceBase);
 		this->m_pMessageDispatcher = new CMessageDispatcher(this);
 
@@ -50,6 +51,7 @@ namespace core
 	{
 		SAFE_DELETE(this->m_pServiceInvoker);
 		SAFE_DELETE(this->m_pMessageDispatcher);
+		SAFE_DELETE(this->m_pTransporter);
 
 		SAFE_DELETE(this->m_mapServiceSelector[eSST_Random]);
 		SAFE_DELETE(this->m_mapServiceSelector[eSST_Hash]);
@@ -192,6 +194,11 @@ namespace core
 	CLogicMessageQueue* CCoreService::getMessageQueue() const
 	{
 		return this->m_pMessageQueue;
+	}
+
+	CTransporter* CCoreService::getTransporter() const
+	{
+		return this->m_pTransporter;
 	}
 
 	EServiceRunState CCoreService::getRunState() const
@@ -364,7 +371,7 @@ namespace core
 		return pPendingResponseInfo;
 	}
 
-	SPendingResponseInfo* CCoreService::addPendingResponseInfo(uint32_t nToServiceID, uint64_t nSessionID, uint64_t nCoroutineID, const std::function<void(std::shared_ptr<void>, uint32_t)>& callback, uint64_t nHolderID)
+	SPendingResponseInfo* CCoreService::addPendingResponseInfo(uint32_t nToServiceID, uint64_t nSessionID, uint64_t nCoroutineID, const std::function<void(std::shared_ptr<void>, uint32_t)>& callback, uint32_t nTimeout, uint64_t nHolderID)
 	{
 		auto iter = this->m_mapPendingResponseInfo.find(nSessionID);
 		DebugAstEx(iter == this->m_mapPendingResponseInfo.end(), nullptr);
@@ -377,7 +384,11 @@ namespace core
 		pPendingResponseInfo->nBeginTime = base::time_util::getGmtTime();
 		pPendingResponseInfo->nToServiceID = nToServiceID;
 		pPendingResponseInfo->tickTimeout.setCallback(std::bind(&CCoreService::onRequestMessageTimeout, this, std::placeholders::_1));
-		this->getServiceBase()->registerTicker(&pPendingResponseInfo->tickTimeout, CCoreApp::Inst()->getInvokeTimeout(pPendingResponseInfo->nToServiceID), 0, nSessionID);
+		
+		if (nTimeout == 0)
+			nTimeout = CCoreApp::Inst()->getDefaultServiceInvokeTimeout();
+
+		this->getServiceBase()->registerTicker(&pPendingResponseInfo->tickTimeout, nTimeout, 0, nSessionID);
 
 		this->m_mapPendingResponseInfo[pPendingResponseInfo->nSessionID] = pPendingResponseInfo;
 
@@ -426,14 +437,17 @@ namespace core
 
 			service_health_request request_msg;
 			uint64_t nSessionID = this->genSessionID();
-			if (!CCoreApp::Inst()->getTransporter()->invoke(this, nToServiceID, nSessionID, &request_msg, eMST_Native))
+			SInvokeOption sInvokeOption;
+			sInvokeOption.nSerializerType = eMST_Native;
+			sInvokeOption.nTimeout = 0;
+			if (!this->m_pTransporter->invoke(nToServiceID, nSessionID, &request_msg, &sInvokeOption))
 				continue;
 
 			auto callback = [this, nToServiceID](std::shared_ptr<void>, uint32_t nErrorCode)
 			{
 			};
 
-			this->addPendingResponseInfo(nToServiceID, nSessionID, 0, callback, 0);
+			this->addPendingResponseInfo(nToServiceID, nSessionID, 0, callback, 0, 0);
 		}
 	}
 

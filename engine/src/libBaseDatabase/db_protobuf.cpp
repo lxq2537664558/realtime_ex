@@ -421,7 +421,7 @@ namespace base
 
 				SFieldInfo sFieldInfo;
 				sFieldInfo.szName = pFieldDescriptor->name();
-				sFieldInfo.szValue = move(szBuf);
+				sFieldInfo.szValue = std::move(szBuf);
 				sFieldInfo.bStr = true;
 
 				vecFieldInfo.push_back(sFieldInfo);
@@ -437,7 +437,7 @@ namespace base
 
 				SFieldInfo sFieldInfo;
 				sFieldInfo.szName = pFieldDescriptor->name();
-				sFieldInfo.szValue = move(szValue);
+				sFieldInfo.szValue = std::move(szValue);
 				sFieldInfo.bStr = (pFieldDescriptor->type() == google::protobuf::FieldDescriptor::TYPE_STRING || pFieldDescriptor->type() == google::protobuf::FieldDescriptor::TYPE_BYTES);
 
 				vecFieldInfo.push_back(sFieldInfo);
@@ -643,14 +643,12 @@ namespace base
 			if (pFieldDescriptor == nullptr)
 			{
 				PrintWarning("field[{}.{}] descriptor is nullptr.", pMessage->GetTypeName(), szFieldName);
-				SAFE_DELETE(pMessage);
 				return nullptr;
 			}
 
 			if (!setFieldValue(pMessage, pReflection, pFieldDescriptor, szValue))
 			{
 				PrintWarning("setFieldValue[{}.{}] failed.", pMessage->GetTypeName(), szFieldName);
-				SAFE_DELETE(pMessage);
 				return nullptr;
 			}
 		}

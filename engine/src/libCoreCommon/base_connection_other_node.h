@@ -18,6 +18,9 @@ namespace core
 		virtual void	onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize);
 
 		uint32_t		getNodeID() const;
+		void			setNodeID(uint32_t nNodeID);
+
+		void			responseHandshake();
 
 	private:
 		uint32_t	m_nNodeID;

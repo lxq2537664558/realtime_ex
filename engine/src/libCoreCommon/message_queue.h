@@ -1,10 +1,10 @@
 #pragma once
 #include "libBaseCommon/noncopyable.h"
-#include "libBaseCommon/circle_queue.h"
 
 #include "core_common_define.h"
 
 #include <mutex>
+#include <list>
 
 namespace core
 {
@@ -16,13 +16,13 @@ namespace core
 		virtual ~CMessageQueue();
 
 		virtual void	send(const SMessagePacket& sMessagePacket) = 0;
-		virtual void	recv(std::vector<SMessagePacket>& vecMessagePacket) = 0;
+		virtual void	recv(std::list<SMessagePacket>& listMessagePacket) = 0;
 		
 		size_t			getSize();
 		bool			isEmpty();
 
 	protected:
-		base::CCircleQueue<SMessagePacket, false>	m_queue;
-		std::mutex									m_lock;
+		std::list<SMessagePacket>	m_listMessagePacket;
+		std::mutex					m_lock;
 	};
 }

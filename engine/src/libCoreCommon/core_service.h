@@ -7,6 +7,7 @@
 #include "logic_message_queue.h"
 #include "message_dispatcher.h"
 #include "base_connection_mgr.h"
+#include "transporter.h"
 
 #include "libBaseCommon/spin_lock.h"
 
@@ -25,76 +26,81 @@ namespace core
 		CCoreService(CServiceBase* pServiceBase, const SServiceBaseInfo& sServiceBaseInfo, const std::string& szConfigFileName);
 		~CCoreService();
 
-		void					quit();
+		void				quit();
 
-		void					onFrame();
+		void				onFrame();
 
-		bool					onInit();
-		void					doQuit();
+		bool				onInit();
+		void				doQuit();
 
-		CServiceBase*			getServiceBase() const;
+		CServiceBase*		getServiceBase() const;
 
-		uint32_t				getServiceID() const;
-		const SServiceBaseInfo&	getServiceBaseInfo() const;
+		uint32_t			getServiceID() const;
+		const SServiceBaseInfo&
+							getServiceBaseInfo() const;
 
-		CServiceInvoker*		getServiceInvoker() const;
-		CMessageDispatcher*		getMessageDispatcher() const;
+		CServiceInvoker*	getServiceInvoker() const;
+		CMessageDispatcher*	getMessageDispatcher() const;
 
-		CLogicMessageQueue*		getMessageQueue() const;
+		CLogicMessageQueue*	getMessageQueue() const;
 
-		void					setServiceSelector(uint32_t nType, CServiceSelector* pServiceSelector);
-		CServiceSelector*		getServiceSelector(uint32_t nType) const;
+		CTransporter*		getTransporter() const;
 
-		CBaseConnectionMgr*		getBaseConnectionMgr() const;
+		void				setServiceSelector(uint32_t nType, CServiceSelector* pServiceSelector);
+		CServiceSelector*	getServiceSelector(uint32_t nType) const;
+
+		CBaseConnectionMgr*	getBaseConnectionMgr() const;
 		
-		void					setToGateMessageCallback(const std::function<void(uint64_t, const void*, uint16_t)>& callback);
+		void				setToGateMessageCallback(const std::function<void(uint64_t, const void*, uint16_t)>& callback);
 		std::function<void(uint64_t, const void*, uint16_t)>&
-								getToGateMessageCallback();
+							getToGateMessageCallback();
 
-		void					setToGateBroadcastMessageCallback(const std::function<void(const uint64_t*, uint16_t, const void*, uint16_t)>& callback);
+		void				setToGateBroadcastMessageCallback(const std::function<void(const uint64_t*, uint16_t, const void*, uint16_t)>& callback);
 		std::function<void(const uint64_t*, uint16_t, const void*, uint16_t)>&
-								getToGateBroadcastMessageCallback();
+							getToGateBroadcastMessageCallback();
 
-		void					registerServiceMessageHandler(const std::string& szMessageName, const std::function<void(CServiceBase*, SSessionInfo, const void*)>& callback);
-		void					registerServiceForwardHandler(const std::string& szMessageName, const std::function<void(CServiceBase*, SClientSessionInfo, const void*)>& callback);
+		void				registerServiceMessageHandler(const std::string& szMessageName, const std::function<void(CServiceBase*, SSessionInfo, const void*)>& callback);
+		void				registerServiceForwardHandler(const std::string& szMessageName, const std::function<void(CServiceBase*, SClientSessionInfo, const void*)>& callback);
 		
 		std::function<void(CServiceBase*, SSessionInfo, const void*)>&
-								getServiceMessageHandler(const std::string& szMessageName);
+							getServiceMessageHandler(const std::string& szMessageName);
 		std::function<void(CServiceBase*, SClientSessionInfo, const void*)>&
-								getServiceForwardHandler(const std::string& szMessageName);
+							getServiceForwardHandler(const std::string& szMessageName);
 
-		const std::string&		getForwardMessageName(uint32_t nMessageID);
+		const std::string&	getForwardMessageName(uint32_t nMessageID);
 
-		void					setServiceConnectCallback(const std::function<void(const std::string&, uint32_t)>& callback);
-		void					setServiceDisconnectCallback(const std::function<void(const std::string&, uint32_t)>& callback);
+		void				setServiceConnectCallback(const std::function<void(const std::string&, uint32_t)>& callback);
+		void				setServiceDisconnectCallback(const std::function<void(const std::string&, uint32_t)>& callback);
 		std::function<void(const std::string&, uint32_t)>&
-								getServiceConnectCallback();
+							getServiceConnectCallback();
 		std::function<void(const std::string&, uint32_t)>&
-								getServiceDisconnectCallback();
+							getServiceDisconnectCallback();
 
-		EServiceRunState		getRunState() const;
-		const std::string&		getConfigFileName() const;
+		EServiceRunState	getRunState() const;
+		const std::string&	getConfigFileName() const;
 		
-		bool					isServiceHealth(uint32_t nServiceID) const;
-		void					updateServiceHealth(uint32_t nServiceID, bool bTimeout);
+		bool				isServiceHealth(uint32_t nServiceID) const;
+		void				updateServiceHealth(uint32_t nServiceID, bool bTimeout);
 		
-		SPendingResponseInfo*	getPendingResponseInfo(uint64_t nSessionID);
-		SPendingResponseInfo*	addPendingResponseInfo(uint32_t nToServiceID, uint64_t nSessionID, uint64_t nCoroutineID, const std::function<void(std::shared_ptr<void>, uint32_t)>& callback, uint64_t nHolderID);
-		void					delPendingResponseInfo(uint64_t nHolderID);
+		SPendingResponseInfo*
+							getPendingResponseInfo(uint64_t nSessionID);
+		SPendingResponseInfo*
+							addPendingResponseInfo(uint32_t nToServiceID, uint64_t nSessionID, uint64_t nCoroutineID, const std::function<void(std::shared_ptr<void>, uint32_t)>& callback, uint32_t nTimeout, uint64_t nHolderID);
+		void				delPendingResponseInfo(uint64_t nHolderID);
 
-		uint64_t				genSessionID();
+		uint64_t			genSessionID();
 
-		void					addServiceMessageSerializer(CMessageSerializer* pMessageSerializer);
-		void					setServiceMessageSerializer(uint32_t nServiceID, uint32_t nType);
-		void					setForwardMessageSerializer(CMessageSerializer* pMessageSerializer);
-		uint32_t				getServiceMessageSerializerType(uint32_t nServiceID) const;
-		CMessageSerializer*		getServiceMessageSerializer(uint32_t nServiceID) const;
-		CMessageSerializer*		getServiceMessageSerializerByType(uint8_t nType) const;
-		CMessageSerializer*		getForwardMessageSerializer() const;
+		void				addServiceMessageSerializer(CMessageSerializer* pMessageSerializer);
+		void				setServiceMessageSerializer(uint32_t nServiceID, uint32_t nType);
+		void				setForwardMessageSerializer(CMessageSerializer* pMessageSerializer);
+		uint32_t			getServiceMessageSerializerType(uint32_t nServiceID) const;
+		CMessageSerializer*	getServiceMessageSerializer(uint32_t nServiceID) const;
+		CMessageSerializer*	getServiceMessageSerializerByType(uint8_t nType) const;
+		CMessageSerializer*	getForwardMessageSerializer() const;
 
 	private:
-		void					onCheckServiceHealth(uint64_t nContext);
-		void					onRequestMessageTimeout(uint64_t nContext);
+		void				onCheckServiceHealth(uint64_t nContext);
+		void				onRequestMessageTimeout(uint64_t nContext);
 
 	private:
 		SServiceBaseInfo		m_sServiceBaseInfo;
@@ -105,7 +111,8 @@ namespace core
 		CMessageDispatcher*		m_pMessageDispatcher;
 		CLogicMessageQueue*		m_pMessageQueue;
 		CBaseConnectionMgr*		m_pBaseConnectionMgr;
-		
+		CTransporter*			m_pTransporter;
+
 		CTicker					m_tickerCheckHealth;
 
 		uint64_t				m_nNextSessionID;

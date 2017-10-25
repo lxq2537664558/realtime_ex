@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <memory>
+#include <vector>
 
 #ifdef _WIN32
 
@@ -71,6 +72,7 @@ namespace core
 	{
 		uint32_t	nID;
 		std::string	szName;			// 节点名字
+		std::string	szGroup;		// 节点所属的组，用于跨机房使用
 		std::string	szHost;			// 服务器IP
 		uint16_t	nPort;			// 0表示该节点没有监听地址
 		uint32_t	nRecvBufSize;	// 接收缓冲区大小
@@ -84,6 +86,13 @@ namespace core
 		std::string	szType;			// 服务类型（比如gate, gas）
 	};
 
+	struct SNodeInfo
+	{
+		SNodeBaseInfo	sNodeBaseInfo;
+		std::vector<SServiceBaseInfo>	
+						vecServiceBaseInfo;
+	};
+
 	struct SClientSessionInfo
 	{
 		uint32_t	nGateServiceID;
@@ -94,6 +103,12 @@ namespace core
 	{
 		uint32_t	nFromServiceID;
 		uint64_t	nSessionID;
+	};
+
+	struct SInvokeOption
+	{
+		uint32_t	nTimeout;
+		uint8_t		nSerializerType;
 	};
 }
 

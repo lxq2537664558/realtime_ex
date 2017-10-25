@@ -20,6 +20,7 @@ namespace core
 {
 	CBaseConnection::CBaseConnection()
 		: m_pCoreConnection(nullptr)
+		, m_bClosing(false)
 	{
 	}
 
@@ -94,6 +95,11 @@ namespace core
 
 	void CBaseConnection::shutdown(bool bForce, const std::string& szMsg)
 	{
+		if (this->m_bClosing)
+			return;
+
+		this->m_bClosing = true;
+
 		SMCT_REQUEST_SOCKET_SHUTDOWN* pContext = new SMCT_REQUEST_SOCKET_SHUTDOWN();
 		pContext->nSocketID = this->getID();
 		pContext->nForce = bForce;
@@ -120,5 +126,10 @@ namespace core
 	base::net::ENetConnecterMode CBaseConnection::getMode() const
 	{
 		return this->m_pCoreConnection->getMode();
+	}
+
+	bool CBaseConnection::isClosing() const
+	{
+		return this->m_bClosing;
 	}
 }

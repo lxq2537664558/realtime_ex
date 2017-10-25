@@ -34,7 +34,8 @@ namespace core
 		for (auto iter = this->m_listRecycleCoroutine.begin(); iter != this->m_listRecycleCoroutine.end(); ++iter)
 		{
 			CCoroutineImpl* pCoroutineImpl = *iter;
-			if ((pCoroutineImpl->getStackSize() == 0 && nStackSize == 0) || std::abs((int32_t)pCoroutineImpl->getStackSize() - (int32_t)nStackSize) <= (int32_t)(10 * nPageSize))
+			// 栈相差不大的，就重复使用
+			if (std::abs((int32_t)pCoroutineImpl->getStackSize() - (int32_t)nStackSize) <= (int32_t)(10 * nPageSize))
 			{
 				pCoroutineImpl->setCallback(callback);
 				pCoroutineImpl->setState(eCS_SUSPEND);

@@ -12,7 +12,6 @@
 #include <map>
 #include <list>
 #include <iostream>
-#include <thread>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -382,8 +381,11 @@ namespace
 		}
 
 		size_t nSize = fwrite(pLogInfo->szBuf, 1, pLogInfo->nBufSize, pLogFileInfo->pFile);
-
 		pLogFileInfo->nFileSize += nSize;
+
+// #ifdef _WIN32
+// 		fflush(pLogFileInfo->pFile);
+// #endif
 	}
 
 	bool CLogger::isAsync() const

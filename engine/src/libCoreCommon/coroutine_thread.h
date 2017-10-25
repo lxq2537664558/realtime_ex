@@ -16,25 +16,26 @@ namespace core
 		CCoroutineThread();
 		~CCoroutineThread();
 
-		bool			init(uint32_t nStackSize);
+		bool	init();
 
-		void			setCurrentCoroutine(CCoroutineImpl* pCoroutineImpl);
-		CCoroutineImpl*	getCurrentCoroutine() const;
+		void	setCurrentCoroutine(CCoroutineImpl* pCoroutineImpl);
+		CCoroutineImpl*	
+				getCurrentCoroutine() const;
 
-		void			addDeadCoroutine(CCoroutineImpl* pCoroutineImpl);
+		void	addDeadCoroutine(CCoroutineImpl* pCoroutineImpl);
 
-		void			update();
+		void	update();
 
-		void*			getMainContext() const;
+		void*	getMainContext() const;
 
 	private:
-		std::list<CCoroutineImpl*>				m_listDeadCoroutine;
-		CCoroutineImpl*							m_pCurrentCoroutine;
-		void*									m_pMainContext;
+		std::list<CCoroutineImpl*>	m_listDeadCoroutine;
+		CCoroutineImpl*				m_pCurrentCoroutine;
+		void*						m_pMainContext;
 #ifndef _WIN32
-		char*									m_pMainStack;
-		uint32_t								m_nMainStackSize;
-		int32_t									m_nMainValgrindID;
+		char*						m_pMainStack;
+		uint32_t					m_nMainStackSize;
+		int32_t						m_nMainValgrindID;
 #endif
 	};
 

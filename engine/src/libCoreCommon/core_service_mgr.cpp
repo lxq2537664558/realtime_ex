@@ -28,8 +28,16 @@ namespace core
 			CCoreService* pCoreService = vecServiceBase[i]->m_pCoreService;
 			DebugAstEx(pCoreService != nullptr, false);
 			
-			this->m_vecCoreService.push_back(pCoreService);
+			if (this->m_mapCoreService.find(pCoreService->getServiceID()) != this->m_mapCoreService.end())
+			{
+				PrintWarning("CCoreServiceMgr::init error dup service_id: {}", pCoreService->getServiceID());
+				return false;
+			}
+
 			this->m_mapCoreService[pCoreService->getServiceID()] = pCoreService;
+
+			this->m_vecCoreService.push_back(pCoreService);
+			this->m_vecServiceBaseInfo.push_back(pCoreService->getServiceBaseInfo());
 
 			PrintInfo("create service service_name: {} service_id: {} successful", pServiceBase->getServiceBaseInfo().szName, pServiceBase->getServiceBaseInfo().nID);
 		}
@@ -39,29 +47,14 @@ namespace core
 
 	bool CCoreServiceMgr::onInit()
 	{
+		SMessagePacket sMessagePacket;
+		sMessagePacket.nType = eMCT_INIT;
+		sMessagePacket.pData = nullptr;
+		sMessagePacket.nDataSize = 0;
+
 		for (size_t i = 0; i < this->m_vecCoreService.size(); ++i)
 		{
-			CCoreService* pCoreService = this->m_vecCoreService[i];
-			if (!pCoreService->onInit())
-			{
-				PrintWarning("CCoreServiceMgr::onInit error service_name: {}", pCoreService->getServiceBaseInfo().szName);
-				return false;
-			}
-		}
-
-		for (size_t k = 0; k < this->m_vecCoreService.size(); ++k)
-		{
-			auto& callback = this->m_vecCoreService[k]->getServiceConnectCallback();
-			if (callback == nullptr)
-				continue;
-
-			for (size_t i = 0; i < this->m_vecCoreService.size(); ++i)
-			{
-				if (this->m_vecCoreService[i]->getServiceID() == this->m_vecCoreService[k]->getServiceID())
-					continue;
-
-				callback(this->m_vecCoreService[i]->getServiceBaseInfo().szType, this->m_vecCoreService[i]->getServiceBaseInfo().nID);
-			}
+			this->m_vecCoreService[i]->getMessageQueue()->send(sMessagePacket);
 		}
 
 		return true;
@@ -81,16 +74,9 @@ namespace core
 		return this->m_vecCoreService;
 	}
 
-	std::vector<SServiceBaseInfo> CCoreServiceMgr::getServiceBaseInfo() const
+	const std::vector<SServiceBaseInfo>& CCoreServiceMgr::getServiceBaseInfo() const
 	{
-		std::vector<SServiceBaseInfo> vecServiceBaseInfo;
-		vecServiceBaseInfo.reserve(this->m_vecCoreService.size());
-		for (size_t i = 0; i < this->m_vecCoreService.size(); ++i)
-		{
-			vecServiceBaseInfo.push_back(this->m_vecCoreService[i]->getServiceBaseInfo());
-		}
-
-		return vecServiceBaseInfo;
+		return this->m_vecServiceBaseInfo;
 	}
 
 	bool CCoreServiceMgr::isLocalService(uint32_t nServiceID) const

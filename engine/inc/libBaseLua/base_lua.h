@@ -150,7 +150,7 @@ namespace base
 		{
 			lua_getinfo(pL, "Sln", &ar);
 
-			if (ar.name != NULL)
+			if (ar.name != nullptr)
 				PrintInfo("\tstack[%d] -> line %d : %s()[%s : line %d]", n, ar.currentline, ar.name, ar.short_src, ar.linedefined);
 			else
 				PrintInfo("\tstack[%d] -> line %d : unknown[%s : line %d]", n, ar.currentline, ar.short_src, ar.linedefined);

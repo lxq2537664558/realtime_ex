@@ -19,7 +19,7 @@ namespace core
 			eCS_SUSPEND,// 挂起状态
 		};
 
-		__CORE_COMMON_API__ void		init(uint32_t nStackSize);
+		__CORE_COMMON_API__ void		init();
 		/**
 		@brief: 启动协程，传入协程入口函数
 		如果传入的栈大小是0的话就用共享栈，否则就用独立栈

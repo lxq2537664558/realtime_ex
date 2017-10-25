@@ -47,6 +47,11 @@ namespace core
 		*/
 		base::net::ENetConnecterMode
 							getMode() const;
+
+		/**
+		@brief: 判断连接是否正在关闭中
+		*/
+		bool				isClosing() const;
 		/**
 		@brief: 发送消息
 		*/
@@ -86,5 +91,6 @@ namespace core
 
 	private:
 		CCoreConnection*	m_pCoreConnection;
+		bool				m_bClosing;
 	};
 }

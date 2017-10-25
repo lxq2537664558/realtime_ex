@@ -21,6 +21,23 @@ namespace
 
 	const uint32_t kPayloadSizeBasic = 125;
 	const uint32_t kPayloadSizeExtended = 0xFFFF;
+
+	std::vector<char>&	getBuf()
+	{
+		struct SOnce
+		{
+			SOnce()
+			{
+				vecBuf.reserve(UINT16_MAX);
+			}
+
+			std::vector<char> vecBuf;
+		};
+
+		static SOnce s_Once;
+
+		return s_Once.vecBuf;
+	}
 }
 
 namespace core
@@ -92,7 +109,7 @@ namespace core
 		else
 		{
 			uint32_t nRecvSize = 0;
-			std::vector<char>& vecBuf = CCoreApp::Inst()->getWebsocketBuf();
+			std::vector<char>& vecBuf = getBuf();
 			while (nRecvSize < nDataSize)
 			{
 				EWebsocketFrameType eType;
@@ -219,7 +236,7 @@ namespace core
 		sWebsocketHeader.nOpcode = (uint8_t)eType;
 		sWebsocketHeader.nPayloadLength = nSize;
 
-		std::vector<char>& vecBuf = CCoreApp::Inst()->getWebsocketBuf();
+		std::vector<char>& vecBuf = getBuf();
 		vecBuf.resize(UINT16_MAX);
 		int32_t nDataSize = this->serializeFrame(sWebsocketHeader, reinterpret_cast<const char*>(pData), vecBuf);
 		if (nDataSize <= 0)

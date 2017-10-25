@@ -62,7 +62,7 @@ namespace base
 			tidx = USERDATA;
 			break;
 		default:
-			return NULL;
+			return nullptr;
 		}
 
 		const void *p = lua_topointer(pL, -1);
@@ -76,7 +76,7 @@ namespace base
 			}
 			lua_pop(pNewL, 1);
 			lua_pop(pL, 1);
-			return NULL;
+			return nullptr;
 		}
 
 		lua_newtable(pNewL);
@@ -113,7 +113,7 @@ namespace base
 	void mark_table(lua_State* pL, lua_State* pNewL, const void* parent, const char* desc)
 	{
 		const void *t = readobject(pL, pNewL, parent, desc);
-		if (t == NULL)
+		if (t == nullptr)
 			return;
 
 		bool weakk = false;
@@ -165,7 +165,7 @@ namespace base
 	void mark_userdata(lua_State* pL, lua_State* pNewL, const void* parent, const char* desc)
 	{
 		const void* t = readobject(pL, pNewL, parent, desc);
-		if (t == NULL)
+		if (t == nullptr)
 			return;
 
 		if (lua_getmetatable(pL, -1))
@@ -188,7 +188,7 @@ namespace base
 	void mark_function(lua_State* pL, lua_State* pNewL, const void* parent, const char* desc)
 	{
 		const void* t = readobject(pL, pNewL, parent, desc);
-		if (t == NULL)
+		if (t == nullptr)
 			return;
 
 		mark_function_env(pL, pNewL, t);
@@ -197,7 +197,7 @@ namespace base
 		for (i = 1;; ++i)
 		{
 			const char* name = lua_getupvalue(pL, -1, i);
-			if (name == NULL)
+			if (name == nullptr)
 				break;
 			mark_object(pL, pNewL, t, name[0] ? name : "[upvalue]");
 		}
@@ -230,7 +230,7 @@ namespace base
 	void mark_thread(lua_State* pL, lua_State* pNewL, const void* parent, const char* desc)
 	{
 		const void* t = readobject(pL, pNewL, parent, desc);
-		if (t == NULL)
+		if (t == nullptr)
 			return;
 		int32_t level = 0;
 		lua_State* pcL = lua_tothread(pL, -1);
@@ -258,7 +258,7 @@ namespace base
 				for (int32_t i = j;; i += j)
 				{
 					const char* name = lua_getlocal(pcL, &ar, i);
-					if (name == NULL)
+					if (name == nullptr)
 						break;
 					base::function_util::snprintf(tmp, sizeof(tmp), "%s : %s:%d", name, ar.short_src, ar.currentline);
 					mark_object(pcL, pNewL, t, tmp);
@@ -389,7 +389,7 @@ namespace base
 			lua_newtable(pNewL);
 		}
 		lua_pushvalue(pL, LUA_REGISTRYINDEX);
-		mark_table(pL, pNewL, NULL, "[registry]");
+		mark_table(pL, pNewL, nullptr, "[registry]");
 		gen_result(pL, pNewL);
 		lua_close(pNewL);
 		return 1;

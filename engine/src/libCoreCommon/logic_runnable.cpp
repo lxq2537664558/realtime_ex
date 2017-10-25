@@ -15,7 +15,7 @@
 
 #include <algorithm>
 
-#define _MAIN_STACK_SIZE 1024*1024
+#define _MAX_CO_COUNT	10000
 
 namespace
 {
@@ -25,7 +25,7 @@ namespace
 		if (pCoreService != nullptr)
 			pBaseConnectionMgrImpl = pCoreService->getBaseConnectionMgr()->getBaseConnectionMgrImpl();
 		else
-			pBaseConnectionMgrImpl = core::CCoreApp::Inst()->getBaseConnectionMgr()->getBaseConnectionMgrImpl();
+			pBaseConnectionMgrImpl = core::CCoreApp::Inst()->getGlobalBaseConnectionMgr()->getBaseConnectionMgrImpl();
 
 		return pBaseConnectionMgrImpl;
 	}
@@ -52,7 +52,7 @@ namespace core
 
 	bool CLogicRunnable::onInit()
 	{
-		coroutine::init(_MAIN_STACK_SIZE);
+		coroutine::init();
 		
 		return true;
 	}
@@ -68,18 +68,27 @@ namespace core
 		CLogicMessageQueue* pMessageQueue = CCoreApp::Inst()->getLogicMessageQueueMgr()->getMessageQueue();
 		DebugAstEx(pMessageQueue != nullptr, true);
 
-		pMessageQueue->recv(this->m_vecMessagePacket);
+		std::list<SMessagePacket> listMessagePacket;
+		pMessageQueue->recv(listMessagePacket);
 
 		CCoreService* pCoreService = pMessageQueue->getCoreService();
 		
-		PROFILING_BEGIN(Message_Process)
-		for (auto iter = this->m_vecMessagePacket.begin(); iter != this->m_vecMessagePacket.end(); ++iter)
+		if (coroutine::getCoroutineCount() < _MAX_CO_COUNT)
 		{
-			const SMessagePacket& sMessagePacket = *iter;
+			PROFILING_BEGIN(Message_Process)
+			for (auto iter = listMessagePacket.begin(); iter != listMessagePacket.end(); ++iter)
+			{
+				const SMessagePacket& sMessagePacket = *iter;
 
-			this->dispatch(pCoreService, sMessagePacket);
+				this->dispatch(pCoreService, sMessagePacket);
+			}
+			PROFILING_END(Message_Process)
 		}
-		PROFILING_END(Message_Process)
+		else
+		{
+			// 整个系统pending的协程太多了，只能歇一歇，不然内存就爆掉了
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		}
 
 		pMessageQueue->dispatchEnd();
 		coroutine::update();
@@ -99,6 +108,36 @@ namespace core
 	{
 		switch (sMessagePacket.nType)
 		{
+		case eMCT_INIT:
+		{
+			DebugAstEx(pCoreService != nullptr, false);
+
+			if (!pCoreService->onInit())
+			{
+				PrintWarning("CCoreServiceMgr::onInit error service_name: {}", pCoreService->getServiceBaseInfo().szName);
+				return false;
+			}
+
+			const std::vector<core::CCoreService*>& vecCoreService = CCoreApp::Inst()->getCoreServiceMgr()->getCoreService();
+			for (size_t i = 0; i < vecCoreService.size(); ++i)
+			{
+				if (vecCoreService[i]->getServiceID() == pCoreService->getServiceID())
+					continue;
+
+				SMCT_SERVICE_CONNECT* pContext = new SMCT_SERVICE_CONNECT();
+				pContext->szType = pCoreService->getServiceBaseInfo().szType;
+				pContext->nID = pCoreService->getServiceBaseInfo().nID;
+
+				SMessagePacket sMessagePacket;
+				sMessagePacket.nType = eMCT_SERVICE_CONNECT;
+				sMessagePacket.pData = pContext;
+				sMessagePacket.nDataSize = 0;
+
+				vecCoreService[i]->getMessageQueue()->send(sMessagePacket);
+			}
+		}
+		break;
+
 		case eMCT_QUIT:
 		{
 			DebugAstEx(pCoreService != nullptr, false);
@@ -112,9 +151,50 @@ namespace core
 			PROFILING_GUARD(eMCT_FRAME)
 
 			DebugAstEx(pCoreService != nullptr, false);
-			
+
 			if (pCoreService->getRunState() == eSRS_Normal)
-				pCoreService->onFrame();
+			{
+				uint64_t nCoroutineID = coroutine::create(CCoreApp::Inst()->getCoroutineStackSize(), [pCoreService](uint64_t) { pCoreService->onFrame(); });
+				coroutine::resume(nCoroutineID, 0);
+			}
+		}
+		break;
+
+		case eMCT_SERVICE_CONNECT:
+		{
+			SMCT_SERVICE_CONNECT* pContext = reinterpret_cast<SMCT_SERVICE_CONNECT*>(sMessagePacket.pData);
+			defer([&]()
+			{
+				SAFE_DELETE(pContext);
+			});
+
+			DebugAstEx(pCoreService != nullptr, false);
+
+			auto& callback = pCoreService->getServiceConnectCallback();
+			if (callback == nullptr)
+				return true;
+
+			uint64_t nCoroutineID = coroutine::create(CCoreApp::Inst()->getCoroutineStackSize(), [&callback, pContext](uint64_t) { callback(pContext->szType, pContext->nID); });
+			coroutine::resume(nCoroutineID, 0);
+		}
+		break;
+
+		case eMCT_SERVICE_DISCONNECT:
+		{
+			SMCT_SERVICE_DISCONNECT* pContext = reinterpret_cast<SMCT_SERVICE_DISCONNECT*>(sMessagePacket.pData);
+			defer([&]()
+			{
+				SAFE_DELETE(pContext);
+			});
+
+			DebugAstEx(pCoreService != nullptr, false);
+
+			auto& callback = pCoreService->getServiceDisconnectCallback();
+			if (callback == nullptr)
+				return true;
+
+			uint64_t nCoroutineID = coroutine::create(CCoreApp::Inst()->getCoroutineStackSize(), [&callback, pContext](uint64_t) { callback(pContext->szType, pContext->nID); });
+			coroutine::resume(nCoroutineID, 0);
 		}
 		break;
 

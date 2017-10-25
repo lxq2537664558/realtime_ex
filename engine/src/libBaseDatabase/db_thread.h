@@ -8,9 +8,6 @@
 
 #include <list>
 #include <mutex>
-#include <thread>
-#include <atomic>
-#include <memory>
 #include <condition_variable>
 
 namespace base

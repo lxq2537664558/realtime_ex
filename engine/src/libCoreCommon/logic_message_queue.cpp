@@ -28,7 +28,7 @@ namespace core
 		PROFILING_GUARD(CLogicMessageQueue::send);
 		std::unique_lock<std::mutex> guard(this->m_lock);
 
-		this->m_queue.send(sMessagePacket);
+		this->m_listMessagePacket.push_back(sMessagePacket);
 		if (this->m_nFlag == eNotInList)
 		{
 			this->m_nFlag = eInList;
@@ -36,20 +36,15 @@ namespace core
 		}
 	}
 
-	void CLogicMessageQueue::recv(std::vector<SMessagePacket>& vecMessagePacket)
+	void CLogicMessageQueue::recv(std::list<SMessagePacket>& listMessagePacket)
 	{
 		PROFILING_GUARD(CLogicMessageQueue::recv);
-		vecMessagePacket.clear();
-
+		
 		std::unique_lock<std::mutex> guard(this->m_lock);
 
 		DebugAst(this->m_nFlag == eInList);
 
-		SMessagePacket sMessagePacket;
-		while (this->m_queue.recv(sMessagePacket))
-		{
-			vecMessagePacket.push_back(sMessagePacket);
-		}
+		listMessagePacket = std::move(this->m_listMessagePacket);
 
 		this->m_nFlag = eDispatch;
 	}
@@ -60,7 +55,7 @@ namespace core
 
 		DebugAst(this->m_nFlag == eDispatch);
 
-		if (this->m_queue.size() != 0)
+		if (!this->m_listMessagePacket.empty())
 		{
 			this->m_nFlag = eInList;
 			this->m_pMessageQueueMgr->putMessageQueue(this);

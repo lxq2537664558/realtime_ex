@@ -8,9 +8,6 @@
 #include "libBaseCommon/time_util.h"
 #include "libBaseCommon/profiling.h"
 
-#include <algorithm>
-#include <thread>
-
 #define _CYCLE_TIME 10
 
 namespace core

@@ -9,7 +9,7 @@ namespace base
 		: m_pLuaFacade(nullptr)
 		, m_nRef(LUA_REFNIL)
 	{
-		DebugAst(pLuaFacade != nullptr && szName != NULL);
+		DebugAst(pLuaFacade != nullptr && szName != nullptr);
 
 		lua_State* pL = pLuaFacade->getState();
 		SStackCheck sStackCheck(pL);

@@ -73,10 +73,10 @@ namespace core
 		this->m_pCoreConnectionMgr->update(_CYCLE_TIME);
 		PROFILING_END(this->m_pCoreConnectionMgr->update)
 
-		static std::vector<SMessagePacket> vecMessagePacket;
-		this->m_pMessageQueue->recv(vecMessagePacket);
+		std::list<SMessagePacket> listMessagePacket;
+		this->m_pMessageQueue->recv(listMessagePacket);
 
-		for (auto iter = vecMessagePacket.begin(); iter != vecMessagePacket.end(); ++iter)
+		for (auto iter = listMessagePacket.begin(); iter != listMessagePacket.end(); ++iter)
 		{
 			const SMessagePacket& sMessagePacket = *iter;
 

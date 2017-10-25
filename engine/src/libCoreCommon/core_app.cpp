@@ -41,7 +41,7 @@
 #define _DEFAULT_SAMPLING_TIME		1000
 #define _DEFAULT_INVOKE_TIMEOUT	30*1000
 #define _MAX_NOFILE_SIZE 1024*10
-#define _DEFAULT_COROUTINE_STACK_SIZE 1024 * 1024
+#define _DEFAULT_COROUTINE_STACK_SIZE 128 * 1024
 
 #ifndef _WIN32
 // 环境变量
@@ -105,24 +105,20 @@ namespace core
 	CCoreApp::CCoreApp()
 		: m_writeBuf(UINT16_MAX)
 		, m_nQuiting(0)
-		, m_nTotalSamplingTime(0)
-		, m_nCycleCount(0)
 		, m_nLogicThreadCount(0)
 		, m_nHeartbeatLimit(_DEFAULT_HEARTBEAT_LIMIT)
 		, m_nHeartbeatTime(_DEFAULT_HEARTBEAT_TIME)
 		, m_nSamplingTime(_DEFAULT_SAMPLING_TIME)
 		, m_nCoroutineStackSize(_DEFAULT_COROUTINE_STACK_SIZE)
 		, m_nQPS(0)
-		, m_nLocalServiceInvokeTimeout(_DEFAULT_INVOKE_TIMEOUT)
-		, m_pBaseConnectionMgr(nullptr)
+		, m_nDefaultServiceInvokeTimeout(_DEFAULT_INVOKE_TIMEOUT)
+		, m_pGlobalBaseConnectionMgr(nullptr)
 		, m_pLogicMessageQueueMgr(nullptr)
 		, m_pGlobalLogicMessageQueue(nullptr)
 		, m_pCoreServiceMgr(nullptr)
-		, m_pTransporter(nullptr)
 		, m_pServiceRegistryProxy(nullptr)
 		, m_pNodeConnectionFactory(nullptr)
 	{
-		this->m_vecWebsocketBuf.reserve(UINT16_MAX);
 		this->m_pLogicMessageQueueMgr = new CLogicMessageQueueMgr();
 		this->m_pGlobalLogicMessageQueue = new CLogicMessageQueue(nullptr, this->m_pLogicMessageQueueMgr);
 	}
@@ -304,14 +300,16 @@ namespace core
 		// 加载节点基本信息
 		this->m_sNodeBaseInfo.nID = nID;
 		this->m_sNodeBaseInfo.szName = pNodeInfoXML->Attribute("node_name");
+		if (pNodeInfoXML->Attribute("node_group") != nullptr)
+			this->m_sNodeBaseInfo.szGroup = pNodeInfoXML->Attribute("node_group");
 		if (pNodeInfoXML->Attribute("host") != nullptr)
 			this->m_sNodeBaseInfo.szHost = pNodeInfoXML->Attribute("host");
 		this->m_sNodeBaseInfo.nPort = (uint16_t)pNodeInfoXML->UnsignedAttribute("port");
 		this->m_sNodeBaseInfo.nRecvBufSize = pNodeInfoXML->UnsignedAttribute("recv_buf_size");
 		this->m_sNodeBaseInfo.nSendBufSize = pNodeInfoXML->UnsignedAttribute("send_buf_size");
-		this->m_nLocalServiceInvokeTimeout = pNodeInfoXML->UnsignedAttribute("invoke_timeout");
-		if (this->m_nLocalServiceInvokeTimeout == 0)
-			this->m_nLocalServiceInvokeTimeout = _DEFAULT_INVOKE_TIMEOUT;
+		this->m_nDefaultServiceInvokeTimeout = pNodeInfoXML->UnsignedAttribute("invoke_timeout");
+		if (this->m_nDefaultServiceInvokeTimeout == 0)
+			this->m_nDefaultServiceInvokeTimeout = _DEFAULT_INVOKE_TIMEOUT;
 
 		base::process_util::setInstanceName(this->m_sNodeBaseInfo.szName.c_str());
 
@@ -407,13 +405,11 @@ namespace core
 		this->m_tickerQPS.setCallback(std::bind(&CCoreApp::onQPS, this, std::placeholders::_1));
 		this->registerTicker(this->m_pGlobalLogicMessageQueue, &this->m_tickerQPS, 1000, 1000, 0);
 
-		this->m_pBaseConnectionMgr = new CBaseConnectionMgr(this->m_pGlobalLogicMessageQueue);
+		this->m_pGlobalBaseConnectionMgr = new CBaseConnectionMgr(this->m_pGlobalLogicMessageQueue);
 		
 		this->m_pNodeConnectionFactory = new CNodeConnectionFactory();
-		this->m_pBaseConnectionMgr->setBaseConnectionFactory("CBaseConnectionToMaster", this->m_pNodeConnectionFactory);
-		this->m_pBaseConnectionMgr->setBaseConnectionFactory("CBaseConnectionOtherNode", this->m_pNodeConnectionFactory);
-
-		this->m_pTransporter = new CTransporter();
+		this->m_pGlobalBaseConnectionMgr->setBaseConnectionFactory("CBaseConnectionToMaster", this->m_pNodeConnectionFactory);
+		this->m_pGlobalBaseConnectionMgr->setBaseConnectionFactory("CBaseConnectionOtherNode", this->m_pNodeConnectionFactory);
 
 		this->m_pCoreServiceMgr = new CCoreServiceMgr();
 		if (!this->m_pCoreServiceMgr->init(vecServiceBase))
@@ -443,7 +439,7 @@ namespace core
 
 		if (!this->m_sNodeBaseInfo.szHost.empty())
 		{
-			if (!this->m_pBaseConnectionMgr->listen(this->m_sNodeBaseInfo.szHost, this->m_sNodeBaseInfo.nPort, false, "CBaseConnectionOtherNode", "", this->m_sNodeBaseInfo.nSendBufSize, this->m_sNodeBaseInfo.nRecvBufSize, nullptr))
+			if (!this->m_pGlobalBaseConnectionMgr->listen(this->m_sNodeBaseInfo.szHost, this->m_sNodeBaseInfo.nPort, false, "CBaseConnectionOtherNode", "", this->m_sNodeBaseInfo.nSendBufSize, this->m_sNodeBaseInfo.nRecvBufSize, nullptr))
 			{
 				PrintWarning("node listen error");
 				return false;
@@ -508,9 +504,9 @@ namespace core
 		}
 	}
 
-	CBaseConnectionMgr* CCoreApp::getBaseConnectionMgr() const
+	CBaseConnectionMgr* CCoreApp::getGlobalBaseConnectionMgr() const
 	{
-		return this->m_pBaseConnectionMgr;
+		return this->m_pGlobalBaseConnectionMgr;
 	}
 
 	CLogicMessageQueueMgr* CCoreApp::getLogicMessageQueueMgr() const
@@ -526,11 +522,6 @@ namespace core
 	CCoreServiceMgr* CCoreApp::getCoreServiceMgr() const
 	{
 		return this->m_pCoreServiceMgr;
-	}
-
-	CTransporter* CCoreApp::getTransporter() const
-	{
-		return this->m_pTransporter;
 	}
 
 	CServiceRegistryProxy* CCoreApp::getServiceRegistryProxy() const
@@ -556,17 +547,17 @@ namespace core
 	void CCoreApp::onQPS(uint64_t nContext)
 	{
 		//PrintInfo("qps: {} net_queue_size: {} logic_queue_size: {}", this->m_nQPS, this->m_pNetMessageQueue->size(), this->m_pLogicMessageQueue->size());
-		this->m_nQPS = 0;
+		this->m_nQPS.store(0, std::memory_order_release);
 	}
 
 	void CCoreApp::incQPS()
 	{
-		++this->m_nQPS;
+		this->m_nQPS.fetch_add(1, std::memory_order_relaxed);
 	}
 
 	uint32_t CCoreApp::getQPS() const
 	{
-		return this->m_nQPS;
+		return this->m_nQPS.load(std::memory_order_acquire);
 	}
 
 	const SNodeBaseInfo& CCoreApp::getNodeBaseInfo() const
@@ -579,26 +570,9 @@ namespace core
 		return this->m_sNodeBaseInfo.nID;
 	}
 
-	uint32_t CCoreApp::getInvokeTimeout(uint32_t nServiceID) const
+	uint32_t CCoreApp::getDefaultServiceInvokeTimeout() const
 	{
-		if (this->m_pCoreServiceMgr->isLocalService(nServiceID))
-			return this->m_nLocalServiceInvokeTimeout;
-
-		uint32_t nInvokeTimeout = this->m_pServiceRegistryProxy->getServiceInvokeTimeout(nServiceID);
-		if (nInvokeTimeout != 0)
-			return nInvokeTimeout;
-
-		return _DEFAULT_INVOKE_TIMEOUT;
-	}
-
-	std::vector<char>& CCoreApp::getWebsocketBuf()
-	{
-		return this->m_vecWebsocketBuf;
-	}
-
-	uint32_t CCoreApp::getLocalServiceInvokeTimeout() const
-	{
-		return this->m_nLocalServiceInvokeTimeout;
+		return this->m_nDefaultServiceInvokeTimeout;
 	}
 
 	uint32_t CCoreApp::getCoroutineStackSize() const
@@ -619,7 +593,7 @@ namespace core
 		std::stringstream ss;
 		ss << std::endl;
 		ss << "############################################################" << std::endl;
-		ss << "\tnode_name: " << sNodeBaseInfo.szName << " node_id: " << sNodeBaseInfo.nID << std::endl;
+		ss << "\tnode_name: " << sNodeBaseInfo.szName << " node_id: " << sNodeBaseInfo.nID << " node_group: " << sNodeBaseInfo.szGroup << std::endl;
 		ss << std::endl;
 		for (size_t i = 0; i < vecServiceBaseInfo.size(); ++i)
 		{

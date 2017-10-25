@@ -20,7 +20,7 @@ namespace core
 		CCoreService*	getCoreService(uint32_t nID) const;
 		const std::vector<CCoreService*>&
 						getCoreService() const;
-		std::vector<SServiceBaseInfo>
+		const std::vector<SServiceBaseInfo>&
 						getServiceBaseInfo() const;
 
 		bool			isLocalService(uint32_t nServiceID) const;
@@ -28,5 +28,6 @@ namespace core
 	private:
 		std::map<uint32_t, CCoreService*>		m_mapCoreService;
 		std::vector<CCoreService*>				m_vecCoreService;
+		std::vector<SServiceBaseInfo>			m_vecServiceBaseInfo;
 	};
 }

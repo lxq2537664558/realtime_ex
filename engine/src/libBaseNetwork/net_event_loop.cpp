@@ -6,11 +6,11 @@
 #include "net_buffer.h"
 #include "net_wakeup.h"
 
-#include <thread>
-
 #include "libBaseCommon/logger.h"
 #include "libBaseCommon/debug_helper.h"
 #include "libBaseCommon/profiling.h"
+
+#include <thread>
 
 namespace base
 {
@@ -231,7 +231,7 @@ namespace base
 						uint32_t nEvent = 0;
 						if (nRawEvent & (EPOLLHUP | EPOLLERR))
 							nEvent = eNET_Error;
-						if (nRawEvent & (EPOLLIN | POLLPRI))
+						if (nRawEvent & (EPOLLIN | POLLPRI))	// 这里没有用EPOLLRDHUP，因为如果有出发EPOLLRDHUP，必然带上EPOLLIN
 							nEvent |= eNET_Recv;
 						if (nRawEvent & EPOLLOUT)
 							nEvent |= eNET_Send;

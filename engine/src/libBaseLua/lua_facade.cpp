@@ -350,7 +350,7 @@ namespace base
 
 		std::string szRequire = "require \'" + std::string(szName) + "\'";
 
-		return this->runString(szRequire.c_str(), NULL);
+		return this->runString(szRequire.c_str(), nullptr);
 	}
 
 	bool CLuaFacade::runString(const char* szBuf, const char* szBufName)

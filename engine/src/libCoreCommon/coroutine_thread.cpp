@@ -28,7 +28,7 @@ namespace core
 #endif
 	}
 
-	bool CCoroutineThread::init(uint32_t nStackSize)
+	bool CCoroutineThread::init()
 	{
 #ifdef _WIN32
 		this->m_pMainContext = ConvertThreadToFiberEx(nullptr, FIBER_FLAG_FLOAT_SWITCH);

@@ -5,7 +5,7 @@ namespace base
 	{
 		static_assert(sizeof...(Args) < 20, "not support 20 arg");
 
-		DebugAstEx(this->m_pLuaFacade != NULL, false);
+		DebugAstEx(this->m_pLuaFacade != nullptr, false);
 		DebugAstEx(this->m_nRef != LUA_REFNIL, false);
 
 		lua_State* pL = this->m_pLuaFacade->getActiveLuaState();
@@ -36,7 +36,7 @@ namespace base
 	{
 		static_assert(sizeof...(Args) < 20, "not support 20 arg");
 
-		DebugAstEx(this->m_pLuaFacade != NULL, false);
+		DebugAstEx(this->m_pLuaFacade != nullptr, false);
 		DebugAstEx(this->m_nRef != LUA_REFNIL, false);
 
 		lua_State* pL = this->m_pLuaFacade->getActiveLuaState();

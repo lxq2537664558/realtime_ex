@@ -20,6 +20,9 @@ namespace core
 		friend class CBaseConnectionMgr;
 
 	public:
+		// 因为CCoreConnection跟CBaseConnection存在于两个线程，他们之间通过消息队列交互，所以需要一些中间状态
+		// eCCS_Connectting的存在是为了需要在逻辑线程创建CBaseConnection对象，但是在eCCS_Connectting状态下还是能收发消息的
+		// eCCS_Disconnecting的存在是因为让CBaseConnection先销毁然后在CCoreConnection销毁，有些消息发送是直接传CCoreConnection指针的，这样多线程也是安全的
 		enum
 		{
 			eCCS_None,

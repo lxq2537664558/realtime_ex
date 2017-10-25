@@ -22,7 +22,7 @@ namespace core
 		inline bool			getMessageName(const void* pMessage, char* szBuf, size_t nBufSize);
 
 	private:
-		inline void*	create_message(const std::string& szMessageName);
+		inline void*		create_message(const std::string& szMessageName);
 	};
 }
 

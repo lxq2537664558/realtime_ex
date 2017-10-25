@@ -105,9 +105,9 @@ namespace core
 			pCoroutineImpl->delLocalData(szName);
 		}
 
-		void init(uint32_t nStackSize)
+		void init()
 		{
-			getCoroutineThread()->init(nStackSize);
+			getCoroutineThread()->init();
 		}
 
 		uint32_t getCoroutineCount()

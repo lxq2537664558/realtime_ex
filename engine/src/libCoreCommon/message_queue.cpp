@@ -1,11 +1,8 @@
 #include "message_queue.h"
 
-#define _DEFAULT_MESSAGE_QUEUE 1024
-
 namespace core
 {
 	CMessageQueue::CMessageQueue()
-		: m_queue(_DEFAULT_MESSAGE_QUEUE)
 	{
 
 	}
@@ -19,13 +16,13 @@ namespace core
 	{
 		std::unique_lock<std::mutex> guard(this->m_lock);
 
-		return this->m_queue.size();
+		return this->m_listMessagePacket.size();
 	}
 
 	bool CMessageQueue::isEmpty()
 	{
 		std::unique_lock<std::mutex> guard(this->m_lock);
 
-		return this->m_queue.size() == 0;
+		return this->m_listMessagePacket.empty();
 	}
 }

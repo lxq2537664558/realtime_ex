@@ -43,7 +43,9 @@ namespace core
 		const message_header* pHeader = reinterpret_cast<const message_header*>(pData);
 		DebugAst(nSize > sizeof(message_header));
 
-		if (pHeader->nMessageID == eSMT_sync_master_info)
+		switch (pHeader->nMessageID)
+		{
+		case eSMT_sync_master_info:
 		{
 			smt_sync_master_info netMsg;
 			netMsg.unpack(pData, nSize);
@@ -58,25 +60,47 @@ namespace core
 			smt_register_node_base_info netMsg1;
 			netMsg1.sNodeBaseInfo = CCoreApp::Inst()->getNodeBaseInfo();
 			netMsg1.vecServiceBaseInfo = CCoreApp::Inst()->getCoreServiceMgr()->getServiceBaseInfo();
-			
+			netMsg1.setConnectServiceName = CCoreApp::Inst()->getServiceRegistryProxy()->getConnectServiceName();
+			netMsg1.setConnectServiceType = CCoreApp::Inst()->getServiceRegistryProxy()->getConnectServiceType();
+
 			base::CWriteBuf& writeBuf = CCoreApp::Inst()->getWriteBuf();
 			netMsg1.pack(writeBuf);
 
 			this->send(eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
 		}
-		else if (pHeader->nMessageID == eSMT_sync_node_base_info)
+		break;
+		
+		case eSMT_sync_node_base_info:
 		{
 			smt_sync_node_base_info netMsg;
 			netMsg.unpack(pData, nSize);
-			
-			CCoreApp::Inst()->getServiceRegistryProxy()->addNodeProxyInfo(netMsg.sNodeBaseInfo, netMsg.vecServiceBaseInfo, true);
+
+			CCoreApp::Inst()->getServiceRegistryProxy()->addNodeProxyInfo(netMsg.sNodeBaseInfo, netMsg.vecServiceBaseInfo, !!netMsg.bExcludeConnect);
 		}
-		else if (pHeader->nMessageID == eSMT_remove_node_base_info)
+		break;
+
+		case eSMT_sync_all_node_base_info:
+		{
+			smt_sync_all_node_base_info netMsg;
+			netMsg.unpack(pData, nSize);
+
+			CCoreApp::Inst()->getServiceRegistryProxy()->setNodeProxyInfo(netMsg.mapNodeInfo, netMsg.setExcludeConnectNodeID);
+		}
+		break;
+
+		case eSMT_remove_node_base_info:
 		{
 			smt_remove_node_base_info netMsg;
 			netMsg.unpack(pData, nSize);
 
 			CCoreApp::Inst()->getServiceRegistryProxy()->delNodeProxyInfo(netMsg.nNodeID);
+		}
+		break;
+
+		default:
+		{
+			PrintWarning("CBaseConnectionToMaster::onDispatch invalid msg type: {}", pHeader->nMessageID);
+		}
 		}
 	}
 }

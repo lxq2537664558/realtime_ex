@@ -25,35 +25,45 @@ namespace core
 		CServiceRegistryProxy();
 		~CServiceRegistryProxy();
 
-		bool							init(tinyxml2::XMLElement* pXMLElement);
+		bool			init(tinyxml2::XMLElement* pXMLElement);
 
-		void							addNodeProxyInfo(const SNodeBaseInfo& sNodeBaseInfo, const std::vector<SServiceBaseInfo>& vecServiceBaseInfo, bool bMaster);
-		void							delNodeProxyInfo(uint32_t nID);
-
-		uint32_t						getServiceID(const std::string& szName) const;
-		std::string						getServiceType(uint32_t nServiceID) const;
-		std::string						getServiceName(uint32_t nServiceID) const;
-		const std::set<uint32_t>&		getServiceIDByType(const std::string& szName) const;
-		const std::vector<uint32_t>&	getActiveServiceIDByType(const std::string& szName) const;
-
-		bool							isValidService(uint32_t nServiceID) const;
-
-		uint32_t						getServiceInvokeTimeout(uint32_t nServiceID) const;
+		void			addNodeProxyInfo(const SNodeBaseInfo& sNodeBaseInfo, const std::vector<SServiceBaseInfo>& vecServiceBaseInfo, bool bExcludeConnect);
+		void			setNodeProxyInfo(const std::map<uint32_t, SNodeInfo>& mapNodeInfo, const std::set<uint32_t>& setExcludeConnectNodeID);
+		void			delNodeProxyInfo(uint32_t nNodeID);
 		
-		const SServiceBaseInfo*			getServiceBaseInfoByServiceID(uint32_t nServiceID) const;
-		bool							getServiceBaseInfoByNodeID(uint32_t nNodeID, std::vector<SServiceBaseInfo>& vecServiceBaseInfo) const;
+		uint32_t		getServiceID(const std::string& szName);
+		std::string		getServiceType(uint32_t nServiceID);
+		std::string		getServiceName(uint32_t nServiceID);
+		const std::set<uint32_t>&
+						getServiceIDByType(const std::string& szName);
+		const std::vector<uint32_t>&
+						getActiveServiceIDByType(const std::string& szName);
+
+		bool			isValidService(uint32_t nServiceID) const;
 		
-		uint64_t						getOtherNodeSocketIDByServiceID(uint32_t nServiceID) const;
-		uint64_t						getOtherNodeSocketIDByNodeID(uint32_t nNodeID) const;
-		bool							setOtherNodeSocketIDByNodeID(uint32_t nNodeID, uint64_t nSocketID);
+		const SServiceBaseInfo*
+						getServiceBaseInfoByServiceID(uint32_t nServiceID);
+		bool			getServiceBaseInfoByNodeID(uint32_t nNodeID, std::vector<SServiceBaseInfo>& vecServiceBaseInfo);
 		
-		bool							addBaseConnectionToMaster(CBaseConnectionToMaster* pBaseConnectionToMaster);
-		void							delBaseConnectionToMaster(uint32_t nMasterID);
+		uint64_t		getOtherNodeSocketIDByServiceID(uint32_t nServiceID) const;
+		uint64_t		getOtherNodeSocketIDByNodeID(uint32_t nNodeID) const;
+		bool			setOtherNodeSocketIDByNodeID(uint32_t nNodeID, uint64_t nSocketID);
+
+		bool			addBaseConnectionToMaster(CBaseConnectionToMaster* pBaseConnectionToMaster);
+		void			delBaseConnectionToMaster(uint32_t nMasterID);
+
+		void			onNodeConnect(uint32_t nNodeID);
+		void			onNodeDisconnect(uint32_t nNodeID);
+
+		const std::set<std::string>&
+						getConnectServiceName() const;
+		const std::set<std::string>&
+						getConnectServiceType() const;
 
 	private:
-		void							onCheckConnectMaster(uint64_t nContext);
-		void							onConnectRefuse(const std::string& szContext);
-		void							updateActiveServiceID(const std::set<std::string>& setType);
+		void			onCheckConnectMaster(uint64_t nContext);
+		void			onConnectRefuse(const std::string& szContext);
+		void			updateActiveServiceID(const std::set<std::string>& setType);
 
 	private:
 		struct SNodeProxyInfo
@@ -85,7 +95,6 @@ namespace core
 			std::set<uint32_t>		setServiceID;
 			std::set<uint32_t>		setActiveServiceID;	// 没有剔除掉因为过载保护而踢除的服务
 			std::vector<uint32_t>	vecActiveServiceID;
-			CLogicServiceLock		lock;
 		};
 
 		CLogicServiceLock						m_sLock;
@@ -98,7 +107,7 @@ namespace core
 		std::map<uint32_t, SMasterInfo>			m_mapMasterInfo;
 		CTicker									m_tickCheckConnectMaster;
 
-		std::map<std::string, uint32_t>			m_mapConnectServiceName;	// 需要被连接的服务名字
-		std::map<std::string, uint32_t>			m_mapConnectServiceType;	// 需要被连接的服务类型
+		std::set<std::string>					m_setConnectServiceName;	// 需要被连接的服务名字
+		std::set<std::string>					m_setConnectServiceType;	// 需要被连接的服务类型
 	};
 }
