@@ -26,7 +26,6 @@ namespace base
 		void		query(const SDbCommand& sDbCommand);
 		bool		isConnectDb() const;
 		uint32_t	getQueueSize();
-		uint32_t	getQPS();
 		CDbCommandHandlerProxy&
 					getDbCommandHandlerProxy();
 
@@ -51,6 +50,5 @@ namespace base
 		CDbThreadMgr*			m_pDbThreadMgr;
 		CThreadBase*			m_pThreadBase;
 		CDbCacheMgr				m_dbCacheMgr;
-		uint32_t				m_nQPS;
 	};
 }

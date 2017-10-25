@@ -61,59 +61,65 @@ CServiceRegistry::~CServiceRegistry()
 
 }
 
-bool CServiceRegistry::addNode(CConnectionFromNode* pConnectionFromNode, const core::SNodeBaseInfo& sNodeBaseInfo, const std::vector<core::SServiceBaseInfo>& vecServiceBaseInfo, const std::set<std::string>& setConnectServiceName, const std::set<std::string>& setConnectServiceType)
+bool CServiceRegistry::addNode(uint64_t nSocketID, const core::SNodeBaseInfo& sNodeBaseInfo, const std::vector<core::SServiceBaseInfo>& vecServiceBaseInfo, const std::set<std::string>& setConnectServiceName, const std::set<std::string>& setConnectServiceType)
 {
-	DebugAstEx(pConnectionFromNode != nullptr, false);
-
 	// 检测节点是否重复
 	auto iter = this->m_mapNodeProxyInfo.find(sNodeBaseInfo.nID);
-	if (iter != this->m_mapNodeProxyInfo.end())
+	if (iter != this->m_mapNodeProxyInfo.end() && iter->second.nSocketID != 0)
 	{
-		PrintWarning("CServiceRegistry::addNode dup node id: {}", sNodeBaseInfo.nID);
+		PrintWarning("CServiceRegistry::addNode dup node node_id: {} socket_id: {}", sNodeBaseInfo.nID, nSocketID);
 		return false;
 	}
 
-	std::map<uint32_t, SServiceBaseInfo> mapServiceBaseInfoByID;
-	std::map<std::string, SServiceBaseInfo> mapServiceBaseInfoByName;
-	// 检测服务是否重复
-	for (size_t i = 0; i < vecServiceBaseInfo.size(); ++i)
+	bool bExist = true;
+	if (iter == this->m_mapNodeProxyInfo.end())
+		bExist = false;
+
+	if (!bExist)
 	{
-		const SServiceBaseInfo& sServiceBaseInfo = vecServiceBaseInfo[i];
-		if (this->m_mapServiceName.find(sServiceBaseInfo.szName) != this->m_mapServiceName.end())
+		std::map<uint32_t, SServiceBaseInfo> mapServiceBaseInfoByID;
+		std::map<std::string, SServiceBaseInfo> mapServiceBaseInfoByName;
+		// 检测服务是否重复
+		for (size_t i = 0; i < vecServiceBaseInfo.size(); ++i)
 		{
-			PrintWarning("CServiceRegistry::addNode dup service name: {} node id: {}", sServiceBaseInfo.szName, sNodeBaseInfo.nID);
-			return false;
+			const SServiceBaseInfo& sServiceBaseInfo = vecServiceBaseInfo[i];
+			if (this->m_mapServiceName.find(sServiceBaseInfo.szName) != this->m_mapServiceName.end())
+			{
+				PrintWarning("CServiceRegistry::addNode dup service name: {} node id: {}", sServiceBaseInfo.szName, sNodeBaseInfo.nID);
+				return false;
+			}
+
+			if (this->m_setServiceID.find(sServiceBaseInfo.nID) != this->m_setServiceID.end())
+			{
+				PrintWarning("CServiceRegistry::addNode dup service id: {} node id: {}", sServiceBaseInfo.nID, sNodeBaseInfo.nID);
+				return false;
+			}
+
+			if (mapServiceBaseInfoByID.find(sServiceBaseInfo.nID) != mapServiceBaseInfoByID.end())
+			{
+				PrintWarning("CServiceRegistry::addNode dup service on same node service_id: {} node id: {}", sServiceBaseInfo.nID, sNodeBaseInfo.nID);
+				return false;
+			}
+
+			if (mapServiceBaseInfoByName.find(sServiceBaseInfo.szName) != mapServiceBaseInfoByName.end())
+			{
+				PrintWarning("CServiceRegistry::addNode dup service on same node service_id: {} node id: {}", sServiceBaseInfo.nID, sNodeBaseInfo.nID);
+				return false;
+			}
 		}
 
-		if (this->m_setServiceID.find(sServiceBaseInfo.nID) != this->m_setServiceID.end())
-		{
-			PrintWarning("CServiceRegistry::addNode dup service id: {} node id: {}", sServiceBaseInfo.nID, sNodeBaseInfo.nID);
-			return false;
-		}
-
-		if (mapServiceBaseInfoByID.find(sServiceBaseInfo.nID) != mapServiceBaseInfoByID.end())
-		{
-			PrintWarning("CServiceRegistry::addNode dup service on same node service_id: {} node id: {}", sServiceBaseInfo.nID, sNodeBaseInfo.nID);
-			return false;
-		}
-
-		if (mapServiceBaseInfoByName.find(sServiceBaseInfo.szName) != mapServiceBaseInfoByName.end())
-		{
-			PrintWarning("CServiceRegistry::addNode dup service on same node service_id: {} node id: {}", sServiceBaseInfo.nID, sNodeBaseInfo.nID);
-			return false;
-		}
+		SNodeProxyInfo& sNodeProxyInfo = this->m_mapNodeProxyInfo[sNodeBaseInfo.nID];
+		sNodeProxyInfo.sNodeBaseInfo = sNodeBaseInfo;
+		sNodeProxyInfo.vecServiceBaseInfo = vecServiceBaseInfo;
+		sNodeProxyInfo.mapServiceBaseInfo = mapServiceBaseInfoByID;
+		sNodeProxyInfo.setConnectServiceName = setConnectServiceName;
+		sNodeProxyInfo.setConnectServiceType = setConnectServiceType;
 	}
 
-	SNodeProxyInfo sNodeProxyInfo;
-	sNodeProxyInfo.sNodeBaseInfo = sNodeBaseInfo;
-	sNodeProxyInfo.vecServiceBaseInfo = vecServiceBaseInfo;
-	sNodeProxyInfo.mapServiceBaseInfo = mapServiceBaseInfoByID;
-	sNodeProxyInfo.setConnectServiceName = setConnectServiceName;
-	sNodeProxyInfo.setConnectServiceType = setConnectServiceType;
-	sNodeProxyInfo.pConnectionFromNode = pConnectionFromNode;
-	
-	this->m_mapNodeProxyInfo[sNodeBaseInfo.nID] = sNodeProxyInfo;
+	SNodeProxyInfo& sNodeProxyInfo = this->m_mapNodeProxyInfo[sNodeBaseInfo.nID];
 
+	sNodeProxyInfo.nSocketID = nSocketID;
+	
 	for (size_t i = 0; i < vecServiceBaseInfo.size(); ++i)
 	{
 		const SServiceBaseInfo& sServiceBaseInfo = vecServiceBaseInfo[i];
@@ -143,7 +149,7 @@ bool CServiceRegistry::addNode(CConnectionFromNode* pConnectionFromNode, const c
 	
 	base::CWriteBuf& writeBuf = this->m_pMasterService->getWriteBuf();
 	netMsg.pack(writeBuf);
-	pConnectionFromNode->send(eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
+	this->m_pMasterService->getBaseConnectionMgr()->send(nSocketID, eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
 
 	// 把这个新加入的节点以及其服务信息广播给其他节点，这里不用广播的方式是因为不是连接连上就属于一个正常的节点连接，还需要同步一些信息才能完整。
 	for (auto iter = this->m_mapNodeProxyInfo.begin(); iter != this->m_mapNodeProxyInfo.end(); ++iter)
@@ -152,7 +158,7 @@ bool CServiceRegistry::addNode(CConnectionFromNode* pConnectionFromNode, const c
 		if (sOtherNodeProxyInfo.sNodeBaseInfo.nID == sNodeBaseInfo.nID)
 			continue;
 
-		if (sOtherNodeProxyInfo.pConnectionFromNode == nullptr)
+		if (sOtherNodeProxyInfo.nSocketID == 0)
 			continue;
 
 		smt_sync_node_base_info netMsg;
@@ -166,10 +172,17 @@ bool CServiceRegistry::addNode(CConnectionFromNode* pConnectionFromNode, const c
 
 		netMsg.pack(writeBuf);
 
-		sOtherNodeProxyInfo.pConnectionFromNode->send(eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
+		this->m_pMasterService->getBaseConnectionMgr()->send(sOtherNodeProxyInfo.nSocketID, eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
 	}
 
-	PrintInfo("register node node_id: {} node_name: {} node_group: {} local addr: {} {} remote addr: {} {}", sNodeBaseInfo.nID, sNodeBaseInfo.szName, sNodeBaseInfo.szGroup, pConnectionFromNode->getLocalAddr().szHost, pConnectionFromNode->getLocalAddr().nPort, pConnectionFromNode->getRemoteAddr().szHost, pConnectionFromNode->getRemoteAddr().nPort);
+	if (!bExist)
+	{
+		PrintInfo("register node node_id: {} node_name: {} node_group: {} socket_id: {}", sNodeBaseInfo.nID, sNodeBaseInfo.szName, sNodeBaseInfo.szGroup, nSocketID);
+	}
+	else
+	{
+		PrintInfo("reregister node node_id: {} node_name: {} node_group: {} socket_id: {}", sNodeBaseInfo.nID, sNodeBaseInfo.szName, sNodeBaseInfo.szGroup, nSocketID);
+	}
 
 	return true;
 }
@@ -187,6 +200,7 @@ void CServiceRegistry::delNode(uint32_t nNodeID)
 
 	std::string szNodeName = sNodeProxyInfo.sNodeBaseInfo.szName;
 	std::string szNodeGroup = sNodeProxyInfo.sNodeBaseInfo.szGroup;
+	uint64_t nSocketID = sNodeProxyInfo.nSocketID;
 
 	for (size_t i = 0; i < sNodeProxyInfo.vecServiceBaseInfo.size(); ++i)
 	{
@@ -211,11 +225,27 @@ void CServiceRegistry::delNode(uint32_t nNodeID)
 	{
 		const SNodeProxyInfo& sOtherNodeProxyInfo = iter->second;
 
-		if (sOtherNodeProxyInfo.pConnectionFromNode == nullptr)
+		if (sOtherNodeProxyInfo.nSocketID == 0)
 			continue;
 
-		sOtherNodeProxyInfo.pConnectionFromNode->send(eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
+		this->m_pMasterService->getBaseConnectionMgr()->send(sOtherNodeProxyInfo.nSocketID, eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
 	}
 
-	PrintInfo("unregister node node_id: {} node_name: {} node_group: {}", nNodeID, szNodeName, szNodeGroup);
+	PrintInfo("unregister node node_id: {} node_name: {} node_group: {} socket_id: {}", nNodeID, szNodeName, szNodeGroup, nSocketID);
+}
+
+void CServiceRegistry::disconnectNode(uint32_t nNodeID)
+{
+	auto iter = this->m_mapNodeProxyInfo.find(nNodeID);
+	if (iter == this->m_mapNodeProxyInfo.end())
+	{
+		PrintWarning("CServiceRegistry::disconnectNode unknwon node id: {}", nNodeID);
+		return;
+	}
+
+	SNodeProxyInfo& sNodeProxyInfo = iter->second;
+
+	PrintInfo("node disconnect node_id: {} node_name: {} node_group: {} socket_id: {}", nNodeID, sNodeProxyInfo.sNodeBaseInfo.szName, sNodeProxyInfo.sNodeBaseInfo.szGroup, sNodeProxyInfo.nSocketID);
+
+	sNodeProxyInfo.nSocketID = 0;
 }

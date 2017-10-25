@@ -42,7 +42,7 @@ void CConnectionFromNode::onConnect()
 void CConnectionFromNode::onDisconnect()
 {
 	if (this->m_nNodeID != 0 && this->m_pMasterService != nullptr)
-		this->m_pMasterService->getServiceRegistry()->delNode(this->m_nNodeID);
+		this->m_pMasterService->getServiceRegistry()->disconnectNode(this->m_nNodeID);
 }
 
 void CConnectionFromNode::onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize)
@@ -57,7 +57,7 @@ void CConnectionFromNode::onDispatch(uint8_t nMessageType, const void* pData, ui
 		smt_register_node_base_info netMsg;
 		netMsg.unpack(pData, nSize);
 		
-		if (!this->m_pMasterService->getServiceRegistry()->addNode(this, netMsg.sNodeBaseInfo, netMsg.vecServiceBaseInfo, netMsg.setConnectServiceName, netMsg.setConnectServiceType))
+		if (!this->m_pMasterService->getServiceRegistry()->addNode(this->getID(), netMsg.sNodeBaseInfo, netMsg.vecServiceBaseInfo, netMsg.setConnectServiceName, netMsg.setConnectServiceType))
 		{
 			this->shutdown(true, "dup node connection");
 			return;

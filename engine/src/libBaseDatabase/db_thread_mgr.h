@@ -36,7 +36,6 @@ namespace base
 
 		void		update();
 
-		uint32_t	getQPS(uint32_t nThreadIndex);
 		uint32_t	getQueueSize(uint32_t nThreadIndex);
 
 		void		setMaxCacheSize(uint64_t nSize);

@@ -367,14 +367,6 @@ namespace base
 			pDbThreadMgr->update();
 		}
 
-		uint32_t getQPS(uint32_t nID, uint32_t nThreadIndex)
-		{
-			CDbThreadMgr* pDbThreadMgr = getDbThreadMgr(nID);
-			DebugAstEx(pDbThreadMgr != nullptr, 0);
-
-			return pDbThreadMgr->getQPS(nThreadIndex);
-		}
-
 		uint32_t getQueueSize(uint32_t nID, uint32_t nThreadIndex)
 		{
 			CDbThreadMgr* pDbThreadMgr = getDbThreadMgr(nID);

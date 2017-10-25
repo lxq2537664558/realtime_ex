@@ -18,7 +18,6 @@ namespace base
 	CDbThread::CDbThread()
 		: m_pDbThreadMgr(nullptr)
 		, m_pThreadBase(nullptr)
-		, m_nQPS(0)
 	{
 	}
 
@@ -241,11 +240,6 @@ namespace base
 	{
 		std::unique_lock<std::mutex> lock(this->m_tCommandLock);
 		return (uint32_t)this->m_listCommand.size();
-	}
-
-	uint32_t CDbThread::getQPS()
-	{
-		return this->m_nQPS;
 	}
 
 	CDbCommandHandlerProxy& CDbThread::getDbCommandHandlerProxy()

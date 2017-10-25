@@ -47,7 +47,7 @@ namespace core
 
 		if (!CCoreApp::Inst()->getCoreServiceMgr()->isLocalService(nToServiceID))
 		{
-			uint64_t nSocketID = CCoreApp::Inst()->getServiceRegistryProxy()->getOtherNodeSocketIDByServiceID(nToServiceID);
+			uint64_t nSocketID = this->m_pCoreService->getLocalServiceRegistryProxy()->getOtherNodeSocketIDByServiceID(nToServiceID);
 			if (nSocketID == 0)
 				return false;
 
@@ -126,7 +126,7 @@ namespace core
 
 		if (!CCoreApp::Inst()->getCoreServiceMgr()->isLocalService(nToServiceID))
 		{
-			uint64_t nSocketID = CCoreApp::Inst()->getServiceRegistryProxy()->getOtherNodeSocketIDByServiceID(nToServiceID);
+			uint64_t nSocketID = this->m_pCoreService->getLocalServiceRegistryProxy()->getOtherNodeSocketIDByServiceID(nToServiceID);
 			if (nSocketID == 0)
 				return false;
 
@@ -194,7 +194,7 @@ namespace core
 
 		if (!CCoreApp::Inst()->getCoreServiceMgr()->isLocalService(nToServiceID))
 		{
-			uint64_t nSocketID = CCoreApp::Inst()->getServiceRegistryProxy()->getOtherNodeSocketIDByServiceID(nToServiceID);
+			uint64_t nSocketID = this->m_pCoreService->getLocalServiceRegistryProxy()->getOtherNodeSocketIDByServiceID(nToServiceID);
 			if (nSocketID == 0)
 				return false;
 
@@ -239,7 +239,7 @@ namespace core
 			char szMessageName[_MAX_MESSAGE_NAME_LEN] = { 0 };
 			DebugAstEx(pMessageSerializer->getMessageName(pMessage, szMessageName, _countof(szMessageName)), false);
 
-			uint64_t nSocketID = CCoreApp::Inst()->getServiceRegistryProxy()->getOtherNodeSocketIDByServiceID(nToServiceID);
+			uint64_t nSocketID = this->m_pCoreService->getLocalServiceRegistryProxy()->getOtherNodeSocketIDByServiceID(nToServiceID);
 			if (nSocketID == 0)
 				return false;
 
@@ -311,7 +311,7 @@ namespace core
 
 		if (!CCoreApp::Inst()->getCoreServiceMgr()->isLocalService(nToServiceID))
 		{
-			uint64_t nSocketID = CCoreApp::Inst()->getServiceRegistryProxy()->getOtherNodeSocketIDByServiceID(nToServiceID);
+			uint64_t nSocketID = this->m_pCoreService->getLocalServiceRegistryProxy()->getOtherNodeSocketIDByServiceID(nToServiceID);
 			if (nSocketID == 0)
 				return false;
 

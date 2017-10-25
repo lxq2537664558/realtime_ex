@@ -16,6 +16,11 @@ namespace core
 		return this->m_pCoreService->getServiceID();
 	}
 
+	uint32_t CServiceBase::getServiceID(const std::string& szName) const
+	{
+		return this->m_pCoreService->getLocalServiceRegistryProxy()->getServiceID(szName);
+	}
+
 	const SServiceBaseInfo& CServiceBase::getServiceBaseInfo() const
 	{
 		return this->m_pCoreService->getServiceBaseInfo();
@@ -139,5 +144,20 @@ namespace core
 	CBaseConnectionMgr* CServiceBase::getBaseConnectionMgr() const
 	{
 		return this->m_pCoreService->getBaseConnectionMgr();
+	}
+
+	uint32_t CServiceBase::getQPS() const
+	{
+		return this->m_pCoreService->getQPS();
+	}
+
+	const std::set<uint32_t>& CServiceBase::getServiceIDByType(const std::string& szName) const
+	{
+		return this->m_pCoreService->getLocalServiceRegistryProxy()->getServiceIDByType(szName);
+	}
+
+	const std::vector<uint32_t>& CServiceBase::getActiveServiceIDByType(const std::string& szName) const
+	{
+		return this->m_pCoreService->getLocalServiceRegistryProxy()->getActiveServiceIDByType(szName);
 	}
 }

@@ -8,6 +8,8 @@
 
 #include "libBaseCommon/buf_file.h"
 
+#include <set>
+
 namespace core
 {
 	// 服务状态 eSRS_Start->eSRS_Normal->eSRS_Quitting->eSRS_Quit
@@ -155,6 +157,23 @@ namespace core
 		*/
 		virtual	CServiceIDConverter*
 							getServiceIDConverter() { return nullptr; }
+
+		/**
+		@brief: 根据节点名字获取节点id
+		*/
+		uint32_t			getServiceID(const std::string& szName) const;
+		/**
+		@brief: 根据服务类型取到该类型服务的所有服务id
+		*/
+		const std::set<uint32_t>&
+							getServiceIDByType(const std::string& szName) const;
+		/**
+		@brief: 根据服务类型取到该类型服务的所有激活的服务id
+		*/
+		const std::vector<uint32_t>&
+							getActiveServiceIDByType(const std::string& szName) const;
+
+		uint32_t			getQPS() const;
 
 		virtual void		release() = 0;
 

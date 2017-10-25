@@ -132,9 +132,6 @@
     <ClInclude Include="..\..\inc\libCoreCommon\service_id_converter.h">
       <Filter>inc\service_base</Filter>
     </ClInclude>
-    <ClInclude Include="service_registry_proxy.h">
-      <Filter>src\framework</Filter>
-    </ClInclude>
     <ClInclude Include="class_info_mgr.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -216,6 +213,12 @@
     <ClInclude Include="coroutine_thread.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="local_service_registry_proxy.h">
+      <Filter>src\framework</Filter>
+    </ClInclude>
+    <ClInclude Include="global_service_registry_proxy.h">
+      <Filter>src\framework</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="fix_memory_pool.cpp">
@@ -293,9 +296,6 @@
     <ClCompile Include="service_invoker.cpp">
       <Filter>src\service_base</Filter>
     </ClCompile>
-    <ClCompile Include="service_registry_proxy.cpp">
-      <Filter>src\framework</Filter>
-    </ClCompile>
     <ClCompile Include="class_info_mgr.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -355,6 +355,12 @@
     </ClCompile>
     <ClCompile Include="coroutine_thread.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="local_service_registry_proxy.cpp">
+      <Filter>src\framework</Filter>
+    </ClCompile>
+    <ClCompile Include="global_service_registry_proxy.cpp">
+      <Filter>src\framework</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

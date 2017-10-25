@@ -33,7 +33,7 @@ namespace core
 	void CBaseConnectionToMaster::onDisconnect()
 	{
 		if (this->m_nMasterID != 0)
-			CCoreApp::Inst()->getServiceRegistryProxy()->delBaseConnectionToMaster(this->m_nMasterID);
+			CCoreApp::Inst()->getGlobalServiceRegistryProxy()->delBaseConnectionToMaster(this->m_nMasterID);
 	}
 
 	void CBaseConnectionToMaster::onDispatch(uint8_t nMessageType, const void* pData, uint16_t nSize)
@@ -51,7 +51,7 @@ namespace core
 			netMsg.unpack(pData, nSize);
 
 			this->m_nMasterID = netMsg.nMasterID;
-			if (!CCoreApp::Inst()->getServiceRegistryProxy()->addBaseConnectionToMaster(this))
+			if (!CCoreApp::Inst()->getGlobalServiceRegistryProxy()->addBaseConnectionToMaster(this))
 			{
 				this->shutdown(true, "dup master connection");
 				return;
@@ -60,8 +60,8 @@ namespace core
 			smt_register_node_base_info netMsg1;
 			netMsg1.sNodeBaseInfo = CCoreApp::Inst()->getNodeBaseInfo();
 			netMsg1.vecServiceBaseInfo = CCoreApp::Inst()->getCoreServiceMgr()->getServiceBaseInfo();
-			netMsg1.setConnectServiceName = CCoreApp::Inst()->getServiceRegistryProxy()->getConnectServiceName();
-			netMsg1.setConnectServiceType = CCoreApp::Inst()->getServiceRegistryProxy()->getConnectServiceType();
+			netMsg1.setConnectServiceName = CCoreApp::Inst()->getGlobalServiceRegistryProxy()->getConnectServiceName();
+			netMsg1.setConnectServiceType = CCoreApp::Inst()->getGlobalServiceRegistryProxy()->getConnectServiceType();
 
 			base::CWriteBuf& writeBuf = CCoreApp::Inst()->getWriteBuf();
 			netMsg1.pack(writeBuf);
@@ -75,7 +75,7 @@ namespace core
 			smt_sync_node_base_info netMsg;
 			netMsg.unpack(pData, nSize);
 
-			CCoreApp::Inst()->getServiceRegistryProxy()->addNodeProxyInfo(netMsg.sNodeBaseInfo, netMsg.vecServiceBaseInfo, !!netMsg.bExcludeConnect);
+			CCoreApp::Inst()->getGlobalServiceRegistryProxy()->addNodeProxyInfo(netMsg.sNodeBaseInfo, netMsg.vecServiceBaseInfo, !!netMsg.bExcludeConnect);
 		}
 		break;
 
@@ -84,7 +84,7 @@ namespace core
 			smt_sync_all_node_base_info netMsg;
 			netMsg.unpack(pData, nSize);
 
-			CCoreApp::Inst()->getServiceRegistryProxy()->setNodeProxyInfo(netMsg.mapNodeInfo, netMsg.setExcludeConnectNodeID);
+			CCoreApp::Inst()->getGlobalServiceRegistryProxy()->setNodeProxyInfo(netMsg.mapNodeInfo, netMsg.setExcludeConnectNodeID);
 		}
 		break;
 
@@ -93,7 +93,7 @@ namespace core
 			smt_remove_node_base_info netMsg;
 			netMsg.unpack(pData, nSize);
 
-			CCoreApp::Inst()->getServiceRegistryProxy()->delNodeProxyInfo(netMsg.nNodeID);
+			CCoreApp::Inst()->getGlobalServiceRegistryProxy()->delNodeProxyInfo(netMsg.nNodeID);
 		}
 		break;
 

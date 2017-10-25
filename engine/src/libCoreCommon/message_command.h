@@ -9,6 +9,7 @@ namespace core
 		eMCT_QUIT,
 		eMCT_INIT,
 		eMCT_FRAME,
+		eMCT_UPDATE_SERVICE_REGISTRY_PROXY,
 		eMCT_SERVICE_CONNECT,
 		eMCT_SERVICE_DISCONNECT,
 		eMCT_REQUEST_SOCKET_CONNECT,
@@ -41,6 +42,11 @@ namespace core
 	{
 		std::string	szType;
 		uint32_t	nID;
+	};
+
+	struct SMCT_UPDATE_SERVICE_REGISTRY_PROXY
+	{
+		void*	pProxy;
 	};
 
 	class CLogicMessageQueue;

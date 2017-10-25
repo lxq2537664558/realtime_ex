@@ -277,7 +277,7 @@ namespace
 		std::list<SLogInfo*> listLogInfo;
 
 		this->m_lock.lock();
-		std::swap(listLogInfo, this->m_listLogInfo);
+		listLogInfo = std::move(this->m_listLogInfo);
 		this->m_lock.unlock();
 
 		for (auto iter = listLogInfo.begin(); iter != listLogInfo.end(); ++iter)

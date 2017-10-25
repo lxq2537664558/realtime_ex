@@ -69,7 +69,6 @@ namespace base
 		__BASE_DATABASE_API__ void		setMaxCacheSize(uint32_t nID, uint64_t nSize);
 		__BASE_DATABASE_API__ void		flushCache(uint32_t nID, uint64_t nKey, EFlushCacheType eType);
 		__BASE_DATABASE_API__ uint32_t	getThreadCount(uint32_t nID);
-		__BASE_DATABASE_API__ uint32_t	getQPS(uint32_t nID, uint32_t nThreadIndex);
 		__BASE_DATABASE_API__ uint32_t	getQueueSize(uint32_t nID, uint32_t nThreadIndex);
 	}
 }

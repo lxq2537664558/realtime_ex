@@ -19,7 +19,7 @@ namespace core
 
 	uint32_t CHashServiceSelector::select(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nContext)
 	{
-		const std::vector<uint32_t>& vecServiceID = core::CBaseApp::Inst()->getActiveServiceIDByType(szServiceType);
+		const std::vector<uint32_t>& vecServiceID = this->m_pServiceBase->getActiveServiceIDByType(szServiceType);
 		if (vecServiceID.empty())
 			return 0;
 

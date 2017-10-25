@@ -18,12 +18,14 @@
 
 namespace core
 {
-	class CServiceRegistryProxy :
+	class CLocalServiceRegistryProxy;
+
+	class CGlobalServiceRegistryProxy :
 		public base::noncopyable
 	{
 	public:
-		CServiceRegistryProxy();
-		~CServiceRegistryProxy();
+		CGlobalServiceRegistryProxy();
+		~CGlobalServiceRegistryProxy();
 
 		bool			init(tinyxml2::XMLElement* pXMLElement);
 
@@ -31,22 +33,8 @@ namespace core
 		void			setNodeProxyInfo(const std::map<uint32_t, SNodeInfo>& mapNodeInfo, const std::set<uint32_t>& setExcludeConnectNodeID);
 		void			delNodeProxyInfo(uint32_t nNodeID);
 		
-		uint32_t		getServiceID(const std::string& szName);
-		std::string		getServiceType(uint32_t nServiceID);
-		std::string		getServiceName(uint32_t nServiceID);
-		const std::set<uint32_t>&
-						getServiceIDByType(const std::string& szName);
-		const std::vector<uint32_t>&
-						getActiveServiceIDByType(const std::string& szName);
-
-		bool			isValidService(uint32_t nServiceID) const;
-		
-		const SServiceBaseInfo*
-						getServiceBaseInfoByServiceID(uint32_t nServiceID);
 		bool			getServiceBaseInfoByNodeID(uint32_t nNodeID, std::vector<SServiceBaseInfo>& vecServiceBaseInfo);
 		
-		uint64_t		getOtherNodeSocketIDByServiceID(uint32_t nServiceID) const;
-		uint64_t		getOtherNodeSocketIDByNodeID(uint32_t nNodeID) const;
 		bool			setOtherNodeSocketIDByNodeID(uint32_t nNodeID, uint64_t nSocketID);
 
 		bool			addBaseConnectionToMaster(CBaseConnectionToMaster* pBaseConnectionToMaster);
@@ -60,12 +48,15 @@ namespace core
 		const std::set<std::string>&
 						getConnectServiceType() const;
 
+		void			fillLocalServiceRegistryProxy(CLocalServiceRegistryProxy* pLocalServiceRegistryProxy);
+
 	private:
 		void			onCheckConnectMaster(uint64_t nContext);
 		void			onConnectRefuse(const std::string& szContext);
 		void			updateActiveServiceID(const std::set<std::string>& setType);
+		void			updateLocalServiceRegistryProxy();
 
-	private:
+	public:
 		struct SNodeProxyInfo
 		{
 			SNodeBaseInfo					sNodeBaseInfo;
@@ -97,7 +88,7 @@ namespace core
 			std::vector<uint32_t>	vecActiveServiceID;
 		};
 
-		CLogicServiceLock						m_sLock;
+	private:
 		std::map<uint32_t, SNodeProxyInfo>		m_mapNodeProxyInfo;
 		std::map<uint32_t, SServiceProxyInfo>	m_mapServiceProxyInfo;
 		std::map<std::string, uint32_t>			m_mapServiceNameByID;

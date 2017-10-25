@@ -7,7 +7,6 @@
 #include <map>
 #include <set>
 
-class CConnectionFromNode;
 class CMasterService;
 class CServiceRegistry
 {
@@ -15,8 +14,9 @@ public:
 	CServiceRegistry(CMasterService* pMasterService);
 	~CServiceRegistry();
 
-	bool	addNode(CConnectionFromNode* pConnectionFromNode, const core::SNodeBaseInfo& sNodeBaseInfo, const std::vector<core::SServiceBaseInfo>& vecServiceBaseInfo, const std::set<std::string>& setConnectServiceName, const std::set<std::string>& setConnectServiceType);
+	bool	addNode(uint64_t nSocketID, const core::SNodeBaseInfo& sNodeBaseInfo, const std::vector<core::SServiceBaseInfo>& vecServiceBaseInfo, const std::set<std::string>& setConnectServiceName, const std::set<std::string>& setConnectServiceType);
 	void	delNode(uint32_t nNodeID);
+	void	disconnectNode(uint32_t nNodeID);
 	
 public:
 	struct SNodeProxyInfo
@@ -28,7 +28,7 @@ public:
 								vecServiceBaseInfo;
 		std::set<std::string>	setConnectServiceName;
 		std::set<std::string>	setConnectServiceType;
-		CConnectionFromNode*	pConnectionFromNode;
+		uint64_t				nSocketID;
 	};
 
 private:

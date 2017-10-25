@@ -110,13 +110,12 @@ namespace core
 		, m_nHeartbeatTime(_DEFAULT_HEARTBEAT_TIME)
 		, m_nSamplingTime(_DEFAULT_SAMPLING_TIME)
 		, m_nCoroutineStackSize(_DEFAULT_COROUTINE_STACK_SIZE)
-		, m_nQPS(0)
 		, m_nDefaultServiceInvokeTimeout(_DEFAULT_INVOKE_TIMEOUT)
 		, m_pGlobalBaseConnectionMgr(nullptr)
 		, m_pLogicMessageQueueMgr(nullptr)
 		, m_pGlobalLogicMessageQueue(nullptr)
 		, m_pCoreServiceMgr(nullptr)
-		, m_pServiceRegistryProxy(nullptr)
+		, m_pGlobalServiceRegistryProxy(nullptr)
 		, m_pNodeConnectionFactory(nullptr)
 	{
 		this->m_pLogicMessageQueueMgr = new CLogicMessageQueueMgr();
@@ -402,9 +401,6 @@ namespace core
 			return false;
 		}
 
-		this->m_tickerQPS.setCallback(std::bind(&CCoreApp::onQPS, this, std::placeholders::_1));
-		this->registerTicker(this->m_pGlobalLogicMessageQueue, &this->m_tickerQPS, 1000, 1000, 0);
-
 		this->m_pGlobalBaseConnectionMgr = new CBaseConnectionMgr(this->m_pGlobalLogicMessageQueue);
 		
 		this->m_pNodeConnectionFactory = new CNodeConnectionFactory();
@@ -418,8 +414,8 @@ namespace core
 			return false;
 		}
 
-		this->m_pServiceRegistryProxy = new CServiceRegistryProxy();
-		if (!this->m_pServiceRegistryProxy->init(pRootXML))
+		this->m_pGlobalServiceRegistryProxy = new CGlobalServiceRegistryProxy();
+		if (!this->m_pGlobalServiceRegistryProxy->init(pRootXML))
 		{
 			PrintWarning("this->m_pServiceRegistryProxy->init(pRootXML)");
 			return false;
@@ -472,7 +468,6 @@ namespace core
 	{
 		PrintInfo("CCoreApp::destroy");
 
-		this->unregisterTicker(&this->m_tickerQPS);
 		CClassInfoMgr::Inst()->unRegisterClassInfo();
 		CClassInfoMgr::Inst()->release();
 
@@ -524,9 +519,9 @@ namespace core
 		return this->m_pCoreServiceMgr;
 	}
 
-	CServiceRegistryProxy* CCoreApp::getServiceRegistryProxy() const
+	CGlobalServiceRegistryProxy* CCoreApp::getGlobalServiceRegistryProxy() const
 	{
-		return this->m_pServiceRegistryProxy;
+		return this->m_pGlobalServiceRegistryProxy;
 	}
 
 	uint32_t CCoreApp::getHeartbeatLimit() const
@@ -544,20 +539,16 @@ namespace core
 		return this->m_nSamplingTime;
 	}
 
-	void CCoreApp::onQPS(uint64_t nContext)
-	{
-		//PrintInfo("qps: {} net_queue_size: {} logic_queue_size: {}", this->m_nQPS, this->m_pNetMessageQueue->size(), this->m_pLogicMessageQueue->size());
-		this->m_nQPS.store(0, std::memory_order_release);
-	}
-
-	void CCoreApp::incQPS()
-	{
-		this->m_nQPS.fetch_add(1, std::memory_order_relaxed);
-	}
-
 	uint32_t CCoreApp::getQPS() const
 	{
-		return this->m_nQPS.load(std::memory_order_acquire);
+		uint32_t nQPS = 0;
+		const std::vector<CCoreService*>& vecCoreService = this->m_pCoreServiceMgr->getCoreService();
+		for (size_t i = 0; i < vecCoreService.size(); ++i)
+		{
+			nQPS += vecCoreService[i]->getQPS();
+		}
+
+		return nQPS;
 	}
 
 	const SNodeBaseInfo& CCoreApp::getNodeBaseInfo() const

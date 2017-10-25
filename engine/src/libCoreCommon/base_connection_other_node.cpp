@@ -41,9 +41,9 @@ namespace core
 	{
 		if (this->getNodeID() != 0)
 		{
-			CCoreApp::Inst()->getServiceRegistryProxy()->setOtherNodeSocketIDByNodeID(this->getNodeID(), 0);
+			CCoreApp::Inst()->getGlobalServiceRegistryProxy()->setOtherNodeSocketIDByNodeID(this->getNodeID(), 0);
 			
-			CCoreApp::Inst()->getServiceRegistryProxy()->onNodeDisconnect(this->getNodeID());
+			CCoreApp::Inst()->getGlobalServiceRegistryProxy()->onNodeDisconnect(this->getNodeID());
 		}
 	}
 
@@ -64,7 +64,7 @@ namespace core
 			netMsg.unpack(pData, nSize);
 
 			std::vector<SServiceBaseInfo> vecSServiceBaseInfo;
-			if (!CCoreApp::Inst()->getServiceRegistryProxy()->getServiceBaseInfoByNodeID(netMsg.nNodeID, vecSServiceBaseInfo))
+			if (!CCoreApp::Inst()->getGlobalServiceRegistryProxy()->getServiceBaseInfoByNodeID(netMsg.nNodeID, vecSServiceBaseInfo))
 			{
 				// 有可能节点信息不存（master还没有同步过来），暂时就踢掉等待对方再次连接
 				this->shutdown(true, "node info not find");
@@ -72,7 +72,7 @@ namespace core
 				return;
 			}
 
-			if (!CCoreApp::Inst()->getServiceRegistryProxy()->setOtherNodeSocketIDByNodeID(netMsg.nNodeID, this->getID()))
+			if (!CCoreApp::Inst()->getGlobalServiceRegistryProxy()->setOtherNodeSocketIDByNodeID(netMsg.nNodeID, this->getID()))
 			{
 				this->shutdown(true, "dup node connection passive mode");
 				return;
@@ -88,7 +88,7 @@ namespace core
 		{
 			smt_node_handshake_response netMsg;
 			netMsg.unpack(pData, nSize);
-			if (!CCoreApp::Inst()->getServiceRegistryProxy()->setOtherNodeSocketIDByNodeID(netMsg.nNodeID, this->getID()))
+			if (!CCoreApp::Inst()->getGlobalServiceRegistryProxy()->setOtherNodeSocketIDByNodeID(netMsg.nNodeID, this->getID()))
 			{
 				this->shutdown(true, "dup node connection initiative mode");
 				return;
@@ -96,7 +96,7 @@ namespace core
 
 			this->m_nNodeID = netMsg.nNodeID;
 
-			CCoreApp::Inst()->getServiceRegistryProxy()->onNodeConnect(this->getNodeID());
+			CCoreApp::Inst()->getGlobalServiceRegistryProxy()->onNodeConnect(this->getNodeID());
 		}
 		break;
 
@@ -126,7 +126,7 @@ namespace core
 		netMsg1.pack(writeBuf);
 		this->send(eMT_SYSTEM, writeBuf.getBuf(), (uint16_t)writeBuf.getCurSize());
 
-		CCoreApp::Inst()->getServiceRegistryProxy()->onNodeConnect(this->getNodeID());
+		CCoreApp::Inst()->getGlobalServiceRegistryProxy()->onNodeConnect(this->getNodeID());
 	}
 
 }

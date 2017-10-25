@@ -55,23 +55,9 @@ namespace core
 		*/
 		uint32_t			getNodeID() const;
 		/**
-		@brief: 根据节点名字获取节点id
-		*/
-		uint32_t			getServiceID(const std::string& szName) const;
-		/**
 		@brief: 判断是否是本节点的服务
 		*/
 		bool				isLocalService(uint32_t nServiceID) const;
-		/**
-		@brief: 根据服务类型取到该类型服务的所有服务id
-		*/
-		const std::set<uint32_t>&
-							getServiceIDByType(const std::string& szName) const;
-		/**
-		@brief: 根据服务类型取到该类型服务的所有激活的服务id
-		*/
-		const std::vector<uint32_t>&
-							getActiveServiceIDByType(const std::string& szName) const;
 		/*
 		@brief: 获取配置文件名
 		*/

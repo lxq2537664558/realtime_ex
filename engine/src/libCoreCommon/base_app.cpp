@@ -83,11 +83,6 @@ namespace core
 		return pCoreService->getServiceBase();
 	}
 
-	uint32_t CBaseApp::getServiceID(const std::string& szName) const
-	{
-		return CCoreApp::Inst()->getServiceRegistryProxy()->getServiceID(szName);
-	}
-
 	const std::string& CBaseApp::getConfigFileName() const
 	{
 		return CCoreApp::Inst()->getConfigFileName();
@@ -118,16 +113,6 @@ namespace core
 	bool CBaseApp::isLocalService(uint32_t nServiceID) const
 	{
 		return CCoreApp::Inst()->getCoreServiceMgr()->isLocalService(nServiceID);
-	}
-
-	const std::set<uint32_t>& CBaseApp::getServiceIDByType(const std::string& szName) const
-	{
-		return CCoreApp::Inst()->getServiceRegistryProxy()->getServiceIDByType(szName);
-	}
-
-	const std::vector<uint32_t>& CBaseApp::getActiveServiceIDByType(const std::string& szName) const
-	{
-		return CCoreApp::Inst()->getServiceRegistryProxy()->getActiveServiceIDByType(szName);
 	}
 
 	uint32_t CBaseApp::getCoroutineStackSize() const

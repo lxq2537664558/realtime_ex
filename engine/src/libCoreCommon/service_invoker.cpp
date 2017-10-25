@@ -39,7 +39,7 @@ namespace core
 	{
 		DebugAst(pMessage != nullptr);
 
-		const std::vector<uint32_t>& vecServiceID = core::CBaseApp::Inst()->getActiveServiceIDByType(szServiceType);
+		const std::vector<uint32_t>& vecServiceID = this->m_pServiceBase->getActiveServiceIDByType(szServiceType);
 		for (size_t i = 0; i < vecServiceID.size(); ++i)
 		{
 			this->send(vecServiceID[i], pMessage, pInvokeOption);

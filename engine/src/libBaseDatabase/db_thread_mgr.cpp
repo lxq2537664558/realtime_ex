@@ -107,26 +107,22 @@ namespace base
 
 	void CDbThreadMgr::update()
 	{
-		std::unique_lock<std::mutex> lock(this->m_tResultLock);
+		this->m_tResultLock.lock();
 		if (this->m_listResultInfo.empty())
+		{
+			this->m_tResultLock.unlock();
 			return;
+		}
 
-		std::list<SDbResultInfo> listResultInfo;
-		listResultInfo.splice(listResultInfo.end(), this->m_listResultInfo);
+		std::list<SDbResultInfo> listResultInfo = std::move(this->m_listResultInfo);
+		this->m_tResultLock.unlock();
+
 		for (auto iter = listResultInfo.begin(); iter != listResultInfo.end(); ++iter)
 		{
 			SDbResultInfo& sDbResultInfo = *iter;
 			if (sDbResultInfo.callback != nullptr)
 				sDbResultInfo.callback(sDbResultInfo.pMessage.get(), sDbResultInfo.nErrorCode);
 		}
-	}
-
-	uint32_t CDbThreadMgr::getQPS(uint32_t nThreadIndex)
-	{
-		if (nThreadIndex >= this->m_vecDbThread.size())
-			return 0;
-
-		return this->m_vecDbThread[nThreadIndex]->getQPS();
 	}
 
 	uint32_t CDbThreadMgr::getQueueSize(uint32_t nThreadIndex)

@@ -152,7 +152,7 @@ namespace core
 	{
 		std::vector<CCoreTickerNode*> vecSwapTicker;
 		this->m_lockRegister.lock();
-		std::swap(vecSwapTicker, this->m_vecRegisterTicker);
+		vecSwapTicker = std::move(this->m_vecRegisterTicker);
 		this->m_lockRegister.unlock();
 		size_t nSwapCount = vecSwapTicker.size();
 		for (size_t i = 0; i < nSwapCount; ++i)
@@ -166,7 +166,7 @@ namespace core
 		vecSwapTicker.clear();
 
 		this->m_lockUnRegister.lock();
-		std::swap(vecSwapTicker, this->m_vecUnRegisterTicker);
+		vecSwapTicker = std::move(this->m_vecUnRegisterTicker);
 		this->m_lockUnRegister.unlock();
 		nSwapCount = vecSwapTicker.size();
 		for (size_t i = 0; i < nSwapCount; ++i)

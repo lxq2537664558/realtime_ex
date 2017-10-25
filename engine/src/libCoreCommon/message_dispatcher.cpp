@@ -29,7 +29,7 @@ namespace core
 	{
 		DebugAst(pContext != nullptr);
 
-		CCoreApp::Inst()->incQPS();
+		this->m_pCoreService->incQPS();
 
 		if (nMessageType == eMT_REQUEST)
 		{

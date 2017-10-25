@@ -54,6 +54,8 @@ namespace core
 
 		for (size_t i = 0; i < this->m_vecCoreService.size(); ++i)
 		{
+			CCoreApp::Inst()->getGlobalServiceRegistryProxy()->fillLocalServiceRegistryProxy(this->m_vecCoreService[i]->getLocalServiceRegistryProxy());
+
 			this->m_vecCoreService[i]->getMessageQueue()->send(sMessagePacket);
 		}
 

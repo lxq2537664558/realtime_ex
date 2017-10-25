@@ -160,6 +160,22 @@ namespace core
 		}
 		break;
 
+		case eMCT_UPDATE_SERVICE_REGISTRY_PROXY:
+		{
+			SMCT_UPDATE_SERVICE_REGISTRY_PROXY* pContext = reinterpret_cast<SMCT_UPDATE_SERVICE_REGISTRY_PROXY*>(sMessagePacket.pData);
+			CLocalServiceRegistryProxy* pLocalServiceRegistryProxy = reinterpret_cast<CLocalServiceRegistryProxy*>(pContext->pProxy);
+			defer([&]()
+			{
+				SAFE_DELETE(pLocalServiceRegistryProxy);
+				SAFE_DELETE(pContext);
+			});
+
+			DebugAstEx(pCoreService != nullptr, false);
+
+			*pCoreService->getLocalServiceRegistryProxy() = *pLocalServiceRegistryProxy;
+		}
+		break;
+
 		case eMCT_SERVICE_CONNECT:
 		{
 			SMCT_SERVICE_CONNECT* pContext = reinterpret_cast<SMCT_SERVICE_CONNECT*>(sMessagePacket.pData);

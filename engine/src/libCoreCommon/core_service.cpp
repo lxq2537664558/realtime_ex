@@ -30,12 +30,15 @@ namespace core
 		, m_pBaseConnectionMgr(nullptr)
 		, m_pMessageQueue(nullptr)
 		, m_nNextSessionID(0)
+		, m_nQPS(0)
+		, m_nCurQPS(0)
 		, m_nDefaultServiceMessageSerializerType(0)
 	{
 		this->m_pMessageQueue = new CLogicMessageQueue(this, CCoreApp::Inst()->getLogicMessageQueueMgr());
 	
 		this->m_pBaseConnectionMgr = new CBaseConnectionMgr(this->m_pMessageQueue);
 
+		this->m_pLocalServiceRegistryProxy = new CLocalServiceRegistryProxy();
 		this->m_pTransporter = new CTransporter(this);
 		this->m_pServiceInvoker = new CServiceInvoker(pServiceBase);
 		this->m_pMessageDispatcher = new CMessageDispatcher(this);
@@ -45,6 +48,7 @@ namespace core
 		this->m_mapServiceSelector[eSST_RoundRobin] = new CRoundRobinServiceSelector(this->m_pServiceBase);
 
 		this->m_tickerCheckHealth.setCallback(std::bind(&CCoreService::onCheckServiceHealth, this, std::placeholders::_1));
+		this->m_tickerQPS.setCallback(std::bind(&CCoreService::onQPS, this, std::placeholders::_1));
 	}
 
 	CCoreService::~CCoreService()
@@ -52,6 +56,7 @@ namespace core
 		SAFE_DELETE(this->m_pServiceInvoker);
 		SAFE_DELETE(this->m_pMessageDispatcher);
 		SAFE_DELETE(this->m_pTransporter);
+		SAFE_DELETE(this->m_pLocalServiceRegistryProxy);
 
 		SAFE_DELETE(this->m_mapServiceSelector[eSST_Random]);
 		SAFE_DELETE(this->m_mapServiceSelector[eSST_Hash]);
@@ -76,13 +81,15 @@ namespace core
 		this->m_eRunState = eSRS_Normal;
 
 		this->addServiceMessageSerializer(new CNativeSerializer());
+		
 		this->registerServiceMessageHandler("service_health_request", [this](CServiceBase* pServiceBase, SSessionInfo sSessionInfo, const void*)
 		{
 			service_health_response response_msg;
 			pServiceBase->getServiceInvoker()->response(sSessionInfo, &response_msg, eRRT_OK, eMST_Native);
 		});
-
 		this->m_pServiceBase->registerTicker(&this->m_tickerCheckHealth, _CHECK_SERVICE_HEALTH_TIME, _CHECK_SERVICE_HEALTH_TIME, 0);
+		
+		this->m_pServiceBase->registerTicker(&this->m_tickerQPS, 1000, 1000, 0);
 		return true;
 	}
 
@@ -269,7 +276,7 @@ namespace core
 
 	bool CCoreService::isServiceHealth(uint32_t nServiceID) const
 	{
-		if (!CCoreApp::Inst()->getServiceRegistryProxy()->isValidService(nServiceID))
+		if (!this->m_pLocalServiceRegistryProxy->isValidService(nServiceID))
 			return false;
 
 		auto iter = this->m_mapServiceHealth.find(nServiceID);
@@ -512,5 +519,27 @@ namespace core
 			nMessageSerializerType = iter->second;
 
 		return nMessageSerializerType;
+	}
+
+	uint32_t CCoreService::getQPS() const
+	{
+		return this->m_nQPS.load(std::memory_order_acquire);
+	}
+
+	void CCoreService::incQPS()
+	{
+		++this->m_nCurQPS;
+	}
+
+	void CCoreService::onQPS(uint64_t nContext)
+	{
+		this->m_nQPS.store(this->m_nCurQPS, std::memory_order_release);
+
+		this->m_nCurQPS = 0;
+	}
+
+	CLocalServiceRegistryProxy* CCoreService::getLocalServiceRegistryProxy() const
+	{
+		return this->m_pLocalServiceRegistryProxy;
 	}
 }

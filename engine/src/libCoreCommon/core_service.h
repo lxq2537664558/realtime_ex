@@ -7,6 +7,7 @@
 #include "logic_message_queue.h"
 #include "message_dispatcher.h"
 #include "base_connection_mgr.h"
+#include "local_service_registry_proxy.h"
 #include "transporter.h"
 
 #include "libBaseCommon/spin_lock.h"
@@ -98,9 +99,16 @@ namespace core
 		CMessageSerializer*	getServiceMessageSerializerByType(uint8_t nType) const;
 		CMessageSerializer*	getForwardMessageSerializer() const;
 
+		uint32_t			getQPS() const;
+		void				incQPS();
+
+		CLocalServiceRegistryProxy*
+							getLocalServiceRegistryProxy() const;
+
 	private:
 		void				onCheckServiceHealth(uint64_t nContext);
 		void				onRequestMessageTimeout(uint64_t nContext);
+		void				onQPS(uint64_t nContext);
 
 	private:
 		SServiceBaseInfo		m_sServiceBaseInfo;
@@ -112,6 +120,12 @@ namespace core
 		CLogicMessageQueue*		m_pMessageQueue;
 		CBaseConnectionMgr*		m_pBaseConnectionMgr;
 		CTransporter*			m_pTransporter;
+		CLocalServiceRegistryProxy*
+								m_pLocalServiceRegistryProxy;
+
+		std::atomic<uint32_t>	m_nQPS;
+		uint32_t				m_nCurQPS;
+		CTicker					m_tickerQPS;
 
 		CTicker					m_tickerCheckHealth;
 
