@@ -31,7 +31,9 @@ namespace core
 			// 这里需要重新获取，因为有可能线程切换了
 			pCoroutineThread = getCoroutineThread();
 			pCoroutineThread->setCurrentCoroutine(nullptr);
-			pCoroutineThread->addDeadCoroutine(pCoroutineImpl);
+			
+			// 这里不能马上放入回收列表，因为这个时候还没有切换到该线程的主协程
+			pCoroutineImpl->setState(eCS_DEAD);
 
 #ifdef _WIN32
 			SwitchToFiber(pCoroutineThread->getMainContext());

@@ -20,6 +20,10 @@ namespace core
 			}
 
 			pCoroutineImpl->resume(nContext);
+			if (pCoroutineImpl->getState() == eCS_DEAD && !CCoroutineMgr::Inst()->addRecycleCoroutine(pCoroutineImpl))
+			{
+				SAFE_DELETE(pCoroutineImpl);
+			}
 		}
 
 		uint64_t yield()
@@ -32,13 +36,6 @@ namespace core
 			}
 
 			return pCoroutineImpl->yield();
-		}
-
-		void update()
-		{
-			CCoroutineThread* pCoroutineThread = getCoroutineThread();
-
-			pCoroutineThread->update();
 		}
 
 		uint32_t getState(uint64_t nID)

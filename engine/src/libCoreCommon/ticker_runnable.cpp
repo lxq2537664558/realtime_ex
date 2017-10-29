@@ -322,7 +322,7 @@ namespace core
 
 	void CCoreTickerInfo::release()
 	{
-		if ((this->m_nRef.fetch_sub(1, std::memory_order_acq_rel)) == 0)
+		if ((this->m_nRef.fetch_sub(1, std::memory_order_acq_rel)) == 1)
 		{
 			CCoreTickerNode* pCoreTickerNode = reinterpret_cast<CCoreTickerNode*>(this->m_pMemory);
 			SAFE_DELETE(pCoreTickerNode);

@@ -51,20 +51,6 @@ namespace core
 		this->m_pCurrentCoroutine = pCoroutineImpl;
 	}
 
-	void CCoroutineThread::addDeadCoroutine(CCoroutineImpl* pCoroutineImpl)
-	{
-		DebugAst(pCoroutineImpl != nullptr);
-
-		pCoroutineImpl->setState(eCS_DEAD);
-		this->m_listDeadCoroutine.push_back(pCoroutineImpl);
-	}
-
-	void CCoroutineThread::update()
-	{
-		CCoroutineMgr::Inst()->update(this->m_listDeadCoroutine);
-		this->m_listDeadCoroutine.clear();
-	}
-
 	void* CCoroutineThread::getMainContext() const
 	{
 		return this->m_pMainContext;

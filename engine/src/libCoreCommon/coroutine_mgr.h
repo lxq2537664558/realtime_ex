@@ -22,15 +22,12 @@ namespace core
 		CCoroutineImpl*	getCoroutine(uint64_t nID);
 		uint32_t		getCoroutineCount();
 		uint64_t		getTotalStackSize();
-		void			update(const std::list<CCoroutineImpl*>& listCoroutineImpl);
+		bool			addRecycleCoroutine(CCoroutineImpl* pCoroutineImpl);
 
 #ifndef _WIN32
 		static char*	allocStack(uint32_t& nStackSize, uint32_t& nValgrindID);
 		static void		freeStack(char* pStack, uint32_t nStackSize, uint32_t nValgrindID);
 #endif
-
-	private:
-		void			recycle(uint32_t nRemainCount);
 
 	private:
 		int64_t									m_nTotalStackSize;

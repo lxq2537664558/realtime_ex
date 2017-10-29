@@ -91,7 +91,6 @@ namespace core
 		}
 
 		pMessageQueue->dispatchEnd();
-		coroutine::update();
 
 		int64_t nEndSamplingTime = base::time_util::getProcessPassTime();
 		this->m_nTotalSamplingTime = this->m_nTotalSamplingTime + (uint32_t)(nEndSamplingTime - nBeginSamplingTime);

@@ -51,7 +51,7 @@ namespace core
 	};
 
 	template<class T>
-	static CFuture<T> createFuture(T val);
+	static CFuture<T> createFuture(std::shared_ptr<T> val);
 }
 
 #include "future.inl"

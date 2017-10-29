@@ -80,6 +80,7 @@ namespace core
 
 		this->m_pContext->callback = fn;
 
+		// 在调用then时future已经可用了
 		if (this->m_pContext->bReady)
 			this->m_pContext->callback(this->m_pContext->val.get(), this->m_pContext->nErrorCode);
 	}
@@ -96,31 +97,60 @@ namespace core
 		pContext->bReady = false;
 		pContext->nErrorCode = 0;
 
-		this->m_pContext->callback = [fn, pContext](const T* val, uint32_t nErrorCode)->void
+		auto callback_0 = [fn, &pContext](const T* val, uint32_t nErrorCode)->void
 		{
 			CFuture<ValueType> sNewFuture = fn(val, nErrorCode);
 			if (sNewFuture.m_pContext == nullptr)
 				return;
 			
+			sNewFuture.m_pContext->callback = pContext->callback;
+
 			// 有可能返回的future已经是一个准备好的future，所以需要拷贝到pContext中
 			pContext->bReady = sNewFuture.m_pContext->bReady;
 			pContext->val = sNewFuture.m_pContext->val;
 			pContext->nErrorCode = sNewFuture.m_pContext->nErrorCode;
-			sNewFuture.m_pContext->callback = pContext->callback;
+			
+			pContext = sNewFuture.m_pContext;
+
 			// 在回调完成后如果返回的future已经准备好，并且回调函数也已经设置好了，就回调他，不然就没有机会回调了
 			if (sNewFuture.m_pContext->bReady && sNewFuture.m_pContext->callback != nullptr)
 				sNewFuture.m_pContext->callback(sNewFuture.m_pContext->val.get(), sNewFuture.m_pContext->nErrorCode);
 		};
 
-		// 在调用then时future已经可用了
+		auto callback_1 = [fn, pContext](const T* val, uint32_t nErrorCode)->void
+		{
+			CFuture<ValueType> sNewFuture = fn(val, nErrorCode);
+			if (sNewFuture.m_pContext == nullptr)
+				return;
+
+			sNewFuture.m_pContext->callback = pContext->callback;
+
+			// 有可能返回的future已经是一个准备好的future，所以需要拷贝到pContext中
+			pContext->bReady = sNewFuture.m_pContext->bReady;
+			pContext->val = sNewFuture.m_pContext->val;
+			pContext->nErrorCode = sNewFuture.m_pContext->nErrorCode;
+			
+			// 在回调完成后如果返回的future已经准备好，并且回调函数也已经设置好了，就回调他，不然就没有机会回调了
+			if (sNewFuture.m_pContext->bReady && sNewFuture.m_pContext->callback != nullptr)
+				sNewFuture.m_pContext->callback(sNewFuture.m_pContext->val.get(), sNewFuture.m_pContext->nErrorCode);
+		};
+
+		// 在调用then_r时future已经可用了
 		if (this->m_pContext->bReady)
+		{
+			this->m_pContext->callback = callback_0;
 			this->m_pContext->callback(this->m_pContext->val.get(), this->m_pContext->nErrorCode);
-		
+		}
+		else
+		{
+			this->m_pContext->callback = callback_1;
+		}
+
 		return CFuture<ValueType>(pContext);
 	}
 
 	template<class T>
-	CFuture<T> createFuture(T val)
+	CFuture<T> createFuture(std::shared_ptr<T> val)
 	{
 		auto pContext = std::make_shared<SFutureContext<T>>();
 		pContext->bReady = true;

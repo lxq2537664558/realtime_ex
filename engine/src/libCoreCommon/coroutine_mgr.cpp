@@ -84,17 +84,6 @@ namespace core
 		return (uint64_t)this->m_nTotalStackSize;
 	}
 
-	void CCoroutineMgr::recycle(uint32_t nRemainCount)
-	{
-		while (this->m_listRecycleCoroutine.size() > nRemainCount)
-		{
-			CCoroutineImpl* pCoroutineImpl = *this->m_listRecycleCoroutine.begin();
-			SAFE_DELETE(pCoroutineImpl);
-
-			this->m_listRecycleCoroutine.pop_front();
-		}
-	}
-
 	CCoroutineMgr::CCoroutineMgr()
 		: m_nNextCoroutineID(1)
 		, m_nTotalStackSize(0)
@@ -104,7 +93,11 @@ namespace core
 
 	CCoroutineMgr::~CCoroutineMgr()
 	{
-		this->recycle(0);
+		for (auto iter = this->m_listRecycleCoroutine.begin(); iter != this->m_listRecycleCoroutine.end(); ++iter)
+		{
+			CCoroutineImpl* pCoroutineImpl = *iter;
+			SAFE_DELETE(pCoroutineImpl);
+		}
 	}
 
 	bool CCoroutineMgr::init()
@@ -112,23 +105,21 @@ namespace core
 		return true;
 	}
 
-	void CCoroutineMgr::update(const std::list<CCoroutineImpl*>& listCoroutineImpl)
+	bool CCoroutineMgr::addRecycleCoroutine(CCoroutineImpl* pCoroutineImpl)
 	{
+		DebugAstEx(pCoroutineImpl != nullptr, false);
+
 		std::unique_lock<std::mutex> guard(this->m_lock);
 
-		for (auto iter = listCoroutineImpl.begin(); iter != listCoroutineImpl.end(); ++iter)
-		{
-			CCoroutineImpl* pCoroutineImpl = *iter;
-			if (nullptr == pCoroutineImpl)
-				continue;
+		this->m_mapCoroutine.erase(pCoroutineImpl->getCoroutineID());
+		this->m_nTotalStackSize -= pCoroutineImpl->getStackSize();
 
-			this->m_mapCoroutine.erase(pCoroutineImpl->getCoroutineID());
-			this->m_nTotalStackSize -= pCoroutineImpl->getStackSize();
+		if (this->m_listRecycleCoroutine.size() > _MAX_CO_RECYCLE_COUNT)
+			return false;
 
-			this->m_listRecycleCoroutine.push_back(pCoroutineImpl);
-		}
+		this->m_listRecycleCoroutine.push_back(pCoroutineImpl);
 
-		this->recycle(_MAX_CO_RECYCLE_COUNT);
+		return true;
 	}
 
 #ifndef _WIN32

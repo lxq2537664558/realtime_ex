@@ -125,7 +125,6 @@ namespace core
 		// 不用担心sNodeProxyInfo的生命周期问题
 		sNodeProxyInfo.pTicker->setCallback([&sNodeProxyInfo](uint64_t nContext)
 		{
-			// 只会在单一线程写，所以不需要加锁
 			if (sNodeProxyInfo.nSocketID != 0)
 				return;
 

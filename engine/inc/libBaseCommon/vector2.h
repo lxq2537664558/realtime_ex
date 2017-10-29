@@ -95,6 +95,6 @@ namespace base
 		}
 	};
 
-	typedef TVector2<int32_t>		CVector2I;
+	typedef TVector2<int32_t>	CVector2I;
 	typedef TVector2<float>		CVector2f;
 }
