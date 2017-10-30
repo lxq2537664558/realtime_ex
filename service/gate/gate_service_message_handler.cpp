@@ -9,8 +9,8 @@ using namespace core;
 
 CGateServiceMessageHandler::CGateServiceMessageHandler(CServiceBase* pServiceBase)
 {
-	register_pb_service_message_handler(pServiceBase, this, &CGateServiceMessageHandler::d2g_player_token_notify_handler);
-	register_pb_service_message_handler(pServiceBase, this, &CGateServiceMessageHandler::s2g_kick_player_notify_handler);
+	register_service_message_handler(pServiceBase, this, &CGateServiceMessageHandler::d2g_player_token_notify_handler);
+	register_service_message_handler(pServiceBase, this, &CGateServiceMessageHandler::s2g_kick_player_notify_handler);
 }
 
 CGateServiceMessageHandler::~CGateServiceMessageHandler()

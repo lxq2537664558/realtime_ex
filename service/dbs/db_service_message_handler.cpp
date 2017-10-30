@@ -17,14 +17,14 @@
 
 CDbServiceMessageHandler::CDbServiceMessageHandler(CServiceBase* pServiceBase)
 {
-	register_native_service_message_handler(pServiceBase, this, &CDbServiceMessageHandler::select_command_handler);
-	register_native_service_message_handler(pServiceBase, this, &CDbServiceMessageHandler::update_command_handler);
-	register_native_service_message_handler(pServiceBase, this, &CDbServiceMessageHandler::delete_command_handler);
-	register_native_service_message_handler(pServiceBase, this, &CDbServiceMessageHandler::insert_command_handler);
-	register_native_service_message_handler(pServiceBase, this, &CDbServiceMessageHandler::call_command_handler);
-	register_native_service_message_handler(pServiceBase, this, &CDbServiceMessageHandler::query_command_handler);
-	register_native_service_message_handler(pServiceBase, this, &CDbServiceMessageHandler::flush_command_handler);
-	register_native_service_message_handler(pServiceBase, this, &CDbServiceMessageHandler::nop_command_handler);
+	register_service_message_handler(pServiceBase, this, &CDbServiceMessageHandler::select_command_handler);
+	register_service_message_handler(pServiceBase, this, &CDbServiceMessageHandler::update_command_handler);
+	register_service_message_handler(pServiceBase, this, &CDbServiceMessageHandler::delete_command_handler);
+	register_service_message_handler(pServiceBase, this, &CDbServiceMessageHandler::insert_command_handler);
+	register_service_message_handler(pServiceBase, this, &CDbServiceMessageHandler::call_command_handler);
+	register_service_message_handler(pServiceBase, this, &CDbServiceMessageHandler::query_command_handler);
+	register_service_message_handler(pServiceBase, this, &CDbServiceMessageHandler::flush_command_handler);
+	register_service_message_handler(pServiceBase, this, &CDbServiceMessageHandler::nop_command_handler);
 }
 
 CDbServiceMessageHandler::~CDbServiceMessageHandler()

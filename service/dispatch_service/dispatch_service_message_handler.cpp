@@ -22,11 +22,11 @@ CDispatchServiceMessageHandler::CDispatchServiceMessageHandler(CDispatchService*
 	: CDbServiceInvokeHolder(pDispatchService, pDispatchService->getGlobalDbServiceID())
 	, CServiceInvokeHolder(pDispatchService)
 {
-	register_pb_service_message_handler(pDispatchService, this, &CDispatchServiceMessageHandler::s2d_online_count_notify_handler);
-	register_pb_service_message_handler(pDispatchService, this, &CDispatchServiceMessageHandler::g2d_online_count_notify_handler);
-	register_pb_service_message_handler(pDispatchService, this, &CDispatchServiceMessageHandler::l2d_validate_login_request_handler);
-	register_pb_service_message_handler(pDispatchService, this, &CDispatchServiceMessageHandler::g2d_addr_notify_handler);
-	register_pb_service_message_handler(pDispatchService, this, &CDispatchServiceMessageHandler::u2d_active_count_notify_handler);
+	register_service_message_handler(pDispatchService, this, &CDispatchServiceMessageHandler::s2d_online_count_notify_handler);
+	register_service_message_handler(pDispatchService, this, &CDispatchServiceMessageHandler::g2d_online_count_notify_handler);
+	register_service_message_handler(pDispatchService, this, &CDispatchServiceMessageHandler::l2d_validate_login_request_handler);
+	register_service_message_handler(pDispatchService, this, &CDispatchServiceMessageHandler::g2d_addr_notify_handler);
+	register_service_message_handler(pDispatchService, this, &CDispatchServiceMessageHandler::u2d_active_count_notify_handler);
 }
 
 CDispatchServiceMessageHandler::~CDispatchServiceMessageHandler()

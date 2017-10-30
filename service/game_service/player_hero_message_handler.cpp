@@ -14,8 +14,8 @@
 
 CPlayerHeroMessageHandler::CPlayerHeroMessageHandler(CServiceBase* pServiceBase)
 {
-	register_pb_forward_message_handler(pServiceBase, this, &CPlayerHeroMessageHandler::c2s_active_hero_request_handler);
-	register_pb_forward_message_handler(pServiceBase, this, &CPlayerHeroMessageHandler::c2s_active_hero_patch_request_handler);
+	register_forward_message_handler(pServiceBase, this, &CPlayerHeroMessageHandler::c2s_active_hero_request_handler);
+	register_forward_message_handler(pServiceBase, this, &CPlayerHeroMessageHandler::c2s_active_hero_patch_request_handler);
 }
 
 CPlayerHeroMessageHandler::~CPlayerHeroMessageHandler()

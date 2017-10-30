@@ -16,10 +16,10 @@
 
 CGameServiceMessageHandler::CGameServiceMessageHandler(CServiceBase* pServiceBase)
 {
-	register_pb_service_message_handler(pServiceBase, this, &CGameServiceMessageHandler::g2s_player_enter_request_handler);
-	register_pb_service_message_handler(pServiceBase, this, &CGameServiceMessageHandler::g2s_player_leave_notify_handler);
-	register_pb_service_message_handler(pServiceBase, this, &CGameServiceMessageHandler::u2s_kick_player_notify_handler);
-	register_pb_service_message_handler(pServiceBase, this, &CGameServiceMessageHandler::g2s_player_heartbeat_notify_handler);
+	register_service_message_handler(pServiceBase, this, &CGameServiceMessageHandler::g2s_player_enter_request_handler);
+	register_service_message_handler(pServiceBase, this, &CGameServiceMessageHandler::g2s_player_leave_notify_handler);
+	register_service_message_handler(pServiceBase, this, &CGameServiceMessageHandler::u2s_kick_player_notify_handler);
+	register_service_message_handler(pServiceBase, this, &CGameServiceMessageHandler::g2s_player_heartbeat_notify_handler);
 }
 
 CGameServiceMessageHandler::~CGameServiceMessageHandler()

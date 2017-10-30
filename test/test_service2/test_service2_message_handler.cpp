@@ -8,7 +8,7 @@
 
 CTestService2MessageHandler::CTestService2MessageHandler(CServiceBase* pServiceBase)
 {
-	register_pb_service_message_handler(pServiceBase, this, &CTestService2MessageHandler::request_msg1_handler);
+	register_service_message_handler(pServiceBase, this, &CTestService2MessageHandler::request_msg1_handler);
 }
 
 CTestService2MessageHandler::~CTestService2MessageHandler()

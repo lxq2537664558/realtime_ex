@@ -13,8 +13,8 @@
 
 CPlayerMessageHandler::CPlayerMessageHandler(CServiceBase* pServiceBase)
 {
-	register_pb_forward_message_handler(pServiceBase, this, &CPlayerMessageHandler::c2s_update_name_request_handler);
-	register_pb_forward_message_handler(pServiceBase, this, &CPlayerMessageHandler::c2s_gm_command_request_handler);
+	register_forward_message_handler(pServiceBase, this, &CPlayerMessageHandler::c2s_update_name_request_handler);
+	register_forward_message_handler(pServiceBase, this, &CPlayerMessageHandler::c2s_gm_command_request_handler);
 }
 
 CPlayerMessageHandler::~CPlayerMessageHandler()
