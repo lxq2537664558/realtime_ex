@@ -24,6 +24,7 @@ namespace core
 		while (true)
 		{
 			CCoroutineThread* pCoroutineThread = getCoroutineThread();
+
 			CCoroutineImpl* pCoroutineImpl = pCoroutineThread->getCurrentCoroutine();
 			pCoroutineImpl->m_callback(pCoroutineImpl->m_nContext);
 			// 一定要把callback设置成null，不然绑在这个function上的对象就不会释放
@@ -138,10 +139,10 @@ namespace core
 		DebugAst(this->getState() == eCS_READY || this->getState() == eCS_SUSPEND);
 
 		this->m_eState = eCS_RUNNING;
+		this->m_nContext = nContext;
 
 		CCoroutineThread* pCoroutineThread = getCoroutineThread();
 		pCoroutineThread->setCurrentCoroutine(this);
-		this->m_nContext = nContext;
 
 #ifdef _WIN32
 		SwitchToFiber(this->m_pContext);

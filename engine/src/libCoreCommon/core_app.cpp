@@ -31,7 +31,6 @@
 #include "base_connection.h"
 #include "message_command.h"
 #include "class_info_mgr.h"
-#include "ticker_runnable.h"
 #include "net_runnable.h"
 #include "logic_runnable.h"
 #include "coroutine_mgr.h"
@@ -111,6 +110,7 @@ namespace core
 		, m_nSamplingTime(_DEFAULT_SAMPLING_TIME)
 		, m_nCoroutineStackSize(_DEFAULT_COROUTINE_STACK_SIZE)
 		, m_nDefaultServiceInvokeTimeout(_DEFAULT_INVOKE_TIMEOUT)
+		, m_pGlobalTickerMgr(nullptr)
 		, m_pGlobalBaseConnectionMgr(nullptr)
 		, m_pLogicMessageQueueMgr(nullptr)
 		, m_pGlobalLogicMessageQueue(nullptr)
@@ -152,14 +152,14 @@ namespace core
 		return true;
 	}
 
-	void CCoreApp::registerTicker(CMessageQueue* pMessageQueue, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
+	void CCoreApp::registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext, bool bCoroutine)
 	{
-		CTickerRunnable::Inst()->registerTicker(pMessageQueue, pTicker, nStartTime, nIntervalTime, nContext);
+		this->m_pGlobalTickerMgr->registerTicker(pTicker, nStartTime, nIntervalTime, nContext, bCoroutine);
 	}
 
 	void CCoreApp::unregisterTicker(CTicker* pTicker)
 	{
-		CTickerRunnable::Inst()->unregisterTicker(pTicker);
+		this->m_pGlobalTickerMgr->unregisterTicker(pTicker);
 	}
 
 	const std::string& CCoreApp::getConfigFileName() const
@@ -401,6 +401,8 @@ namespace core
 			return false;
 		}
 
+		this->m_pGlobalTickerMgr = new CTickerMgr(base::time_util::getGmtTime());
+
 		this->m_pGlobalBaseConnectionMgr = new CBaseConnectionMgr(this->m_pGlobalLogicMessageQueue);
 		
 		this->m_pNodeConnectionFactory = new CNodeConnectionFactory();
@@ -424,12 +426,6 @@ namespace core
 		if (!CNetRunnable::Inst()->init(nMaxConnectionCount))
 		{
 			PrintWarning("CNetRunnable::Inst()->init(nMaxConnectionCount)");
-			return false;
-		}
-
-		if (!CTickerRunnable::Inst()->init())
-		{
-			PrintWarning("CTickerRunnable::Inst()->init()");
 			return false;
 		}
 
@@ -605,4 +601,12 @@ namespace core
 
 		base::log::save("INFO", true, "%s", ss.str().c_str());
 	}
+
+	void CCoreApp::onFrame()
+	{
+		int64_t nCurTime = base::time_util::getGmtTime();
+
+		this->m_pGlobalTickerMgr->update(nCurTime);
+	}
+
 }

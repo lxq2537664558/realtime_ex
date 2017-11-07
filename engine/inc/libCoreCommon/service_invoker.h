@@ -66,7 +66,8 @@ namespace core
 		inline void		async_invoke(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const void* pMessage, CFuture<T>& sFuture, const SInvokeOption* pInvokeOption = nullptr, CServiceInvokeHolder* pServiceInvokeHolder = nullptr);
 		/**
 		@brief: 同步的调用远程的接口
-			通过pResponseMessage来拿到响应结果，这里用shared_ptr的原因是为了自动释放pResponseMessage
+			通过pResponseMessage来拿到响应结果，这里用shared_ptr的原因是为了管理pResponseMessage的生命周期，
+			只有持有这个share_ptr才能保证pResponseMessage的有效性。
 		*/
 		template<class T>
 		inline uint32_t	sync_invoke(const std::string& szServiceType, uint32_t nServiceSelectorType, uint64_t nServiceSelectorContext, const void* pMessage, std::shared_ptr<T>& pResponseMessage, const SInvokeOption* pInvokeOption = nullptr, CServiceInvokeHolder* pServiceInvokeHolder = nullptr);

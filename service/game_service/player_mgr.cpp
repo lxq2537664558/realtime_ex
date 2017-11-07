@@ -21,12 +21,20 @@ CPlayer* CPlayerMgr::getPlayer(uint64_t nPlayerID) const
 	if (iter == this->m_mapPlayer.end())
 		return nullptr;
 
-	return iter->second;
+	CPlayer* pPlayer = iter->second;
+	if (nullptr == pPlayer)
+		return nullptr;
+
+	if (pPlayer->getStatus() != ePST_Normal)
+		return nullptr;
+
+	return pPlayer;
 }
 
 CPlayer* CPlayerMgr::createPlayer(uint64_t nPlayerID, const void* pContext)
 {
-	if (nullptr != this->getPlayer(nPlayerID))
+	auto iter = this->m_mapPlayer.find(nPlayerID);
+	if (iter != this->m_mapPlayer.end())
 		return nullptr;
 
 	CPlayer* pPlayer = new CPlayer(this->m_pGameService);
@@ -42,7 +50,14 @@ CPlayer* CPlayerMgr::createPlayer(uint64_t nPlayerID, const void* pContext)
 	uint32_t nDbServiceID = nDBID + _GAME_DB_SERVICE_DELTA;
 	uint32_t nErrorCode = this->service_sync_nop(nDbServiceID, (uint32_t)nPlayerID, 0);
 	
-	pPlayer = this->getPlayer(nPlayerID);
+	iter = this->m_mapPlayer.find(nPlayerID);
+	if (iter == this->m_mapPlayer.end())
+	{
+		PrintInfo("load player data nop iter == this->m_mapPlayer.end() player_id: {}", nPlayerID);
+		return nullptr;
+	}
+
+	pPlayer = iter->second;
 	if (nullptr == pPlayer)
 	{
 		PrintInfo("load player data nop nullptr == pPlayer player_id: {}", nPlayerID);

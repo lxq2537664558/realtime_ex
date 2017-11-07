@@ -22,12 +22,14 @@ namespace base
 		CDbThread();
 		~CDbThread();
 
-		bool		init(CDbThreadMgr* pDbThreadMgr, const db::SCacheConfigInfo& CacheConfigInfo);
+		bool		init(CDbThreadMgr* pDbThreadMgr, const db::SDbOptions& sDbOptions);
 		void		query(const SDbCommand& sDbCommand);
 		bool		isConnectDb() const;
 		uint32_t	getQueueSize();
-		CDbCommandHandlerProxy&
-					getDbCommandHandlerProxy();
+		CDbCommandHandlerProxy*
+					getDbCommandHandlerProxy() const;
+		google::protobuf::Message*
+					createMessage(const std::string& szMessageName);
 
 		void		setMaxCacheSize(uint64_t nSize);
 
@@ -46,7 +48,7 @@ namespace base
 		std::mutex				m_tCommandLock;
 		std::list<SDbCommand>	m_listCommand;
 		CDbConnection			m_dbConnection;
-		CDbCommandHandlerProxy	m_dbCommandHandlerProxy;
+		CDbCommandHandlerProxy*	m_pCommandHandlerProxy;
 		CDbThreadMgr*			m_pDbThreadMgr;
 		CThreadBase*			m_pThreadBase;
 		CDbCacheMgr				m_dbCacheMgr;

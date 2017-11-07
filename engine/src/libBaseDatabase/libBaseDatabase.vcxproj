@@ -202,6 +202,7 @@ del /a $(OutDir)libmysql.pdb</Command>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>../../inc;../../inc/libBaseDatabase;../../inc/libBaseDatabase/proto_src;../../../3rd/mysql/include;../../../3rd/protobuf/include;</AdditionalIncludeDirectories>
       <StringPooling>true</StringPooling>
+      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

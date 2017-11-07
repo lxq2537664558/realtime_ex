@@ -21,10 +21,8 @@ namespace core
 	{
 		DebugAstEx(callback != nullptr, nullptr);
 
-#ifdef _WIN32
 		if (nStackSize == 0)
 			nStackSize = CCoreApp::Inst()->getCoroutineStackSize();
-#endif
 
 		uint32_t nPageSize = base::process_util::getPageSize();
 		nStackSize = (nStackSize + nPageSize - 1) / nPageSize * nPageSize;
@@ -41,7 +39,7 @@ namespace core
 				pCoroutineImpl->setState(eCS_SUSPEND);
 				this->m_listRecycleCoroutine.erase(iter);
 				this->m_mapCoroutine[pCoroutineImpl->getCoroutineID()] = pCoroutineImpl;
-				this->m_nTotalStackSize += nStackSize;
+				this->m_nTotalStackSize += pCoroutineImpl->getStackSize();
 				return pCoroutineImpl;
 			}
 		}

@@ -31,16 +31,6 @@ namespace core
 		@brief: 启动框架
 		*/
 		bool				runAndServe(size_t argc, char** argv, const std::vector<CServiceBase*>& vecServiceBase);
-		/**
-		@brief: 注册定时器
-		nStartTime 第一次触发定时器的时间
-		nIntervalTime 第一次触发定时器后接下来定时器触发的间隔时间，如果该值是0就表示这个定时器只触发一次
-		*/
-		void				registerTicker(uint32_t nServiceID, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
-		/**
-		@brief: 反注册定时器
-		*/
-		void				unregisterTicker(CTicker* pTicker);
 		/*
 		@brief: 根据服务ID获取服务
 		*/

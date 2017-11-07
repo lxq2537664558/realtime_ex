@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "ticker.h"
-#include "ticker_runnable.h"
-#include "base_app.h"
+#include "ticker_mgr.h"
 
 #include "libBaseCommon/debug_helper.h"
 
@@ -18,10 +17,10 @@ namespace core
 	{
 		SAFE_DELETE(this->m_callback);
 
-		if (!this->isRegister())
+		if (this->m_pCoreContext == nullptr)
 			return;
 
-		CBaseApp::Inst()->unregisterTicker(this);
+		reinterpret_cast<CCoreTickerNode*>(this->m_pCoreContext)->Value.pTickerMgr->unregisterTicker(this);
 	}
 
 	CTicker::CTicker(CTicker&& rhs)
@@ -31,7 +30,7 @@ namespace core
 		*this->m_callback = *rhs.m_callback;
 		this->m_pCoreContext = rhs.m_pCoreContext;
 		if (this->m_pCoreContext != nullptr)
-			reinterpret_cast<CCoreTickerNode*>(this->m_pCoreContext)->Value.m_pTicker = this;
+			reinterpret_cast<CCoreTickerNode*>(this->m_pCoreContext)->Value.pTicker = this;
 
 		rhs.m_pCoreContext = nullptr;
 	}
@@ -46,7 +45,7 @@ namespace core
 		*this->m_callback = *rhs.m_callback;
 		this->m_pCoreContext = rhs.m_pCoreContext;
 		if (this->m_pCoreContext != nullptr)
-			reinterpret_cast<CCoreTickerNode*>(this->m_pCoreContext)->Value.m_pTicker = this;
+			reinterpret_cast<CCoreTickerNode*>(this->m_pCoreContext)->Value.pTicker = this;
 
 		rhs.m_pCoreContext = nullptr;
 
@@ -60,10 +59,7 @@ namespace core
 
 	bool CTicker::isRegister() const
 	{
-		if (this->m_pCoreContext == nullptr)
-			return false;
-
-		return reinterpret_cast<CCoreTickerNode*>(this->m_pCoreContext)->Value.m_nState == eRegister;
+		return this->m_pCoreContext != nullptr;
 	}
 
 	void CTicker::setCallback(const std::function<void(uint64_t)>& callback)

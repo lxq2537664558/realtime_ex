@@ -84,6 +84,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBBASENETWORK_EXPORTS;__BUILD_BASE_NETWORK_DLL__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>../../inc;../../inc/libBaseNetwork;</AdditionalIncludeDirectories>
       <StringPooling>true</StringPooling>
+      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

@@ -57,14 +57,14 @@ namespace base
 {
 	namespace db
 	{
-		uint32_t create(const std::string& szHost, uint16_t nPort, const std::string& szDb, const std::string& szUser, const std::string& szPassword, const std::string& szCharset, const std::string& szProtoDir, uint32_t nDbThreadCount, const SCacheConfigInfo& sCacheConfigInfo)
+		uint32_t create(const std::string& szHost, uint16_t nPort, const std::string& szDb, const std::string& szUser, const std::string& szPassword, const std::string& szCharset, const SDbOptions& sDbOptions)
 		{
 			std::vector<std::string> vecProto;
 
 #ifdef _WIN32
 			WIN32_FIND_DATAA FindFileData;
 
-			std::string szProtoFile = szProtoDir;
+			std::string szProtoFile = sDbOptions.szProtoDir;
 			szProtoFile = base::string_util::trim(szProtoFile);
 			if (!szProtoFile.empty() && (szProtoFile[szProtoFile.size() - 1] == '/' || szProtoFile[szProtoFile.size() - 1] == '\\'))
 				szProtoFile.resize(szProtoFile.size() - 1);
@@ -82,7 +82,7 @@ namespace base
 			}
 #else
 			DIR* pDir = nullptr;
-			if ((pDir = opendir(szProtoDir.c_str())) == nullptr)
+			if ((pDir = opendir(sDbOptions.szProtoDir.c_str())) == nullptr)
 				return 0;
 
 			struct dirent* pFile = nullptr;
@@ -100,11 +100,11 @@ namespace base
 			}
 			closedir(pDir);
 #endif
-			if (!importProtobuf(szProtoDir, vecProto))
+			if (!importProtobuf(sDbOptions.szProtoDir, vecProto))
 				return 0;
 
 			CDbThreadMgr* pDbThreadMgr = new CDbThreadMgr();
-			if (!pDbThreadMgr->init(szHost, nPort, szDb, szUser, szPassword, szCharset, nDbThreadCount, sCacheConfigInfo))
+			if (!pDbThreadMgr->init(szHost, nPort, szDb, szUser, szPassword, szCharset, sDbOptions))
 			{
 				SAFE_DELETE(pDbThreadMgr);
 				return 0;
@@ -153,7 +153,7 @@ namespace base
 
 				nType = eDBCT_Update;
 
-				pMessage = createMessage(pCommand->message_name());
+				pMessage = pDbThreadMgr->createMessage(pCommand->message_name());
 				if (pMessage == nullptr)
 				{
 					PrintWarning("create message error {}", pCommand->message_name());
@@ -230,7 +230,7 @@ namespace base
 
 				nType = eDBCT_Insert;
 
-				pMessage = createMessage(pCommand->message_name());
+				pMessage = pDbThreadMgr->createMessage(pCommand->message_name());
 				if (pMessage == nullptr)
 				{
 					PrintWarning("create message error {}", pCommand->message_name());

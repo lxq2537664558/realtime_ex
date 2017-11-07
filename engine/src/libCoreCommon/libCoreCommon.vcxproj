@@ -41,7 +41,6 @@
     <ClInclude Include="core_app.h" />
     <ClInclude Include="core_connection.h" />
     <ClInclude Include="core_connection_mgr.h" />
-    <ClInclude Include="core_connection_monitor.h" />
     <ClInclude Include="base_connection_other_node.h" />
     <ClInclude Include="base_connection_to_master.h" />
     <ClInclude Include="core_websocket_connection.h" />
@@ -73,7 +72,7 @@
     <ClInclude Include="core_service.h" />
     <ClInclude Include="core_service_mgr.h" />
     <ClInclude Include="stdafx.h" />
-    <ClInclude Include="ticker_runnable.h" />
+    <ClInclude Include="ticker_mgr.h" />
     <ClInclude Include="transporter.h" />
   </ItemGroup>
   <ItemGroup>
@@ -86,7 +85,6 @@
     <ClCompile Include="core_app.cpp" />
     <ClCompile Include="core_connection.cpp" />
     <ClCompile Include="core_connection_mgr.cpp" />
-    <ClCompile Include="core_connection_monitor.cpp" />
     <ClCompile Include="base_connection_other_node.cpp" />
     <ClCompile Include="base_connection_to_master.cpp" />
     <ClCompile Include="core_websocket_connection.cpp" />
@@ -122,7 +120,7 @@
     <ClCompile Include="service_invoker.cpp" />
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="ticker.cpp" />
-    <ClCompile Include="ticker_runnable.cpp" />
+    <ClCompile Include="ticker_mgr.cpp" />
     <ClCompile Include="transporter.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -223,6 +221,7 @@ copy /y ..\..\..\3rd\tinyxml2\lib\win32\$(Configuration)\tinyxml2d.pdb $(OutDir)
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>../../inc;../../inc/libCoreCommon;./proto_src;../../../3rd/tinyxml2/include;../../../3rd/protobuf/include;</AdditionalIncludeDirectories>
       <StringPooling>true</StringPooling>
+      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

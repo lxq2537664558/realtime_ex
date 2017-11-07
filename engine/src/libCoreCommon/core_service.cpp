@@ -26,16 +26,19 @@ namespace core
 		, m_szConfigFileName(szConfigFileName)
 		, m_sServiceBaseInfo(sServiceBaseInfo)
 		, m_pServiceBase(pServiceBase)
-		, m_pForwardMessageSerializer(nullptr)
 		, m_pBaseConnectionMgr(nullptr)
 		, m_pMessageQueue(nullptr)
+		, m_pTickerMgr(nullptr)
+		, m_nForwardMessageSerializerType(0)
+		, m_nDefaultServiceMessageSerializerType(0)
 		, m_nNextSessionID(0)
 		, m_nQPS(0)
 		, m_nCurQPS(0)
-		, m_nDefaultServiceMessageSerializerType(0)
 	{
+		this->m_pTickerMgr = new CTickerMgr(base::time_util::getGmtTime());
+
 		this->m_pMessageQueue = new CLogicMessageQueue(this, CCoreApp::Inst()->getLogicMessageQueueMgr());
-	
+
 		this->m_pBaseConnectionMgr = new CBaseConnectionMgr(this->m_pMessageQueue);
 
 		this->m_pLocalServiceRegistryProxy = new CLocalServiceRegistryProxy();
@@ -87,9 +90,9 @@ namespace core
 			service_health_response response_msg;
 			pServiceBase->getServiceInvoker()->response(sSessionInfo, &response_msg, eRRT_OK, eMST_Native);
 		});
-		this->m_pServiceBase->registerTicker(&this->m_tickerCheckHealth, _CHECK_SERVICE_HEALTH_TIME, _CHECK_SERVICE_HEALTH_TIME, 0);
+		this->registerTicker(&this->m_tickerCheckHealth, _CHECK_SERVICE_HEALTH_TIME, _CHECK_SERVICE_HEALTH_TIME, 0);
 		
-		this->m_pServiceBase->registerTicker(&this->m_tickerQPS, 1000, 1000, 0);
+		this->registerTicker(&this->m_tickerQPS, 1000, 1000, 0);
 		return true;
 	}
 
@@ -110,6 +113,13 @@ namespace core
 
 	void CCoreService::registerServiceMessageHandler(const std::string& szMessageName, const std::function<void(CServiceBase*, SSessionInfo, const void*)>& callback)
 	{
+		auto iter = this->m_mapServiceMessageHandler.find(szMessageName);
+		if (iter != this->m_mapServiceMessageHandler.end())
+		{
+			PrintWarning("dup service message name old_message_name: {} new_message_name: {}", iter->first, szMessageName);
+			return;
+		}
+
 		this->m_mapServiceMessageHandler[szMessageName] = callback;
 	}
 
@@ -117,17 +127,14 @@ namespace core
 	{
 		uint32_t nMessageID = _GET_MESSAGE_ID(szMessageName);
 
-		std::unique_lock<base::spin_lock> guard(this->m_lockForwardMessage);
-
-		auto iter = this->m_mapForwardMessageName.find(nMessageID);
-		if (iter != this->m_mapForwardMessageName.end() && szMessageName != iter->second)
+		auto iter = this->m_mapServiceForwardHandler.find(nMessageID);
+		if (iter != this->m_mapServiceForwardHandler.end() && szMessageName != iter->second.second)
 		{
-			PrintWarning("dup forward message id message_id: {} old_message_name: {} new_message_name: {}", nMessageID, iter->second, szMessageName);
+			PrintWarning("dup forward message id message_id: {} old_message_name: {} new_message_name: {}", nMessageID, iter->second.second, szMessageName);
 			return;
 		}
 
-		this->m_mapForwardMessageName[nMessageID] = szMessageName;
-		this->m_mapServiceForwardHandler[szMessageName] = callback;
+		this->m_mapServiceForwardHandler[nMessageID] = std::make_pair(callback, szMessageName);
 	}
 
 	std::function<void(CServiceBase*, SSessionInfo, const void*)>& CCoreService::getServiceMessageHandler(const std::string& szMessageName)
@@ -142,12 +149,12 @@ namespace core
 		return iter->second;
 	}
 
-	std::function<void(CServiceBase*, SClientSessionInfo, const void*)>& CCoreService::getServiceForwardHandler(const std::string& szMessageName)
+	std::pair<std::function<void(CServiceBase*, SClientSessionInfo, const void*)>, std::string>& CCoreService::getServiceForwardHandler(uint32_t nMessageID)
 	{
-		auto iter = this->m_mapServiceForwardHandler.find(szMessageName);
+		auto iter = this->m_mapServiceForwardHandler.find(nMessageID);
 		if (iter == this->m_mapServiceForwardHandler.end())
 		{
-			static std::function<void(CServiceBase*, SClientSessionInfo, const void*)> callback;
+			static std::pair<std::function<void(CServiceBase*, SClientSessionInfo, const void*)>, std::string> callback;
 			return callback;
 		}
 
@@ -165,7 +172,14 @@ namespace core
 
 	void CCoreService::onFrame()
 	{
-		this->m_pServiceBase->onFrame();
+		int64_t nCurTime = base::time_util::getGmtTime();
+		this->m_pTickerMgr->update(nCurTime);
+
+		if (this->getRunState() == eSRS_Normal)
+		{
+			uint64_t nCoroutineID = coroutine::create(CCoreApp::Inst()->getCoroutineStackSize(), [this](uint64_t) { this->m_pServiceBase->onFrame(); });
+			coroutine::resume(nCoroutineID, 0);
+		}
 	}
 
 	void CCoreService::setServiceConnectCallback(const std::function<void(const std::string&, uint32_t)>& callback)
@@ -238,20 +252,6 @@ namespace core
 	CBaseConnectionMgr* CCoreService::getBaseConnectionMgr() const
 	{
 		return this->m_pBaseConnectionMgr;
-	}
-
-	const std::string& CCoreService::getForwardMessageName(uint32_t nMessageID)
-	{
-		std::unique_lock<base::spin_lock> guard(this->m_lockForwardMessage);
-
-		auto iter = this->m_mapForwardMessageName.find(nMessageID);
-		if (iter == this->m_mapForwardMessageName.end())
-		{
-			static std::string s_Default;
-			return s_Default;
-		}
-
-		return iter->second;
 	}
 
 	void CCoreService::setToGateMessageCallback(const std::function<void(uint64_t, const void*, uint16_t)>& callback)
@@ -395,7 +395,7 @@ namespace core
 		if (nTimeout == 0)
 			nTimeout = CCoreApp::Inst()->getDefaultServiceInvokeTimeout();
 
-		this->getServiceBase()->registerTicker(&pPendingResponseInfo->tickTimeout, nTimeout, 0, nSessionID);
+		this->registerTicker(&pPendingResponseInfo->tickTimeout, nTimeout, 0, nSessionID);
 
 		this->m_mapPendingResponseInfo[pPendingResponseInfo->nSessionID] = pPendingResponseInfo;
 
@@ -465,28 +465,26 @@ namespace core
 		this->m_mapMessageSerializer[pMessageSerializer->getType()] = pMessageSerializer;
 	}
 
-	void CCoreService::setServiceMessageSerializer(uint32_t nServiceID, uint32_t nType)
+	void CCoreService::setServiceMessageSerializer(const std::string& szServiceType, uint32_t nType)
 	{
-		if (nServiceID == 0)
+		if (szServiceType.empty())
 		{
 			this->m_nDefaultServiceMessageSerializerType = nType;
 			return;
 		}
 
-		this->m_mapServiceMessageSerializerType[nServiceID] = nType;
+		this->m_mapServiceMessageSerializerType[szServiceType] = nType;
 	}
 
-	void CCoreService::setForwardMessageSerializer(CMessageSerializer* pMessageSerializer)
+	void CCoreService::setForwardMessageSerializer(uint32_t nType)
 	{
-		DebugAst(pMessageSerializer != nullptr);
-
-		this->m_pForwardMessageSerializer = pMessageSerializer;
+		this->m_nForwardMessageSerializerType = nType;
 	}
 
-	CMessageSerializer* CCoreService::getServiceMessageSerializer(uint32_t nServiceID) const
+	CMessageSerializer* CCoreService::getServiceMessageSerializer(const std::string& szServiceType) const
 	{
 		uint32_t nMessageSerializerType = this->m_nDefaultServiceMessageSerializerType;
-		auto iter = this->m_mapServiceMessageSerializerType.find(nServiceID);
+		auto iter = this->m_mapServiceMessageSerializerType.find(szServiceType);
 		if (iter != this->m_mapServiceMessageSerializerType.end())
 			nMessageSerializerType = iter->second;
 
@@ -499,7 +497,11 @@ namespace core
 
 	CMessageSerializer* CCoreService::getForwardMessageSerializer() const
 	{
-		return this->m_pForwardMessageSerializer;
+		auto iter = this->m_mapMessageSerializer.find(this->m_nForwardMessageSerializerType);
+		if (iter == this->m_mapMessageSerializer.end())
+			return nullptr;
+
+		return iter->second;
 	}
 
 	CMessageSerializer* CCoreService::getServiceMessageSerializerByType(uint8_t nType) const
@@ -509,16 +511,6 @@ namespace core
 			return nullptr;
 
 		return iter->second;
-	}
-
-	uint32_t CCoreService::getServiceMessageSerializerType(uint32_t nServiceID) const
-	{
-		uint32_t nMessageSerializerType = this->m_nDefaultServiceMessageSerializerType;
-		auto iter = this->m_mapServiceMessageSerializerType.find(nServiceID);
-		if (iter != this->m_mapServiceMessageSerializerType.end())
-			nMessageSerializerType = iter->second;
-
-		return nMessageSerializerType;
 	}
 
 	uint32_t CCoreService::getQPS() const
@@ -541,5 +533,20 @@ namespace core
 	CLocalServiceRegistryProxy* CCoreService::getLocalServiceRegistryProxy() const
 	{
 		return this->m_pLocalServiceRegistryProxy;
+	}
+
+	void CCoreService::registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext, bool bCoroutine /*= false*/)
+	{
+		this->m_pTickerMgr->registerTicker(pTicker, nStartTime, nIntervalTime, nContext, bCoroutine);
+	}
+
+	void CCoreService::unregisterTicker(CTicker* pTicker)
+	{
+		this->m_pTickerMgr->unregisterTicker(pTicker);
+	}
+
+	int64_t CCoreService::getLogicTime() const
+	{
+		return this->m_pTickerMgr->getLogicTime();
 	}
 }

@@ -30,10 +30,11 @@ bool CLoginService::onInit()
 	this->m_pNormalProtobufSerializer = std::make_unique<CNormalProtobufSerializer>();
 	this->m_pJsonProtobufSerializer = std::make_unique<CJsonProtobufSerializer>();
 	
-	this->setForwardMessageSerializer(this->m_pJsonProtobufSerializer.get());
 	this->addServiceMessageSerializer(this->m_pNormalProtobufSerializer.get());
+	this->addServiceMessageSerializer(this->m_pJsonProtobufSerializer.get());
 
-	this->setServiceMessageSerializer(0, eMST_Protobuf);
+	this->setServiceMessageSerializer("", eMST_Protobuf);
+	this->setForwardMessageSerializer(eMST_JsonProtobuf);
 
 	tinyxml2::XMLDocument sConfigXML;
 	if (sConfigXML.LoadFile(this->getConfigFileName().c_str()) != tinyxml2::XML_SUCCESS)

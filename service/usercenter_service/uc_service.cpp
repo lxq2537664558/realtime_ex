@@ -35,7 +35,7 @@ bool CUCService::onInit()
 	
 	this->addServiceMessageSerializer(this->m_pNormalProtobufSerializer.get());
 
-	this->setServiceMessageSerializer(0, eMST_Protobuf);
+	this->setServiceMessageSerializer("", eMST_Protobuf);
 	
 	this->m_pUCServiceMessageHandler = std::make_unique<CUCServiceMessageHandler>(this);
 	this->m_pUserInfoMgr = std::make_unique<CUserInfoMgr>(this);

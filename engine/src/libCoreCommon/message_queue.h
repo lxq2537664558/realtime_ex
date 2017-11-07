@@ -4,7 +4,7 @@
 #include "core_common_define.h"
 
 #include <mutex>
-#include <list>
+#include <vector>
 
 namespace core
 {
@@ -16,13 +16,13 @@ namespace core
 		virtual ~CMessageQueue();
 
 		virtual void	send(const SMessagePacket& sMessagePacket) = 0;
-		virtual void	recv(std::list<SMessagePacket>& listMessagePacket) = 0;
+		virtual void	recv(std::vector<SMessagePacket>& vecMessagePacket) = 0;
 		
 		size_t			getSize();
 		bool			isEmpty();
 
 	protected:
-		std::list<SMessagePacket>	m_listMessagePacket;
+		std::vector<SMessagePacket>	m_vecMessagePacket;
 		std::mutex					m_lock;
 	};
 }

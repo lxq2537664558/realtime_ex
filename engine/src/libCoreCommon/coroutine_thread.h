@@ -4,10 +4,6 @@
 
 #include "libBaseCommon/singleton.h"
 
-#include <map>
-#include <list>
-#include <mutex>
-
 namespace core
 {
 	class CCoroutineThread
@@ -25,14 +21,18 @@ namespace core
 		void*	getMainContext() const;
 
 	private:
-		CCoroutineImpl*				m_pCurrentCoroutine;
-		void*						m_pMainContext;
+		CCoroutineImpl*	m_pCurrentCoroutine;
+		void*			m_pMainContext;
 #ifndef _WIN32
-		char*						m_pMainStack;
-		uint32_t					m_nMainStackSize;
-		int32_t						m_nMainValgrindID;
+		char*			m_pMainStack;
+		uint32_t		m_nMainStackSize;
+		int32_t			m_nMainValgrindID;
 #endif
 	};
 
-	CCoroutineThread* getCoroutineThread();
+#ifdef _WIN32
+	__declspec(noinline) CCoroutineThread* getCoroutineThread();
+#else
+	CCoroutineThread* getCoroutineThread() __attribute__((noinline));
+#endif
 }

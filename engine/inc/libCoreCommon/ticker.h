@@ -7,12 +7,9 @@
 
 #include <functional>
 
-
 namespace core
 {
-	class CTickerRunnable;
-	class CLogicRunnable;
-	class CNetRunnable;
+	class CTickerMgr;
 	
 	// 定时器对象不支持直接拷贝，因为直接拷贝时如果有定时行为，这个行为是带过去呢还是拷贝一个空的定时器呢？
 	// 这里定时器对象的拷贝只能通过用move的方式
@@ -22,9 +19,7 @@ namespace core
 		public virtual base::noninheritable<CTicker>,
 		public base::noncopyable
 	{
-		friend class CTickerRunnable;
-		friend class CLogicRunnable;
-		friend class CNetRunnable;
+		friend class CTickerMgr;
 		
 	public:
 		CTicker();

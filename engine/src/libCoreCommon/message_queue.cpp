@@ -16,13 +16,13 @@ namespace core
 	{
 		std::unique_lock<std::mutex> guard(this->m_lock);
 
-		return this->m_listMessagePacket.size();
+		return this->m_vecMessagePacket.size();
 	}
 
 	bool CMessageQueue::isEmpty()
 	{
 		std::unique_lock<std::mutex> guard(this->m_lock);
 
-		return this->m_listMessagePacket.empty();
+		return this->m_vecMessagePacket.empty();
 	}
 }

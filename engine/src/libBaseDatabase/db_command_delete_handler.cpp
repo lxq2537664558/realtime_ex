@@ -1,5 +1,6 @@
 #include "db_command_delete_handler.h"
 #include "db_protobuf.h"
+#include "db_thread.h"
 
 #include "libBaseCommon/debug_helper.h"
 #include "libBaseCommon/defer.h"
@@ -10,7 +11,8 @@
 
 namespace base
 {
-	CDbCommandDeleteHandler::CDbCommandDeleteHandler()
+	CDbCommandDeleteHandler::CDbCommandDeleteHandler(CDbThread* pDbThread)
+		: CDbCommandHandler(pDbThread)
 	{
 
 	}
@@ -26,7 +28,7 @@ namespace base
 		DebugAstEx(pCommand != nullptr, db::eDBRC_ProtobufError);
 
 		std::string szMessageName = getMessageNameByTableName(pCommand->table_name());
-		google::protobuf::Message* pMessage = createMessage(szMessageName);
+		google::protobuf::Message* pMessage = this->getDbThread()->createMessage(szMessageName);
 		DebugAstEx(pMessage != nullptr, db::eDBRC_ProtobufError);
 
 		defer([&]() 

@@ -1,4 +1,6 @@
 #include "coroutine.h"
+#include "libBaseCommon/logger.h"
+
 #include <tuple>
 
 namespace core
@@ -66,6 +68,12 @@ namespace core
 			return false;
 		if (this->m_pContext->nCoroutineID != 0)
 			return false;
+
+		if (coroutine::getCurrentID() == 0)
+		{
+			PrintWarning("root coroutine can't wait");
+			return false;
+		}
 
 		this->m_pContext->nCoroutineID = coroutine::getCurrentID();
 		coroutine::yield();

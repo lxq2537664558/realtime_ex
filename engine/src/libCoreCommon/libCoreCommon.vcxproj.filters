@@ -99,9 +99,6 @@
     <ClInclude Include="core_connection_mgr.h">
       <Filter>src\framework</Filter>
     </ClInclude>
-    <ClInclude Include="core_connection_monitor.h">
-      <Filter>src\framework</Filter>
-    </ClInclude>
     <ClInclude Include="logic_message_queue.h">
       <Filter>src\framework</Filter>
     </ClInclude>
@@ -121,9 +118,6 @@
       <Filter>src\framework</Filter>
     </ClInclude>
     <ClInclude Include="node_connection_factory.h">
-      <Filter>src\framework</Filter>
-    </ClInclude>
-    <ClInclude Include="ticker_runnable.h">
       <Filter>src\framework</Filter>
     </ClInclude>
     <ClInclude Include="transporter.h">
@@ -219,6 +213,9 @@
     <ClInclude Include="global_service_registry_proxy.h">
       <Filter>src\framework</Filter>
     </ClInclude>
+    <ClInclude Include="ticker_mgr.h">
+      <Filter>src\framework</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="fix_memory_pool.cpp">
@@ -266,9 +263,6 @@
     <ClCompile Include="core_connection_mgr.cpp">
       <Filter>src\framework</Filter>
     </ClCompile>
-    <ClCompile Include="core_connection_monitor.cpp">
-      <Filter>src\framework</Filter>
-    </ClCompile>
     <ClCompile Include="logic_message_queue.cpp">
       <Filter>src\framework</Filter>
     </ClCompile>
@@ -285,9 +279,6 @@
       <Filter>src\framework</Filter>
     </ClCompile>
     <ClCompile Include="node_connection_factory.cpp">
-      <Filter>src\framework</Filter>
-    </ClCompile>
-    <ClCompile Include="ticker_runnable.cpp">
       <Filter>src\framework</Filter>
     </ClCompile>
     <ClCompile Include="transporter.cpp">
@@ -360,6 +351,9 @@
       <Filter>src\framework</Filter>
     </ClCompile>
     <ClCompile Include="global_service_registry_proxy.cpp">
+      <Filter>src\framework</Filter>
+    </ClCompile>
+    <ClCompile Include="ticker_mgr.cpp">
       <Filter>src\framework</Filter>
     </ClCompile>
   </ItemGroup>

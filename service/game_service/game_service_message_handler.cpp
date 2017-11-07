@@ -85,18 +85,18 @@ void CGameServiceMessageHandler::g2s_player_leave_notify_handler(CServiceBase* p
 	DebugAst(pGameService != nullptr);
 
 	CPlayer* pPlayer = pGameService->getPlayerMgr()->getPlayer(pMessage->player_id());
-	if (nullptr == pPlayer)
-		return;
+	if (nullptr != pPlayer)
+	{
+		uint32_t nUCServiceID = pPlayer->getUCServiceID();
 
-	uint32_t nUCServiceID = pPlayer->getUCServiceID();
+		pPlayer->onPlayerLogout();
 
-	pPlayer->onPlayerLogout();
+		s2u_player_leave_notify notify_msg;
+		notify_msg.set_player_id(pMessage->player_id());
+		pServiceBase->getServiceInvoker()->send(nUCServiceID, &notify_msg);
+	}
 
 	pGameService->getPlayerMgr()->destroyPlayer(pMessage->player_id(), "gate notify leave");
-
-	s2u_player_leave_notify notify_msg;
-	notify_msg.set_player_id(pMessage->player_id());
-	pServiceBase->getServiceInvoker()->send(nUCServiceID, &notify_msg);
 }
 
 void CGameServiceMessageHandler::u2s_kick_player_notify_handler(CServiceBase* pServiceBase, SSessionInfo sSessionInfo, const u2s_kick_player_notify* pMessage)
@@ -105,17 +105,18 @@ void CGameServiceMessageHandler::u2s_kick_player_notify_handler(CServiceBase* pS
 	DebugAst(pGameService != nullptr);
 
 	CPlayer* pPlayer = pGameService->getPlayerMgr()->getPlayer(pMessage->player_id());
-	if (nullptr == pPlayer)
-		return;
+	if (nullptr != pPlayer)
+	{
+		pPlayer->onPlayerLogout();
 
-	pPlayer->onPlayerLogout();
+		uint32_t nGateID = pPlayer->getGateServiceID();
+		
+		s2g_kick_player_notify notify_msg;
+		notify_msg.set_player_id(pMessage->player_id());
+		pGameService->getServiceInvoker()->send(nGateID, &notify_msg);
+	}
 
-	uint32_t nGateID = pPlayer->getGateServiceID();
 	pGameService->getPlayerMgr()->destroyPlayer(pMessage->player_id(), "uc kick");
-
-	s2g_kick_player_notify notify_msg;
-	notify_msg.set_player_id(pMessage->player_id());
-	pGameService->getServiceInvoker()->send(nGateID, &notify_msg);
 }
 
 void CGameServiceMessageHandler::g2s_player_heartbeat_notify_handler(CServiceBase* pServiceBase, SSessionInfo sSessionInfo, const g2s_player_heartbeat_notify* pMessage)

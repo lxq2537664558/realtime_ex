@@ -86,6 +86,7 @@ copy /y ..\..\..\3rd\lua\lib\win32\$(Configuration)\lua.pdb $(OutDir)</Command>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBBASELUA_EXPORTS;__BUILD_BASE_LUA_DLL__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>../../inc;../../inc/libBaseLua;../../../3rd/lua/include/;</AdditionalIncludeDirectories>
       <StringPooling>true</StringPooling>
+      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

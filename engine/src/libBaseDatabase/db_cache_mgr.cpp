@@ -32,16 +32,16 @@ namespace base
 
 	}
 
-	bool CDbCacheMgr::init(CDbThread* pDbThread, const db::SCacheConfigInfo& sCacheConfigInfo)
+	bool CDbCacheMgr::init(CDbThread* pDbThread, const db::SDbOptions& sDbOptions)
 	{
 		DebugAstEx(pDbThread != nullptr, false);
 
 		this->m_pDbThread = pDbThread;
-		this->m_nMaxCacheSize = sCacheConfigInfo.nMaxCacheSize;
-		this->m_nWritebackTime = sCacheConfigInfo.nWritebackTime;
-		for (size_t i = 0; i < sCacheConfigInfo.vecTable.size(); ++i)
+		this->m_nMaxCacheSize = sDbOptions.nMaxCacheSize;
+		this->m_nWritebackTime = sDbOptions.nCacheWritebackTime;
+		for (size_t i = 0; i < sDbOptions.vecCacheTable.size(); ++i)
 		{
-			this->m_setAllowDataName.insert(getMessageNameByTableName(sCacheConfigInfo.vecTable[i]));
+			this->m_setAllowDataName.insert(getMessageNameByTableName(sDbOptions.vecCacheTable[i]));
 		}
 
 		return true;

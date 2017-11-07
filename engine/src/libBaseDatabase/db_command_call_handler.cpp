@@ -20,7 +20,8 @@ namespace
 
 namespace base
 {
-	CDbCommandCallHandler::CDbCommandCallHandler()
+	CDbCommandCallHandler::CDbCommandCallHandler(CDbThread* pDbThread)
+		: CDbCommandHandler(pDbThread)
 	{
 
 	}

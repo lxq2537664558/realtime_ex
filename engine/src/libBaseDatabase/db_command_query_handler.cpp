@@ -1,5 +1,6 @@
 #include "db_command_query_handler.h"
 #include "db_protobuf.h"
+#include "db_thread.h"
 
 #include "libBaseCommon/defer.h"
 #include "libBaseCommon/debug_helper.h"
@@ -17,7 +18,8 @@ namespace
 namespace base
 {
 
-	CDbCommandQueryHandler::CDbCommandQueryHandler()
+	CDbCommandQueryHandler::CDbCommandQueryHandler(CDbThread* pDbThread)
+		: CDbCommandHandler(pDbThread)
 	{
 
 	}
@@ -73,10 +75,14 @@ namespace base
 
 		DebugAstEx(pDbRecordset != nullptr, db::eDBRC_MysqlError);
 
-		std::string szMessageName = getMessageNameByTableName(pCommand->table_name());
-		*pResponseMessage = std::shared_ptr<google::protobuf::Message>(createRepeatMessage(pDbRecordset, szMessageName));
-		if (*pResponseMessage == nullptr)
-			return db::eDBRC_ProtobufError;
+		std::string szMessageName = getMessageNameByTableName(pCommand->table_name()) + _QUERY_SET_SUFFIX;
+
+		auto pMessage = std::shared_ptr<google::protobuf::Message>(this->getDbThread()->createMessage(szMessageName));
+		DebugAstEx(pMessage != nullptr, db::eDBRC_ProtobufError);
+
+		DebugAstEx(fillRepeatMessage(pDbRecordset, pMessage.get()), db::eDBRC_ProtobufError);
+		
+		*pResponseMessage = pMessage;
 
 		return db::eDBRC_OK;
 	}

@@ -163,8 +163,8 @@ namespace core
 		this->m_nState = eCCS_Disconnecting;
 		this->m_pNetConnecter = nullptr;
 
-		if (this->m_heartbeat.isRegister())
-			CCoreApp::Inst()->unregisterTicker(&this->m_heartbeat);
+// 		if (this->m_heartbeat.isRegister())
+// 			CCoreApp::Inst()->unregisterTicker(&this->m_heartbeat);
 	}
 
 	void CCoreConnection::onConnectFail()
@@ -183,7 +183,7 @@ namespace core
 
 		this->m_nState = eCCS_Connected;
 
-		CCoreApp::Inst()->registerTicker(CNetRunnable::Inst()->getMessageQueue(), &this->m_heartbeat,CCoreApp::Inst()->getHeartbeatTime(), CCoreApp::Inst()->getHeartbeatTime(), 0);
+		//CCoreApp::Inst()->registerTicker(CNetRunnable::Inst()->getMessageQueue(), &this->m_heartbeat,CCoreApp::Inst()->getHeartbeatTime(), CCoreApp::Inst()->getHeartbeatTime(), 0, true);
 	}
 
 	uint64_t CCoreConnection::getID() const
@@ -205,8 +205,6 @@ namespace core
 	{
 		if (nMessageType == eMT_HEARTBEAT)
 			return;
-
-		this->m_monitor.onRecv(nSize);
 
 		if (nMessageType == eMT_REQUEST)
 		{
@@ -406,8 +404,6 @@ namespace core
 		if (this->m_pNetConnecter == nullptr)
 			return;
 
-		this->m_monitor.onSend(nSize);
-
 		switch (nMessageType)
 		{
 		case eMT_CLIENT:
@@ -440,8 +436,6 @@ namespace core
 
 		if (this->m_pNetConnecter == nullptr)
 			return;
-
-		this->m_monitor.onSend(nSize + nExtraSize);
 
 		switch (nMessageType)
 		{

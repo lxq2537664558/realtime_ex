@@ -1,7 +1,7 @@
 ﻿<!--服务器配置-->
 <root>
 	<!--服务基本信息-->
-	<base_info work_path = "./conf/" connections = "2000" logic_threads = "5">
+	<base_info work_path = "./conf/" connections = "2000" logic_threads = "6">
 		<log async = "1" path = "./log/" debug = "1"/>
 		<profiling sampling_time = "1000"/>
 		<heartbeat heartbeat_limit = "100000" heartbeat_time = "10000"/>
@@ -12,7 +12,7 @@
 	<node_info node_id = "1" node_name = "test_node_1" invoke_timeout = "100000000">
 		<service_info service_id = "1" service_name = "test_service_1" service_type = "test_service11" lib_name = "test_service1"/>
 		<service_info service_id = "2" service_name = "test_service_2" service_type = "test_service" lib_name = "test_service2"/>
-		<service_info service_id = "30001" service_name = "master_1" service_type = "master" lib_name = "master" config_file_name = "service/master_config.xml"/>
+		<service_info service_id = "3" service_name = "test_service_3" service_type = "test_service" lib_name = "test_service2"/>
 	</node_info>
 	
 	<!--本节点需要连接的服务-->
@@ -23,6 +23,5 @@
 	
 	<!--连接master地址-->
 	<monster_info>
-		<master id = "30001" host = "127.0.0.1" port = "10008"/>
 	</monster_info>
 </root>

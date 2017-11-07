@@ -1,5 +1,6 @@
 #include "db_command_select_handler.h"
 #include "db_protobuf.h"
+#include "db_thread.h"
 
 #include "libBaseCommon/debug_helper.h"
 #include "libBaseCommon/defer.h"
@@ -10,7 +11,8 @@
 
 namespace base
 {
-	CDbCommandSelectHandler::CDbCommandSelectHandler()
+	CDbCommandSelectHandler::CDbCommandSelectHandler(CDbThread* pDbThread)
+		: CDbCommandHandler(pDbThread)
 	{
 
 	}
@@ -26,7 +28,8 @@ namespace base
 		DebugAstEx(pCommand != nullptr, db::eDBRC_ProtobufError);
 
 		std::string szMessageName = getMessageNameByTableName(pCommand->table_name());
-		std::shared_ptr<google::protobuf::Message> pMessage(createMessage(szMessageName));
+
+		auto pMessage = std::shared_ptr<google::protobuf::Message>(this->getDbThread()->createMessage(szMessageName));
 		DebugAstEx(pMessage != nullptr, db::eDBRC_ProtobufError);
 
 		std::string szPrimaryName = getPrimaryName(pMessage.get());

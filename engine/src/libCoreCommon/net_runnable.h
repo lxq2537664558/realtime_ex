@@ -29,10 +29,11 @@ namespace core
 		virtual void		onDestroy();
 
 	private:
-		base::CThreadBase*	m_pThreadBase;
-		CCoreConnectionMgr*	m_pCoreConnectionMgr;
-		CNetMessageQueue*	m_pMessageQueue;
-		int64_t				m_nLastCheckTime;
-		int64_t				m_nTotalSamplingTime;
+		base::CThreadBase*			m_pThreadBase;
+		CCoreConnectionMgr*			m_pCoreConnectionMgr;
+		CNetMessageQueue*			m_pMessageQueue;
+		std::vector<SMessagePacket>	m_vecMessagePacket;
+		int64_t						m_nLastCheckTime;
+		int64_t						m_nTotalSamplingTime;
 	};
 }

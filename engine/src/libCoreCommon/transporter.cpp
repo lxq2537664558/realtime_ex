@@ -34,9 +34,14 @@ namespace core
 
 		CMessageSerializer* pMessageSerializer = nullptr;
 		if (pInvokeOption == nullptr || pInvokeOption->nSerializerType == 0)
-			pMessageSerializer = this->m_pCoreService->getServiceMessageSerializer(nToServiceID);
+		{
+			std::string szServiceType = this->m_pCoreService->getLocalServiceRegistryProxy()->getServiceType(nToServiceID);
+			pMessageSerializer = this->m_pCoreService->getServiceMessageSerializer(szServiceType);
+		}
 		else
+		{
 			pMessageSerializer = this->m_pCoreService->getServiceMessageSerializerByType(pInvokeOption->nSerializerType);
+		}
 
 		DebugAstEx(pMessageSerializer != nullptr, false);
 
@@ -112,9 +117,14 @@ namespace core
 
 		CMessageSerializer* pMessageSerializer = nullptr;
 		if (nMessageSerializerType == 0)
-			pMessageSerializer = this->m_pCoreService->getServiceMessageSerializer(nToServiceID);
+		{
+			std::string szServiceType = this->m_pCoreService->getLocalServiceRegistryProxy()->getServiceType(nToServiceID);
+			pMessageSerializer = this->m_pCoreService->getServiceMessageSerializer(szServiceType);
+		}
 		else
+		{
 			pMessageSerializer = this->m_pCoreService->getServiceMessageSerializerByType(nMessageSerializerType);
+		}
 
 		char szMessageName[_MAX_MESSAGE_NAME_LEN] = { 0 };
 		if (pMessage != nullptr)

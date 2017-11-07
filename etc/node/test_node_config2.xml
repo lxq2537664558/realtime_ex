@@ -11,8 +11,6 @@
 	<!--节点信息-->
 	<node_info node_id = "2" node_name = "test_node_2" host = "127.0.0.1" port = "6000" send_buf_size = "102400" recv_buf_size = "102400" invoke_timeout = "100000000">
 		<service_info service_id = "2" service_name = "test_service_2" service_type = "test_service" lib_name = "test_service2"/>
-		<service_info service_id = "3" service_name = "test_service_3" service_type = "test_service" lib_name = "test_service3"/>
-		<service_info service_id = "30001" service_name = "master_1" service_type = "master" lib_name = "master" config_file_name = "service/master_config.xml"/>
 	</node_info>
 	
 	<!--本节点需要连接的服务-->
@@ -22,6 +20,5 @@
 	
 	<!--连接master地址-->
 	<monster_info>
-		<master id = "30001" host = "127.0.0.1" port = "10001"/>
 	</monster_info>
 </root>

@@ -9,6 +9,7 @@
 #include "base_connection_mgr.h"
 #include "local_service_registry_proxy.h"
 #include "transporter.h"
+#include "ticker_mgr.h"
 
 #include "libBaseCommon/spin_lock.h"
 
@@ -40,6 +41,10 @@ namespace core
 		const SServiceBaseInfo&
 							getServiceBaseInfo() const;
 
+		int64_t				getLogicTime() const;
+		void				registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext, bool bCoroutine = false);
+		void				unregisterTicker(CTicker* pTicker);
+
 		CServiceInvoker*	getServiceInvoker() const;
 		CMessageDispatcher*	getMessageDispatcher() const;
 
@@ -65,10 +70,8 @@ namespace core
 		
 		std::function<void(CServiceBase*, SSessionInfo, const void*)>&
 							getServiceMessageHandler(const std::string& szMessageName);
-		std::function<void(CServiceBase*, SClientSessionInfo, const void*)>&
-							getServiceForwardHandler(const std::string& szMessageName);
-
-		const std::string&	getForwardMessageName(uint32_t nMessageID);
+		std::pair<std::function<void(CServiceBase*, SClientSessionInfo, const void*)>, std::string>&
+							getServiceForwardHandler(const uint32_t nMessageID);
 
 		void				setServiceConnectCallback(const std::function<void(const std::string&, uint32_t)>& callback);
 		void				setServiceDisconnectCallback(const std::function<void(const std::string&, uint32_t)>& callback);
@@ -92,10 +95,9 @@ namespace core
 		uint64_t			genSessionID();
 
 		void				addServiceMessageSerializer(CMessageSerializer* pMessageSerializer);
-		void				setServiceMessageSerializer(uint32_t nServiceID, uint32_t nType);
-		void				setForwardMessageSerializer(CMessageSerializer* pMessageSerializer);
-		uint32_t			getServiceMessageSerializerType(uint32_t nServiceID) const;
-		CMessageSerializer*	getServiceMessageSerializer(uint32_t nServiceID) const;
+		void				setServiceMessageSerializer(const std::string& szServiceType, uint32_t nType);
+		void				setForwardMessageSerializer(uint32_t nType);
+		CMessageSerializer*	getServiceMessageSerializer(const std::string& szServiceType) const;
 		CMessageSerializer*	getServiceMessageSerializerByType(uint8_t nType) const;
 		CMessageSerializer*	getForwardMessageSerializer() const;
 
@@ -120,6 +122,7 @@ namespace core
 		CLogicMessageQueue*		m_pMessageQueue;
 		CBaseConnectionMgr*		m_pBaseConnectionMgr;
 		CTransporter*			m_pTransporter;
+		CTickerMgr*				m_pTickerMgr;
 		CLocalServiceRegistryProxy*
 								m_pLocalServiceRegistryProxy;
 
@@ -140,12 +143,8 @@ namespace core
 
 		std::map<std::string, std::function<void(CServiceBase*, SSessionInfo, const void*)>>
 								m_mapServiceMessageHandler;
-		std::map<std::string, std::function<void(CServiceBase*, SClientSessionInfo, const void*)>>
+		std::map<uint32_t, std::pair<std::function<void(CServiceBase*, SClientSessionInfo, const void*)>, std::string>>
 								m_mapServiceForwardHandler;
-
-		std::map<uint32_t, std::string>
-								m_mapForwardMessageName;
-		base::spin_lock			m_lockForwardMessage;	// 这个冲突概率非常小，直接用旋转锁，这样性能比读写锁还高
 
 		std::function<void(const std::string&, uint32_t)>
 								m_fnServiceConnectCallback;
@@ -162,9 +161,9 @@ namespace core
 
 		std::map<uint32_t, CMessageSerializer*>
 								m_mapMessageSerializer;
-		std::map<uint32_t, uint32_t>
+		std::map<std::string, uint32_t>
 								m_mapServiceMessageSerializerType;
 		uint32_t				m_nDefaultServiceMessageSerializerType;
-		CMessageSerializer*		m_pForwardMessageSerializer;
+		uint32_t				m_nForwardMessageSerializerType;
 	};
 }

@@ -17,7 +17,7 @@ namespace base
 		CDbCacheMgr();
 		~CDbCacheMgr();
 
-		bool				init(CDbThread* pDbThread, const db::SCacheConfigInfo& sCacheConfigInfo);
+		bool				init(CDbThread* pDbThread, const db::SDbOptions& sDbOptions);
 		google::protobuf::Message*
 							getData(uint64_t nID, const std::string& szDataName);
 		bool				setData(uint64_t nID, const google::protobuf::Message* pData);

@@ -27,7 +27,7 @@ bool CTestService3::onInit()
 
 	this->addServiceMessageSerializer(this->m_pNormalProtobufSerializer);
 
-	this->setServiceMessageSerializer(0, eMST_Protobuf);
+	this->setServiceMessageSerializer("", eMST_Protobuf);
 	
 	this->m_pTestService3MessageHandler = new CTestService3MessageHandler(this);
 	

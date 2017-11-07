@@ -3,7 +3,6 @@
 
 #include "ticker.h"
 #include "core_common.h"
-#include "core_connection_monitor.h"
 
 #include <atomic>
 
@@ -86,6 +85,5 @@ namespace core
 		uint32_t				m_nState;
 		std::string				m_szContext;
 		MessageParser			m_messageParser;
-		CCoreConnectionMonitor	m_monitor;
 	};
 }

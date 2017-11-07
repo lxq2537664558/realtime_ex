@@ -41,11 +41,6 @@ namespace core
 		this->m_pCoreService->registerServiceForwardHandler(szMessageName, callback);
 	}
 
-	const std::string& CServiceBase::getForwardMessageName(uint32_t nMessageID)
-	{
-		return this->m_pCoreService->getForwardMessageName(nMessageID);
-	}
-
 	void CServiceBase::setServiceConnectCallback(const std::function<void(const std::string&, uint32_t)>& callback)
 	{
 		this->m_pCoreService->setServiceConnectCallback(callback);
@@ -56,14 +51,19 @@ namespace core
 		this->m_pCoreService->setServiceDisconnectCallback(callback);
 	}
 
-	void CServiceBase::registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
+	int64_t CServiceBase::getLogicTime() const
 	{
-		CCoreApp::Inst()->registerTicker(this->m_pCoreService->getMessageQueue(), pTicker, nStartTime, nIntervalTime, nContext);
+		return this->m_pCoreService->getLogicTime();
+	}
+
+	void CServiceBase::registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext, bool bCoroutine /* = false */)
+	{
+		this->m_pCoreService->registerTicker(pTicker, nStartTime, nIntervalTime, nContext, bCoroutine);
 	}
 
 	void CServiceBase::unregisterTicker(CTicker* pTicker)
 	{
-		CCoreApp::Inst()->unregisterTicker(pTicker);
+		this->m_pCoreService->unregisterTicker(pTicker);
 	}
 
 	void CServiceBase::doQuit()
@@ -116,29 +116,24 @@ namespace core
 		this->m_pCoreService->addServiceMessageSerializer(pMessageSerializer);
 	}
 
-	void CServiceBase::setServiceMessageSerializer(uint32_t nServiceID, uint32_t nType)
+	void CServiceBase::setServiceMessageSerializer(const std::string& szServiceType, uint32_t nType)
 	{
-		this->m_pCoreService->setServiceMessageSerializer(nServiceID, nType);
+		this->m_pCoreService->setServiceMessageSerializer(szServiceType, nType);
 	}
 
-	void CServiceBase::setForwardMessageSerializer(CMessageSerializer* pMessageSerializer)
+	void CServiceBase::setForwardMessageSerializer(uint32_t nType)
 	{
-		this->m_pCoreService->setForwardMessageSerializer(pMessageSerializer);
+		this->m_pCoreService->setForwardMessageSerializer(nType);
 	}
 
-	CMessageSerializer* CServiceBase::getServiceMessageSerializer(uint32_t nServiceID) const
+	CMessageSerializer* CServiceBase::getServiceMessageSerializer(const std::string& szServiceType) const
 	{
-		return this->m_pCoreService->getServiceMessageSerializer(nServiceID);
+		return this->m_pCoreService->getServiceMessageSerializer(szServiceType);
 	}
 
 	CMessageSerializer* CServiceBase::getForwardMessageSerializer() const
 	{
 		return this->m_pCoreService->getForwardMessageSerializer();
-	}
-
-	uint32_t CServiceBase::getServiceMessageSerializerType(uint32_t nServiceID) const
-	{
-		return this->m_pCoreService->getServiceMessageSerializerType(nServiceID);
 	}
 
 	CBaseConnectionMgr* CServiceBase::getBaseConnectionMgr() const

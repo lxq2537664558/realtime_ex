@@ -23,7 +23,7 @@ namespace base
 		CDbThreadMgr();
 		~CDbThreadMgr();
 
-		bool		init(const std::string& szHost, uint16_t nPort, const std::string& szDb, const std::string& szUser, const std::string& szPassword, const std::string& szCharacterset, uint32_t nDbThreadCount, const db::SCacheConfigInfo& sCacheConfigInfo);
+		bool		init(const std::string& szHost, uint16_t nPort, const std::string& szDb, const std::string& szUser, const std::string& szPassword, const std::string& szCharacterset, const db::SDbOptions& sDbOptions);
 
 		uint32_t	getThreadCount() const;
 		void		query(uint32_t nThreadIndex, const SDbCommand& sDbCommand);
@@ -39,11 +39,16 @@ namespace base
 		uint32_t	getQueueSize(uint32_t nThreadIndex);
 
 		void		setMaxCacheSize(uint64_t nSize);
+
+		google::protobuf::Message*
+					createMessage(const std::string& szMessageName);
 		
 	private:
 		std::vector<CDbThread*>		m_vecDbThread;
 		SDbConnectionInfo			m_sDbConnectionInfo;
 		std::mutex					m_tResultLock;
 		std::list<SDbResultInfo>	m_listResultInfo;
+		std::function<google::protobuf::Message*(const std::string&)>
+									m_funcCreateMessage;
 	};
 }

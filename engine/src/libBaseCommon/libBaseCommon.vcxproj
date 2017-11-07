@@ -88,6 +88,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBBASECOMMON_EXPORTS;__BUILD_BASE_COMMON_DLL__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>../../inc/libBaseCommon;</AdditionalIncludeDirectories>
       <StringPooling>true</StringPooling>
+      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

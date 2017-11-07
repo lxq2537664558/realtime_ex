@@ -18,12 +18,14 @@ namespace base
 	CDbThread::CDbThread()
 		: m_pDbThreadMgr(nullptr)
 		, m_pThreadBase(nullptr)
+		, m_pCommandHandlerProxy(nullptr)
 	{
 	}
 
 	CDbThread::~CDbThread()
 	{
 		SAFE_RELEASE(this->m_pThreadBase);
+		SAFE_DELETE(this->m_pCommandHandlerProxy);
 	}
 
 	bool CDbThread::connectDb(bool bInit)
@@ -47,25 +49,26 @@ namespace base
 			break;
 		} while (1);
 
-		this->m_dbCommandHandlerProxy.onConnect(&this->m_dbConnection);
+		this->m_pCommandHandlerProxy->onConnect(&this->m_dbConnection);
 		return true;
 	}
 
-	bool CDbThread::init(CDbThreadMgr* pDbThreadMgr, const db::SCacheConfigInfo& sCacheConfigInfo)
+	bool CDbThread::init(CDbThreadMgr* pDbThreadMgr, const db::SDbOptions& sDbOptions)
 	{
 		DebugAstEx(pDbThreadMgr != nullptr, false);
-		this->m_pDbThreadMgr = pDbThreadMgr;
-		if (!this->m_dbCommandHandlerProxy.init())
-			return false;
 
-		if (!this->m_dbCacheMgr.init(this, sCacheConfigInfo))
+		this->m_pDbThreadMgr = pDbThreadMgr;
+		
+		this->m_pCommandHandlerProxy = new CDbCommandHandlerProxy(this);
+		
+		if (!this->m_dbCacheMgr.init(this, sDbOptions))
 			return false;
 
 		if (!this->connectDb(true))
 			return false;
 
 		this->m_pThreadBase = base::CThreadBase::createNew(this);
-		
+
 		return this->m_pThreadBase != nullptr;
 	}
 
@@ -74,7 +77,7 @@ namespace base
 		this->flushCache(0, true);
 
 		this->m_dbConnection.close();
-		this->m_dbCommandHandlerProxy.onDisconnect();
+		this->m_pCommandHandlerProxy->onDisconnect();
 	}
 
 	bool CDbThread::onProcess()
@@ -82,7 +85,7 @@ namespace base
 		if (!this->m_dbConnection.isConnect() || !this->m_dbConnection.ping())
 		{
 			this->m_dbConnection.close();
-			this->m_dbCommandHandlerProxy.onDisconnect();
+			this->m_pCommandHandlerProxy->onDisconnect();
 			this->connectDb(false);
 		}
 
@@ -97,7 +100,7 @@ namespace base
 					return true;
 			}
 
-			listCommand.splice(listCommand.end(), this->m_listCommand);
+			listCommand = std::move(this->m_listCommand);
 		}
 
 		for (auto iter = listCommand.begin(); iter != listCommand.end(); ++iter)
@@ -123,7 +126,7 @@ namespace base
 			uint32_t nErrorCode = db::eDBRC_OK;
 			if (!this->onPreCache(sDbCommand.nType, pRequestMessage, pResponseMessage))
 			{
-				nErrorCode = this->m_dbCommandHandlerProxy.onDbCommand(sDbCommand.nType, pRequestMessage, &pResponseMessage);
+				nErrorCode = this->m_pCommandHandlerProxy->onDbCommand(sDbCommand.nType, pRequestMessage, &pResponseMessage);
 				if (nErrorCode == db::eDBRC_LostConnection)
 				{
 					std::unique_lock<std::mutex> lock(this->m_tCommandLock);
@@ -242,9 +245,14 @@ namespace base
 		return (uint32_t)this->m_listCommand.size();
 	}
 
-	CDbCommandHandlerProxy& CDbThread::getDbCommandHandlerProxy()
+	CDbCommandHandlerProxy* CDbThread::getDbCommandHandlerProxy() const
 	{
-		return this->m_dbCommandHandlerProxy;
+		return this->m_pCommandHandlerProxy;
+	}
+
+	google::protobuf::Message* CDbThread::createMessage(const std::string& szMessageName)
+	{
+		return this->m_pDbThreadMgr->createMessage(szMessageName);
 	}
 
 	void CDbThread::setMaxCacheSize(uint64_t nSize)

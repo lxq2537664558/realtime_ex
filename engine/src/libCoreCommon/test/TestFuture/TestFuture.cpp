@@ -191,7 +191,7 @@ TEST(FutureTest9, FutureTest)
 	p2.setValue(std::make_shared<std::string>("hello"), 0);
 }
 
-int _tmain(int argc, _TCHAR* argv[])
+int32_t main(int32_t argc, char* argv[])
 {
 	testing::InitGoogleTest(&argc, argv);
 	return RUN_ALL_TESTS();

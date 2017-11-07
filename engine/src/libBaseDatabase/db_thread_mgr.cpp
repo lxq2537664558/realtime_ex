@@ -1,4 +1,6 @@
 #include "db_thread_mgr.h"
+#include "db_protobuf.h"
+
 #include "libBaseCommon/debug_helper.h"
 
 namespace base
@@ -12,9 +14,9 @@ namespace base
 		this->exit();
 	}
 
-	bool CDbThreadMgr::init(const std::string& szHost, uint16_t nPort, const std::string& szDb, const std::string& szUser, const std::string& szPassword, const std::string& szCharacterset, uint32_t nDbThreadCount, const db::SCacheConfigInfo& sCacheConfigInfo)
+	bool CDbThreadMgr::init(const std::string& szHost, uint16_t nPort, const std::string& szDb, const std::string& szUser, const std::string& szPassword, const std::string& szCharacterset, const db::SDbOptions& sDbOptions)
 	{
-		DebugAstEx(nDbThreadCount > 0, false);
+		DebugAstEx(sDbOptions.nDbThreadCount > 0, false);
 
 		this->m_sDbConnectionInfo.szHost = szHost;
 		this->m_sDbConnectionInfo.nPort = nPort;
@@ -23,11 +25,13 @@ namespace base
 		this->m_sDbConnectionInfo.szPassword = szPassword;
 		this->m_sDbConnectionInfo.szCharacterset = szCharacterset;
 
-		this->m_vecDbThread.resize(nDbThreadCount);
-		for (uint32_t i = 0; i < nDbThreadCount; ++i)
+		this->m_funcCreateMessage = sDbOptions.funcCreateMessage;
+
+		this->m_vecDbThread.resize(sDbOptions.nDbThreadCount);
+		for (uint32_t i = 0; i < sDbOptions.nDbThreadCount; ++i)
 		{
 			this->m_vecDbThread[i] = new CDbThread();
-			if (!this->m_vecDbThread[i]->init(this, sCacheConfigInfo))
+			if (!this->m_vecDbThread[i]->init(this, sDbOptions))
 				return false;
 		}
 
@@ -108,12 +112,6 @@ namespace base
 	void CDbThreadMgr::update()
 	{
 		this->m_tResultLock.lock();
-		if (this->m_listResultInfo.empty())
-		{
-			this->m_tResultLock.unlock();
-			return;
-		}
-
 		std::list<SDbResultInfo> listResultInfo = std::move(this->m_listResultInfo);
 		this->m_tResultLock.unlock();
 
@@ -142,4 +140,16 @@ namespace base
 			this->m_vecDbThread[i]->setMaxCacheSize(nSize);
 		}
 	}
+
+	google::protobuf::Message* CDbThreadMgr::createMessage(const std::string& szMessageName)
+	{
+		google::protobuf::Message* pMessage = nullptr;
+		if (this->m_funcCreateMessage != nullptr)
+			pMessage = this->m_funcCreateMessage(szMessageName);
+		else
+			pMessage = base::createMessage(szMessageName);
+
+		return pMessage;
+	}
+
 }

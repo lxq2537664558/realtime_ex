@@ -7,7 +7,7 @@ namespace base
 		public CDbCommandHandler
 	{
 	public:
-		CDbCommandCallHandler();
+		CDbCommandCallHandler(CDbThread* pDbThread);
 		virtual ~CDbCommandCallHandler();
 
 		virtual uint32_t	onDbCommand(const google::protobuf::Message* pRequestMessage, std::shared_ptr<google::protobuf::Message>* pResponseMessage);

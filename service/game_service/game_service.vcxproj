@@ -163,6 +163,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>../../engine/inc;../../3rd/tinyxml2/include;../../3rd/protobuf/include;../proto;../proto/db_proto_src</AdditionalIncludeDirectories>
       <StringPooling>true</StringPooling>
+      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

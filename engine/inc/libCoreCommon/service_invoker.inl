@@ -55,9 +55,16 @@ namespace core
 			coroutine::resume(nCoroutineID, 0);
 		};
 
+		if (coroutine::getCurrentID() == 0)
+		{
+			PrintWarning("root coroutine can't sync_invoke");
+			return eRRT_ERROR;
+		}
+
 		if (!this->invoke(bCheckHealth, nServiceID, pMessage, nCoroutineID, callback_, pInvokeOption, pServiceInvokeHolder))
 			return eRRT_ERROR;
-
+		
+		// 不用怕上面的resume先执行（invoke跟yield不是原子的），因为在yield完之前response消息是不可能被调度到的
 		coroutine::yield();
 
 		uint64_t nResponse = 0;

@@ -65,11 +65,17 @@ namespace core
 		bool				isServiceHealth(uint32_t nServiceID) const;
 
 		/**
+		@brief: 获取逻辑时间
+		逻辑时间跟真实的gmt时间会有一些偏差，如果一些活动的各个阶段时间是由定时器控制的，在判断时间时为了保证跟定时器一致，建议用这个时间
+		*/
+		int64_t				getLogicTime() const;
+		/**
 		@brief: 注册定时器
 		nStartTime 第一次触发定时器的时间
 		nIntervalTime 第一次触发定时器后接下来定时器触发的间隔时间，如果该值是0就表示这个定时器只触发一次
+		bCoroutine 如果打算在ticker中发起同步rpc调用就设置成true，默认是false
 		*/
-		void				registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
+		void				registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext, bool bCoroutine = false);
 		/**
 		@brief: 反注册定时器
 		*/
@@ -86,18 +92,13 @@ namespace core
 		@brief: 注册经网关服务转发客户端的服务消息
 		*/
 		void				registerServiceForwardHandler(const std::string& szMessageName, const std::function<void(CServiceBase*, SClientSessionInfo, const void*)>& callback);
-		
-		/**
-		@brief: 获取客户端转发消息名字
-		*/
-		const std::string&	getForwardMessageName(uint32_t nMessageID);
 
 		/**
-		@brief: 设置全局的服务连接成功回调
+		@brief: 设置其他服务连接成功回调
 		*/
 		void				setServiceConnectCallback(const std::function<void(const std::string&, uint32_t)>& callback);
 		/**
-		@brief: 设置全局的服务连接断开回调
+		@brief: 设置其他服务连接断开回调
 		*/
 		void				setServiceDisconnectCallback(const std::function<void(const std::string&, uint32_t)>& callback);
 
@@ -132,22 +133,18 @@ namespace core
 		*/
 		void				addServiceMessageSerializer(CMessageSerializer* pMessageSerializer);
 		/**
-		@brief: 设置某一个service所使用的序列化器
+		@brief: 设置某一个服务类型所使用的序列化器
 		*/
-		void				setServiceMessageSerializer(uint32_t nServiceID, uint32_t nType);
+		void				setServiceMessageSerializer(const std::string& szServiceType, uint32_t nType);
 		/**
 		@brief: 设置forward消息的序列化器
 		*/
-		void				setForwardMessageSerializer(CMessageSerializer* pMessageSerializer);
+		void				setForwardMessageSerializer(uint32_t nType);
 		/**
-		@brief: 获取某一个跟指定服务通讯时消息的序列化器
+		@brief: 获取跟某一类型的服务通讯时消息的序列化器
 		*/
-		CMessageSerializer*	getServiceMessageSerializer(uint32_t nServiceID) const;
-		/**
-		@brief: 获取某一个跟指定服务通讯时消息的序列化器类型
-		*/
-		uint32_t			getServiceMessageSerializerType(uint32_t nServiceID) const;
-
+		CMessageSerializer*	getServiceMessageSerializer(const std::string& szServiceType) const;
+		
 		/**
 		@brief: 获取forward消息的序列化器
 		*/

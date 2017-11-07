@@ -7,6 +7,10 @@
 
 #include "db_record_set.h"
 
+#define _DB_NAMESPACE			"proto.db."
+#define _QUERY_SET_SUFFIX		"_set"
+#define _QUERY_SET_SUFFIX_LEN	4
+
 namespace base
 {
 	struct SFieldInfo
@@ -30,6 +34,5 @@ namespace base
 	google::protobuf::Message* 
 				createMessage(const std::string& szName);
 	bool		fillNormalMessage(CDbRecordset* pDbRecordset, google::protobuf::Message* pMessage);
-	google::protobuf::Message*
-				createRepeatMessage(CDbRecordset* pDbRecordset, const std::string& szName);
+	bool		fillRepeatMessage(CDbRecordset* pDbRecordset, google::protobuf::Message* pMessage);
 }

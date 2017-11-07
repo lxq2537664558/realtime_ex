@@ -17,7 +17,7 @@ namespace core
 		CCoreService*	getCoreService() const;
 
 		void			send(const SMessagePacket& sMessagePacket);
-		void			recv(std::list<SMessagePacket>& listMessagePacket);
+		void			recv(std::vector<SMessagePacket>& vecMessagePacket);
 		void			dispatchEnd();
 
 	private:

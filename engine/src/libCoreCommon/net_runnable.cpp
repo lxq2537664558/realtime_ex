@@ -5,7 +5,6 @@
 #include "core_connection_mgr.h"
 #include "core_app.h"
 #include "message_command.h"
-#include "ticker_runnable.h"
 
 #include "libBaseCommon/debug_helper.h"
 #include "libBaseCommon/time_util.h"
@@ -73,12 +72,32 @@ namespace core
 		this->m_pCoreConnectionMgr->update(_CYCLE_TIME);
 		PROFILING_END(this->m_pCoreConnectionMgr->update)
 
-		std::list<SMessagePacket> listMessagePacket;
-		this->m_pMessageQueue->recv(listMessagePacket);
-
-		for (auto iter = listMessagePacket.begin(); iter != listMessagePacket.end(); ++iter)
+		int64_t nCurTime = base::time_util::getGmtTime();
+		if (nCurTime - this->m_nLastCheckTime >= _CYCLE_TIME)
 		{
-			const SMessagePacket& sMessagePacket = *iter;
+			this->m_nLastCheckTime = nCurTime;
+
+			SMessagePacket sMessagePacket;
+			sMessagePacket.nType = eMCT_FRAME;
+			sMessagePacket.pData = nullptr;
+			sMessagePacket.nDataSize = 0;
+
+			const std::vector<CCoreService*>& vecCoreService = CCoreApp::Inst()->getCoreServiceMgr()->getCoreService();
+			for (size_t i = 0; i < vecCoreService.size(); ++i)
+			{
+				vecCoreService[i]->getMessageQueue()->send(sMessagePacket);
+			}
+
+			sMessagePacket.nType = eMCT_GLOBAL_FRAME;
+			
+			CCoreApp::Inst()->getGlobalLogicMessageQueue()->send(sMessagePacket);
+		}
+
+		this->m_pMessageQueue->recv(this->m_vecMessagePacket);
+
+		for (size_t i = 0; i < this->m_vecMessagePacket.size(); ++i)
+		{
+			const SMessagePacket& sMessagePacket = this->m_vecMessagePacket[i];
 
 			switch (sMessagePacket.nType)
 			{
@@ -205,35 +224,6 @@ namespace core
 				this->m_pCoreConnectionMgr->broadcast(pContext->szType, pContext->nMessageType, pData, (uint16_t)(sMessagePacket.nDataSize - sizeof(SMCT_BROADCAST_SOCKET_DATA2) - pContext->nTypeLen - sizeof(uint64_t)*pContext->nExcludeIDCount), pExcludeID, pContext->nExcludeIDCount);
 
 				SAFE_DELETE_ARRAY(szBuf);
-			}
-			break;
-
-			case eMCT_TICKER:
-			{
-				PROFILING_GUARD(eMCT_TICKER_NET)
-				CCoreTickerNode* pCoreTickerNode = reinterpret_cast<CCoreTickerNode*>(sMessagePacket.pData);
-				if (pCoreTickerNode == nullptr)
-				{
-					PrintWarning("pCoreTickerNode == nullptr type: eMCT_TICKER");
-					continue;
-				}
-
-				if (pCoreTickerNode->Value.m_pTicker == nullptr)
-				{
-					pCoreTickerNode->Value.release();
-					continue;
-				}
-
-				CTicker* pTicker = pCoreTickerNode->Value.m_pTicker;
-				if (pCoreTickerNode->Value.getRef() == 1)
-				{
-					CCoreApp::Inst()->unregisterTicker(pTicker);
-				}
-
-				auto& callback = pTicker->getCallback();
-				if (callback != nullptr)
-					callback(pTicker->getContext());
-				pCoreTickerNode->Value.release();
 			}
 			break;
 

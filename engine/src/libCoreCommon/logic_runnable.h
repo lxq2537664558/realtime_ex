@@ -24,7 +24,8 @@ namespace core
 		bool			dispatch(CCoreService* pCoreService, const SMessagePacket& sMessagePacket);
 
 	private:
-		base::CThreadBase*	m_pThreadBase;
-		int64_t				m_nTotalSamplingTime;
+		base::CThreadBase*			m_pThreadBase;
+		std::vector<SMessagePacket>	m_vecMessagePacket;
+		int64_t						m_nTotalSamplingTime;
 	};
 }

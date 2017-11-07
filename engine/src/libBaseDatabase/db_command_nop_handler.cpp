@@ -2,7 +2,8 @@
 
 namespace base
 {
-	CDbCommandNOPHandler::CDbCommandNOPHandler()
+	CDbCommandNOPHandler::CDbCommandNOPHandler(CDbThread* pDbThread)
+		: CDbCommandHandler(pDbThread)
 	{
 
 	}

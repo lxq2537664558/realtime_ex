@@ -37,10 +37,11 @@ bool CGateService::onInit()
 	this->m_pNormalProtobufSerializer = std::make_unique<CNormalProtobufSerializer>();
 	this->m_pJsonProtobufSerializer = std::make_unique<CJsonProtobufSerializer>();
 	
-	this->setForwardMessageSerializer(this->m_pJsonProtobufSerializer.get());
 	this->addServiceMessageSerializer(this->m_pNormalProtobufSerializer.get());
+	this->addServiceMessageSerializer(this->m_pJsonProtobufSerializer.get());
 
-	this->setServiceMessageSerializer(0, eMST_Protobuf);
+	this->setServiceMessageSerializer("", eMST_Protobuf);
+	this->setForwardMessageSerializer(eMST_JsonProtobuf);
 
 	this->setServiceConnectCallback(std::bind(&CGateService::onServiceConnect, this, std::placeholders::_1, std::placeholders::_2));
 	this->setServiceDisconnectCallback(std::bind(&CGateService::onServiceDisconnect, this, std::placeholders::_1, std::placeholders::_2));

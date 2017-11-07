@@ -28,11 +28,13 @@ namespace core
 		bool				runAndServe(size_t argc, char** argv, const std::vector<CServiceBase*>& vecServiceBase);
 		void				doQuit();
 
+		void				onFrame();
+
 		uint32_t			getNodeID() const;
 		const SNodeBaseInfo&
 							getNodeBaseInfo() const;
 
-		void				registerTicker(CMessageQueue* pMessageQueue, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
+		void				registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext, bool bCoroutine);
 		void				unregisterTicker(CTicker* pTicker);
 
 		CCoreServiceMgr*	getCoreServiceMgr() const;
@@ -76,6 +78,8 @@ namespace core
 		uint32_t						m_nCoroutineStackSize;
 
 		std::vector<CLogicRunnable*>	m_vecLogicRunnable;
+		
+		CTickerMgr*						m_pGlobalTickerMgr;
 		CBaseConnectionMgr*				m_pGlobalBaseConnectionMgr;
 		CLogicMessageQueue*				m_pGlobalLogicMessageQueue;
 		CLogicMessageQueueMgr*			m_pLogicMessageQueueMgr;

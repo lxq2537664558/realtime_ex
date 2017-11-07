@@ -17,8 +17,6 @@
 
 #include "db_protobuf.h"
 
-#define _DB_NAMESPACE "proto.db."
-
 namespace
 {
 	enum ESerializeType
@@ -512,78 +510,70 @@ namespace base
 		return true;
 	}
 
-	google::protobuf::Message* createRepeatMessage(CDbRecordset* pDbRecordset, const std::string& szName)
+	bool fillRepeatMessage(CDbRecordset* pDbRecordset, google::protobuf::Message* pMessage)
 	{
-		DebugAstEx(pDbRecordset != nullptr, nullptr);
+		DebugAstEx(pDbRecordset != nullptr, false);
+		DebugAstEx(pMessage != nullptr, false);
 
-		std::string szMessageName(szName + "_set");
-		google::protobuf::Message* pMessage = CMessageFactory::Inst()->createMessage(szMessageName);
-		DebugAstEx(pMessage != nullptr, nullptr);
-		bool bDelete = true;
-		defer([&]()
-		{
-			if (bDelete)
-			{
-				SAFE_DELETE(pMessage);
-			}
-		});
+		std::string szMessageName = pMessage->GetTypeName();
+		szMessageName = szMessageName.substr(0, szMessageName.size() - _QUERY_SET_SUFFIX_LEN);
 
 		const google::protobuf::Reflection* pMainReflection = pMessage->GetReflection();
 		if (pMainReflection == nullptr)
 		{
-			PrintWarning("message[{}] can't get reflection.", szMessageName);
-			return nullptr;
+			PrintWarning("message[{}] can't get reflection.", pMessage->GetTypeName());
+			return false;
 		}
 
 		const google::protobuf::Descriptor* pMainDescriptor = pMessage->GetDescriptor();
 		if (pMainDescriptor == nullptr)
 		{
-			PrintWarning("message[{}] can't get descriptor.", szMessageName);
-			return nullptr;
+			PrintWarning("message[{}] can't get descriptor.", pMessage->GetTypeName());
+			return false;
 		}
 
 		if (pMainDescriptor->field_count() != 1)
 		{
-			PrintWarning("message[{}] field count isn't one.", szMessageName);
-			return nullptr;
+			PrintWarning("message[{}] field count isn't one.", pMessage->GetTypeName());
+			return false;
 		}
 
 		const google::protobuf::FieldDescriptor* pMainFieldDescriptor = pMainDescriptor->field(0);
 		if (pMainFieldDescriptor == nullptr)
 		{
-			PrintWarning("message[{}] can't get field descriptor.", szMessageName);
-			return nullptr;
+			PrintWarning("message[{}] can't get field descriptor.", pMessage->GetTypeName());
+			return false;
 		}
 
 		if (pMainFieldDescriptor->label() != google::protobuf::FieldDescriptor::LABEL_REPEATED ||
 			pMainFieldDescriptor->type() != google::protobuf::FieldDescriptor::TYPE_MESSAGE)
 		{
-			PrintWarning("message[{}] main field prototy is wrong.", szMessageName);
-			return nullptr;
+			PrintWarning("message[{}] main field prototy is wrong.", pMessage->GetTypeName());
+			return false;
 		}
 
 		for (uint64_t i = 0; i < pDbRecordset->getRowCount(); ++i)
 		{
 			pDbRecordset->fatchNextRow();
 			google::protobuf::Message* pSubMessage = pMainReflection->AddMessage(pMessage, pMainFieldDescriptor);
-			if (pSubMessage == nullptr || pSubMessage->GetTypeName() != szName)
+			if (pSubMessage == nullptr || pSubMessage->GetTypeName() != szMessageName)
 			{
-				PrintWarning("message[{}] AddMessage failed.", szMessageName);
-				return nullptr;
+				PrintWarning("message[{}] AddMessage failed.", pMessage->GetTypeName());
+				return false;
 			}
 
 			const google::protobuf::Reflection* pReflection = pSubMessage->GetReflection();
 			if (pReflection == nullptr)
 			{
 				PrintWarning("message[{}] can't get reflection.", pSubMessage->GetTypeName());
-				return nullptr;
+				return false;
 			}
 
 			const google::protobuf::Descriptor* pDescriptor = pSubMessage->GetDescriptor();
 			if (pDescriptor == nullptr)
 			{
 				PrintWarning("message[{}] can't get descriptor.", pSubMessage->GetTypeName());
-				return nullptr;
+				return false;
 			}
 
 			for (uint32_t i = 0; i < pDbRecordset->getFieldCount(); ++i)
@@ -595,19 +585,18 @@ namespace base
 				if (pFieldDescriptor == nullptr)
 				{
 					PrintWarning("field[{}.{}] descriptor is nullptr.", pSubMessage->GetTypeName(), szFieldName);
-					return nullptr;
+					return false;
 				}
 
 				if (!setFieldValue(pSubMessage, pReflection, pFieldDescriptor, szValue))
 				{
 					PrintWarning("setFieldValue[{}.{}] failed.", pSubMessage->GetTypeName(), szFieldName);
-					return nullptr;
+					return false;
 				}
 			}
 		}
 
-		bDelete = false;
-		return pMessage;
+		return true;
 	}
 
 	bool fillNormalMessage(CDbRecordset* pDbRecordset, google::protobuf::Message* pMessage)
@@ -643,13 +632,13 @@ namespace base
 			if (pFieldDescriptor == nullptr)
 			{
 				PrintWarning("field[{}.{}] descriptor is nullptr.", pMessage->GetTypeName(), szFieldName);
-				return nullptr;
+				return false;
 			}
 
 			if (!setFieldValue(pMessage, pReflection, pFieldDescriptor, szValue))
 			{
 				PrintWarning("setFieldValue[{}.{}] failed.", pMessage->GetTypeName(), szFieldName);
-				return nullptr;
+				return false;
 			}
 		}
 

@@ -10,7 +10,7 @@
 
 #include <string>
 #include <map>
-#include <list>
+#include <vector>
 #include <iostream>
 
 #ifdef _WIN32
@@ -93,7 +93,7 @@ namespace
 		uint32_t	nBufSize;
 		uint8_t		bConsole;
 		uint8_t		nDay;
-		char		szBuf[1];
+		char		szBuf[_LOG_BUF_SIZE];
 
 		SLogInfo()
 			: nBufSize(0)
@@ -140,7 +140,8 @@ namespace
 		char									m_szPath[MAX_PATH];
 		std::map<std::string, SLogFileInfo*>	m_mapLogFileInfo;
 		int64_t									m_nLastFlushTime;
-		std::list<SLogInfo*>					m_listLogInfo;
+		std::vector<SLogInfo*>					m_vecLogInfo;
+		std::vector<SLogInfo*>					m_vecSwapLogInfo;
 		base::spin_lock							m_lock;
 		base::CThreadBase*						m_pThreadBase;
 		bool									m_bAsync;
@@ -259,7 +260,7 @@ namespace
 		if (this->m_bAsync)
 		{
 			this->m_lock.lock();
-			this->m_listLogInfo.push_back(pLogInfo);
+			this->m_vecLogInfo.push_back(pLogInfo);
 			this->m_lock.unlock();
 		}
 		else
@@ -274,15 +275,20 @@ namespace
 
 	bool CLogger::onProcess()
 	{
-		std::list<SLogInfo*> listLogInfo;
-
 		this->m_lock.lock();
-		listLogInfo = std::move(this->m_listLogInfo);
+		std::swap(this->m_vecLogInfo, this->m_vecSwapLogInfo);
 		this->m_lock.unlock();
 
-		for (auto iter = listLogInfo.begin(); iter != listLogInfo.end(); ++iter)
+		// 这里不用条件变量的原因是因为日志不需要马上输出，用交换队列锁的代价更小。
+		if (this->m_vecSwapLogInfo.empty())
 		{
-			SLogInfo* pLogInfo = *iter;
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+			return true;
+		}
+
+		for (size_t i = 0; i < this->m_vecSwapLogInfo.size(); ++i)
+		{
+			SLogInfo* pLogInfo = this->m_vecSwapLogInfo[i];
 			if (pLogInfo == nullptr)
 				continue;
 
@@ -296,16 +302,15 @@ namespace
 				this->saveLog(pLogInfo);
 			}
 
-			char* szBuf = reinterpret_cast<char*>(pLogInfo);
-			delete[](szBuf);
+			delete pLogInfo;
 		}
+
+		this->m_vecSwapLogInfo.clear();
 
 		if (this->m_bAsync)
 		{
 			this->tryFlushLog();
 		}
-
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
 		return true;
 	}
@@ -455,22 +460,21 @@ namespace base
 			if (szFormat == nullptr || szPrefix == nullptr)
 				return;
 
-			uint8_t nDay = 0;
-			static thread_local char szBuf[_LOG_BUF_SIZE] = { 0 };
+			SLogInfo* pLogInfo = new SLogInfo();
 			va_list arg;
 			va_start(arg, szFormat);
-			uint32_t nSize = formatLog(szBuf, _countof(szBuf), szPrefix, g_pLogger->isGmtTime(), szFormat, arg, &nDay);
+			uint32_t nSize = formatLog(pLogInfo->szBuf, _countof(pLogInfo->szBuf), szPrefix, g_pLogger->isGmtTime(), szFormat, arg, &pLogInfo->nDay);
 			va_end(arg);
 			if (nSize == 0)
+			{
+				delete pLogInfo;
 				return;
+			}
 
-			SLogInfo* pLogInfo = reinterpret_cast<SLogInfo*>(new char[sizeof(SLogInfo) + nSize + 1]);
 			pLogInfo->nBufSize = nSize;
 			pLogInfo->szSuffix[0] = 0;
 			pLogInfo->bConsole = bConsole;
-			pLogInfo->nDay = nDay;
-			base::function_util::strcpy(pLogInfo->szBuf, nSize + 1, szBuf);
-
+			
 			g_pLogger->pushLog(pLogInfo);
 		}
 
@@ -479,21 +483,17 @@ namespace base
 			if (szFormat == nullptr || szFileName == nullptr)
 				return;
 
-			uint8_t nDay = 0;
-			static thread_local char szBuf[_LOG_BUF_SIZE] = { 0 };
+			SLogInfo* pLogInfo = new SLogInfo();
 			va_list arg;
 			va_start(arg, szFormat);
-			uint32_t nSize = formatLog(szBuf, _countof(szBuf), "", g_pLogger->isGmtTime(), szFormat, arg, &nDay);
+			uint32_t nSize = formatLog(pLogInfo->szBuf, _countof(pLogInfo->szBuf), "", g_pLogger->isGmtTime(), szFormat, arg, &pLogInfo->nDay);
 			va_end(arg);
 			if (nSize == 0)
 				return;
 
-			SLogInfo* pLogInfo = reinterpret_cast<SLogInfo*>(new char[sizeof(SLogInfo) + nSize + 1]);
 			pLogInfo->nBufSize = nSize;
 			base::function_util::strcpy(pLogInfo->szSuffix, _LOG_FILE_NAME_SIZE, szFileName);
 			pLogInfo->bConsole = bConsole;
-			pLogInfo->nDay = nDay;
-			base::function_util::strcpy(pLogInfo->szBuf, nSize + 1, szBuf);
 
 			g_pLogger->pushLog(pLogInfo);
 		}
@@ -522,8 +522,9 @@ namespace base
 			if (g_pLogger == nullptr)
 				return;
 
-			SLogInfo* pLogInfo = reinterpret_cast<SLogInfo*>(new char[sizeof(SLogInfo)]);
+			SLogInfo* pLogInfo = new SLogInfo();
 			pLogInfo->nBufSize = 0;
+			pLogInfo->nDay = 0;
 			g_pLogger->pushLog(pLogInfo);
 		}
 

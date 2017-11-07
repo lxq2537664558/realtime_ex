@@ -44,7 +44,7 @@ bool CTestService1::onInit()
 	
 	this->addServiceMessageSerializer(this->m_pNormalProtobufSerializer);
 
-	this->setServiceMessageSerializer(0, eMST_Protobuf);
+	this->setServiceMessageSerializer("", eMST_Protobuf);
 
 	this->setServiceConnectCallback(std::bind(&CTestService1::onServiceConnect, this, std::placeholders::_1, std::placeholders::_2));
 	this->setServiceDisconnectCallback(std::bind(&CTestService1::onServiceDisconnect, this, std::placeholders::_1, std::placeholders::_2));

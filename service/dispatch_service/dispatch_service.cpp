@@ -66,7 +66,7 @@ bool CDispatchService::onInit()
 	
 	this->addServiceMessageSerializer(this->m_pNormalProtobufSerializer.get());
 
-	this->setServiceMessageSerializer(0, eMST_Protobuf);
+	this->setServiceMessageSerializer("", eMST_Protobuf);
 	
 	this->m_pDispatchServiceMessageHandler = std::make_unique<CDispatchServiceMessageHandler>(this);
 	this->m_pOnlineCountMgr = std::make_unique<COnlineCountMgr>();

@@ -74,7 +74,7 @@ namespace base
 			return (x << 24) |
 				(x & 0x0000ff00) << 8 |
 				(x & 0x00ff0000) >> 8 |
-				x >> 24;;
+				x >> 24;
 		}
 
 		uint32_t ntoh32(uint32_t x)
@@ -82,7 +82,7 @@ namespace base
 			return (x << 24) |
 				(x & 0x0000ff00) << 8 |
 				(x & 0x00ff0000) >> 8 |
-				x >> 24;;
+				x >> 24;
 		}
 
 		uint64_t ntoh64(uint64_t x)

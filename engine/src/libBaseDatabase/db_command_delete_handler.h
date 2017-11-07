@@ -7,7 +7,7 @@ namespace base
 		public CDbCommandHandler
 	{
 	public:
-		CDbCommandDeleteHandler();
+		CDbCommandDeleteHandler(CDbThread* pDbThread);
 		virtual ~CDbCommandDeleteHandler();
 
 		virtual uint32_t	onDbCommand(const google::protobuf::Message* pRequestMessage, std::shared_ptr<google::protobuf::Message>* pResponseMessage);

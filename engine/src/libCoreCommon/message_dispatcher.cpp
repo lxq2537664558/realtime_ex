@@ -142,19 +142,16 @@ namespace core
 			DebugAst(pMessageSerializer != nullptr);
 
 			const message_header* pHeader = reinterpret_cast<const message_header*>(pGateForwardContext + 1);
-			const std::string& szMessageName = this->m_pCoreService->getForwardMessageName(pHeader->nMessageID);
-			if (szMessageName.empty())
+
+			auto& handler = this->m_pCoreService->getServiceForwardHandler(pHeader->nMessageID);
+			auto& callback = handler.first;
+			if (callback == nullptr)
 			{
-				PrintWarning("CMessageDispatcher::dispatch eMT_GATE_FORWARD error szMessageName.empty() service_id: {} message_id: {}", this->m_pCoreService->getServiceID(), pHeader->nMessageID);
+				PrintWarning("CMessageDispatcher::dispatch error unknown gate forward message service_id: {} message_id: {}", this->m_pCoreService->getServiceID(), pHeader->nMessageID);
 				return;
 			}
 
-			auto& callback = this->m_pCoreService->getServiceForwardHandler(szMessageName);
-			if (callback == nullptr)
-			{
-				PrintWarning("CMessageDispatcher::dispatch error unknown gate forward message service_id: {}, message_name: {}", this->m_pCoreService->getServiceID(), szMessageName);
-				return;
-			}
+			const std::string& szMessageName = handler.second;
 
 			const char* pMessageData = reinterpret_cast<const char*>(pHeader + 1);
 

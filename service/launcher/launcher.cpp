@@ -25,13 +25,6 @@ typedef core::CServiceBase*(*funcCreateServiceBase)(const core::SServiceBaseInfo
 
 int32_t main(int32_t argc, char* argv[])
 {
-	if (argc < 2)
-	{
-		fprintf(stderr, "argc error\n");
-		return 0;
-	}
-
-
 	core::CBaseApp* pBaseApp = new core::CBaseApp();
 
 	char szOldCurPath[MAX_PATH] = { 0 };

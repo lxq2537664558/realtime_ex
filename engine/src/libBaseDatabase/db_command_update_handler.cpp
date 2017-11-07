@@ -9,7 +9,8 @@
 namespace base
 {
 
-	CDbCommandUpdateHandler::CDbCommandUpdateHandler()
+	CDbCommandUpdateHandler::CDbCommandUpdateHandler(CDbThread* pDbThread)
+		: CDbCommandHandler(pDbThread)
 	{
 
 	}

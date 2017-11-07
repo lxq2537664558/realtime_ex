@@ -24,7 +24,7 @@ bool CDbService::onInit()
 	
 	this->addServiceMessageSerializer(this->m_pNormalProtobufSerializer.get());
 
-	this->setServiceMessageSerializer(0, eMST_Protobuf);
+	this->setServiceMessageSerializer("", eMST_Protobuf);
 
 	tinyxml2::XMLDocument sConfigXML;
 	if (sConfigXML.LoadFile(this->getConfigFileName().c_str()) != tinyxml2::XML_SUCCESS)
@@ -57,21 +57,22 @@ bool CDbService::onInit()
 	const std::string szName = pMysqlXML->Attribute("name");
 	const std::string szCharset = pMysqlXML->Attribute("charset");
 
-	base::db::SCacheConfigInfo sCacheConfigInfo;
-	sCacheConfigInfo.nMaxCacheSize = nCacheSize;
-	sCacheConfigInfo.nWritebackTime = nWriteBackTime;
-
+	base::db::SDbOptions sDbOptions;
+	sDbOptions.nMaxCacheSize = nCacheSize;
+	sDbOptions.nCacheWritebackTime = nWriteBackTime;
+	sDbOptions.szProtoDir = szProtoDir;
+	sDbOptions.nDbThreadCount = nThreadCount;
 	tinyxml2::XMLElement* pTableCacheXML = pRootXML->FirstChildElement("cache_table");
 	if (pTableCacheXML != nullptr)
 	{
 		for (tinyxml2::XMLElement* pTableInfoXML = pTableCacheXML->FirstChildElement("table_info"); pTableInfoXML != nullptr; pTableInfoXML = pTableInfoXML->NextSiblingElement("table_info"))
 		{
 			std::string szName = pTableInfoXML->Attribute("name");
-			sCacheConfigInfo.vecTable.push_back(szName);
+			sDbOptions.vecCacheTable.push_back(szName);
 		}
 	}
 
-	this->m_nDbID = base::db::create(szHost, nPort, szName, szUser, szPassword, szCharset, szProtoDir, nThreadCount, sCacheConfigInfo);
+	this->m_nDbID = base::db::create(szHost, nPort, szName, szUser, szPassword, szCharset, sDbOptions);
 	if (0 == this->m_nDbID)
 	{
 		PrintWarning("0 == this->m_nDbID");

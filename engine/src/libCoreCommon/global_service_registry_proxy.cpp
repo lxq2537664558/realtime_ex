@@ -53,7 +53,7 @@ namespace core
 				this->m_mapMasterInfo[sMasterInfo.nID] = sMasterInfo;
 			}
 
-			CCoreApp::Inst()->registerTicker(CCoreApp::Inst()->getGlobalLogicMessageQueue(), &this->m_tickCheckConnectMaster, 1000, 5 * 1000, 0);
+			CCoreApp::Inst()->registerTicker(&this->m_tickCheckConnectMaster, 1000, 5 * 1000, 0, true);
 		}
 
 		CCoreApp::Inst()->getGlobalBaseConnectionMgr()->addConnectFailCallback("master", std::bind(&CGlobalServiceRegistryProxy::onConnectRefuse, this, std::placeholders::_1));
@@ -153,7 +153,7 @@ namespace core
 		{
 			DebugAst(!sNodeProxyInfo.sNodeBaseInfo.szHost.empty() && sNodeProxyInfo.sNodeBaseInfo.nPort != 0);
 
-			CCoreApp::Inst()->registerTicker(CCoreApp::Inst()->getGlobalLogicMessageQueue(), sNodeProxyInfo.pTicker.get(), _CHECK_CONNECT_TIME, _CHECK_CONNECT_TIME, 0);
+			CCoreApp::Inst()->registerTicker(sNodeProxyInfo.pTicker.get(), _CHECK_CONNECT_TIME, _CHECK_CONNECT_TIME, 0, true);
 		}
 
 		this->updateLocalServiceRegistryProxy();
@@ -366,7 +366,7 @@ namespace core
 			sMasterInfo.bActive = true;
 			char szBuf[256] = { 0 };
 			base::function_util::snprintf(szBuf, _countof(szBuf), "master%d", sMasterInfo.nID);
-			CCoreApp::Inst()->getGlobalBaseConnectionMgr()->connect(sMasterInfo.szHost, sMasterInfo.nPort, "CBaseConnectionToMaster", szBuf, 10 * 1024, 10 * 1024, nullptr);;
+			CCoreApp::Inst()->getGlobalBaseConnectionMgr()->connect(sMasterInfo.szHost, sMasterInfo.nPort, "CBaseConnectionToMaster", szBuf, 10 * 1024, 10 * 1024, nullptr);
 		}
 	}
 

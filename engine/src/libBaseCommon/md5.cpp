@@ -447,7 +447,7 @@ namespace base
 		}
 
 		if( nInLen % 4 != 0 )
-			return nullptr;
+			return false;
 		
 		size_t req_out_len = nInLen / 4 * 3;
 		if( szIn[nInLen - 1] == '=' ) req_out_len--;

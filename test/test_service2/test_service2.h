@@ -22,7 +22,19 @@ private:
 	virtual void	onFrame();
 	virtual void	onQuit();
 
+	void			TestTickCallBack3(uint64_t  ucontext);
+	void			TestTickCallBack0(uint64_t  ucontext);
+
 private:
+	struct  ST_TickData
+	{
+		CTicker ticker;
+		int		nFlag; // when nFlag ==2 , to do unRegis;
+	};
+
+	CTicker							m_ticker;
+	int64_t							m_nLastTime;
+	std::vector<ST_TickData>		m_vecTickData;
 	CTestService2MessageHandler*	m_pTestService2MessageHandler;
 	CNormalProtobufSerializer*		m_pNormalProtobufSerializer;
 };

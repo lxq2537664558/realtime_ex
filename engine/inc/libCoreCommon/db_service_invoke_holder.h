@@ -24,12 +24,12 @@ namespace core
 		CDbServiceInvokeHolder(CServiceBase* pServiceBase, uint32_t nDbServiceID) : m_sServiceInvokeHolder(pServiceBase), m_nDbServiceID(nDbServiceID) { }
 		virtual ~CDbServiceInvokeHolder() { }
 
-		// 这批接口是不需要响应的db操作接口
+		inline bool		flush(uint64_t nPrimaryID, base::db::EFlushCacheType eType);
+
 		inline bool		update(const google::protobuf::Message* pMessage);
 		inline bool		remove(uint64_t nPrimaryID, const std::string& szTableName);
 		inline bool		insert(const google::protobuf::Message* pMessage);
 		inline bool		call(uint32_t nChannelID, const std::string& szSQL, const std::vector<std::string>* vecArg);
-		inline bool		flush(uint64_t nPrimaryID, base::db::EFlushCacheType eType);
 
 		inline void		async_select(uint64_t nPrimaryID, const std::string& szTableName, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback, uint32_t nTimeout = 0);
 		inline void		async_update(const google::protobuf::Message* pMessage, const std::function<void(uint32_t)>& callback, uint32_t nTimeout = 0);

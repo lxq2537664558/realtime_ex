@@ -32,7 +32,7 @@ namespace base
 			return nullptr;
 
 		const std::string& szDataName = this->m_pDbCacheMgr->getDataName(nDataID);
-		google::protobuf::Message* pMessage = createMessage(szDataName);
+		google::protobuf::Message* pMessage = this->m_pDbCacheMgr->getDbThread()->createMessage(szDataName);
 		if (nullptr == pMessage)
 		{
 			PrintWarning("CDbCache::getData error nullptr == pMessage data_name: {}", szDataName);
@@ -72,7 +72,7 @@ namespace base
 		if (iter == this->m_mapCacheInfo.end())
 			return this->addData(nDataID, pData);
 
-		google::protobuf::Message* pDstData = createMessage(szDataName);
+		google::protobuf::Message* pDstData = this->m_pDbCacheMgr->getDbThread()->createMessage(szDataName);
 		if (nullptr == pDstData)
 			return false;
 
@@ -207,7 +207,7 @@ namespace base
 					PrintWarning("CDbCache::writeback error szDataName.empty() index: {}", iter->first);
 					continue;
 				}
-				google::protobuf::Message* pMessage = createMessage(szDataName);
+				google::protobuf::Message* pMessage = this->m_pDbCacheMgr->getDbThread()->createMessage(szDataName);
 				if (nullptr == pMessage)
 				{
 					PrintWarning("CDbCache::writeback error nullptr == pMessage data_name: {}", szDataName);
@@ -223,7 +223,7 @@ namespace base
 					PrintWarning("CDbCache::writeback error pMessage->ParseFromString data_name: {}", szDataName);
 					continue;
 				}
-				uint32_t nErrorCode = m_pDbCacheMgr->getDbThread()->getDbCommandHandlerProxy().onDbCommand(db::eDBCT_Update, pMessage, nullptr);
+				uint32_t nErrorCode = m_pDbCacheMgr->getDbThread()->getDbCommandHandlerProxy()->onDbCommand(db::eDBCT_Update, pMessage, nullptr);
 				if (nErrorCode != db::eDBRC_OK)
 				{
 					PrintWarning("CDbCache::writeback error nErrorCode != db::eDBRC_OK data_name: {} error_code: {}", szDataName, nErrorCode);

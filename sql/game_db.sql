@@ -29,15 +29,6 @@ CREATE TABLE `player_base` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- ----------------------------
--- Table structure for player_battlearray
--- ----------------------------
-CREATE TABLE `player_battlearray` (
-  `player_id` bigint(20) unsigned NOT NULL,
-  `data` text,
-  PRIMARY KEY (`player_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- ----------------------------
 -- Table structure for player_hero
 -- ----------------------------
 CREATE TABLE `player_hero` (

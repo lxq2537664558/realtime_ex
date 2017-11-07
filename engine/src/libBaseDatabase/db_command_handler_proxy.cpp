@@ -13,15 +13,15 @@
 
 namespace base
 {
-	CDbCommandHandlerProxy::CDbCommandHandlerProxy()
+	CDbCommandHandlerProxy::CDbCommandHandlerProxy(CDbThread* pDbThread)
 	{
-		this->m_mapDbCommandHandler[db::eDBCT_Call] = new CDbCommandCallHandler();
-		this->m_mapDbCommandHandler[db::eDBCT_Delete] = new CDbCommandDeleteHandler();
-		this->m_mapDbCommandHandler[db::eDBCT_Insert] = new CDbCommandInsertHandler();
-		this->m_mapDbCommandHandler[db::eDBCT_Query] = new CDbCommandQueryHandler();
-		this->m_mapDbCommandHandler[db::eDBCT_Select] = new CDbCommandSelectHandler();
-		this->m_mapDbCommandHandler[db::eDBCT_Update] = new CDbCommandUpdateHandler();
-		this->m_mapDbCommandHandler[db::eDBCT_Nop] = new CDbCommandNOPHandler();
+		this->m_mapDbCommandHandler[db::eDBCT_Call] = new CDbCommandCallHandler(pDbThread);
+		this->m_mapDbCommandHandler[db::eDBCT_Delete] = new CDbCommandDeleteHandler(pDbThread);
+		this->m_mapDbCommandHandler[db::eDBCT_Insert] = new CDbCommandInsertHandler(pDbThread);
+		this->m_mapDbCommandHandler[db::eDBCT_Query] = new CDbCommandQueryHandler(pDbThread);
+		this->m_mapDbCommandHandler[db::eDBCT_Select] = new CDbCommandSelectHandler(pDbThread);
+		this->m_mapDbCommandHandler[db::eDBCT_Update] = new CDbCommandUpdateHandler(pDbThread);
+		this->m_mapDbCommandHandler[db::eDBCT_Nop] = new CDbCommandNOPHandler(pDbThread);
 	}
 
 	CDbCommandHandlerProxy::~CDbCommandHandlerProxy()
@@ -31,11 +31,6 @@ namespace base
 			CDbCommandHandler* pDbCommandHandler = iter->second;
 			SAFE_DELETE(pDbCommandHandler);
 		}
-	}
-
-	bool CDbCommandHandlerProxy::init()
-	{
-		return true;
 	}
 
 	void CDbCommandHandlerProxy::onConnect(CDbConnection* pDbConnection)

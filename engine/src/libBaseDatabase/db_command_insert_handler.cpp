@@ -7,8 +7,8 @@
 
 namespace base
 {
-
-	CDbCommandInsertHandler::CDbCommandInsertHandler()
+	CDbCommandInsertHandler::CDbCommandInsertHandler(CDbThread* pDbThread)
+		: CDbCommandHandler(pDbThread)
 	{
 
 	}

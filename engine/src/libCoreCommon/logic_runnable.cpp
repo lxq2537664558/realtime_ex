@@ -4,7 +4,6 @@
 #include "message_command.h"
 #include "base_connection_mgr.h"
 #include "base_connection.h"
-#include "ticker_runnable.h"
 #include "net_runnable.h"
 #include "core_app.h"
 
@@ -68,27 +67,18 @@ namespace core
 		CLogicMessageQueue* pMessageQueue = CCoreApp::Inst()->getLogicMessageQueueMgr()->getMessageQueue();
 		DebugAstEx(pMessageQueue != nullptr, true);
 
-		std::list<SMessagePacket> listMessagePacket;
-		pMessageQueue->recv(listMessagePacket);
+		pMessageQueue->recv(this->m_vecMessagePacket);
 
 		CCoreService* pCoreService = pMessageQueue->getCoreService();
 		
-		if (coroutine::getCoroutineCount() < _MAX_CO_COUNT)
+		PROFILING_BEGIN(Message_Process)
+		for (size_t i = 0; i < this->m_vecMessagePacket.size(); ++i)
 		{
-			PROFILING_BEGIN(Message_Process)
-			for (auto iter = listMessagePacket.begin(); iter != listMessagePacket.end(); ++iter)
-			{
-				const SMessagePacket& sMessagePacket = *iter;
+			const SMessagePacket& sMessagePacket = this->m_vecMessagePacket[i];
 
-				this->dispatch(pCoreService, sMessagePacket);
-			}
-			PROFILING_END(Message_Process)
+			this->dispatch(pCoreService, sMessagePacket);
 		}
-		else
-		{
-			// 整个系统pending的协程太多了，只能歇一歇，不然内存就爆掉了
-			std::this_thread::sleep_for(std::chrono::milliseconds(1));
-		}
+		PROFILING_END(Message_Process)
 
 		pMessageQueue->dispatchEnd();
 
@@ -151,11 +141,13 @@ namespace core
 
 			DebugAstEx(pCoreService != nullptr, false);
 
-			if (pCoreService->getRunState() == eSRS_Normal)
-			{
-				uint64_t nCoroutineID = coroutine::create(CCoreApp::Inst()->getCoroutineStackSize(), [pCoreService](uint64_t) { pCoreService->onFrame(); });
-				coroutine::resume(nCoroutineID, 0);
-			}
+			pCoreService->onFrame();
+		}
+		break;
+
+		case eMCT_GLOBAL_FRAME:
+		{
+			CCoreApp::Inst()->onFrame();
 		}
 		break;
 
@@ -342,39 +334,6 @@ namespace core
 				nMessageType = eMT_GATE_FORWARD;
 
 			pCoreService->getMessageDispatcher()->dispatch(CCoreApp::Inst()->getNodeID(), nMessageType, sMessagePacket.pData);
-		}
-		break;
-
-		case eMCT_TICKER:
-		{
-			PROFILING_GUARD(eMCT_TICKER_LOGIC)
-				
-			CCoreTickerNode* pCoreTickerNode = reinterpret_cast<CCoreTickerNode*>(sMessagePacket.pData);
-			if (pCoreTickerNode == nullptr)
-			{
-				PrintWarning("pCoreTickerNode == nullptr type: eMCT_TICKER");
-				return true;
-			}
-
-			if (pCoreTickerNode->Value.m_pTicker == nullptr)
-			{
-				pCoreTickerNode->Value.release();
-				return true;
-			}
-
-			CTicker* pTicker = pCoreTickerNode->Value.m_pTicker;
-			if (pCoreTickerNode->Value.getRef() == 1)
-				CCoreApp::Inst()->unregisterTicker(pTicker);
-
-			auto& callback = pTicker->getCallback();
-			if (callback != nullptr)
-			{
-				uint64_t nContext = pTicker->getContext();
-				uint64_t nCoroutineID = coroutine::create(CCoreApp::Inst()->getCoroutineStackSize(), [&callback, nContext](uint64_t) { callback(nContext); });
-				coroutine::resume(nCoroutineID, 0);
-			}
-
-			pCoreTickerNode->Value.release();
 		}
 		break;
 

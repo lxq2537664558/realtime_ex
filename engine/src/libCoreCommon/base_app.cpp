@@ -50,20 +50,6 @@ namespace core
 		return true;
 	}
 
-	void CBaseApp::registerTicker(uint32_t nServiceID, CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
-	{
-		CCoreService* pCoreService = CCoreApp::Inst()->getCoreServiceMgr()->getCoreService(nServiceID);
-		if (nullptr == pCoreService)
-			return;
-
-		CCoreApp::Inst()->registerTicker(pCoreService->getMessageQueue(), pTicker, nStartTime, nIntervalTime, nContext);
-	}
-
-	void CBaseApp::unregisterTicker(CTicker* pTicker)
-	{
-		CCoreApp::Inst()->unregisterTicker(pTicker);
-	}
-
 	const SNodeBaseInfo& CBaseApp::getNodeBaseInfo() const
 	{
 		return CCoreApp::Inst()->getNodeBaseInfo();
