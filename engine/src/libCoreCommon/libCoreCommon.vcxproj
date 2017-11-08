@@ -34,7 +34,6 @@
     <ClInclude Include="..\..\inc\libCoreCommon\service_invoker.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\service_invoke_holder.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\service_selector.h" />
-    <ClInclude Include="..\..\inc\libCoreCommon\ticker.h" />
     <ClInclude Include="..\..\inc\libCoreCommon\when_all.h" />
     <ClInclude Include="base_connection_mgr_impl.h" />
     <ClInclude Include="class_info_mgr.h" />
@@ -72,7 +71,6 @@
     <ClInclude Include="core_service.h" />
     <ClInclude Include="core_service_mgr.h" />
     <ClInclude Include="stdafx.h" />
-    <ClInclude Include="ticker_mgr.h" />
     <ClInclude Include="transporter.h" />
   </ItemGroup>
   <ItemGroup>
@@ -119,8 +117,6 @@
     <ClCompile Include="core_service_mgr.cpp" />
     <ClCompile Include="service_invoker.cpp" />
     <ClCompile Include="stdafx.cpp" />
-    <ClCompile Include="ticker.cpp" />
-    <ClCompile Include="ticker_mgr.cpp" />
     <ClCompile Include="transporter.cpp" />
   </ItemGroup>
   <ItemGroup>

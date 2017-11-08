@@ -51,14 +51,10 @@ const ::google::protobuf::uint32 TableStruct::offsets[] = {
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(flush_command, id_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(flush_command, type_),
-  0,
-  1,
 };
 
 static const ::google::protobuf::internal::MigrationSchema schemas[] = {
-  { 0, 7, sizeof(flush_command)},
+  { 0, 5, sizeof(flush_command)},
 };
 
 static ::google::protobuf::Message const * const file_default_instances[] = {
@@ -107,11 +103,11 @@ void InitDefaults() {
 void AddDescriptorsImpl() {
   InitDefaults();
   static const char descriptor[] = {
-      "\n\023flush_command.proto\022\010proto.db\")\n\rflush"
-      "_command\022\n\n\002id\030\001 \002(\004\022\014\n\004type\030\002 \002(\r"
+      "\n\023flush_command.proto\022\010proto.db\"\017\n\rflush"
+      "_command"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 74);
+      descriptor, 48);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "flush_command.proto", &protobuf_RegisterTypes);
   ::google::protobuf::internal::OnShutdown(&TableStruct::Shutdown);
@@ -134,8 +130,6 @@ struct StaticDescriptorInitializer {
 // ===================================================================
 
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int flush_command::kIdFieldNumber;
-const int flush_command::kTypeFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 flush_command::flush_command()
@@ -152,16 +146,11 @@ flush_command::flush_command(const flush_command& from)
       _has_bits_(from._has_bits_),
       _cached_size_(0) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::memcpy(&id_, &from.id_,
-    reinterpret_cast<char*>(&type_) -
-    reinterpret_cast<char*>(&id_) + sizeof(type_));
   // @@protoc_insertion_point(copy_constructor:proto.db.flush_command)
 }
 
 void flush_command::SharedCtor() {
   _cached_size_ = 0;
-  ::memset(&id_, 0, reinterpret_cast<char*>(&type_) -
-    reinterpret_cast<char*>(&id_) + sizeof(type_));
 }
 
 flush_command::~flush_command() {
@@ -197,10 +186,6 @@ flush_command* flush_command::New(::google::protobuf::Arena* arena) const {
 
 void flush_command::Clear() {
 // @@protoc_insertion_point(message_clear_start:proto.db.flush_command)
-  if (_has_bits_[0 / 32] & 3u) {
-    ::memset(&id_, 0, reinterpret_cast<char*>(&type_) -
-      reinterpret_cast<char*>(&id_) + sizeof(type_));
-  }
   _has_bits_.Clear();
   _internal_metadata_.Clear();
 }
@@ -214,47 +199,14 @@ bool flush_command::MergePartialFromCodedStream(
     ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
     tag = p.first;
     if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // required uint64 id = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(8u)) {
-          set_has_id();
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
-                 input, &id_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // required uint32 type = 2;
-      case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(16u)) {
-          set_has_type();
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::uint32, ::google::protobuf::internal::WireFormatLite::TYPE_UINT32>(
-                 input, &type_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      default: {
-      handle_unusual:
-        if (tag == 0 ||
-            ::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
-          goto success;
-        }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, mutable_unknown_fields()));
-        break;
-      }
+  handle_unusual:
+    if (tag == 0 ||
+        ::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+        ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+      goto success;
     }
+    DO_(::google::protobuf::internal::WireFormat::SkipField(
+          input, tag, mutable_unknown_fields()));
   }
 success:
   // @@protoc_insertion_point(parse_success:proto.db.flush_command)
@@ -271,17 +223,6 @@ void flush_command::SerializeWithCachedSizes(
   ::google::protobuf::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
-  // required uint64 id = 1;
-  if (cached_has_bits & 0x00000001u) {
-    ::google::protobuf::internal::WireFormatLite::WriteUInt64(1, this->id(), output);
-  }
-
-  // required uint32 type = 2;
-  if (cached_has_bits & 0x00000002u) {
-    ::google::protobuf::internal::WireFormatLite::WriteUInt32(2, this->type(), output);
-  }
-
   if (_internal_metadata_.have_unknown_fields()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         unknown_fields(), output);
@@ -296,17 +237,6 @@ void flush_command::SerializeWithCachedSizes(
   ::google::protobuf::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
-  // required uint64 id = 1;
-  if (cached_has_bits & 0x00000001u) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(1, this->id(), target);
-  }
-
-  // required uint32 type = 2;
-  if (cached_has_bits & 0x00000002u) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(2, this->type(), target);
-  }
-
   if (_internal_metadata_.have_unknown_fields()) {
     target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
         unknown_fields(), target);
@@ -315,26 +245,6 @@ void flush_command::SerializeWithCachedSizes(
   return target;
 }
 
-size_t flush_command::RequiredFieldsByteSizeFallback() const {
-// @@protoc_insertion_point(required_fields_byte_size_fallback_start:proto.db.flush_command)
-  size_t total_size = 0;
-
-  if (has_id()) {
-    // required uint64 id = 1;
-    total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::UInt64Size(
-        this->id());
-  }
-
-  if (has_type()) {
-    // required uint32 type = 2;
-    total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::UInt32Size(
-        this->type());
-  }
-
-  return total_size;
-}
 size_t flush_command::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:proto.db.flush_command)
   size_t total_size = 0;
@@ -343,20 +253,6 @@ size_t flush_command::ByteSizeLong() const {
     total_size +=
       ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
         unknown_fields());
-  }
-  if (((_has_bits_[0] & 0x00000003) ^ 0x00000003) == 0) {  // All required fields are present.
-    // required uint64 id = 1;
-    total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::UInt64Size(
-        this->id());
-
-    // required uint32 type = 2;
-    total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::UInt32Size(
-        this->type());
-
-  } else {
-    total_size += RequiredFieldsByteSizeFallback();
   }
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
   GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
@@ -387,16 +283,6 @@ void flush_command::MergeFrom(const flush_command& from) {
   ::google::protobuf::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = from._has_bits_[0];
-  if (cached_has_bits & 3u) {
-    if (cached_has_bits & 0x00000001u) {
-      id_ = from.id_;
-    }
-    if (cached_has_bits & 0x00000002u) {
-      type_ = from.type_;
-    }
-    _has_bits_[0] |= cached_has_bits;
-  }
 }
 
 void flush_command::CopyFrom(const ::google::protobuf::Message& from) {
@@ -414,7 +300,6 @@ void flush_command::CopyFrom(const flush_command& from) {
 }
 
 bool flush_command::IsInitialized() const {
-  if ((_has_bits_[0] & 0x00000003) != 0x00000003) return false;
   return true;
 }
 
@@ -423,8 +308,6 @@ void flush_command::Swap(flush_command* other) {
   InternalSwap(other);
 }
 void flush_command::InternalSwap(flush_command* other) {
-  std::swap(id_, other->id_);
-  std::swap(type_, other->type_);
   std::swap(_has_bits_[0], other->_has_bits_[0]);
   _internal_metadata_.Swap(&other->_internal_metadata_);
   std::swap(_cached_size_, other->_cached_size_);
@@ -437,54 +320,6 @@ void flush_command::InternalSwap(flush_command* other) {
 
 #if PROTOBUF_INLINE_NOT_IN_HEADERS
 // flush_command
-
-// required uint64 id = 1;
-bool flush_command::has_id() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-void flush_command::set_has_id() {
-  _has_bits_[0] |= 0x00000001u;
-}
-void flush_command::clear_has_id() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-void flush_command::clear_id() {
-  id_ = GOOGLE_ULONGLONG(0);
-  clear_has_id();
-}
-::google::protobuf::uint64 flush_command::id() const {
-  // @@protoc_insertion_point(field_get:proto.db.flush_command.id)
-  return id_;
-}
-void flush_command::set_id(::google::protobuf::uint64 value) {
-  set_has_id();
-  id_ = value;
-  // @@protoc_insertion_point(field_set:proto.db.flush_command.id)
-}
-
-// required uint32 type = 2;
-bool flush_command::has_type() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-void flush_command::set_has_type() {
-  _has_bits_[0] |= 0x00000002u;
-}
-void flush_command::clear_has_type() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-void flush_command::clear_type() {
-  type_ = 0u;
-  clear_has_type();
-}
-::google::protobuf::uint32 flush_command::type() const {
-  // @@protoc_insertion_point(field_get:proto.db.flush_command.type)
-  return type_;
-}
-void flush_command::set_type(::google::protobuf::uint32 value) {
-  set_has_type();
-  type_ = value;
-  // @@protoc_insertion_point(field_set:proto.db.flush_command.type)
-}
 
 #endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
 

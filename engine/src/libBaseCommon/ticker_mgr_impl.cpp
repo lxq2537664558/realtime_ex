@@ -1,29 +1,28 @@
 #include "stdafx.h"
-#include "ticker_mgr.h"
+#include "ticker_mgr_impl.h"
 
-#include "libBaseCommon/debug_helper.h"
-#include "libBaseCommon/time_util.h"
-#include "libBaseCommon/profiling.h"
-#include "core_app.h"
-#include "coroutine.h"
+#include "debug_helper.h"
+#include "time_util.h"
+#include "profiling.h"
 
-namespace core
+namespace base
 {
-	CTickerMgr::CTickerMgr(int64_t nTime)
+	CTickerMgrImpl::CTickerMgrImpl(int64_t nTime, const std::function<void(CTicker*)>& callback)
 		: m_nLogicTime(nTime)
+		, m_callback(callback)
 	{
 	}
 
-	CTickerMgr::~CTickerMgr()
+	CTickerMgrImpl::~CTickerMgrImpl()
 	{
 	}
 
-	int64_t CTickerMgr::getLogicTime() const
+	int64_t CTickerMgrImpl::getLogicTime() const
 	{
 		return this->m_nLogicTime;
 	}
 
-	bool CTickerMgr::registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext, bool bCoroutine)
+	bool CTickerMgrImpl::registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
 	{
 		DebugAstEx(pTicker != nullptr, false);
 		DebugAstEx(!pTicker->isRegister(), false);
@@ -34,7 +33,6 @@ namespace core
 		pCoreTickerNode->Value.pTicker = pTicker;
 		pCoreTickerNode->Value.nNextTime = this->m_nLogicTime + nStartTime;
 		pCoreTickerNode->Value.nIntervalTime = nIntervalTime;
-		pCoreTickerNode->Value.bCoroutine = bCoroutine;
 		
 		pTicker->m_nIntervalTime = nIntervalTime;
 		pTicker->m_nContext = nContext;
@@ -45,7 +43,7 @@ namespace core
 		return true;
 	}
 
-	void CTickerMgr::unregisterTicker(CTicker* pTicker)
+	void CTickerMgrImpl::unregisterTicker(CTicker* pTicker)
 	{
 		DebugAst(pTicker != nullptr);
 
@@ -71,7 +69,7 @@ namespace core
 		}
 	}
 
-	void CTickerMgr::insertTicker(CCoreTickerNode* pTickerNode)
+	void CTickerMgrImpl::insertTicker(CCoreTickerNode* pTickerNode)
 	{
 		DebugAst(pTickerNode->Value.nNextTime >= this->m_nLogicTime);
 
@@ -112,7 +110,7 @@ namespace core
 		}
 	}
 
-	void CTickerMgr::update(int64_t nTime)
+	void CTickerMgrImpl::update(int64_t nTime)
 	{
 		// 每一次更新都将刻度时间慢慢推进到与当前时间一样
 		// 处理时间定时器
@@ -145,15 +143,13 @@ namespace core
 				auto& callback = pTicker->getCallback();
 				if (callback != nullptr)
 				{
-					uint64_t nContext = pTicker->getContext();
-					if (pCoreTickerNode->Value.bCoroutine)
+					if (this->m_callback != nullptr)
 					{
-						uint64_t nCoroutineID = coroutine::create(CCoreApp::Inst()->getCoroutineStackSize(), [&callback, nContext](uint64_t) { callback(nContext); });
-						coroutine::resume(nCoroutineID, 0);
+						this->m_callback(pTicker);
 					}
 					else
 					{
-						callback(nContext);
+						callback(pTicker->getContext());
 					}
 				}
 
@@ -184,7 +180,7 @@ namespace core
 		}
 	}
 
-	void CTickerMgr::cascadeTicker()
+	void CTickerMgrImpl::cascadeTicker()
 	{
 		uint32_t nLevel = 0;
 		// 一个联级一个联级的往上找，把符合条件的定时器重新添加

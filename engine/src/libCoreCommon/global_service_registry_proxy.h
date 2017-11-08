@@ -1,10 +1,10 @@
 #pragma once
 
 #include "libBaseCommon/noncopyable.h"
+#include "libBaseCommon/ticker.h"
 
 #include "tinyxml2/tinyxml2.h"
 
-#include "ticker.h"
 #include "core_common.h"
 #include "logic_service_lock.h"
 #include "base_connection_other_node.h"
@@ -62,7 +62,7 @@ namespace core
 			SNodeBaseInfo					sNodeBaseInfo;
 			std::vector<SServiceBaseInfo>	vecServiceBaseInfo;
 			uint64_t						nSocketID;
-			std::unique_ptr<CTicker>		pTicker;
+			std::unique_ptr<base::CTicker>	pTicker;
 		};
 
 		struct SServiceProxyInfo
@@ -96,7 +96,7 @@ namespace core
 		std::map<std::string, SServiceIDInfo>	m_mapServiceIDInfoByType;
 
 		std::map<uint32_t, SMasterInfo>			m_mapMasterInfo;
-		CTicker									m_tickCheckConnectMaster;
+		base::CTicker							m_tickCheckConnectMaster;
 
 		std::set<std::string>					m_setConnectServiceName;	// 需要被连接的服务名字
 		std::set<std::string>					m_setConnectServiceType;	// 需要被连接的服务类型

@@ -129,35 +129,12 @@ class flush_command : public ::google::protobuf::Message /* @@protoc_insertion_p
 
   // accessors -------------------------------------------------------
 
-  // required uint64 id = 1;
-  bool has_id() const;
-  void clear_id();
-  static const int kIdFieldNumber = 1;
-  ::google::protobuf::uint64 id() const;
-  void set_id(::google::protobuf::uint64 value);
-
-  // required uint32 type = 2;
-  bool has_type() const;
-  void clear_type();
-  static const int kTypeFieldNumber = 2;
-  ::google::protobuf::uint32 type() const;
-  void set_type(::google::protobuf::uint32 value);
-
   // @@protoc_insertion_point(class_scope:proto.db.flush_command)
  private:
-  void set_has_id();
-  void clear_has_id();
-  void set_has_type();
-  void clear_has_type();
-
-  // helper for ByteSizeLong()
-  size_t RequiredFieldsByteSizeFallback() const;
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
   ::google::protobuf::internal::HasBits<1> _has_bits_;
   mutable int _cached_size_;
-  ::google::protobuf::uint64 id_;
-  ::google::protobuf::uint32 type_;
   friend struct protobuf_flush_5fcommand_2eproto::TableStruct;
 };
 // ===================================================================
@@ -167,54 +144,6 @@ class flush_command : public ::google::protobuf::Message /* @@protoc_insertion_p
 
 #if !PROTOBUF_INLINE_NOT_IN_HEADERS
 // flush_command
-
-// required uint64 id = 1;
-inline bool flush_command::has_id() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void flush_command::set_has_id() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void flush_command::clear_has_id() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void flush_command::clear_id() {
-  id_ = GOOGLE_ULONGLONG(0);
-  clear_has_id();
-}
-inline ::google::protobuf::uint64 flush_command::id() const {
-  // @@protoc_insertion_point(field_get:proto.db.flush_command.id)
-  return id_;
-}
-inline void flush_command::set_id(::google::protobuf::uint64 value) {
-  set_has_id();
-  id_ = value;
-  // @@protoc_insertion_point(field_set:proto.db.flush_command.id)
-}
-
-// required uint32 type = 2;
-inline bool flush_command::has_type() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void flush_command::set_has_type() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void flush_command::clear_has_type() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void flush_command::clear_type() {
-  type_ = 0u;
-  clear_has_type();
-}
-inline ::google::protobuf::uint32 flush_command::type() const {
-  // @@protoc_insertion_point(field_get:proto.db.flush_command.type)
-  return type_;
-}
-inline void flush_command::set_type(::google::protobuf::uint32 value) {
-  set_has_type();
-  type_ = value;
-  // @@protoc_insertion_point(field_set:proto.db.flush_command.type)
-}
 
 #endif  // !PROTOBUF_INLINE_NOT_IN_HEADERS
 

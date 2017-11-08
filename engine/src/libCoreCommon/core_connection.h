@@ -1,7 +1,8 @@
 #pragma once
 #include "libBaseNetwork/network.h"
 
-#include "ticker.h"
+#include "libBaseCommon/ticker.h"
+
 #include "core_common.h"
 
 #include <atomic>
@@ -76,7 +77,7 @@ namespace core
 
 	protected:
 		std::atomic<uint8_t>	m_bHeartbeat;
-		CTicker					m_heartbeat;
+		base::CTicker			m_heartbeat;
 		uint32_t				m_nSendHeartbeatCount;
 
 		uint64_t				m_nID;

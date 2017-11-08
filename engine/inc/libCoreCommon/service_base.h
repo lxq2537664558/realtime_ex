@@ -1,11 +1,11 @@
 #pragma once
 
 #include "core_common.h"
-#include "ticker.h"
 #include "service_id_converter.h"
 #include "message_serializer.h"
 #include "service_selector.h"
 
+#include "libBaseCommon/ticker.h"
 #include "libBaseCommon/buf_file.h"
 
 #include <set>
@@ -75,11 +75,11 @@ namespace core
 		nIntervalTime 第一次触发定时器后接下来定时器触发的间隔时间，如果该值是0就表示这个定时器只触发一次
 		bCoroutine 如果打算在ticker中发起同步rpc调用就设置成true，默认是false
 		*/
-		void				registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext, bool bCoroutine = false);
+		void				registerTicker(base::CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
 		/**
 		@brief: 反注册定时器
 		*/
-		void				unregisterTicker(CTicker* pTicker);
+		void				unregisterTicker(base::CTicker* pTicker);
 		/*
 		@brief: 获取连接管理器
 		*/

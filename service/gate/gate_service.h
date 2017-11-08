@@ -41,6 +41,6 @@ private:
 	std::unique_ptr<core::CNormalProtobufSerializer>	m_pNormalProtobufSerializer;
 	std::unique_ptr<core::CJsonProtobufSerializer>		m_pJsonProtobufSerializer;
 
-	core::CTicker										m_tickerNotifyOnlineCount;
+	base::CTicker										m_tickerNotifyOnlineCount;
 	std::string											m_szAddr;
 };

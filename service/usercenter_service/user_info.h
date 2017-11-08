@@ -3,7 +3,7 @@
 
 #include <string>
 
-#include "libCoreCommon/ticker.h"
+#include "libBaseCommon/ticker.h"
 
 class CUCService;
 class CUserInfo
@@ -28,5 +28,5 @@ private:
 	CUCService*		m_pUCService;
 	uint64_t		m_nPlayerID;
 	uint32_t		m_nGasID;
-	core::CTicker	m_tickerTimeout;
+	base::CTicker	m_tickerTimeout;
 };

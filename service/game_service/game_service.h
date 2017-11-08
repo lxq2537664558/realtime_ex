@@ -1,6 +1,7 @@
 #pragma once
+#include "libBaseCommon/ticker.h"
+
 #include "libCoreCommon/service_base.h"
-#include "libCoreCommon/ticker.h"
 #include "libCoreCommon/normal_protobuf_serializer.h"
 #include "libCoreCommon/json_protobuf_serializer.h"
 
@@ -49,5 +50,5 @@ private:
 	std::unique_ptr<CPlayerItemMessageHandler>	m_pPlayerItemMessageHandler;
 	std::unique_ptr<CPlayerMessageHandler>		m_pPlayerMessageHandler;
 	
-	core::CTicker								m_tickerNotifyOnlineCount;
+	base::CTicker								m_tickerNotifyOnlineCount;
 };

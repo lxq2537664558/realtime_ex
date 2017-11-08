@@ -38,10 +38,9 @@ namespace base
 
 		uint32_t	getQueueSize(uint32_t nThreadIndex);
 
-		void		setMaxCacheSize(uint64_t nSize);
-
 		google::protobuf::Message*
 					createMessage(const std::string& szMessageName);
+		void		destroyMessage(google::protobuf::Message* pMessage);
 		
 	private:
 		std::vector<CDbThread*>		m_vecDbThread;
@@ -50,5 +49,7 @@ namespace base
 		std::list<SDbResultInfo>	m_listResultInfo;
 		std::function<google::protobuf::Message*(const std::string&)>
 									m_funcCreateMessage;
+		std::function<void(google::protobuf::Message*)>
+									m_funcDestroyMessage;
 	};
 }

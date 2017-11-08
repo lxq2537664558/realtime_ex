@@ -74,7 +74,7 @@ namespace base
 
 	void base::CDbThread::onDestroy()
 	{
-		this->flushCache(0, true);
+		this->flushCache();
 
 		this->m_dbConnection.close();
 		this->m_pCommandHandlerProxy->onDisconnect();
@@ -109,7 +109,7 @@ namespace base
 			google::protobuf::Message* pRequestMessage = sDbCommand.pMessage;
 			defer([&]()
 			{
-				SAFE_DELETE(pRequestMessage);
+				this->destroyMessage(pRequestMessage);
 			});
 
 			if (sDbCommand.nType == db::eDBCT_Flush)
@@ -118,10 +118,10 @@ namespace base
 				if (pFlushCommand == nullptr)
 					continue;
 
-				this->flushCache(pFlushCommand->id(), pFlushCommand->type() == db::eFCT_Del);
+				this->flushCache();
 				continue;
 			}
-
+			
 			std::shared_ptr<google::protobuf::Message> pResponseMessage;
 			uint32_t nErrorCode = db::eDBRC_OK;
 			if (!this->onPreCache(sDbCommand.nType, pRequestMessage, pResponseMessage))
@@ -156,7 +156,7 @@ namespace base
 
 	bool CDbThread::onPreCache(uint32_t nType, const google::protobuf::Message* pRequestMessage, std::shared_ptr<google::protobuf::Message>& pResponseMessage)
 	{
-		if (this->m_dbCacheMgr.getMaxCacheSize() <= 0)
+		if (!this->m_dbCacheMgr.enableCache())
 			return false;
 
 		switch (nType)
@@ -187,16 +187,6 @@ namespace base
 		}
 		break;
 
-		case db::eDBCT_Insert:
-		{
-			uint64_t nID = 0;
-			if (!getPrimaryValue(pRequestMessage, nID))
-				return false;
-
-			this->m_dbCacheMgr.addData(nID, pRequestMessage);
-		}
-		break;
-
 		case db::eDBCT_Delete:
 		{
 			const proto::db::delete_command* pCommand = dynamic_cast<const proto::db::delete_command*>(pRequestMessage);
@@ -205,6 +195,8 @@ namespace base
 			this->m_dbCacheMgr.delData(pCommand->id(), getMessageNameByTableName(pCommand->table_name()));
 		}
 		break;
+
+		// 先插入再缓存，不然如果插入失败，缓存中的数据还得丢弃
 		}
 
 		return false;
@@ -212,10 +204,12 @@ namespace base
 
 	void CDbThread::onPostCache(uint32_t nType, const google::protobuf::Message* pRequestMessage, std::shared_ptr<google::protobuf::Message>& pResponseMessage)
 	{
-		if (this->m_dbCacheMgr.getMaxCacheSize() <= 0)
+		if (!this->m_dbCacheMgr.enableCache())
 			return;
 
-		if (nType == db::eDBCT_Select)
+		switch (nType)
+		{
+		case db::eDBCT_Select:
 		{
 			DebugAst(pResponseMessage != nullptr);
 
@@ -223,6 +217,18 @@ namespace base
 			DebugAst(pCommand != nullptr);
 
 			this->m_dbCacheMgr.setData(pCommand->id(), pResponseMessage.get());
+		}
+		break;
+
+		case db::eDBCT_Insert:
+		{
+			uint64_t nID = 0;
+			if (!getPrimaryValue(pRequestMessage, nID))
+				return;
+
+			this->m_dbCacheMgr.addData(nID, pRequestMessage);
+		}
+		break;
 		}
 	}
 
@@ -255,13 +261,13 @@ namespace base
 		return this->m_pDbThreadMgr->createMessage(szMessageName);
 	}
 
-	void CDbThread::setMaxCacheSize(uint64_t nSize)
+	void CDbThread::destroyMessage(google::protobuf::Message* pMessage)
 	{
-		this->m_dbCacheMgr.setMaxCacheSize(nSize);
+		this->m_pDbThreadMgr->destroyMessage(pMessage);
 	}
 
-	void CDbThread::flushCache(uint64_t nKey, bool bDel)
+	void CDbThread::flushCache()
 	{
-		this->m_dbCacheMgr.flushCache(nKey, bDel);
+		this->m_dbCacheMgr.flushCache();
 	}
 }

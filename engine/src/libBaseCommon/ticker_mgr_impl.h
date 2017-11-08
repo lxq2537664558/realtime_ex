@@ -1,39 +1,28 @@
 #pragma once
 
-#include "libBaseCommon/thread_base.h"
-#include "libBaseCommon/spin_lock.h"
-#include "libBaseCommon/link.h"
-#include "libBaseCommon/singleton.h"
-
+#include "link.h"
+#include "singleton.h"
 #include "ticker.h"
 
 #include <memory>
 #include <vector>
 
-//#define __TEST_TICKER_
 
-namespace core
+namespace base
 {
-	class CTickerMgr;
+	class CTickerMgrImpl;
 	class CTicker;
 	struct SCoreTickerInfo
 	{
-		CTickerMgr*		pTickerMgr;
+		CTickerMgrImpl*	pTickerMgr;
 		CTicker*		pTicker;
 		int64_t			nNextTime;		// 下一次定时器运行时间
 		int64_t			nIntervalTime;	// 定时器运行的间隔时间
-		bool			bCoroutine;
 	};
 
-	typedef base::TLinkNode<SCoreTickerInfo> CCoreTickerNode;
+	typedef TLinkNode<SCoreTickerInfo> CCoreTickerNode;
 
-#ifdef __TEST_TICKER_
-#define __EXPORT_TICKER_MGR__	__CORE_COMMON_API__
-#else
-#define __EXPORT_TICKER_MGR__
-#endif
-
-	class __EXPORT_TICKER_MGR__ CTickerMgr
+	class CTickerMgrImpl
 	{
 	private:
 		enum
@@ -48,12 +37,12 @@ namespace core
 		};
 
 	public:
-		CTickerMgr(int64_t nTime);
-		virtual ~CTickerMgr();
+		CTickerMgrImpl(int64_t nTime, const std::function<void(CTicker*)>& callback);
+		virtual ~CTickerMgrImpl();
 
 		int64_t	getLogicTime() const;
 		void	update(int64_t nTime);
-		bool	registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext, bool bCoroutine);
+		bool	registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
 		void	unregisterTicker(CTicker* pTicker);
 		
 	private:
@@ -67,5 +56,7 @@ namespace core
 
 		std::vector<CCoreTickerNode*>	m_vecTempTickerNode;
 		int64_t							m_nLogicTime;													// 当前刻度时间
+
+		std::function<void(CTicker*)>	m_callback;
 	};
 }

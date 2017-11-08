@@ -27,9 +27,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\inc\libCoreCommon\ticker.h">
-      <Filter>inc</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\inc\libCoreCommon\base_object.h">
       <Filter>inc</Filter>
     </ClInclude>
@@ -213,18 +210,12 @@
     <ClInclude Include="global_service_registry_proxy.h">
       <Filter>src\framework</Filter>
     </ClInclude>
-    <ClInclude Include="ticker_mgr.h">
-      <Filter>src\framework</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="fix_memory_pool.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="stdafx.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="ticker.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="coroutine.cpp">
@@ -351,9 +342,6 @@
       <Filter>src\framework</Filter>
     </ClCompile>
     <ClCompile Include="global_service_registry_proxy.cpp">
-      <Filter>src\framework</Filter>
-    </ClCompile>
-    <ClCompile Include="ticker_mgr.cpp">
       <Filter>src\framework</Filter>
     </ClCompile>
   </ItemGroup>

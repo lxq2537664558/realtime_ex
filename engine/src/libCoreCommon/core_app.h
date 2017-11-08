@@ -34,8 +34,8 @@ namespace core
 		const SNodeBaseInfo&
 							getNodeBaseInfo() const;
 
-		void				registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext, bool bCoroutine);
-		void				unregisterTicker(CTicker* pTicker);
+		void				registerTicker(base::CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
+		void				unregisterTicker(base::CTicker* pTicker);
 
 		CCoreServiceMgr*	getCoreServiceMgr() const;
 		CLogicMessageQueueMgr*	
@@ -79,7 +79,7 @@ namespace core
 
 		std::vector<CLogicRunnable*>	m_vecLogicRunnable;
 		
-		CTickerMgr*						m_pGlobalTickerMgr;
+		base::CTickerMgr*				m_pGlobalTickerMgr;
 		CBaseConnectionMgr*				m_pGlobalBaseConnectionMgr;
 		CLogicMessageQueue*				m_pGlobalLogicMessageQueue;
 		CLogicMessageQueueMgr*			m_pLogicMessageQueueMgr;

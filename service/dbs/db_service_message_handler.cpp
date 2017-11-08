@@ -57,9 +57,7 @@ void CDbServiceMessageHandler::delete_command_handler(CServiceBase* pServiceBase
 void CDbServiceMessageHandler::flush_command_handler(CServiceBase* pServiceBase, SSessionInfo sSessionInfo, const flush_command* pCommand)
 {
 	proto::db::flush_command pb_command;
-	pb_command.set_id(pCommand->primary_id);
-	pb_command.set_type(pCommand->type);
-
+	
 	this->normal_command_handler(pServiceBase, sSessionInfo, &pb_command);
 }
 

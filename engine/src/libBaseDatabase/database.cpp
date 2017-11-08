@@ -163,7 +163,7 @@ namespace base
 				if (!pMessage->ParseFromString(pCommand->message_content()))
 				{
 					PrintWarning("parse message error {}", pCommand->message_name());
-					SAFE_DELETE(pMessage);
+					pDbThreadMgr->destroyMessage(pMessage);
 					return;
 				}
 
@@ -171,7 +171,7 @@ namespace base
 				if (!getPrimaryValue(pMessage, nValue))
 				{
 					PrintWarning("get primary value error {}", pCommand->message_name());
-					SAFE_DELETE(pMessage);
+					pDbThreadMgr->destroyMessage(pMessage);
 					return;
 				}
 
@@ -185,7 +185,7 @@ namespace base
 				nType = eDBCT_Select;
 				nThreadIndex = (uint32_t)pCommand->id();
 
-				pMessage = createMessage(szMessageName);
+				pMessage = pDbThreadMgr->createMessage(szMessageName);
 				if (pMessage == nullptr)
 				{
 					PrintWarning("create message error {}", szMessageName);
@@ -196,7 +196,7 @@ namespace base
 				if (!pMessage->ParseFromString(szData))
 				{
 					PrintWarning("ParseFromString message error {}", szMessageName);
-					SAFE_DELETE(pMessage);
+					pDbThreadMgr->destroyMessage(pMessage);
 					return;
 				}
 			}
@@ -208,7 +208,7 @@ namespace base
 				nType = eDBCT_Query;
 				nThreadIndex = (uint32_t)pCommand->channel_id();
 
-				pMessage = createMessage(szMessageName);
+				pMessage = pDbThreadMgr->createMessage(szMessageName);
 				if (pMessage == nullptr)
 				{
 					PrintWarning("create message error {}", szMessageName);
@@ -219,7 +219,7 @@ namespace base
 				if (!pMessage->ParseFromString(szData))
 				{
 					PrintWarning("ParseFromString message error {}", szMessageName);
-					SAFE_DELETE(pMessage);
+					pDbThreadMgr->destroyMessage(pMessage);
 					return;
 				}
 			}
@@ -240,7 +240,7 @@ namespace base
 				if (!pMessage->ParseFromString(pCommand->message_content()))
 				{
 					PrintWarning("parse message error {}", pCommand->message_name());
-					SAFE_DELETE(pMessage);
+					pDbThreadMgr->destroyMessage(pMessage);
 					return;
 				}
 
@@ -248,7 +248,7 @@ namespace base
 				if (!getPrimaryValue(pMessage, nValue))
 				{
 					PrintWarning("get primary value error {}", pCommand->message_name());
-					SAFE_DELETE(pMessage);
+					pDbThreadMgr->destroyMessage(pMessage);
 					return;
 				}
 
@@ -260,9 +260,8 @@ namespace base
 				DebugAst(pCommand != nullptr);
 
 				nType = eDBCT_Flush;
-				nThreadIndex = (uint32_t)pCommand->id();
-
-				pMessage = createMessage(szMessageName);
+				
+				pMessage = pDbThreadMgr->createMessage(szMessageName);
 				if (pMessage == nullptr)
 				{
 					PrintWarning("create message error {}", szMessageName);
@@ -273,7 +272,7 @@ namespace base
 				if (!pMessage->ParseFromString(szData))
 				{
 					PrintWarning("ParseFromString message error {}", szMessageName);
-					SAFE_DELETE(pMessage);
+					pDbThreadMgr->destroyMessage(pMessage);
 					return;
 				}
 			}
@@ -285,7 +284,7 @@ namespace base
 				nType = eDBCT_Call;
 				nThreadIndex = pCommand->channel_id();
 
-				pMessage = createMessage(szMessageName);
+				pMessage = pDbThreadMgr->createMessage(szMessageName);
 				if (pMessage == nullptr)
 				{
 					PrintWarning("create message error {}", szMessageName);
@@ -296,7 +295,7 @@ namespace base
 				if (!pMessage->ParseFromString(szData))
 				{
 					PrintWarning("ParseFromString message error {}", szMessageName);
-					SAFE_DELETE(pMessage);
+					pDbThreadMgr->destroyMessage(pMessage);
 					return;
 				}
 			}
@@ -308,7 +307,7 @@ namespace base
 				nType = eDBCT_Delete;
 				nThreadIndex = (uint32_t)pCommand->id();
 
-				pMessage = createMessage(szMessageName);
+				pMessage = pDbThreadMgr->createMessage(szMessageName);
 				if (pMessage == nullptr)
 				{
 					PrintWarning("create message error {}", szMessageName);
@@ -319,7 +318,7 @@ namespace base
 				if (!pMessage->ParseFromString(szData))
 				{
 					PrintWarning("ParseFromString message error {}", szMessageName);
-					SAFE_DELETE(pMessage);
+					pDbThreadMgr->destroyMessage(pMessage);
 					return;
 				}
 			}
@@ -331,7 +330,7 @@ namespace base
 				nType = eDBCT_Nop;
 				nThreadIndex = pCommand->channel_id();
 
-				pMessage = createMessage(szMessageName);
+				pMessage = pDbThreadMgr->createMessage(szMessageName);
 				if (pMessage == nullptr)
 				{
 					PrintWarning("create message error {}", szMessageName);
@@ -342,7 +341,7 @@ namespace base
 				if (!pMessage->ParseFromString(szData))
 				{
 					PrintWarning("ParseFromString message error {}", szMessageName);
-					SAFE_DELETE(pMessage);
+					pDbThreadMgr->destroyMessage(pMessage);
 					return;
 				}
 			}
@@ -373,31 +372,6 @@ namespace base
 			DebugAstEx(pDbThreadMgr != nullptr, 0);
 
 			return pDbThreadMgr->getQueueSize(nThreadIndex);
-		}
-
-		void setMaxCacheSize(uint32_t nID, uint64_t nSize)
-		{
-			CDbThreadMgr* pDbThreadMgr = getDbThreadMgr(nID);
-			DebugAst(pDbThreadMgr != nullptr);
-
-			pDbThreadMgr->setMaxCacheSize(nSize);
-		}
-
-		void flushCache(uint32_t nID, uint64_t nKey, EFlushCacheType eType)
-		{
-			CDbThreadMgr* pDbThreadMgr = getDbThreadMgr(nID);
-			DebugAst(pDbThreadMgr != nullptr);
-
-			proto::db::flush_command* pMessage = new proto::db::flush_command();
-			pMessage->set_id(nKey);
-			pMessage->set_type(eType);
-
-			SDbCommand sDbCommand;
-			sDbCommand.nType = eDBCT_Flush;
-			sDbCommand.callback = nullptr;
-			sDbCommand.pMessage = pMessage;
-
-			pDbThreadMgr->query((uint32_t)nID, sDbCommand);
 		}
 
 		uint32_t getThreadCount(uint32_t nID)

@@ -111,6 +111,12 @@
     <ClInclude Include="..\..\inc\libBaseCommon\rw_lock.h">
       <Filter>inc</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\inc\libBaseCommon\ticker.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="ticker_mgr_impl.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="encryptor.cpp">
@@ -177,6 +183,12 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="memory_new.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="ticker.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="ticker_mgr_impl.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

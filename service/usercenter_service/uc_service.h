@@ -1,6 +1,7 @@
 #pragma once
+#include "libBaseCommon/ticker.h"
+
 #include "libCoreCommon/service_base.h"
-#include "libCoreCommon/ticker.h"
 #include "libCoreCommon/normal_protobuf_serializer.h"
 #include "user_info_mgr.h"
 
@@ -34,5 +35,5 @@ private:
 	std::unique_ptr<CNormalProtobufSerializer>	m_pNormalProtobufSerializer;
 	std::unique_ptr<CUserInfoMgr>				m_pUserInfoMgr;
 
-	core::CTicker								m_tickerNotifyActiveCount;
+	base::CTicker								m_tickerNotifyActiveCount;
 };

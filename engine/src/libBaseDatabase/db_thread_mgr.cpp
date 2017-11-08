@@ -26,6 +26,7 @@ namespace base
 		this->m_sDbConnectionInfo.szCharacterset = szCharacterset;
 
 		this->m_funcCreateMessage = sDbOptions.funcCreateMessage;
+		this->m_funcDestroyMessage = sDbOptions.funcDestroyMessage;
 
 		this->m_vecDbThread.resize(sDbOptions.nDbThreadCount);
 		for (uint32_t i = 0; i < sDbOptions.nDbThreadCount; ++i)
@@ -131,16 +132,6 @@ namespace base
 		return this->m_vecDbThread[nThreadIndex]->getQueueSize();
 	}
 
-	void CDbThreadMgr::setMaxCacheSize(uint64_t nSize)
-	{
-		nSize = this->m_vecDbThread.size() / nSize;
-
-		for (size_t i = 0; i < this->m_vecDbThread.size(); ++i)
-		{
-			this->m_vecDbThread[i]->setMaxCacheSize(nSize);
-		}
-	}
-
 	google::protobuf::Message* CDbThreadMgr::createMessage(const std::string& szMessageName)
 	{
 		google::protobuf::Message* pMessage = nullptr;
@@ -152,4 +143,15 @@ namespace base
 		return pMessage;
 	}
 
+	void CDbThreadMgr::destroyMessage(google::protobuf::Message* pMessage)
+	{
+		if (this->m_funcDestroyMessage != nullptr)
+		{
+			this->m_funcDestroyMessage(pMessage);
+		}
+		else
+		{
+			SAFE_DELETE(pMessage);
+		}
+	}
 }

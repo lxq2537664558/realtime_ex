@@ -56,12 +56,12 @@ namespace core
 		return this->m_pCoreService->getLogicTime();
 	}
 
-	void CServiceBase::registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext, bool bCoroutine /* = false */)
+	void CServiceBase::registerTicker(base::CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
 	{
-		this->m_pCoreService->registerTicker(pTicker, nStartTime, nIntervalTime, nContext, bCoroutine);
+		this->m_pCoreService->registerTicker(pTicker, nStartTime, nIntervalTime, nContext);
 	}
 
-	void CServiceBase::unregisterTicker(CTicker* pTicker)
+	void CServiceBase::unregisterTicker(base::CTicker* pTicker)
 	{
 		this->m_pCoreService->unregisterTicker(pTicker);
 	}

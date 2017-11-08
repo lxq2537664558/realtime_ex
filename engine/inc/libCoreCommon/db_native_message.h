@@ -75,15 +75,10 @@ native_message_end(delete_command)
 
 
 native_message_begin(flush_command)
-	uint64_t primary_id;
-	uint32_t type;
-
+	
 	void pack(base::CWriteBuf& writeBuf) const
 	{
 		native_pack_begin(writeBuf);
-
-		writeBuf.write(primary_id);
-		writeBuf.write(type);
 
 		native_pack_end(writeBuf);
 	}
@@ -91,9 +86,6 @@ native_message_begin(flush_command)
 	bool unpack(const void* pBuf, uint16_t nSize)
 	{
 		native_unpack_begin(pBuf, nSize);
-
-		readBuf.read(primary_id);
-		readBuf.read(type);
 
 		native_unpack_end();
 

@@ -9,12 +9,12 @@
 #include "base_connection_mgr.h"
 #include "local_service_registry_proxy.h"
 #include "transporter.h"
-#include "ticker_mgr.h"
 
-#include "libBaseCommon/spin_lock.h"
+#include "libBaseCommon/ticker.h"
 
 #include <map>
 #include <set>
+#include <atomic>
 
 namespace core
 {
@@ -42,8 +42,8 @@ namespace core
 							getServiceBaseInfo() const;
 
 		int64_t				getLogicTime() const;
-		void				registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext, bool bCoroutine = false);
-		void				unregisterTicker(CTicker* pTicker);
+		void				registerTicker(base::CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext);
+		void				unregisterTicker(base::CTicker* pTicker);
 
 		CServiceInvoker*	getServiceInvoker() const;
 		CMessageDispatcher*	getMessageDispatcher() const;
@@ -122,15 +122,15 @@ namespace core
 		CLogicMessageQueue*		m_pMessageQueue;
 		CBaseConnectionMgr*		m_pBaseConnectionMgr;
 		CTransporter*			m_pTransporter;
-		CTickerMgr*				m_pTickerMgr;
 		CLocalServiceRegistryProxy*
 								m_pLocalServiceRegistryProxy;
+		base::CTickerMgr*		m_pTickerMgr;
 
 		std::atomic<uint32_t>	m_nQPS;
 		uint32_t				m_nCurQPS;
-		CTicker					m_tickerQPS;
+		base::CTicker			m_tickerQPS;
 
-		CTicker					m_tickerCheckHealth;
+		base::CTicker			m_tickerCheckHealth;
 
 		uint64_t				m_nNextSessionID;
 		std::map<uint64_t, SPendingResponseInfo*>	

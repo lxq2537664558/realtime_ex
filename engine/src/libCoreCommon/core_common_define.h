@@ -5,24 +5,24 @@
 #include <string>
 #include <list>
 
-#include "ticker.h"
+#include "libBaseCommon/ticker.h"
 #include "core_common.h"
 
 namespace core
 {
 	struct SPendingResponseInfo
 	{
-		CTicker		tickTimeout;
-		uint64_t	nSessionID;
-		uint64_t	nCoroutineID;
-		uint64_t	nHolderID;
+		base::CTicker	tickTimeout;
+		uint64_t		nSessionID;
+		uint64_t		nCoroutineID;
+		uint64_t		nHolderID;
 		std::list<uint64_t>::iterator
-					iterHolder;
+						iterHolder;
 
-		int64_t		nBeginTime;	// 发送时间
-		uint32_t	nToServiceID;
+		int64_t			nBeginTime;	// 发送时间
+		uint32_t		nToServiceID;
 		std::function<void(std::shared_ptr<void>, uint32_t)>
-					callback;
+						callback;
 	};
 
 	struct	SMessagePacket

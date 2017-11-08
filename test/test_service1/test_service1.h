@@ -1,6 +1,7 @@
 #pragma once
+#include "libBaseCommon/ticker.h"
+
 #include "libCoreCommon/service_base.h"
-#include "libCoreCommon/ticker.h"
 #include "libCoreCommon/normal_protobuf_serializer.h"
 
 #include <map>

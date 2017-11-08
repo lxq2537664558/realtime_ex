@@ -8,20 +8,20 @@
 
 #include "gtest/gtest.h"
 #include <utility>
-#include "../../ticker_mgr.h"
+#include "libBaseCommon/ticker.h"
+#include "libBaseCommon/debug_helper.h"
+#include "libBaseCommon/time_util.h"
 
-using namespace core;
-
+using namespace base;
 
 // 测试时间推进正确性
 TEST(TickFunctionTest1, TickTest)
 {
-#ifdef __TEST_TICKER_
 	std::vector<CTicker*> vecTicker;
 	int64_t nBeginTime = 1509680061793;
 	int64_t nRunTime = 10000;
 	int64_t nCount = 0;
-	CTickerMgr* pTickerMgr = new CTickerMgr(nBeginTime);
+	CTickerMgr* pTickerMgr = new CTickerMgr(nBeginTime, nullptr);
 	vecTicker.reserve(nRunTime);
 	for (int64_t i = 0; i < nRunTime; ++i)
 	{
@@ -34,7 +34,7 @@ TEST(TickFunctionTest1, TickTest)
 			nCount++;
 		});
 
-		pTickerMgr->registerTicker(pTicker, i, 0, i, false);
+		pTickerMgr->registerTicker(pTicker, i, 0, i);
 	}
 
 	for (int64_t i = nBeginTime; i <= nBeginTime + nRunTime; ++i)
@@ -49,16 +49,14 @@ TEST(TickFunctionTest1, TickTest)
 		SAFE_DELETE(vecTicker[i]);
 	}
 	SAFE_DELETE(pTickerMgr);
-#endif
 }
 
 // 注册反注册测试
 TEST(TickFunctionTest2, TickTest)
 {
-#ifdef __TEST_TICKER_
 	std::vector<CTicker*> vecTicker;
 	
-	CTickerMgr* pTickerMgr = new CTickerMgr(0);
+	CTickerMgr* pTickerMgr = new CTickerMgr(0, nullptr);
 	vecTicker.resize(100);
 	int64_t nCount = 0;
 	for (int64_t i = 0; i < vecTicker.size(); ++i)
@@ -80,7 +78,7 @@ TEST(TickFunctionTest2, TickTest)
 			nCount++;
 		});
 
-		pTickerMgr->registerTicker(pTicker, 100, 100, i, false);
+		pTickerMgr->registerTicker(pTicker, 100, 100, i);
 	}
 
 	for (int64_t i = 0; i <= 200; ++i)
@@ -95,7 +93,76 @@ TEST(TickFunctionTest2, TickTest)
 		SAFE_DELETE(vecTicker[i]);
 	}
 	SAFE_DELETE(pTickerMgr);
-#endif
+}
+
+TEST(TickFunctionTest3, TickTest)
+{
+	std::vector<CTicker*> vecTicker;
+
+	CTickerMgr* pTickerMgr = new CTickerMgr(0, nullptr);
+	vecTicker.resize(5000);
+	int64_t nCount = 0;
+	for (int64_t i = 0; i < vecTicker.size(); ++i)
+	{
+		CTicker* pTicker = new CTicker();
+		vecTicker[i] = pTicker;
+		pTicker->setCallback([&](uint64_t nContext)
+		{
+			nCount++;
+		});
+
+		pTickerMgr->registerTicker(pTicker, 5, 5, i);
+	}
+
+	int64_t nBeginTime = base::time_util::getGmtTime();
+	for (int64_t i = 0; i <= 10000; ++i)
+	{
+		pTickerMgr->update(i);
+	}
+	int64_t nEndTime = base::time_util::getGmtTime();
+
+	printf("time: %I64d count: %I64d \n", (nEndTime - nBeginTime), nCount);
+
+	for (int64_t i = 0; i < vecTicker.size(); ++i)
+	{
+		SAFE_DELETE(vecTicker[i]);
+	}
+	SAFE_DELETE(pTickerMgr);
+}
+
+TEST(TickFunctionTest4, TickTest)
+{
+	std::vector<CTicker*> vecTicker;
+
+	CTickerMgr* pTickerMgr = new CTickerMgr(0, nullptr);
+	vecTicker.resize(5000);
+	int64_t nCount = 0;
+	for (int64_t i = 0; i < vecTicker.size(); ++i)
+	{
+		CTicker* pTicker = new CTicker();
+		vecTicker[i] = pTicker;
+		pTicker->setCallback([&](uint64_t nContext)
+		{
+			nCount++;
+		});
+
+		pTickerMgr->registerTicker(pTicker, 5, 5, i);
+	}
+
+	int64_t nBeginTime = base::time_util::getGmtTime();
+	for (int64_t i = 0; i <= 10000; ++i)
+	{
+		pTickerMgr->update(i);
+	}
+	int64_t nEndTime = base::time_util::getGmtTime();
+
+	printf("time: %I64d count: %I64d \n", (nEndTime - nBeginTime), nCount);
+
+	for (int64_t i = 0; i < vecTicker.size(); ++i)
+	{
+		SAFE_DELETE(vecTicker[i]);
+	}
+	SAFE_DELETE(pTickerMgr);
 }
 
 class TickEnvironment : public testing::Environment

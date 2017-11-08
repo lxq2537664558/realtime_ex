@@ -33,7 +33,7 @@ namespace base
 
 		defer([&]() 
 		{
-			SAFE_DELETE(pMessage);
+			this->getDbThread()->destroyMessage(pMessage);
 		});
 
 		std::string szPrimaryName = getPrimaryName(pMessage);

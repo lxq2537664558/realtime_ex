@@ -53,7 +53,7 @@ namespace core
 				this->m_mapMasterInfo[sMasterInfo.nID] = sMasterInfo;
 			}
 
-			CCoreApp::Inst()->registerTicker(&this->m_tickCheckConnectMaster, 1000, 5 * 1000, 0, true);
+			CCoreApp::Inst()->registerTicker(&this->m_tickCheckConnectMaster, 1000, 5 * 1000, 0);
 		}
 
 		CCoreApp::Inst()->getGlobalBaseConnectionMgr()->addConnectFailCallback("master", std::bind(&CGlobalServiceRegistryProxy::onConnectRefuse, this, std::placeholders::_1));
@@ -121,7 +121,7 @@ namespace core
 
 		this->updateActiveServiceID(setType);
 		
-		sNodeProxyInfo.pTicker = std::make_unique<CTicker>();
+		sNodeProxyInfo.pTicker = std::make_unique<base::CTicker>();
 		// 不用担心sNodeProxyInfo的生命周期问题
 		sNodeProxyInfo.pTicker->setCallback([&sNodeProxyInfo](uint64_t nContext)
 		{
@@ -153,7 +153,7 @@ namespace core
 		{
 			DebugAst(!sNodeProxyInfo.sNodeBaseInfo.szHost.empty() && sNodeProxyInfo.sNodeBaseInfo.nPort != 0);
 
-			CCoreApp::Inst()->registerTicker(sNodeProxyInfo.pTicker.get(), _CHECK_CONNECT_TIME, _CHECK_CONNECT_TIME, 0, true);
+			CCoreApp::Inst()->registerTicker(sNodeProxyInfo.pTicker.get(), _CHECK_CONNECT_TIME, _CHECK_CONNECT_TIME, 0);
 		}
 
 		this->updateLocalServiceRegistryProxy();

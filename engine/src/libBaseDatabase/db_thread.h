@@ -30,8 +30,7 @@ namespace base
 					getDbCommandHandlerProxy() const;
 		google::protobuf::Message*
 					createMessage(const std::string& szMessageName);
-
-		void		setMaxCacheSize(uint64_t nSize);
+		void		destroyMessage(google::protobuf::Message* pMessage);
 
 	private:
 		bool		connectDb(bool bInit);
@@ -40,7 +39,7 @@ namespace base
 
 		bool		onPreCache(uint32_t nType, const google::protobuf::Message* pRequest, std::shared_ptr<google::protobuf::Message>& pResponse);
 		void		onPostCache(uint32_t nType, const google::protobuf::Message* pRequest, std::shared_ptr<google::protobuf::Message>& pResponse);
-		void		flushCache(uint64_t nKey, bool bDel);
+		void		flushCache();
 
 	private:
 		volatile uint32_t		m_quit;

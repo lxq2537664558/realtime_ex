@@ -19,6 +19,29 @@
 #define _TIMEOUT_HEALTH		2
 #define _CHECK_SERVICE_HEALTH_TIME 100
 
+namespace
+{
+	void tickerCallback(base::CTicker* pTicker)
+	{
+		DebugAst(pTicker != nullptr);
+
+		auto& callback = pTicker->getCallback();
+		if (callback != nullptr)
+		{
+			uint64_t nContext = pTicker->getContext();
+			if (pTicker->isCoroutine())
+			{
+				uint64_t nCoroutineID = core::coroutine::create(core::CCoreApp::Inst()->getCoroutineStackSize(), [&callback, nContext](uint64_t) { callback(nContext); });
+				core::coroutine::resume(nCoroutineID, 0);
+			}
+			else
+			{
+				callback(nContext);
+			}
+		}
+	}
+}
+
 namespace core
 {
 	CCoreService::CCoreService(CServiceBase* pServiceBase, const SServiceBaseInfo& sServiceBaseInfo, const std::string& szConfigFileName)
@@ -35,7 +58,7 @@ namespace core
 		, m_nQPS(0)
 		, m_nCurQPS(0)
 	{
-		this->m_pTickerMgr = new CTickerMgr(base::time_util::getGmtTime());
+		this->m_pTickerMgr = new base::CTickerMgr(base::time_util::getGmtTime(), std::bind(&tickerCallback, std::placeholders::_1));
 
 		this->m_pMessageQueue = new CLogicMessageQueue(this, CCoreApp::Inst()->getLogicMessageQueueMgr());
 
@@ -535,12 +558,12 @@ namespace core
 		return this->m_pLocalServiceRegistryProxy;
 	}
 
-	void CCoreService::registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext, bool bCoroutine /*= false*/)
+	void CCoreService::registerTicker(base::CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
 	{
-		this->m_pTickerMgr->registerTicker(pTicker, nStartTime, nIntervalTime, nContext, bCoroutine);
+		this->m_pTickerMgr->registerTicker(pTicker, nStartTime, nIntervalTime, nContext);
 	}
 
-	void CCoreService::unregisterTicker(CTicker* pTicker)
+	void CCoreService::unregisterTicker(base::CTicker* pTicker)
 	{
 		this->m_pTickerMgr->unregisterTicker(pTicker);
 	}

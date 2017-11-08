@@ -57,6 +57,6 @@ private:
 	uint32_t			m_nState;
 	bool				m_bKick;
 
-	core::CTicker		m_tickerTokenTimeout;
-	core::CTicker		m_tickerHeartbeat;
+	base::CTicker		m_tickerTokenTimeout;
+	base::CTicker		m_tickerHeartbeat;
 };

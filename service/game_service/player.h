@@ -1,6 +1,7 @@
 #pragma once
+#include "libBaseCommon/ticker.h"
+
 #include "libCoreCommon/service_base.h"
-#include "libCoreCommon/ticker.h"
 #include "libCoreCommon/service_invoke_holder.h"
 #include "libCoreCommon/db_service_invoke_holder.h"
 
@@ -89,7 +90,7 @@ private:
 private:
 	CGameService*					m_pGameService;
 	uint64_t						m_nPlayerID;
-	core::CTicker					m_tickHeartbeat;
+	base::CTicker					m_tickHeartbeat;
 	EPlayerStatusType				m_eStatus;
 	uint32_t						m_nGateServiceID;
 	CPlayerModule*					m_zPlayerModule[ePMT_Count];
@@ -98,5 +99,5 @@ private:
 
 	std::set<uint32_t>				m_setModuleLoadDataError;
 
-	core::CTicker					m_tickerBackup;
+	base::CTicker					m_tickerBackup;
 };

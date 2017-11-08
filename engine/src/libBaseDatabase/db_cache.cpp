@@ -7,15 +7,14 @@
 #include "libBaseCommon/defer.h"
 #include "libBaseCommon/debug_helper.h"
 #include "libBaseCommon/time_util.h"
-
-#define _CACHE_EXPIRED_TIME 1
+#include "libBaseCommon/rand_gen.h"
 
 namespace base
 {
-
-	CDbCache::CDbCache(CDbCacheMgr* pDbCacheMgr)
+	CDbCache::CDbCache(CDbCacheMgr* pDbCacheMgr, const std::string szDataName)
 		: m_pDbCacheMgr(pDbCacheMgr)
 		, m_nDataSize(0)
+		, m_szDataName(szDataName)
 	{
 
 	}
@@ -25,32 +24,32 @@ namespace base
 
 	}
 
-	google::protobuf::Message* CDbCache::getData(uint32_t nDataID)
+	google::protobuf::Message* CDbCache::getData(uint64_t nID)
 	{
-		auto iter = this->m_mapCacheInfo.find(nDataID);
+		auto iter = this->m_mapCacheInfo.find(nID);
 		if (iter == this->m_mapCacheInfo.end())
 			return nullptr;
 
-		const std::string& szDataName = this->m_pDbCacheMgr->getDataName(nDataID);
-		google::protobuf::Message* pMessage = this->m_pDbCacheMgr->getDbThread()->createMessage(szDataName);
+		google::protobuf::Message* pMessage = this->m_pDbCacheMgr->getDbThread()->createMessage(this->m_szDataName);
 		if (nullptr == pMessage)
 		{
-			PrintWarning("CDbCache::getData error nullptr == pMessage data_name: {}", szDataName);
+			PrintWarning("CDbCache::getData error nullptr == pMessage data_name: {}", this->m_szDataName);
 			return nullptr;
 		}
+
 		if (!pMessage->ParseFromArray(iter->second.szData.c_str(), (int32_t)iter->second.szData.size()))
 		{
-			PrintWarning("CDbCache::getData error pMessage->ParseFromArray data_name: {}", szDataName);
-			SAFE_DELETE(pMessage);
+			PrintWarning("CDbCache::getData error pMessage->ParseFromArray data_name: {}", this->m_szDataName);
+			this->m_pDbCacheMgr->getDbThread()->destroyMessage(pMessage);
 			return nullptr;
 		}
 
 		return pMessage;
 	}
 
-	bool CDbCache::addData(uint32_t nDataID, const google::protobuf::Message* pData)
+	bool CDbCache::addData(uint64_t nID, const google::protobuf::Message* pData)
 	{
-		if (this->m_mapCacheInfo.find(nDataID) != this->m_mapCacheInfo.end())
+		if (this->m_mapCacheInfo.find(nID) != this->m_mapCacheInfo.end())
 			return false;
 
 		std::string szData;
@@ -58,27 +57,36 @@ namespace base
 			return false;
 
 		int32_t nSize = (int32_t)szData.size();
-		SCacheInfo& sCacheInfo = this->m_mapCacheInfo[nDataID];
-		sCacheInfo.nTime = base::time_util::getGmtTime();
+		SCacheInfo& sCacheInfo = this->m_mapCacheInfo[nID];
 		sCacheInfo.szData = std::move(szData);
 		this->m_nDataSize += nSize;
+		sCacheInfo.ticker = std::make_unique<CTicker>();
+		sCacheInfo.ticker->setCallback(std::bind(&CDbCache::onBackup, this, std::placeholders::_1), false);
 
 		return true;
 	}
 
-	bool CDbCache::setData(uint32_t nDataID, const std::string& szDataName, const google::protobuf::Message* pData)
+	bool CDbCache::setData(uint64_t nID, const google::protobuf::Message* pData)
 	{
-		auto iter = this->m_mapCacheInfo.find(nDataID);
+		DebugAstEx(pData != nullptr, false);
+		
+		auto iter = this->m_mapCacheInfo.find(nID);
 		if (iter == this->m_mapCacheInfo.end())
-			return this->addData(nDataID, pData);
+		{
+			this->addData(nID, pData);
+			// 这里返回false是为了让db操作直接落到db上，而不是只在cache中，因为是新的数据。
+			return false;
+		}
 
-		google::protobuf::Message* pDstData = this->m_pDbCacheMgr->getDbThread()->createMessage(szDataName);
+		SCacheInfo& sCacheInfo = iter->second;
+
+		google::protobuf::Message* pDstData = this->m_pDbCacheMgr->getDbThread()->createMessage(this->m_szDataName);
 		if (nullptr == pDstData)
 			return false;
 
 		defer([&]()
 		{
-			SAFE_DELETE(pDstData);
+			this->m_pDbCacheMgr->getDbThread()->destroyMessage(pDstData);
 		});
 
 		if (!pDstData->ParseFromString(iter->second.szData))
@@ -164,22 +172,24 @@ namespace base
 			return false;
 
 		int32_t nSize = (int32_t)szData.size();
-		this->m_nDataSize -= (int32_t)iter->second.szData.size();
-		iter->second.nTime = base::time_util::getGmtTime();
-		iter->second.szData = std::move(szData);
+		this->m_nDataSize -= (int32_t)sCacheInfo.szData.size();
+		sCacheInfo.szData = std::move(szData);
 		this->m_nDataSize += nSize;
+
+		if (!sCacheInfo.ticker->isRegister())
+			this->m_pDbCacheMgr->getTickerMgr()->registerTicker(sCacheInfo.ticker.get(), this->m_pDbCacheMgr->getWritebackTime(), 0, 0);
 
 		return true;
 	}
 
-	bool CDbCache::delData(uint32_t nDataID)
+	bool CDbCache::delData(uint64_t nID)
 	{
-		auto iter = this->m_mapCacheInfo.find(nDataID);
+		auto iter = this->m_mapCacheInfo.find(nID);
 		if (iter == this->m_mapCacheInfo.end())
 			return false;
 
 		this->m_nDataSize -= (int32_t)iter->second.szData.size();
-		this->m_mapCacheInfo.erase(nDataID);
+		this->m_mapCacheInfo.erase(nID);
 
 		return true;
 	}
@@ -189,52 +199,78 @@ namespace base
 		return this->m_nDataSize;
 	}
 
-	bool CDbCache::writeback(int64_t nTime)
+	void CDbCache::flush()
 	{
-		bool bDirty = false;
 		for (auto iter = this->m_mapCacheInfo.begin(); iter != this->m_mapCacheInfo.end(); ++iter)
 		{
-			SCacheInfo& sCacheInfo = iter->second;
-			if (sCacheInfo.nTime == 0)
-				continue;
+			this->onBackup(iter->first);
+		}
+	}
 
-			int64_t nDeltaTime = nTime - sCacheInfo.nTime;
-			if (nDeltaTime >= _CACHE_EXPIRED_TIME || nTime == 0)
-			{
-				const std::string& szDataName = this->m_pDbCacheMgr->getDataName(iter->first);
-				if (szDataName.empty())
-				{
-					PrintWarning("CDbCache::writeback error szDataName.empty() index: {}", iter->first);
-					continue;
-				}
-				google::protobuf::Message* pMessage = this->m_pDbCacheMgr->getDbThread()->createMessage(szDataName);
-				if (nullptr == pMessage)
-				{
-					PrintWarning("CDbCache::writeback error nullptr == pMessage data_name: {}", szDataName);
-					continue;
-				}
-				defer([&]()
-				{
-					SAFE_DELETE(pMessage);
-				});
+	int32_t CDbCache::cleanData()
+	{
+		std::vector<std::unordered_map<uint64_t, SCacheInfo>::local_iterator> vecElement;
+		vecElement.reserve(5);
+		for (size_t i = 0; i < 5; ++i)
+		{
+			if (this->m_mapCacheInfo.bucket_count() == 0)
+				break;
 
-				if (!pMessage->ParseFromString(sCacheInfo.szData))
-				{
-					PrintWarning("CDbCache::writeback error pMessage->ParseFromString data_name: {}", szDataName);
-					continue;
-				}
-				uint32_t nErrorCode = m_pDbCacheMgr->getDbThread()->getDbCommandHandlerProxy()->onDbCommand(db::eDBCT_Update, pMessage, nullptr);
-				if (nErrorCode != db::eDBRC_OK)
-				{
-					PrintWarning("CDbCache::writeback error nErrorCode != db::eDBRC_OK data_name: {} error_code: {}", szDataName, nErrorCode);
-				}
-			}
-			else
+			int32_t nPos = rand() % this->m_mapCacheInfo.bucket_count();
+			if (this->m_mapCacheInfo.begin(nPos) != this->m_mapCacheInfo.end(nPos))
 			{
-				bDirty = true;
+				vecElement.push_back(this->m_mapCacheInfo.begin(nPos));
 			}
 		}
 
-		return bDirty;
+		if (vecElement.empty())
+			return 0;
+
+		uint32_t nPos = base::CRandGen::getGlobalRand((uint32_t)vecElement.size());
+		SCacheInfo& sCacheInfo = vecElement[nPos]->second;
+		uint64_t nID = vecElement[nPos]->first;
+
+		if (sCacheInfo.ticker->isRegister())
+			this->onBackup(nID);
+
+		int32_t nDataSize = (int32_t)sCacheInfo.szData.size();
+		this->m_nDataSize -= nDataSize;
+
+		this->m_mapCacheInfo.erase(nID);
+
+		return nDataSize;
+	}
+
+	void CDbCache::onBackup(uint64_t nContext)
+	{
+		auto iter = this->m_mapCacheInfo.find(nContext);
+		if (iter == this->m_mapCacheInfo.end())
+			return;
+
+		SCacheInfo& sCacheInfo = iter->second;
+
+		google::protobuf::Message* pMessage = this->m_pDbCacheMgr->getDbThread()->createMessage(this->m_szDataName);
+		if (nullptr == pMessage)
+		{
+			PrintWarning("CDbCache::writeback error nullptr == pMessage data_name: {}", this->m_szDataName);
+			return;
+		}
+
+		defer([&]()
+		{
+			this->m_pDbCacheMgr->getDbThread()->destroyMessage(pMessage);
+		});
+
+		if (!pMessage->ParseFromString(sCacheInfo.szData))
+		{
+			PrintWarning("CDbCache::writeback error pMessage->ParseFromString data_name: {}", this->m_szDataName);
+			return;
+		}
+
+		uint32_t nErrorCode = m_pDbCacheMgr->getDbThread()->getDbCommandHandlerProxy()->onDbCommand(db::eDBCT_Update, pMessage, nullptr);
+		if (nErrorCode != db::eDBRC_OK)
+		{
+			PrintWarning("CDbCache::writeback error nErrorCode != db::eDBRC_OK data_name: {} error_code: {}", this->m_szDataName, nErrorCode);
+		}
 	}
 }

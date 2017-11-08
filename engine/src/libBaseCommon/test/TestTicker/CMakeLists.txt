@@ -4,7 +4,6 @@ aux_source_directory(. DIR_SRCS)
 
 # 设置头文件
 include_directories(../../../../../engine/inc)
-include_directories(../../../../../engine/inc/libCoreCommon)
 include_directories(../../../../../3rd/gtest/include)
 
 # 设置输出目录
@@ -12,7 +11,7 @@ set(EXECUTABLE_OUTPUT_PATH ${BIN_OUTPUT_PATH})
 
 link_directories(${PROJECT_SOURCE_DIR}/3rd/gtest/lib/linux/)
 # 设置链接的库
-set(LINK_LIBS ${BIN_OUTPUT_PATH}/libtinyxml2.so ${BIN_OUTPUT_PATH}/libBaseCommon.so ${BIN_OUTPUT_PATH}/libBaseNetwork.so ${BIN_OUTPUT_PATH}/libCoreCommon.so gtest rt dl pthread)
+set(LINK_LIBS ${BIN_OUTPUT_PATH}/libBaseCommon.so gtest rt dl pthread)
 # 设置链接选项
 set(CMAKE_EXE_LINKER_FLAGS "-Wl,-rpath=./ ")
 # 生成TestTicker

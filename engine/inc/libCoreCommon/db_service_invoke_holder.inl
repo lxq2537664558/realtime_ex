@@ -62,11 +62,9 @@ namespace core
 		return this->m_sServiceInvokeHolder.send(nDbServiceID, &command, &sInvokeOption);
 	}
 
-	bool CDbServiceInvokeHolder::service_flush(uint32_t nDbServiceID, uint64_t nPrimaryID, base::db::EFlushCacheType eType)
+	bool CDbServiceInvokeHolder::service_flush(uint32_t nDbServiceID)
 	{
 		flush_command command;
-		command.primary_id = nPrimaryID;
-		command.type = (uint32_t)eType;
 
 		SInvokeOption sInvokeOption;
 		sInvokeOption.nSerializerType = eMST_Native;
@@ -330,9 +328,9 @@ namespace core
 		return this->service_call(this->m_nDbServiceID, nChannelID, szSQL, vecArg);
 	}
 
-	bool CDbServiceInvokeHolder::flush(uint64_t nPrimaryID, base::db::EFlushCacheType eType)
+	bool CDbServiceInvokeHolder::flush()
 	{
-		return this->service_flush(this->m_nDbServiceID, nPrimaryID, eType);
+		return this->service_flush(this->m_nDbServiceID);
 	}
 
 	void CDbServiceInvokeHolder::async_select(uint64_t nPrimaryID, const std::string& szTableName, const std::function<void(const google::protobuf::Message*, uint32_t)>& callback, uint32_t nTimeout/* = 0*/)

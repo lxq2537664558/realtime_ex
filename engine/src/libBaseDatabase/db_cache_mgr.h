@@ -2,7 +2,8 @@
 #include "db_cache.h"
 #include "database.h"
 
-#include <unordered_map>
+#include "libBaseCommon/ticker.h"
+
 #include <map>
 #include <memory>
 
@@ -10,6 +11,10 @@
 
 namespace base
 {
+	/*
+	CDbCacheMgr 类似于库的概念
+	CDbCache 对应某一个表
+	*/
 	class CDbThread;
 	class CDbCacheMgr
 	{
@@ -23,31 +28,23 @@ namespace base
 		bool				setData(uint64_t nID, const google::protobuf::Message* pData);
 		bool				addData(uint64_t nID, const google::protobuf::Message* pData);
 		bool				delData(uint64_t nID, const std::string& szDataName);
-		int64_t				getMaxCacheSize() const;
-		void				setMaxCacheSize(uint64_t nSize);
-		const std::string&	getDataName(uint32_t nIndex) const;
-		void				flushCache(uint64_t nKey, bool bDel);
+
+		bool				enableCache() const;
+		void				flushCache();
+		CTickerMgr*			getTickerMgr() const;
 		CDbThread*			getDbThread() const;
 		void				update();
 
-	private:
-		uint32_t			getDataID(const std::string& szDataName);
-		void				cleanCache(int64_t nTime);
-		void				writeback(uint64_t nTime);
+		uint32_t			getWritebackTime() const;
 
 	private:
-		CDbThread*												m_pDbThread;
-		std::unordered_map<uint64_t, std::shared_ptr<CDbCache>>	m_mapCache;
-		std::map<std::string, uint32_t>							m_mapDataIndex;
-		std::map<uint32_t, std::string>							m_mapDataName;
-		uint32_t												m_nCurIndex;
-		std::map<uint64_t, std::shared_ptr<CDbCache>>			m_mapDirtyCache;
-		int64_t													m_nDataSize;
-		int64_t													m_nLastCleanCacheTime;
-		int64_t													m_nLastWritebackTime;
+		CDbThread*							m_pDbThread;
+		CTickerMgr*							m_pTickerMgr;
+		std::map<std::string, CDbCache*>	m_mapCache;
+
+		int64_t								m_nDataSize;
 		
-		uint32_t												m_nWritebackTime;
-		int64_t													m_nMaxCacheSize;
-		std::set<std::string>									m_setAllowDataName;
+		uint32_t							m_nWritebackTime;
+		int64_t								m_nMaxCacheSize;
 	};
 }

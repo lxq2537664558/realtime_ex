@@ -152,12 +152,12 @@ namespace core
 		return true;
 	}
 
-	void CCoreApp::registerTicker(CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext, bool bCoroutine)
+	void CCoreApp::registerTicker(base::CTicker* pTicker, uint64_t nStartTime, uint64_t nIntervalTime, uint64_t nContext)
 	{
-		this->m_pGlobalTickerMgr->registerTicker(pTicker, nStartTime, nIntervalTime, nContext, bCoroutine);
+		this->m_pGlobalTickerMgr->registerTicker(pTicker, nStartTime, nIntervalTime, nContext);
 	}
 
-	void CCoreApp::unregisterTicker(CTicker* pTicker)
+	void CCoreApp::unregisterTicker(base::CTicker* pTicker)
 	{
 		this->m_pGlobalTickerMgr->unregisterTicker(pTicker);
 	}
@@ -401,7 +401,7 @@ namespace core
 			return false;
 		}
 
-		this->m_pGlobalTickerMgr = new CTickerMgr(base::time_util::getGmtTime());
+		this->m_pGlobalTickerMgr = new base::CTickerMgr(base::time_util::getGmtTime(), nullptr);
 
 		this->m_pGlobalBaseConnectionMgr = new CBaseConnectionMgr(this->m_pGlobalLogicMessageQueue);
 		
