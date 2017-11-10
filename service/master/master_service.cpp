@@ -56,11 +56,7 @@ bool CMasterService::onInit()
 	const std::string szHost = pMasterXML->Attribute("host") != nullptr ? pMasterXML->Attribute("host") : "0.0.0.0";
 	uint16_t nPort = (uint16_t)pMasterXML->UnsignedAttribute("port");
 
-	if (!this->getBaseConnectionMgr()->listen(szHost, nPort, false, "CConnectionFromNode", "", 10 * 1024, 10 * 1024, nullptr))
-	{
-		PrintWarning("master listen error");
-		return false;
-	}
+	this->getBaseConnectionMgr()->listen(szHost, nPort, false, "CConnectionFromNode", "", 10 * 1024, 10 * 1024, nullptr);
 
 	PrintInfo("CMasterService::onInit");
 	return true;

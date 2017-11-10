@@ -4,7 +4,6 @@
 
 #include <vector>
 #include <string>
-#include <mutex>
 #include <map>
 
 #ifdef _WIN32
@@ -33,17 +32,23 @@
 #include "libBaseCommon/debug_helper.h"
 #include "libBaseCommon/string_util.h"
 #include "libBaseCommon/base_common.h"
+#include "libBaseCommon/rw_lock.h"
+#include "libBaseCommon/defer.h"
 
 namespace
 {
 	std::map<uint32_t, base::CDbThreadMgr*>	s_mapDbThreadMgr;
-	std::mutex s_lock;
+	base::CRWLock s_lock;
 
 	const std::string szDbOption = "db_option.proto";
 
 	base::CDbThreadMgr* getDbThreadMgr(uint32_t nID)
 	{
-		std::unique_lock<std::mutex> lock(s_lock);
+		s_lock.lock(base::CRWLock::eLT_Read);
+		defer([&]()
+		{
+			s_lock.unlock(base::CRWLock::eLT_Read);
+		});
 
 		auto iter = s_mapDbThreadMgr.find(nID);
 		if (iter == s_mapDbThreadMgr.end())
@@ -100,11 +105,22 @@ namespace base
 			}
 			closedir(pDir);
 #endif
-			if (!importProtobuf(sDbOptions.szProtoDir, vecProto))
-				return 0;
-
+			
 			CDbThreadMgr* pDbThreadMgr = new CDbThreadMgr();
 			if (!pDbThreadMgr->init(szHost, nPort, szDb, szUser, szPassword, szCharset, sDbOptions))
+			{
+				SAFE_DELETE(pDbThreadMgr);
+				return 0;
+			}
+
+			s_lock.lock(CRWLock::eLT_Write);
+			defer([&]()
+			{
+				s_lock.unlock(CRWLock::eLT_Write);
+			});
+
+			// 初始化proto需要保护
+			if (!importProtobuf(sDbOptions.szProtoDir, vecProto))
 			{
 				SAFE_DELETE(pDbThreadMgr);
 				return 0;
@@ -120,7 +136,12 @@ namespace base
 		{
 			CDbThreadMgr* pDbThreadMgr = nullptr;
 			{
-				std::unique_lock<std::mutex> lock(s_lock);
+				s_lock.lock(CRWLock::eLT_Write);
+				defer([&]()
+				{
+					s_lock.unlock(CRWLock::eLT_Write);
+				});
+
 				auto iter = s_mapDbThreadMgr.find(nID);
 				DebugAst(iter != s_mapDbThreadMgr.end());
 				pDbThreadMgr = iter->second;
@@ -259,22 +280,17 @@ namespace base
 				const proto::db::flush_command* pCommand = dynamic_cast<const proto::db::flush_command*>(pRequest);
 				DebugAst(pCommand != nullptr);
 
-				nType = eDBCT_Flush;
-				
-				pMessage = pDbThreadMgr->createMessage(szMessageName);
-				if (pMessage == nullptr)
+				SDbCommand sDbCommand;
+				sDbCommand.callback = callback;
+				sDbCommand.nType = eDBCT_Flush;
+				sDbCommand.pMessage = nullptr;
+
+				for (uint32_t i = 0; i < pDbThreadMgr->getThreadCount(); ++i)
 				{
-					PrintWarning("create message error {}", szMessageName);
-					return;
+					pDbThreadMgr->query(i, sDbCommand);
 				}
 
-				std::string szData = pRequest->SerializeAsString();
-				if (!pMessage->ParseFromString(szData))
-				{
-					PrintWarning("ParseFromString message error {}", szMessageName);
-					pDbThreadMgr->destroyMessage(pMessage);
-					return;
-				}
+				return;
 			}
 			else if (szMessageName == "proto.db.call_command")
 			{

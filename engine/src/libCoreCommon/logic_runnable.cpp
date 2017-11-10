@@ -93,18 +93,19 @@ namespace core
 		return true;
 	}
 
-	bool CLogicRunnable::dispatch(CCoreService* pCoreService, const SMessagePacket& sMessagePacket)
+	void CLogicRunnable::dispatch(CCoreService* pCoreService, const SMessagePacket& sMessagePacket)
 	{
 		switch (sMessagePacket.nType)
 		{
 		case eMCT_INIT:
 		{
-			DebugAstEx(pCoreService != nullptr, false);
+			DebugAst(pCoreService != nullptr);
 
 			if (!pCoreService->onInit())
 			{
 				PrintWarning("CCoreServiceMgr::onInit error service_name: {}", pCoreService->getServiceBaseInfo().szName);
-				return false;
+				CCoreApp::Inst()->doQuit();
+				return;
 			}
 
 			const std::vector<core::CCoreService*>& vecCoreService = CCoreApp::Inst()->getCoreServiceMgr()->getCoreService();
@@ -129,7 +130,7 @@ namespace core
 
 		case eMCT_QUIT:
 		{
-			DebugAstEx(pCoreService != nullptr, false);
+			DebugAst(pCoreService != nullptr);
 
 			pCoreService->quit();
 		}
@@ -139,7 +140,10 @@ namespace core
 		{
 			PROFILING_GUARD(eMCT_FRAME)
 
-			DebugAstEx(pCoreService != nullptr, false);
+			DebugAst(pCoreService != nullptr);
+
+			if (pCoreService->getRunState() == eSRS_Quit)
+				return;
 
 			pCoreService->onFrame();
 		}
@@ -161,7 +165,7 @@ namespace core
 				SAFE_DELETE(pContext);
 			});
 
-			DebugAstEx(pCoreService != nullptr, false);
+			DebugAst(pCoreService != nullptr);
 
 			*pCoreService->getLocalServiceRegistryProxy() = *pLocalServiceRegistryProxy;
 		}
@@ -175,11 +179,11 @@ namespace core
 				SAFE_DELETE(pContext);
 			});
 
-			DebugAstEx(pCoreService != nullptr, false);
+			DebugAst(pCoreService != nullptr);
 
 			auto& callback = pCoreService->getServiceConnectCallback();
 			if (callback == nullptr)
-				return true;
+				return;
 
 			uint64_t nCoroutineID = coroutine::create(CCoreApp::Inst()->getCoroutineStackSize(), [&callback, pContext](uint64_t) { callback(pContext->szType, pContext->nID); });
 			coroutine::resume(nCoroutineID, 0);
@@ -194,11 +198,11 @@ namespace core
 				SAFE_DELETE(pContext);
 			});
 
-			DebugAstEx(pCoreService != nullptr, false);
+			DebugAst(pCoreService != nullptr);
 
 			auto& callback = pCoreService->getServiceDisconnectCallback();
 			if (callback == nullptr)
-				return true;
+				return;
 
 			uint64_t nCoroutineID = coroutine::create(CCoreApp::Inst()->getCoroutineStackSize(), [&callback, pContext](uint64_t) { callback(pContext->szType, pContext->nID); });
 			coroutine::resume(nCoroutineID, 0);
@@ -216,7 +220,7 @@ namespace core
 			});
 
 			CBaseConnectionMgrImpl* pBaseConnectionMgrImpl = ::getBaseConnectionMgrImpl(pCoreService);
-			DebugAstEx(pBaseConnectionMgrImpl != nullptr, true);
+			DebugAst(pBaseConnectionMgrImpl != nullptr);
 
 			if (!pBaseConnectionMgrImpl->onConnect(pContext->pCoreConnection))
 			{
@@ -246,7 +250,7 @@ namespace core
 			});
 
 			CBaseConnectionMgrImpl* pBaseConnectionMgrImpl = ::getBaseConnectionMgrImpl(pCoreService);
-			DebugAstEx(pBaseConnectionMgrImpl != nullptr, true);
+			DebugAst(pBaseConnectionMgrImpl != nullptr);
 
 			uint64_t nSocketID = pContext->nSocketID;
 			pBaseConnectionMgrImpl->onDisconnect(nSocketID);
@@ -275,9 +279,28 @@ namespace core
 			});
 
 			CBaseConnectionMgrImpl* pBaseConnectionMgrImpl = ::getBaseConnectionMgrImpl(pCoreService);
-			DebugAstEx(pBaseConnectionMgrImpl != nullptr, true);
+			DebugAst(pBaseConnectionMgrImpl != nullptr);
 
 			pBaseConnectionMgrImpl->onConnectFail(pContext->szContext);
+		}
+		break;
+
+		case eMCT_NOTIFY_SOCKET_LISTEN_FAIL:
+		{
+			PROFILING_GUARD(eMCT_NOTIFY_SOCKET_LISTEN_FAIL)
+
+			SMCT_NOTIFY_SOCKET_LISTEN_FAIL* pContext = reinterpret_cast<SMCT_NOTIFY_SOCKET_LISTEN_FAIL*>(sMessagePacket.pData);
+			defer([&]()
+			{
+				SAFE_DELETE(pContext);
+			});
+
+			CBaseConnectionMgrImpl* pBaseConnectionMgrImpl = ::getBaseConnectionMgrImpl(pCoreService);
+			DebugAst(pBaseConnectionMgrImpl != nullptr);
+
+			PrintDebug("listen error addr: {}:{} context: {}", pContext->szHost, pContext->nPort, pContext->szContext);
+
+			CCoreApp::Inst()->doQuit();
 		}
 		break;
 
@@ -294,13 +317,13 @@ namespace core
 			});
 
 			CBaseConnectionMgrImpl* pBaseConnectionMgrImpl = ::getBaseConnectionMgrImpl(pCoreService);
-			DebugAstEx(pBaseConnectionMgrImpl != nullptr, true);
+			DebugAst(pBaseConnectionMgrImpl != nullptr);
 
 			CBaseConnection* pBaseConnection = pBaseConnectionMgrImpl->getBaseConnectionBySocketID(pContext->nSocketID);
 			if (pBaseConnection == nullptr)
 			{
 				PrintWarning("pBaseConnection == nullptr type: eMCT_RECV_SOCKET_DATA socket_id: {}", pContext->nSocketID);
-				return true;
+				return;
 			}
 
 			pBaseConnection->onDispatch(pContext->nMessageType, pContext->pData, pContext->nDataSize);
@@ -319,7 +342,7 @@ namespace core
 				SAFE_DELETE_ARRAY(pBuf);
 			});
 
-			DebugAstEx(pCoreService != nullptr, true);
+			DebugAst(pCoreService != nullptr);
 
 			uint8_t nMessageType = 0;
 			if (sMessagePacket.nType == eMCT_REQUEST)
@@ -342,7 +365,5 @@ namespace core
 			PrintWarning("invalid type: {}", sMessagePacket.nType);
 		}
 		}
-
-		return true;
 	}
 }

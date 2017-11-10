@@ -26,18 +26,18 @@ namespace
 		DebugAst(pTicker != nullptr);
 
 		auto& callback = pTicker->getCallback();
-		if (callback != nullptr)
+		if (callback == nullptr)
+			return;
+		
+		uint64_t nContext = pTicker->getContext();
+		if (pTicker->isCoroutine())
 		{
-			uint64_t nContext = pTicker->getContext();
-			if (pTicker->isCoroutine())
-			{
-				uint64_t nCoroutineID = core::coroutine::create(core::CCoreApp::Inst()->getCoroutineStackSize(), [&callback, nContext](uint64_t) { callback(nContext); });
-				core::coroutine::resume(nCoroutineID, 0);
-			}
-			else
-			{
-				callback(nContext);
-			}
+			uint64_t nCoroutineID = core::coroutine::create(core::CCoreApp::Inst()->getCoroutineStackSize(), [&callback, nContext](uint64_t) { callback(nContext); });
+			core::coroutine::resume(nCoroutineID, 0);
+		}
+		else
+		{
+			callback(nContext);
 		}
 	}
 }
@@ -89,14 +89,7 @@ namespace core
 		SAFE_DELETE(this->m_mapServiceSelector[eSST_RoundRobin]);
 
 		SAFE_DELETE(this->m_pBaseConnectionMgr);
-	}
-
-	void CCoreService::quit()
-	{
-		DebugAst(this->m_eRunState == eSRS_Normal);
-
-		this->m_eRunState = eSRS_Quitting;
-		this->m_pServiceBase->onQuit();
+		SAFE_DELETE(this->m_pTickerMgr);
 	}
 
 	bool CCoreService::onInit()
@@ -182,15 +175,6 @@ namespace core
 		}
 
 		return iter->second;
-	}
-
-	void CCoreService::doQuit()
-	{
-		DebugAst(this->m_eRunState == eSRS_Quitting);
-
-		PrintInfo("CCoreService::doQuit service_id: {}", this->getServiceID());
-		
-		this->m_eRunState = eSRS_Quit;
 	}
 
 	void CCoreService::onFrame()
@@ -318,10 +302,10 @@ namespace core
 		auto iter = this->m_mapServiceHealth.find(nServiceID);
 		if (iter == this->m_mapServiceHealth.end())
 		{
-			this->m_mapServiceHealth[nServiceID] = _MAX_SERVICE_HEALTH;
-			iter = this->m_mapServiceHealth.find(nServiceID);
-			if (iter == this->m_mapServiceHealth.end())
-				return;
+			auto ret = this->m_mapServiceHealth.insert(std::make_pair(nServiceID, _MAX_SERVICE_HEALTH));
+			DebugAst(ret.second);
+
+			iter = ret.first;
 		}
 
 		int32_t& nHealth = iter->second;
@@ -571,5 +555,36 @@ namespace core
 	int64_t CCoreService::getLogicTime() const
 	{
 		return this->m_pTickerMgr->getLogicTime();
+	}
+
+	void CCoreService::quit()
+	{
+		DebugAst(this->m_eRunState == eSRS_Normal);
+
+		this->m_eRunState = eSRS_Quitting;
+		this->m_pServiceBase->onQuit();
+	}
+
+	void CCoreService::doQuit()
+	{
+		DebugAst(this->m_eRunState == eSRS_Quitting);
+
+		PrintInfo("CCoreService::doQuit service_id: {}", this->getServiceID());
+
+		this->m_eRunState = eSRS_Quit;
+
+		std::unique_lock<std::mutex> guard(this->m_lockQuit);
+			
+		this->m_condQuit.notify_one();
+	}
+
+	void CCoreService::waitQuit()
+	{
+		std::unique_lock<std::mutex> guard(this->m_lockQuit);
+
+		while (this->m_eRunState != eSRS_Quit)
+		{
+			this->m_condQuit.wait(guard);
+		}
 	}
 }

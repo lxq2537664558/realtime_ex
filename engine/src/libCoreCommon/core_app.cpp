@@ -140,10 +140,35 @@ namespace core
 		if (!this->init(argc, argv, vecServiceBase))
 			return false;
 
+		// 先让服务退出，但是不销毁
+		const std::vector<CCoreService*>& vecCoreService = this->getCoreServiceMgr()->getCoreService();
+		for (size_t i = 0; i < vecCoreService.size(); ++i)
+		{
+			vecCoreService[i]->waitQuit();
+		}
+
+		PrintInfo("all service is quit");
+
+		// 退出服务线程，肯定能过退出，因为服务还没有销毁，网络线程的心跳还在驱动的他
+		for (size_t i = 0; i < this->m_vecLogicRunnable.size(); ++i)
+		{
+			this->m_vecLogicRunnable[i]->quit();
+		}
+
+		// 等待逻辑线程退出
 		for (size_t i = 0; i < this->m_vecLogicRunnable.size(); ++i)
 		{
 			this->m_vecLogicRunnable[i]->join();
+			SAFE_DELETE(this->m_vecLogicRunnable[i]);
 		}
+
+		PrintInfo("all logic thread is quit");
+
+		// 退出网络线程
+		CNetRunnable::Inst()->quit();
+		CNetRunnable::Inst()->join();
+
+		PrintInfo("net thread is quit");
 
 		this->destroy();
 
@@ -332,6 +357,8 @@ namespace core
 		memset(&sig_action, 0, sizeof(sig_action));
 		sig_action.sa_sigaction = [](int32_t signo, siginfo_t*, void* ptr)->void
 		{
+			PrintInfo("recv quit signal");
+
 			CCoreApp::Inst()->doQuit();
 		};
 		sig_action.sa_flags = SA_SIGINFO;
@@ -430,13 +457,7 @@ namespace core
 		}
 
 		if (!this->m_sNodeBaseInfo.szHost.empty())
-		{
-			if (!this->m_pGlobalBaseConnectionMgr->listen(this->m_sNodeBaseInfo.szHost, this->m_sNodeBaseInfo.nPort, false, "CBaseConnectionOtherNode", "", this->m_sNodeBaseInfo.nSendBufSize, this->m_sNodeBaseInfo.nRecvBufSize, nullptr))
-			{
-				PrintWarning("node listen error");
-				return false;
-			}
-		}
+			this->m_pGlobalBaseConnectionMgr->listen(this->m_sNodeBaseInfo.szHost, this->m_sNodeBaseInfo.nPort, false, "CBaseConnectionOtherNode", "", this->m_sNodeBaseInfo.nSendBufSize, this->m_sNodeBaseInfo.nRecvBufSize, nullptr);
 
 		for (uint32_t i = 0; i < this->m_nLogicThreadCount; ++i)
 		{
@@ -464,9 +485,17 @@ namespace core
 	{
 		PrintInfo("CCoreApp::destroy");
 
+		SAFE_DELETE(this->m_pGlobalBaseConnectionMgr);
+		SAFE_DELETE(this->m_pGlobalLogicMessageQueue);
+		SAFE_DELETE(this->m_pLogicMessageQueueMgr);
+		SAFE_DELETE(this->m_pCoreServiceMgr);
+		SAFE_DELETE(this->m_pGlobalServiceRegistryProxy);
+		SAFE_DELETE(this->m_pNodeConnectionFactory);
+		SAFE_DELETE(this->m_pGlobalTickerMgr);
+
 		CClassInfoMgr::Inst()->unRegisterClassInfo();
 		CClassInfoMgr::Inst()->release();
-
+		
 		base::profiling::uninit();
 
 		base::log::uninit();

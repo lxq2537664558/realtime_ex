@@ -37,12 +37,12 @@ namespace core
 
 		std::unique_lock<std::mutex> guard(this->m_lock);
 
-		bool bNotify = this->m_listMessageQueue.empty();
 		this->m_listMessageQueue.push_back(pMessageQueue);
 		
-		// 先notify再unlock的顺序没问题，并且不会带来等待线程醒来但是拿不到锁再次睡眠的问题，这个会有一个等待转移的过程，直接在内核处理掉了
+		// 先notify再unlock的顺序没问题，并且不会带来等待线程醒来但是拿不到锁再次睡眠的问题，这个会有一个等待转移的过程，直接把线程等待到锁等待列表中
+		// 如果先unlock再notify，会带来比较多的伪唤醒问题，当然逻辑正确性也是没问题的
 
-		if (bNotify)
-			this->m_cond.notify_one();	// 这里只需要唤醒一个等待线程就行如果存在等待线程，不然多个唤醒最后也会抢不到队列再次睡眠
+		// 这里不在需要额外的控制变量来限制notify次数，因为如果没有线程在等待，这个函数啥也不会做，这个跟我们自己加标识一样
+		this->m_cond.notify_one();
 	}
 }

@@ -37,7 +37,7 @@ bool CTestService2::onInit()
 
 
 		//int32_t ntmp = 0xff00;
-		this->m_vecTickData.resize(0xff00);
+		this->m_vecTickData.resize(0xff0);
 		for (size_t i = 0; i < this->m_vecTickData.size(); ++i)
 		{
 			this->m_vecTickData[i].nFlag = 0;
@@ -57,6 +57,7 @@ void CTestService2::onFrame()
 void CTestService2::onQuit()
 {
 	PrintInfo("CTestService2::onQuit");
+	this->doQuit();
 }
 
 void CTestService2::TestTickCallBack3(uint64_t ucontext)
@@ -74,7 +75,7 @@ void CTestService2::TestTickCallBack3(uint64_t ucontext)
 void CTestService2::TestTickCallBack0(uint64_t ucontext)
 {
 	int64_t nCurTime = base::time_util::getGmtTime();
-	PrintInfo(" 时钟5 的再次触发间隔时间 {} 毫秒，预期 10ms ", nCurTime - this->m_nLastTime);
+	//PrintInfo(" 时钟5 的再次触发间隔时间 {} 毫秒，预期 10ms ", nCurTime - this->m_nLastTime);
 	this->m_nLastTime = nCurTime;
 }
 

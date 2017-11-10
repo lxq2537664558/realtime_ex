@@ -7,7 +7,6 @@ namespace base
 {
 	CTicker::CTicker()
 		: m_pCoreContext(nullptr)
-		, m_nIntervalTime(0)
 		, m_bCoroutine(false)
 	{
 		this->m_callback = new std::function<void(uint64_t)>();
@@ -20,13 +19,11 @@ namespace base
 		if (this->m_pCoreContext == nullptr)
 			return;
 
-		reinterpret_cast<CCoreTickerNode*>(this->m_pCoreContext)->Value.pTickerMgr->unregisterTicker(this);
+		reinterpret_cast<CCoreTickerNode*>(this->m_pCoreContext)->Value.pTickerMgrImpl->unregisterTicker(this);
 	}
 
 	CTicker::CTicker(CTicker&& rhs)
 	{
-		this->m_nIntervalTime = rhs.m_nIntervalTime;
-		this->m_nContext = rhs.m_nContext;
 		this->m_bCoroutine = rhs.m_bCoroutine;
 		*this->m_callback = *rhs.m_callback;
 		this->m_pCoreContext = rhs.m_pCoreContext;
@@ -42,10 +39,8 @@ namespace base
 			return *this;
 
 		if(this->m_pCoreContext != nullptr)
-			reinterpret_cast<CCoreTickerNode*>(this->m_pCoreContext)->Value.pTickerMgr->unregisterTicker(this);
+			reinterpret_cast<CCoreTickerNode*>(this->m_pCoreContext)->Value.pTickerMgrImpl->unregisterTicker(this);
 
-		this->m_nIntervalTime = rhs.m_nIntervalTime;
-		this->m_nContext = rhs.m_nContext;
 		this->m_bCoroutine = rhs.m_bCoroutine;
 		*this->m_callback = *rhs.m_callback;
 		this->m_pCoreContext = rhs.m_pCoreContext;
@@ -59,7 +54,18 @@ namespace base
 
 	int64_t CTicker::getIntervalTime() const
 	{
-		return this->m_nIntervalTime;
+		if (this->m_pCoreContext == nullptr)
+			return 0;
+
+		return reinterpret_cast<CCoreTickerNode*>(this->m_pCoreContext)->Value.nIntervalTime;
+	}
+
+	int64_t CTicker::getNextTime() const
+	{
+		if (this->m_pCoreContext == nullptr)
+			return 0;
+
+		return reinterpret_cast<CCoreTickerNode*>(this->m_pCoreContext)->Value.nNextTime;
 	}
 
 	bool CTicker::isRegister() const
@@ -85,7 +91,10 @@ namespace base
 
 	uint64_t CTicker::getContext() const
 	{
-		return this->m_nContext;
+		if (this->m_pCoreContext == nullptr)
+			return 0;
+
+		return reinterpret_cast<CCoreTickerNode*>(this->m_pCoreContext)->Value.nContext;
 	}
 
 	CTickerMgr::CTickerMgr(int64_t nTime, const std::function<void(CTicker*)>& callback)

@@ -11,13 +11,13 @@
 namespace base
 {
 	class CTickerMgrImpl;
-	class CTicker;
 	struct SCoreTickerInfo
 	{
-		CTickerMgrImpl*	pTickerMgr;
+		CTickerMgrImpl*	pTickerMgrImpl;
 		CTicker*		pTicker;
 		int64_t			nNextTime;		// 下一次定时器运行时间
 		int64_t			nIntervalTime;	// 定时器运行的间隔时间
+		uint64_t		nContext;
 	};
 
 	typedef TLinkNode<SCoreTickerInfo> CCoreTickerNode;
@@ -38,7 +38,7 @@ namespace base
 
 	public:
 		CTickerMgrImpl(int64_t nTime, const std::function<void(CTicker*)>& callback);
-		virtual ~CTickerMgrImpl();
+		~CTickerMgrImpl();
 
 		int64_t	getLogicTime() const;
 		void	update(int64_t nTime);

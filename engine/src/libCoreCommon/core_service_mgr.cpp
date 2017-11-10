@@ -15,6 +15,7 @@ namespace core
 		{
 			CCoreService* pCoreService = this->m_vecCoreService[i];
 			pCoreService->getServiceBase()->release();
+			// pCoreServiceÔÚCServiceBaseÖĞÉ¾³ı
 		}
 	}
 

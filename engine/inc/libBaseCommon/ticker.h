@@ -27,6 +27,7 @@ namespace base
 		CTicker& operator = (CTicker&& rhs);
 
 		int64_t		getIntervalTime() const;
+		int64_t		getNextTime() const;
 		bool		isRegister() const;
 		uint64_t	getContext() const;
 		void		setCallback(const std::function<void(uint64_t)>& callback, bool bCoroutine = false);
@@ -36,8 +37,6 @@ namespace base
 
 	private:
 		void*							m_pCoreContext;		// 这块数据只会有逻辑线程去读
-		int64_t							m_nIntervalTime;	// 定时器运行的间隔时间
-		uint64_t						m_nContext;
 		std::function<void(uint64_t)>*	m_callback;
 		bool							m_bCoroutine;
 	};

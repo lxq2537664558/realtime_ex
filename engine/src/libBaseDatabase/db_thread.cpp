@@ -106,21 +106,18 @@ namespace base
 		for (auto iter = listCommand.begin(); iter != listCommand.end(); ++iter)
 		{
 			SDbCommand sDbCommand = *iter;
+
+			if (sDbCommand.nType == db::eDBCT_Flush)
+			{
+				this->flushCache();
+				continue;
+			}
+
 			google::protobuf::Message* pRequestMessage = sDbCommand.pMessage;
 			defer([&]()
 			{
 				this->destroyMessage(pRequestMessage);
 			});
-
-			if (sDbCommand.nType == db::eDBCT_Flush)
-			{
-				proto::db::flush_command* pFlushCommand = dynamic_cast<proto::db::flush_command*>(pRequestMessage);
-				if (pFlushCommand == nullptr)
-					continue;
-
-				this->flushCache();
-				continue;
-			}
 			
 			std::shared_ptr<google::protobuf::Message> pResponseMessage;
 			uint32_t nErrorCode = db::eDBRC_OK;

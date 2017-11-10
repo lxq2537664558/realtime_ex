@@ -34,6 +34,8 @@ namespace core
 
 		bool				onInit();
 		void				doQuit();
+		
+		void				waitQuit();
 
 		CServiceBase*		getServiceBase() const;
 
@@ -165,5 +167,8 @@ namespace core
 								m_mapServiceMessageSerializerType;
 		uint32_t				m_nDefaultServiceMessageSerializerType;
 		uint32_t				m_nForwardMessageSerializerType;
+
+		std::mutex				m_lockQuit;
+		std::condition_variable	m_condQuit;
 	};
 }

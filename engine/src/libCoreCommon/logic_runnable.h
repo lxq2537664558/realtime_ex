@@ -21,7 +21,7 @@ namespace core
 		virtual bool	onProcess();
 		virtual void	onDestroy();
 
-		bool			dispatch(CCoreService* pCoreService, const SMessagePacket& sMessagePacket);
+		void			dispatch(CCoreService* pCoreService, const SMessagePacket& sMessagePacket);
 
 	private:
 		base::CThreadBase*			m_pThreadBase;

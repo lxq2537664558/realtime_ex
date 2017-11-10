@@ -81,14 +81,10 @@ bool CGateService::onInit()
 
 	// 启动客户端连接
 #ifdef _WEB_SOCKET_
-	if (!this->getBaseConnectionMgr()->listen(szHost, nPort, true, "CGateConnectionFromClient", szBuf, nSendBufSize, nRecvBufSize, default_client_message_parser, eCCT_Websocket))
+	this->getBaseConnectionMgr()->listen(szHost, nPort, true, "CGateConnectionFromClient", szBuf, nSendBufSize, nRecvBufSize, default_client_message_parser, eCCT_Websocket);
 #else
-	if (!this->getBaseConnectionMgr()->listen(szHost, nPort, true, "CGateConnectionFromClient", szBuf, nSendBufSize, nRecvBufSize, default_client_message_parser, eCCT_Normal))
+	this->getBaseConnectionMgr()->listen(szHost, nPort, true, "CGateConnectionFromClient", szBuf, nSendBufSize, nRecvBufSize, default_client_message_parser, eCCT_Normal);
 #endif
-	{
-		PrintWarning("gate listen error");
-		return false;
-	}
 
 	PrintInfo("CGateService::onInit");
 

@@ -29,13 +29,12 @@ namespace base
 		DebugAstEx(pTicker->getCallback() != nullptr, false);
 		
 		CCoreTickerNode* pCoreTickerNode = new CCoreTickerNode();
-		pCoreTickerNode->Value.pTickerMgr = this;
+		pCoreTickerNode->Value.pTickerMgrImpl = this;
 		pCoreTickerNode->Value.pTicker = pTicker;
 		pCoreTickerNode->Value.nNextTime = this->m_nLogicTime + nStartTime;
 		pCoreTickerNode->Value.nIntervalTime = nIntervalTime;
-		
-		pTicker->m_nIntervalTime = nIntervalTime;
-		pTicker->m_nContext = nContext;
+		pCoreTickerNode->Value.nContext = nContext;
+
 		pTicker->m_pCoreContext = pCoreTickerNode;
 
 		this->insertTicker(pCoreTickerNode);
@@ -56,7 +55,7 @@ namespace base
 			// 正常的反注册分支
 			pCoreTickerNode->remove();
 			pCoreTickerNode->Value.pTicker = nullptr;
-			pCoreTickerNode->Value.pTickerMgr = nullptr;
+			pCoreTickerNode->Value.pTickerMgrImpl = nullptr;
 			pTicker->m_pCoreContext = nullptr;
 			SAFE_DELETE(pCoreTickerNode);
 		}
@@ -64,7 +63,7 @@ namespace base
 		{
 			// 定时器回调的时候反注册分支
 			pCoreTickerNode->Value.pTicker = nullptr;
-			pCoreTickerNode->Value.pTickerMgr = nullptr;
+			pCoreTickerNode->Value.pTickerMgrImpl = nullptr;
 			pTicker->m_pCoreContext = nullptr;
 		}
 	}
@@ -134,23 +133,22 @@ namespace base
 				CTicker* pTicker = pCoreTickerNode->Value.pTicker;
 
 				// 对于一次性的定时器必须在回调前反注册掉
-				if (pTicker->m_nIntervalTime == 0)
+				if (pCoreTickerNode->Value.nIntervalTime == 0)
 				{
 					pCoreTickerNode->Value.pTicker = nullptr;
+					pCoreTickerNode->Value.pTickerMgrImpl = nullptr;
 					pTicker->m_pCoreContext = nullptr;
 				}
 
-				auto& callback = pTicker->getCallback();
-				if (callback != nullptr)
+				if (this->m_callback != nullptr)
 				{
-					if (this->m_callback != nullptr)
-					{
-						this->m_callback(pTicker);
-					}
-					else
-					{
-						callback(pTicker->getContext());
-					}
+					this->m_callback(pTicker);
+				}
+				else
+				{
+					auto& callback = pTicker->getCallback();
+					if (callback != nullptr)
+						callback(pCoreTickerNode->Value.nContext);
 				}
 
 				// 回调的时候反注册了或者一次性定时器，这个时候pTicker是不能动的，极有可能是个野指针

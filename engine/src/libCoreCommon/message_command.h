@@ -13,6 +13,8 @@ namespace core
 		eMCT_UPDATE_SERVICE_REGISTRY_PROXY,
 		eMCT_SERVICE_CONNECT,
 		eMCT_SERVICE_DISCONNECT,
+		eMCT_REQUEST_SOCKET_LISTEN,
+		eMCT_NOTIFY_SOCKET_LISTEN_FAIL,
 		eMCT_REQUEST_SOCKET_CONNECT,
 		eMCT_REQUEST_SOCKET_SHUTDOWN,
 		eMCT_NOTIFY_SOCKET_CONNECT,
@@ -50,6 +52,27 @@ namespace core
 	};
 
 	class CLogicMessageQueue;
+	struct SMCT_REQUEST_SOCKET_LISTEN
+	{
+		std::string			szHost;
+		uint16_t			nPort;
+		uint8_t				nReusePort;
+		CLogicMessageQueue* pMessageQueue;
+		std::string			szContext;
+		std::string			szType;
+		uint8_t				nCoreConnectionType;
+		uint32_t			nSendBufferSize;
+		uint32_t			nRecvBufferSize;
+		MessageParser		messageParser;
+	};
+
+	struct SMCT_NOTIFY_SOCKET_LISTEN_FAIL
+	{
+		std::string	szContext;
+		std::string	szHost;
+		uint16_t	nPort;
+	};
+
 	struct SMCT_REQUEST_SOCKET_CONNECT
 	{
 		std::string			szHost;

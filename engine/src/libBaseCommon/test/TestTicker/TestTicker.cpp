@@ -100,29 +100,29 @@ TEST(TickFunctionTest3, TickTest)
 	std::vector<CTicker*> vecTicker;
 
 	CTickerMgr* pTickerMgr = new CTickerMgr(0, nullptr);
-	vecTicker.resize(5000);
+	vecTicker.resize(2);
 	int64_t nCount = 0;
-	for (int64_t i = 0; i < vecTicker.size(); ++i)
+	
+	CTicker* pTicker0 = new CTicker();
+	vecTicker[0] = pTicker0;
+	pTicker0->setCallback([&](uint64_t nContext)
 	{
-		CTicker* pTicker = new CTicker();
-		vecTicker[i] = pTicker;
-		pTicker->setCallback([&](uint64_t nContext)
-		{
-			nCount++;
-		});
+		nCount++;
+	});
 
-		pTickerMgr->registerTicker(pTicker, 5, 5, i);
-	}
+	pTickerMgr->registerTicker(pTicker0, 5, 5, 0);
 
-	int64_t nBeginTime = base::time_util::getGmtTime();
-	for (int64_t i = 0; i <= 10000; ++i)
+	CTicker* pTicker1 = new CTicker();
+	vecTicker[1] = pTicker1;
+	*pTicker1 = std::move(*pTicker0);
+
+	for (int64_t i = 0; i <= 20; ++i)
 	{
 		pTickerMgr->update(i);
 	}
-	int64_t nEndTime = base::time_util::getGmtTime();
-
-	printf("time: %I64d count: %I64d \n", (nEndTime - nBeginTime), nCount);
-
+	
+	EXPECT_EQ(nCount, 4);
+	
 	for (int64_t i = 0; i < vecTicker.size(); ++i)
 	{
 		SAFE_DELETE(vecTicker[i]);
@@ -135,28 +135,76 @@ TEST(TickFunctionTest4, TickTest)
 	std::vector<CTicker*> vecTicker;
 
 	CTickerMgr* pTickerMgr = new CTickerMgr(0, nullptr);
-	vecTicker.resize(5000);
+	vecTicker.resize(2);
 	int64_t nCount = 0;
-	for (int64_t i = 0; i < vecTicker.size(); ++i)
+
+	CTicker* pTicker0 = new CTicker();
+	vecTicker[0] = pTicker0;
+	pTicker0->setCallback([&](uint64_t nContext)
 	{
-		CTicker* pTicker = new CTicker();
-		vecTicker[i] = pTicker;
-		pTicker->setCallback([&](uint64_t nContext)
-		{
-			nCount++;
-		});
+		nCount++;
+	});
 
-		pTickerMgr->registerTicker(pTicker, 5, 5, i);
-	}
+	pTickerMgr->registerTicker(pTicker0, 5, 5, 0);
 
-	int64_t nBeginTime = base::time_util::getGmtTime();
-	for (int64_t i = 0; i <= 10000; ++i)
+	CTicker* pTicker1 = new CTicker();
+	vecTicker[1] = pTicker1;
+	pTicker1->setCallback([&](uint64_t nContext)
+	{
+		nCount++;
+	});
+
+	pTickerMgr->registerTicker(pTicker1, 10, 10, 0);
+	*pTicker1 = std::move(*pTicker0);
+
+	for (int64_t i = 0; i <= 20; ++i)
 	{
 		pTickerMgr->update(i);
 	}
-	int64_t nEndTime = base::time_util::getGmtTime();
 
-	printf("time: %I64d count: %I64d \n", (nEndTime - nBeginTime), nCount);
+	EXPECT_EQ(nCount, 4);
+
+	for (int64_t i = 0; i < vecTicker.size(); ++i)
+	{
+		SAFE_DELETE(vecTicker[i]);
+	}
+	SAFE_DELETE(pTickerMgr);
+}
+
+TEST(TickFunctionTest5, TickTest)
+{
+	std::vector<CTicker*> vecTicker;
+
+	CTickerMgr* pTickerMgr = new CTickerMgr(0, nullptr);
+	vecTicker.resize(2);
+	int64_t nCount = 0;
+
+	CTicker* pTicker0 = new CTicker();
+	vecTicker[0] = pTicker0;
+	pTicker0->setCallback([&](uint64_t nContext)
+	{
+		nCount++;
+		if (nCount == 1)
+			*vecTicker[1] = std::move(*pTicker0);
+	});
+
+	pTickerMgr->registerTicker(pTicker0, 5, 5, 0);
+
+	CTicker* pTicker1 = new CTicker();
+	vecTicker[1] = pTicker1;
+	pTicker1->setCallback([&](uint64_t nContext)
+	{
+		nCount++;
+	});
+
+	pTickerMgr->registerTicker(pTicker1, 10, 10, 0);
+
+	for (int64_t i = 0; i <= 20; ++i)
+	{
+		pTickerMgr->update(i);
+	}
+
+	EXPECT_EQ(nCount, 4);
 
 	for (int64_t i = 0; i < vecTicker.size(); ++i)
 	{

@@ -101,6 +101,29 @@ namespace core
 
 			switch (sMessagePacket.nType)
 			{
+			case eMCT_REQUEST_SOCKET_LISTEN:
+			{
+				PROFILING_GUARD(eMCT_REQUEST_SOCKET_LISTEN)
+				SMCT_REQUEST_SOCKET_LISTEN* pContext = reinterpret_cast<SMCT_REQUEST_SOCKET_LISTEN*>(sMessagePacket.pData);
+
+				if (!this->m_pCoreConnectionMgr->listen(pContext->pMessageQueue, pContext->szHost, pContext->nPort, pContext->nReusePort != 0, pContext->szType, pContext->szContext, pContext->nSendBufferSize, pContext->nSendBufferSize, pContext->messageParser, pContext->nCoreConnectionType))
+				{
+					SMCT_NOTIFY_SOCKET_LISTEN_FAIL* pFailContext = new SMCT_NOTIFY_SOCKET_LISTEN_FAIL();
+					pFailContext->szContext = pContext->szContext;
+					pFailContext->szHost = pContext->szHost;
+					pFailContext->nPort = pContext->nPort;
+
+					SMessagePacket sMessagePacket;
+					sMessagePacket.nType = eMCT_NOTIFY_SOCKET_LISTEN_FAIL;
+					sMessagePacket.pData = pFailContext;
+					sMessagePacket.nDataSize = sizeof(SMCT_NOTIFY_SOCKET_LISTEN_FAIL);
+
+					pContext->pMessageQueue->send(sMessagePacket);
+				}
+
+				SAFE_DELETE(pContext);
+			}
+			break;
 			case eMCT_REQUEST_SOCKET_CONNECT:
 			{
 				PROFILING_GUARD(eMCT_REQUEST_SOCKET_CONNECT)

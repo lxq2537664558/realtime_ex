@@ -266,8 +266,8 @@ namespace
 		else
 		{
 			this->saveLog(pLogInfo);
-			char* szBuf = reinterpret_cast<char*>(pLogInfo);
-			delete[](szBuf);
+			
+			delete pLogInfo;
 
 			this->tryFlushLog();
 		}

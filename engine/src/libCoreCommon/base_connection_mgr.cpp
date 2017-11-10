@@ -72,13 +72,26 @@ namespace core
 		CNetRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
 	}
 
-	bool CBaseConnectionMgr::listen(const std::string& szHost, uint16_t nPort, bool bReusePort, const std::string& szType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser, ECoreConnectionType eCoreConnectionType /* = eCCT_Normal */)
+	void CBaseConnectionMgr::listen(const std::string& szHost, uint16_t nPort, bool bReusePort, const std::string& szType, const std::string& szContext, uint32_t nSendBufferSize, uint32_t nRecvBufferSize, MessageParser messageParser, ECoreConnectionType eCoreConnectionType /* = eCCT_Normal */)
 	{
-		CNetRunnable::Inst()->pause();
-		bool bRet = CNetRunnable::Inst()->getCoreConnectionMgr()->listen(this->m_pBaseConnectionMgrImpl->getMessageQueue(), szHost, nPort, bReusePort, szType, szContext, nSendBufferSize, nRecvBufferSize, messageParser, (uint8_t)eCoreConnectionType);
-		CNetRunnable::Inst()->resume();
+		SMCT_REQUEST_SOCKET_LISTEN* pContext = new SMCT_REQUEST_SOCKET_LISTEN();
+		pContext->szHost = szHost;
+		pContext->nPort = nPort;
+		pContext->nReusePort = bReusePort;
+		pContext->szContext = szContext;
+		pContext->szType = szType;
+		pContext->pMessageQueue = this->m_pBaseConnectionMgrImpl->getMessageQueue();
+		pContext->nCoreConnectionType = (uint8_t)eCoreConnectionType;
+		pContext->nRecvBufferSize = nRecvBufferSize;
+		pContext->nSendBufferSize = nSendBufferSize;
+		pContext->messageParser = messageParser;
 
-		return bRet;
+		SMessagePacket sMessagePacket;
+		sMessagePacket.nType = eMCT_REQUEST_SOCKET_LISTEN;
+		sMessagePacket.pData = pContext;
+		sMessagePacket.nDataSize = sizeof(SMCT_REQUEST_SOCKET_LISTEN);
+
+		CNetRunnable::Inst()->getMessageQueue()->send(sMessagePacket);
 	}
 
 	void CBaseConnectionMgr::send(uint64_t nSocketID, uint8_t nMessageType, const void* pData, uint16_t nSize)
